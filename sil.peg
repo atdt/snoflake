@@ -1,0 +1,109 @@
+{
+    function Tag(type, value) {
+        this.type = type;
+        this.value = value;
+    }
+}
+
+program
+  = lines:line+ end
+{
+    return lines;
+}
+
+line
+  = empty* val:(statement / comment) eol
+{
+    return val;
+}
+
+empty
+  = '*' eol
+
+comment
+  = '*' comment:raw
+{
+    return new Tag('comment', comment);
+}
+
+raw
+  = raw: [^\n]+
+{
+    return raw.join('').trim();
+}
+
+statement
+  = label:label? blank+ op:op blank+ variable:variable comment:raw?
+{
+    return [label || null, op, variable];
+}
+
+op
+  = code:[A-Z]+
+{
+    code = code.join('');
+    return new Tag('op', code);
+}
+
+variable
+  = head:var tail:(sep del:var { return del; })*
+{
+    console.log(tail);
+    tail.unshift(head);
+    return tail;
+}
+
+var
+  = list
+  / literal
+  / label
+  / integer
+  / ''
+
+literal
+  = "'" str:[^']* "'"
+{
+    return new Tag('literal', str.join(''));
+}
+
+integer
+  = digits:[0-9]+
+{
+    return parseInt(digits.join(''), 10);
+}
+
+list
+  = '('
+    head:item
+    tail:(sep item:item { return item; })*
+    ')'
+{
+    tail.unshift(head);
+    return tail;
+}
+
+sep
+  = ','
+
+item
+  = value:(literal / label)
+{
+    return value;
+}
+
+blank
+  = [\u0009\u0020]+
+
+
+label
+  = head:[A-Z] tail:[A-Z0-9]*
+{
+    tail.unshift(head);
+    return new Tag('label', tail.join(''));
+}
+
+eol
+  = '\n'
+
+end
+  = blank+ 'END' !.

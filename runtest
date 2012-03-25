@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+/* vim: set ft=javascript: */
+
+var fs = require('fs'),
+    peg = require('pegjs');
+    prettyjson = require('prettyjson');
+
+var log = console.log.bind(console);
+
+console.log = function() {
+    pretty = prettyjson.render.apply(prettyjson, arguments);
+    log(pretty);
+    log('\n');
+}
+
+var grammar = fs.readFileSync('sil.peg', 'utf-8'),
+    demo = fs.readFileSync('v311.sil', 'utf-8');
+
+console.log('Building the parser...');
+parser = peg.buildParser(grammar);
+
+console.log('Parsing demo...');
+parser.parse(demo)
