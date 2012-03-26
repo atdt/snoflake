@@ -16,6 +16,9 @@
     // .push() and .pop() methods so they can be used as LIFO queues.
     //
 
+    // 0x1F
+    var specifiers = {};
+
     var heap = [];
     var stack = [];
 
@@ -154,5 +157,12 @@
     var AEQLIC = function (A, N1, N2, NELOC, EQLOC) {
         // TODO
     };
+
+    // STRING is used to assemble a string and a specifier to it.
+    var STRING = function (LIT) {
+        // Todo: the address should point to the string literal somehw
+        return new Specifier(address, 0, 0, 0, LIT.length);
+    }
+        
 
 }());
