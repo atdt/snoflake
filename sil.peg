@@ -1,3 +1,7 @@
+// PEG.js Grammar for SIL (SNOBOL Implementation Language)
+// (C) Copyright 2012 by Ori Livneh
+// Released under GPL and MIT licenses
+
 {
     function Node(type, value) {
         this.type = type;
