@@ -10,10 +10,20 @@
 }
 
 program
-  = (statement '\n')* end
+  = lines:(statement / comment)+ end
+{
+    return lines;
+}
+
+
+comment
+  = '*' comment:[^\n]* '\n'
+{
+    return comment.join('');
+}
 
 statement
-  = label:label? blank oper:oper blank operands:operands blank? comment:([^\n]+)?
+  = label:label? blank oper:oper blank operands:operands blank? comment:[^\n]* '\n'
 {
     return [label || null, oper, operands];
 }
@@ -29,7 +39,7 @@ operands
 {
     var result = [head];
     for (var i = 0, max = tail.length; i < max; i++) {
-        result.push(tail[i][2]);
+        result.push(tail[i][1]);
     }
     return result;
 }
@@ -54,11 +64,11 @@ integer "integer"
 }
 
 list
-  = '(' head:item tail:(',' item:item)* ')'
+  = '(' head:item tail:(',' item)* ')'
 {
     var result = [head];
     for (var i = 0, max = tail.length; i < max; i++) {
-        result.push(tail[i][2]);
+        result.push(tail[i][1]);
     }
     return result;
 }
@@ -81,4 +91,4 @@ label
 }
 
 end
-  = blank 'END' '\n' !.
+  = blank 'END' (blank / '\n')* !.
