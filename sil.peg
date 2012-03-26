@@ -1,89 +1,64 @@
 {
-    function Tag(type, value) {
+    function Node(type, value) {
         this.type = type;
         this.value = value;
     }
 }
 
 program
-  = lines:line+ end
-{
-    return lines;
-}
-
-line
-  = empty* val:(statement / comment) eol
-{
-    return val;
-}
-
-empty
-  = '*' eol
-
-comment
-  = '*' comment:raw
-{
-    return new Tag('comment', comment);
-}
-
-raw
-  = raw: [^\n]+
-{
-    return raw.join('').trim();
-}
+  = (statement '\n')* end
 
 statement
-  = label:label? blank+ op:op blank+ variable:variable comment:raw?
+  = label:label? blank operation:operation blank vfield:vfield blank? comment:([^\n]+)?
 {
-    return [label || null, op, variable];
+    return [label || null, operation, vfield];
 }
 
-op
-  = code:[A-Z]+
+operation
+  = operation:[A-Z]+
 {
-    code = code.join('');
-    return new Tag('op', code);
+    operation = operation.join('');
+    return new Node('operation', operation);
+}
+
+vfield
+  = head:variable tail:(',' variable)*
+{
+    var result = [head];
+    for (var i = 0, max = tail.length; i < max; i++) {
+        result.push(tail[i][2]);
+    }
+    return result;
 }
 
 variable
-  = head:var tail:(sep del:var { return del; })*
-{
-    console.log(tail);
-    tail.unshift(head);
-    return tail;
-}
-
-var
   = list
   / literal
   / label
   / integer
-  / ''
+  / ''       { return undefined; }
 
-literal
-  = "'" str:[^']* "'"
+literal "literal"
+  = "'" literal:[^']* "'"
 {
-    return new Tag('literal', str.join(''));
+    return new Node('literal', literal.join(''));
 }
 
-integer
+integer "integer"
   = digits:[0-9]+
 {
     return parseInt(digits.join(''), 10);
 }
 
 list
-  = '('
-    head:item
-    tail:(sep item:item { return item; })*
-    ')'
+  = '(' head:item tail:(',' item:item)* ')'
 {
-    tail.unshift(head);
-    return tail;
+    var result = [head];
+    for (var i = 0, max = tail.length; i < max; i++) {
+        result.push(tail[i][2]);
+    }
+    return result;
 }
-
-sep
-  = ','
 
 item
   = value:(literal / label)
@@ -99,11 +74,8 @@ label
   = head:[A-Z] tail:[A-Z0-9]*
 {
     tail.unshift(head);
-    return new Tag('label', tail.join(''));
+    return new Node('label', tail.join(''));
 }
 
-eol
-  = '\n'
-
 end
-  = blank+ 'END' !.
+  = blank 'END' !.
