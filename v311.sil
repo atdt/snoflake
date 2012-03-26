@@ -5147,8 +5147,8 @@ END1   OUTPUT  OUTPUT,STATHD	   Print statistics title
        INTRL   FCL,ZEROCL
        BRANCH  AVTIME		   Join end game
 *_
-END2   INTL   EXNOCL,EXNOCL	   Convert execution total tn RAL
-       INTRL   XCL,ETMCL	  Convert execution time to REAL
+END2   INTRL   EXNOCL,EXNOCL	   Convert execution total tn REAL
+       INTRL   XCL,ETMCL	   Convert execution time to REAL
        DVREAL  FCL,XCL,EXNOCL	   Compute average time
 AVTIME OUTPUT  OUTPUT,TIMEPS,(FCL) Print average time
 ENDALL ENDEX   ABNDCL						E3.2.2
