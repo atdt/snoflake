@@ -13,19 +13,18 @@ program
   = (statement '\n')* end
 
 statement
-  = label:label? blank operation:operation blank vfield:vfield blank? comment:([^\n]+)?
+  = label:label? blank oper:oper blank operands:operands blank? comment:([^\n]+)?
 {
-    return [label || null, operation, vfield];
+    return [label || null, oper, operands];
 }
 
-operation
-  = operation:[A-Z]+
+oper
+  = oper:[A-Z]+
 {
-    operation = operation.join('');
-    return new Node('operation', operation);
+    return new Node('oper', oper.join(''));
 }
 
-vfield
+operands
   = head:variable tail:(',' variable)*
 {
     var result = [head];
@@ -82,4 +81,4 @@ label
 }
 
 end
-  = blank 'END' !.
+  = blank 'END' '\n' !.
