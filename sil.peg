@@ -23,9 +23,9 @@ comment
 }
 
 statement
-  = label:label? blank oper:oper blank operands:operands blank? comment:[^\n]* '\n'
+  = loc:label? blank oper:oper blank operands:operands blank? comment:[^\n]* '\n'
 {
-    return [label || null, oper, operands];
+    return [loc || null, oper, operands];
 }
 
 oper
@@ -41,7 +41,7 @@ operands
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return result;
+    return new Node('operands', result);
 }
 
 variable
@@ -49,7 +49,7 @@ variable
   / literal
   / label
   / integer
-  / ''       { return undefined; }
+  / &(',') { return undefined; }
 
 literal "literal"
   = "'" literal:[^']* "'"
@@ -60,11 +60,12 @@ literal "literal"
 integer "integer"
   = digits:[0-9]+
 {
-    return parseInt(digits.join(''), 10);
+    digits = parseInt(digits.join(''), 10);
+    return new Node('integer', digits);
 }
 
-list
-  = '(' head:item tail:(',' item)* ')'
+list "operand list"
+  = '(' head:variable tail:(',' variable)* ')'
 {
     var result = [head];
     for (var i = 0, max = tail.length; i < max; i++) {
@@ -83,7 +84,7 @@ blank
   = [\u0009\u0020]+
 
 
-label
+label "label"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     tail.unshift(head);
