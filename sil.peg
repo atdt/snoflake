@@ -23,15 +23,19 @@ comment
 }
 
 statement
-  = loc:label? blank oper:oper blank operands:operands blank? comment:[^\n]* '\n'
+  = label:label? blank oper:oper blank operands:operands blank? comment:[^\n]* '\n'
 {
-    return [loc || null, oper, operands];
+    return {
+        operation : oper,
+        operands  : operands,
+        label     : label.value
+    };
 }
 
 oper
   = oper:[A-Z]+
 {
-    return new Node('oper', oper.join(''));
+    return oper.join('');
 }
 
 operands
@@ -41,27 +45,34 @@ operands
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return new Node('operands', result);
+    return result;
 }
 
 variable
   = list
   / literal
+  / expr
   / label
   / integer
   / &(',') { return undefined; }
 
+
+expr
+  = left:(integer / label) operator:[*+-] right:(integer / label)
+{
+    return new Node('expression', [left, operator, right]);
+}
+
 literal "literal"
   = "'" literal:[^']* "'"
 {
-    return new Node('literal', literal.join(''));
+    return literal.join('');
 }
 
 integer "integer"
   = digits:[0-9]+
 {
-    digits = parseInt(digits.join(''), 10);
-    return new Node('integer', digits);
+    return parseInt(digits.join(''), 10);
 }
 
 list "operand list"
@@ -72,12 +83,6 @@ list "operand list"
         result.push(tail[i][1]);
     }
     return result;
-}
-
-item
-  = value:(literal / label)
-{
-    return value;
 }
 
 blank
@@ -93,3 +98,5 @@ label "label"
 
 end
   = blank 'END' (blank / '\n')* !.
+
+/* vim: set ft=javascript: */
