@@ -3,9 +3,13 @@
 // Released under GPL and MIT licenses
 
 {
+    var macros = {},
+        index = 0;
+
     function stackPush(call) {
         return ["call", ["dot", ["name", "stack"], "push"], [call]];
     }
+
     var expansions = {
         'EQU': function (label, operands) {
             console.log(operands);
@@ -37,6 +41,7 @@ statement
         call = ["array", [oper, operands]],
         stmt = stackPush(call);
 
+    macros[macro] = 1;
     /*
     if (macro in expansions) {
         var expand = expansions[macro];

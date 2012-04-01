@@ -10,7 +10,7 @@ var log = console.log.bind(console);
 
 var grammar = fs.readFileSync('sil.peg', 'utf-8'),
     // demo = fs.readFileSync('v311.sil', 'utf-8');
-    demo = fs.readFileSync('dummy.sil', 'utf-8');
+    demo = fs.readFileSync('meir.sil', 'utf-8');
 
 console.log('Building the parser...');
 parser = peg.buildParser(grammar);
