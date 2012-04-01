@@ -3,16 +3,23 @@
 // Released under GPL and MIT licenses
 
 {
-    function Node(type, value) {
-        this.type = type;
-        this.value = value;
+    function stackPush(call) {
+        return ["call", ["dot", ["name", "stack"], "push"], [call]];
     }
+    var expansions = {
+        'EQU': function (label, operands) {
+            console.log(operands);
+            return ["var", [[label[1], operands[0]]]];
+        }
+    };
 }
 
 program
   = lines:(statement / comment)+ end
 {
-    return lines;
+
+    lines = lines.filter(function notString(o) { return typeof o !== 'string'; }); // exclude comments
+    return ["toplevel", lines];
 }
 
 
@@ -23,19 +30,25 @@ comment
 }
 
 statement
-  = label:label? blank oper:oper blank operands:operands blank? comment:[^\n]* '\n'
+  = label:name? blank oper:name blank operands:operands blank? comment:[^\n]* '\n'
 {
-    return {
-        operation : oper,
-        operands  : operands,
-        label     : label.value
-    };
-}
+    var macro = oper[1],
+        label = label ? label[1] : undefined;
+        call = ["array", [oper, operands]],
+        stmt = stackPush(call);
 
-oper
-  = oper:[A-Z]+
-{
-    return oper.join('');
+    /*
+    if (macro in expansions) {
+        var expand = expansions[macro];
+        return expand(label || undefined, operands);
+    }
+    */
+
+    if (label) {
+        return ["var", [[label, stmt]]];
+    } else {
+        return ["stat", stmt];
+    }
 }
 
 operands
@@ -45,34 +58,34 @@ operands
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return result;
+    return ["array", result];
 }
 
 variable
   = list
   / literal
   / expr
-  / label
+  / name
   / integer
-  / &(',') { return undefined; }
+  / &(',') { return ["name", "undefined"]; }
 
 
 expr
-  = left:(integer / label) operator:[*+-] right:(integer / label)
+  = left:(integer / name) operator:[*+-] right:(integer / name)
 {
-    return new Node('expression', [left, operator, right]);
+    return ["binary", operator, left, right];
 }
 
 literal "literal"
   = "'" literal:[^']* "'"
 {
-    return literal.join('');
+    return ["string", literal.join('')];
 }
 
 integer "integer"
   = digits:[0-9]+
 {
-    return parseInt(digits.join(''), 10);
+    return ["num", parseInt(digits.join(''), 10)];
 }
 
 list "operand list"
@@ -82,18 +95,18 @@ list "operand list"
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return result;
+    return ["array", result];
 }
 
 blank
   = [\u0009\u0020]+
 
 
-label "label"
+name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     tail.unshift(head);
-    return new Node('label', tail.join(''));
+    return ["name", tail.join('')];
 }
 
 end

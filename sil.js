@@ -16,6 +16,8 @@
     // .push() and .pop() methods so they can be used as LIFO queues.
     //
 
+    var resident = {};
+    //
     // 0x1F
     var specifiers = {};
 
