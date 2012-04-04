@@ -1,9 +1,10 @@
 // PEG.js Grammar for SIL (SNOBOL Implementation Language)
 // (C) Copyright 2012 by Ori Livneh
 // Released under GPL and MIT licenses
-
 {
     var macros = {},
+        labels = [],
+        stack = [],
         index = 0;
 
     function stackPush(call) {
@@ -21,9 +22,33 @@
 program
   = lines:(statement / comment)+ end
 {
+    var statement,
+        program = [];
 
-    lines = lines.filter(function notString(o) { return typeof o !== 'string'; }); // exclude comments
-    return ["toplevel", lines];
+    for (var i = 0, max = lines.length; i < max; i++) {
+        statement = lines[i];
+
+        // Skip comments
+        if (typeof statement === 'string') {
+            continue;
+        }
+
+        stack.push(statement.call);
+        macros[statement.macro] = (macros[statement.macro] || 0) + 1;
+
+        if (statement.label) {
+            labels.push([statement.label, ["num", stack.length - 1]]);
+        }
+    }
+
+    macros = Object.keys(macros).map(function (e) { return [e]; });
+
+    program.push(["var", macros]);
+    program.push(["var", labels]);
+    program.push(["var", [["stack", ["array", stack]]]]);
+    // program.push(["var", ["stack", ["array", stack]]]);
+
+    return ["toplevel", program];
 }
 
 
@@ -36,11 +61,14 @@ comment
 statement
   = label:name? blank oper:name blank operands:operands blank? comment:[^\n]* '\n'
 {
-    var macro = oper[1],
-        label = label ? label[1] : undefined;
-        call = ["array", [oper, operands]],
-        stmt = stackPush(call);
+    return {
+        label : label ? label[1] : undefined,
+        macro : oper[1],
+        call  : ["array", [oper, operands]],
+    }
 
+
+    
     macros[macro] = 1;
     /*
     if (macro in expansions) {
