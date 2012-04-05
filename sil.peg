@@ -1,87 +1,54 @@
 // PEG.js Grammar for SIL (SNOBOL Implementation Language)
 // (C) Copyright 2012 by Ori Livneh
 // Released under GPL and MIT licenses
+
 {
-    var macros = {},
-        labels = [],
-        stack = [],
-        index = 0;
-
-    function stackPush(call) {
-        return ["call", ["dot", ["name", "stack"], "push"], [call]];
-    }
-
-    var expansions = {
-        'EQU': function (label, operands) {
-            console.log(operands);
-            return ["var", [[label[1], operands[0]]]];
-        }
-    };
+    var namespace = {};
 }
 
 program
-  = lines:(statement / comment)+ end
+  = statements:(statement / comment)+ end
 {
-    var statement,
-        program = [];
+    var stack = [], identifiers = [], declare;
 
-    for (var i = 0, max = lines.length; i < max; i++) {
-        statement = lines[i];
+    // Filter out comments
+    statements = statements.filter(function (s) {
+        return s[0].indexOf('comment') !== 0;
+    });
 
-        // Skip comments
-        if (typeof statement === 'string') {
-            continue;
-        }
+    // Construct a JavaScript array representing a call stack
+    stack = [ "stack", [ "array", statements ] ];
 
-        stack.push(statement.call);
-        macros[statement.macro] = (macros[statement.macro] || 0) + 1;
+    // Enumerate other identifiers to declare
+    for ( name in namespace )
+        identifiers.push([ name ] );
 
-        if (statement.label) {
-            labels.push([statement.label, ["num", stack.length - 1]]);
-        }
-    }
+    identifiers.sort();
+    identifiers.push(stack);
 
-    macros = Object.keys(macros).map(function (e) { return [e]; });
+    declare = [ "var", identifiers ];
 
-    program.push(["var", macros]);
-    program.push(["var", labels]);
-    program.push(["var", [["stack", ["array", stack]]]]);
-    // program.push(["var", ["stack", ["array", stack]]]);
-
-    return ["toplevel", program];
+    return [ "toplevel", [ declare ] ];
 }
 
 
 comment
   = '*' comment:[^\n]* '\n'
 {
-    return comment.join('');
+    return [ "comment2", comment.join('') ];
 }
 
 statement
-  = label:name? blank oper:name blank operands:operands blank? comment:[^\n]* '\n'
+  = label:(name:name? { return name || ["name", "null"] })
+    blank
+    oper:name
+    blank
+    operands:operands
+    blank?
+    comment:(comment:[^\n]* { return ["comment1", comment.join('')]; })
+    '\n'
 {
-    return {
-        label : label ? label[1] : undefined,
-        macro : oper[1],
-        call  : ["array", [oper, operands]],
-    }
-
-
-    
-    macros[macro] = 1;
-    /*
-    if (macro in expansions) {
-        var expand = expansions[macro];
-        return expand(label || undefined, operands);
-    }
-    */
-
-    if (label) {
-        return ["var", [[label, stmt]]];
-    } else {
-        return ["stat", stmt];
-    }
+    return [ "array", [ oper, operands, label ] ];
 }
 
 operands
@@ -91,7 +58,7 @@ operands
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return ["array", result];
+    return [ "array", result ];
 }
 
 variable
@@ -100,35 +67,43 @@ variable
   / expr
   / name
   / integer
-  / &(',') { return ["name", "undefined"]; }
+  / &(',') { return [ "name", "null" ]; }
 
 
 expr
   = left:(integer / name) operator:[*+-] right:(integer / name)
 {
-    return ["binary", operator, left, right];
+    return [ "binary", operator, left, right ];
 }
 
 literal "literal"
   = "'" literal:[^']* "'"
 {
-    return ["string", literal.join('')];
+    literal = literal.join('');
+    return [ "string", literal ];
 }
 
 integer "integer"
   = digits:[0-9]+
 {
-    return ["num", parseInt(digits.join(''), 10)];
+    var num = parseInt(digits.join(''), 10);
+    return [ "num", num ];
 }
 
 list "operand list"
-  = '(' head:variable tail:(',' variable)* ')'
+  = '('
+    head:variable
+    tail:(',' v:variable { return v; })*
+    ')'
 {
-    var result = [head];
-    for (var i = 0, max = tail.length; i < max; i++) {
-        result.push(tail[i][1]);
+    var result = [];
+
+    if (head !== undefined || tail.length) {
+        tail.unshift(head);
+        result = tail;
     }
-    return ["array", result];
+
+    return [ "array", result ];
 }
 
 blank
@@ -138,8 +113,10 @@ blank
 name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
-    tail.unshift(head);
-    return ["name", tail.join('')];
+    var name = head + tail.join('');
+
+    namespace[name] = ( namespace[name] || 0 ) + 1;
+    return [ "name", name ];
 }
 
 end
