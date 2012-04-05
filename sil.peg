@@ -9,7 +9,7 @@
 program
   = statements:(statement / comment)+ end
 {
-    var stack = [], identifiers = [], declare;
+    var i = 0, stack = [], identifiers = [], declare;
 
     // Filter out comments
     statements = statements.filter(function (s) {
@@ -21,11 +21,9 @@ program
 
     // Enumerate other identifiers to declare
     for ( name in namespace )
-        identifiers.push([ name ] );
+        identifiers.push([ name, ["num", i++ ] ]);
 
-    identifiers.sort();
     identifiers.push(stack);
-
     declare = [ "var", identifiers ];
 
     return [ "toplevel", [ declare ] ];
