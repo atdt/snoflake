@@ -1,0 +1,3 @@
+This repository contains work towards a SNOBOL4 environment in JavaScript, based on the SIL (macro) implementation. 
+
+This is very early-stage work. It's currently capable of parsing the SIL code of the SNOBOL4 interpreter and generating JavaScript code out of it. Still outstanding are the actual implementations of the SIL macros and memory allocation.
