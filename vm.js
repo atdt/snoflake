@@ -26,6 +26,6 @@
     do {
         frame = stack[p++];
         exec.apply(null, frame);
-    } while (p < end)
+    } while (p < end);
 
 }());
