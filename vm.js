@@ -2,11 +2,15 @@
 // (C) Copyright 2012 by Ori Livneh
 // Released under GPL and MIT licenses
 
+/*jslint plusplus: true */
+
 (function () {
+    "use strict";
 
     // << compiled SIL gets inlined here >>
 
-    var end = stack.length,
+    var stack = [],
+        end = stack.length,
         frame = [],
         p = 0,
         resident = [];
@@ -19,7 +23,11 @@
             retval = func.apply(null, operands);
 
         if (dest !== null) {
-            resident[dest] = (retval !== undefined) ? retval : stack_loc;
+            if (retval !== undefined) {
+                resident[dest] = retval;
+            } else {
+                resident[dest] = stack_loc;
+            }
         }
     }
 
