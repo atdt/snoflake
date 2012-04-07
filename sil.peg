@@ -3,26 +3,28 @@
 // Released under GPL and MIT licenses
 
 {
-    var namespace = {};
+    var TYPE = 0, VALUE = 1,
+        counter = 0, namespace = {};
 }
 
 program
   = statements:(statement / comment)+ end
 {
-    var i = 0, stack = [], identifiers = [], declare;
+    var statement, constants = [], stack = [], identifiers = [], declare;
 
     // Filter out comments
     statements = statements.filter(function (s) {
-        return s[0].indexOf('comment') !== 0;
+        return s[TYPE] === 'array';
     });
 
+        
     // Construct a JavaScript array representing a call stack
     stack = [ "stack", [ "array", statements ] ];
 
     // Enumerate other identifiers to declare
-    for ( name in namespace )
-        identifiers.push([ name, ["num", i++ ] ]);
-
+    for ( name in namespace ) {
+        identifiers.push([ name, namespace[ name ] ]);
+    }
     identifiers.push(stack);
     declare = [ "var", identifiers ];
 
@@ -37,15 +39,32 @@ comment
 }
 
 statement
-  = label:(name:name? { return name || ["name", "null"] })
+  = label:(name:name? { return name || [ "name", "null" ] })
     blank
     oper:name
     blank
     operands:operands
     blank?
-    comment:(comment:[^\n]* { return ["comment1", comment.join('')]; })
+    comment:(comment:[^\n]* { return [ "comment1", comment.join('') ]; })
     '\n'
 {
+    var identifier = label[VALUE];
+
+    if (identifier !== "null") {
+        switch (oper[VALUE]) {
+        case 'EQU':
+            namespace[identifier] = operands[VALUE][0];
+            break;
+        case 'LHERE':
+            namespace[identifier] = [ "num", counter + 1 ];
+            break;
+        default:
+            namespace[identifier] = [ "num", counter ];
+            break;
+        }
+    }
+    counter++;
+
     return [ "array", [ oper, operands, label ] ];
 }
 
@@ -113,7 +132,7 @@ name "name"
 {
     var name = head + tail.join('');
 
-    namespace[name] = ( namespace[name] || 0 ) + 1;
+    // namespace[name] = null;
     return [ "name", name ];
 }
 
