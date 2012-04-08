@@ -19,19 +19,14 @@ sil = {};
 // 2.  See also LCOMP, ACOMPC, AEQL, AEQLC, and AEQLIC.
 sil.ACOMP = function ($DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC) {
     // address comparison
-    var next;
     switch (($DESCR1.addr - $DESCR2.addr) >> 31) {
     case 1:
-        next = $GTLOC;
-        break;
+        return $GTLOC;
     case -1:
-        next = $LTLOC;
-        break;
+        return $LTLOC;
     case 0:
-        next = $EQLOC;
-        break;
+        return $EQLOC;
     }
-    if (next !== null) p = next;
 };
 
 //     ACOMPC is used  to  compare  the  address  field  of  a
@@ -50,19 +45,14 @@ sil.ACOMP = function ($DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC) {
 // 4.  See also ACOMP, AEQL, AEQLC, and AEQLIC.
 sil.ACOMPC = function ($DESCR, $N, $GTLOC, $EQLOC, $LTLOC) {
     // address comparison with constant
-    var next;
     switch (($DESCR - $N) >> 31) {
     case 1:
-        next = $GTLOC;
-        break;
+        return $GTLOC;
     case -1:
-        next = $LTLOC;
-        break;
+        return $LTLOC;
     case 0:
-        next = $EQLOC;
-        break;
+        return $EQLOC;
     }
-    if (next !== null) p = next;
 };
 
 //     ADDLG is used to add an integer  to  the  length  of  a
@@ -209,14 +199,12 @@ sil.ADJUST = function ($DESCR1, $DESCR2, $DESCR3) {
 sil.ADREAL = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
     // add real numbers
     // TODO: this is *real*
-    var next, sum = $DESCR2.val + $DESCR3.val;
+    var sum = $DESCR2.val + $DESCR3.val;
     if (sum === (sum & sum)) {
         $DESCR1.val = sum;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     AEQL is used to  compare  the  address  fields  of  two
@@ -235,8 +223,7 @@ sil.ADREAL = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
 // 2.  See  also VEQL, AEQLC, LEQLC, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
     // addresses equal test
-    var next = $DESCR.addr === $DESCR2.addr ? $EQLOC : $NELOC;
-    if (next !== null) p = next;
+    return $DESCR.addr === $DESCR2.addr ? $EQLOC : $NELOC;
 };
 
 //     AEQLC is  used  to  compare  the  address  field  of  a
@@ -254,8 +241,7 @@ sil.AEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
 // 4.  See also LEQLC, AEQL, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
     // address equal to constant test
-    var next = $DESCR.addr === $N ? $EQLOC : $NELOC;
-    if (next !== null) p = next;
+    return $DESCR.addr === $N ? $EQLOC : $NELOC;
 };
 
 //     AEQLIC  is  used  to  compare  an  indirectly specified
@@ -277,10 +263,11 @@ sil.AEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
 // 4.  See also AEQL, AEQLC, LEQLC, ACOMP, and ACOMPC.
 sil.AEQLIC = function ($DESCR, $N1, $N2, $NELOC, $EQLOC) {
     // address equal to constant indirect test
-    ok($N1 === 0);
-    var $A2 = $DESCR.addr + $N1,
-        next = $A2 === $N2 ? $EQLOC : $NELOC;
-    if (next !== null) p = next;
+    // ok($N1 === 0);
+    // var $A2 = $DESCR.addr + $N1,
+    //     next = $A2 === $N2 ? $EQLOC : $NELOC;
+    // if (next !== null) p = next;
+    return;
 };
 
 //     APDSP is used to append one specified string to another
@@ -402,8 +389,8 @@ sil.BRANCH = function ($LOC, $PROC) {
 // 1.  N is always zero
 sil.BRANIC = function ($DESCR, $N) {
     // branch indirect with offset constant
-    ok($N === 0);
-    p = $DESCR.addr + $N;
+    // ok($N === 0);
+    return $DESCR.addr + $N;
 };
 
 //     BUFFER  is used to assemble a string of N blank charac-
@@ -552,11 +539,12 @@ sil.CLERTB = function (TABLE,KEY) {
 // other machine-dependent data.
 sil.COPY = function ($FILE) {
     // copy file into assembly
-    for (attr in $FILE) {
-        if ($FILE.hasOwnAtrribute(attr)) {
-            window[attr] = $FILE[attr];
-        }
-    }
+    // for (attr in $FILE) {
+    //     if ($FILE.hasOwnAtrribute(attr)) {
+    //         window[attr] = $FILE[attr];
+    //     }
+    // }
+    return;
 };
 
 //     CPYPAT is used to copy a pattern.  First set
@@ -701,15 +689,13 @@ sil.DECRA = function ($DESCR, $N) {
 // transfer to EQLOC.
 sil.DEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
     // descriptor equal test
-    var next;
     if ($DESCR1.addr === $DESCR2.addr &&
         $DESCR1.flags === $DESCR2.flags &&
         $DESCR1.val === $DESCR2.val) {
-        next = $EQLOC;
+        return $EQLOC;
     } else {
-        next = $NELOC;
+        return $NELOC;
     }
-    if (next !== null) p = next;
 };
 
 //     DESCR  assembles  a  descriptor with specified address,
@@ -746,15 +732,11 @@ sil.DESCR = function (A,F,V) {
 // 1.  A may be a relocatable address.
 sil.DIVIDE = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
     // divide integers
-    var next;
-
     if ($DESCR3.addr !== 0) {
         $DESCR1.addr = ($DESCR2.addr / $DESCR3.addr) >> 0;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     DVREAL  is  used  to divide one real number by another.
@@ -831,7 +813,7 @@ sil.ENFILE = function ($DESCR) {
 // to SYMBOL.
 sil.EQU = function ($N) {
     // define symbol equivalence
-    return $N;
+    d[this] = $N;
 };
 
 //     EXPINT is used to raise an integer to an integer power.
@@ -851,14 +833,12 @@ sil.EQU = function ($N) {
 //               +------------------------+
 sil.EXPINT = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
     // exponentiate integers
-    var next, res = Math.pow($DESCR2.addr, $DESCR3.addr);
+    var res = Math.pow($DESCR2.addr, $DESCR3.addr);
     if (res === (res & res)) {
         $DESCR1.addr = res;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     EXREAL is used to raise a real number to a real  power.
@@ -1335,7 +1315,7 @@ sil.LEXCMP = function (SPEC1,SPEC2,GTLOC,EQLOC,LTLOC) {
 //      LOC  OP
 sil.LHERE = function () {
     // define location here
-    return;
+    d[this] = ip + 1;
 };
 
 //     LINK is used to link to an external function.  A2 is  a
@@ -1683,14 +1663,12 @@ sil.MNREAL = function ($DESCR1, $DESCR2) {
 // 2.  See also MNREAL.
 sil.MNSINT = function ($DESCR1, $DESCR2, $FLOC, $SLOC) {
     // minus integer
-    var next, opposite = $DESCR2.addr * -1
+    var opposite = $DESCR2.addr * -1;
     if (opposite === (opposite & opposite)) {
         $DESCR1.addr = opposite;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     MOVA is used to move an address field from one descrip-
@@ -1858,14 +1836,12 @@ sil.MSTIME = function ($DESCR) {
 // 3.  See also MULTC and DIVIDE.
 sil.MULT = function (DESCR1, DESCR2, DESCR3, FLOC, SLOC) {
     // multiply integers
-    var next, product = $DESC2.addr * $DESCR3.addr;
+    var product = $DESC2.addr * $DESCR3.addr;
     if (product === (product & product)) {
         $DESCR1.addr = product;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     MULTC is used to multiply an integer by a constant.
@@ -3156,14 +3132,12 @@ sil.SUBSP = function (SPEC1,SPEC2,SPEC3,FLOC,SLOC) {
 // 4.  See also SUM.
 sil.SUBTRT = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
     // subtract addresses
-    var next, diff = $DESC2.addr - $DESCR3.addr;
+    var diff = $DESC2.addr - $DESCR3.addr;
     if (diff === (diff & sum)) {
         $DESCR1.addr = diff;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     SUM  is  used  to  add two address fields.  A and I are
@@ -3190,14 +3164,12 @@ sil.SUBTRT = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
 // 4.  See also SUBTRT.
 sil.SUM = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
     // sum addresses
-    var next, sum = $DESC2.addr + $DESCR3.addr;
+    var sum = $DESC2.addr + $DESCR3.addr;
     if (sum === (sum & sum)) {
         $DESCR1.addr = sum;
-        next = $SLOC;
-    } else {
-        next = $FLOC;
+        return $SLOC;
     }
-    if (next !== null) p = next;
+    return $FLOC;
 };
 
 //     TESTF is used to test a flag field for the presence  of
@@ -3211,9 +3183,7 @@ sil.SUM = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
 // 1.  See also TESTFI.
 sil.TESTF = function ($DESCR, $FLAG, $FLOC, $SLOC) {
     // test flag
-    var next ($DESCR.flags & $FLAG) ? $SLOC : $FLOC;
-    if (next !== null) p = next;
-    return;
+    return ($DESCR.flags & $FLAG) ? $SLOC : $FLOC;
 };
 
 //     TESTFI is used to test  an  indirectly  specified  flag
@@ -3397,8 +3367,7 @@ sil.VEQL = function (DESCR1,DESCR2,NELOC,EQLOC) {
 // 2.  See also AEQLC and VEQL.
 sil.VEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
     // value field equal to constant test
-    var next = $DESCR.val === $N ? $EQLOC : $NELOC;
-    if (next !== null) p = next;
+    return $DESCR.val === $N ? $EQLOC : $NELOC;
 };
 
 //     ZERBLK is used to zero a block of I+1 descriptors.
