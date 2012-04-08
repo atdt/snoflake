@@ -4,71 +4,55 @@
 
 {
     var TYPE = 0, VALUE = 1,
-        counter = 0, namespace = {};
+        namespace = {};
 }
 
 program
-  = statements:(statement / comment)+ end
+  = statements:statement+ end
 {
-    var statement, constants = [], stack = [], identifiers = [], declare;
+    var stack = [ "stack", [ "array", statements ] ],
+        identifiers = [],
+        declare = [ "var", identifiers ],
+        i = 0;
 
-    // Filter out comments
-    statements = statements.filter(function (s) {
-        return s[TYPE] === 'array';
-    });
+    for ( name in namespace )
+        identifiers.push([ name, [ "num", i++ ] ]);
 
-        
-    // Construct a JavaScript array representing a call stack
-    stack = [ "stack", [ "array", statements ] ];
-
-    // Enumerate other identifiers to declare
-    for ( name in namespace ) {
-        identifiers.push([ name, namespace[ name ] ]);
-    }
     identifiers.push(stack);
-    declare = [ "var", identifiers ];
 
     return [ "toplevel", [ declare ] ];
 }
 
 
-comment
-  = '*' comment:[^\n]* '\n'
-{
-    return [ "comment2", comment.join('') ];
-}
-
-statement
-  = label:(name:name? { return name || [ "name", "null" ] })
+statement "statement"
+  = comment2* 
+    label:( name:name? { return name || [ "name", "null" ] } )
     blank
-    oper:name
+    oper:macro
     blank
     operands:operands
     blank?
-    comment:(comment:[^\n]* { return [ "comment1", comment.join('') ]; })
+    comment1?
     '\n'
 {
-    var identifier = label[VALUE];
-
-    if (identifier !== "null") {
-        switch (oper[VALUE]) {
-        case 'EQU':
-            namespace[identifier] = operands[VALUE][0];
-            break;
-        case 'LHERE':
-            namespace[identifier] = [ "num", counter + 1 ];
-            break;
-        default:
-            namespace[identifier] = [ "num", counter ];
-            break;
-        }
-    }
-    counter++;
-
+    oper[TYPE] = "string";
     return [ "array", [ oper, operands, label ] ];
 }
 
-operands
+
+comment1 "trailing comment"
+  = comment:[^\n]*
+{
+    return [ "comment1", comment.join('') ];
+}
+
+comment2 "multi-line comment"
+  = lines:( '*' comment:[^\n]* '\n' { return comment.join(''); } )+
+{
+    return [ "comment2", lines.join('\n') ];
+}
+
+operands "operands"
   = head:variable tail:(',' variable)*
 {
     var result = [head];
@@ -87,7 +71,7 @@ variable
   / &(',') { return [ "name", "null" ]; }
 
 
-expr
+expr "expression"
   = left:(integer / name) operator:[*+-] right:(integer / name)
 {
     return [ "binary", operator, left, right ];
@@ -107,7 +91,7 @@ integer "integer"
     return [ "num", num ];
 }
 
-list "operand list"
+list "list operand"
   = '('
     head:variable
     tail:(',' v:variable { return v; })*
@@ -132,8 +116,15 @@ name "name"
 {
     var name = head + tail.join('');
 
-    // namespace[name] = null;
+    namespace[name] = null;
     return [ "name", name ];
+}
+
+macro "macro"
+  = head:[A-Z] tail:[A-Z0-9]*
+{
+    var macro = head + tail.join('');
+    return [ "string", macro ];
 }
 
 end

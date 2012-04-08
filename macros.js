@@ -3342,6 +3342,7 @@ sil.UNLOAD = function (SPEC) {
 //               +---------------------------------------+
 sil.VARID = function (DESCR,SPEC) {
     // compute variable identification numbers
+    // .split('').reverse().join('');
     return;
 };
 
