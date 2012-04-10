@@ -5,6 +5,12 @@
 {
     var TYPE = 0, VALUE = 1,
         namespace = {};
+
+    // Given a JavaScript AST representing some value, return a modified AST
+    // representing an anonymous function that returns that value.
+    var deferred = function (value) {
+        return [ "function", null, [], [ [ "return", value ] ] ]
+    }
 }
 
 program
@@ -15,8 +21,10 @@ program
         declare = [ "var", identifiers ],
         i = 0;
 
-    for ( name in namespace )
-        identifiers.push([ name, [ "num", i++ ] ]);
+    for ( name in namespace ) {
+        identifiers.push([ name, [ "num", i ] ]);
+        i = i + 100;
+    }
 
     identifiers.push(stack);
 
@@ -59,7 +67,7 @@ operands "operands"
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return [ "array", result ];
+    return defer([ "array", result ]);
 }
 
 variable
