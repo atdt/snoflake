@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+/* vim: set ft=javascript: */
+
+(function (args) {
+    "use strict";
+
+    console.json = function () {
+        var jargs = Array.prototype.map.call(arguments, JSON.stringify);
+        console.log.apply(console, jargs);
+    };
+
+    var fs = require('fs'),
+        peg = require('pegjs'),
+        uglify = require('uglify-js'),
+        grammar = fs.readFileSync('sil.peg', 'utf-8'),
+        sil = peg.buildParser(grammar),
+        js = {
+            generate : uglify.uglify.gen_code.bind(uglify.uglify),
+            parse    : uglify.parser.parse.bind(uglify.parser)
+        };
+
+    if (args[0] === '--js') {
+        /* output ast for a snippet of javascript code */
+        console.json(js.parse(args[1]));
+        return 0;
+    }
+
+    args.forEach(function (infile) {
+        var src = fs.readFileSync(infile, 'utf-8'),
+            ast = sil.parse(src),
+            code = js.generate(ast, {
+                beautify     : true,
+                indent_level : 4,
+                space_colon  : true
+            });
+        console.log(code);
+    });
+
+}(process.argv.slice(2)));
