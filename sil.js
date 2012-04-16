@@ -1,3 +1,7 @@
+function signOf(x) {
+    return x > 0 ? 1 : (x >> 31);
+}
+
 sil = {};
 
 
@@ -19,7 +23,7 @@ sil = {};
 // 2.  See also LCOMP, ACOMPC, AEQL, AEQLC, and AEQLIC.
 sil.ACOMP = function ($DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC) {
     // address comparison
-    switch (($DESCR1.addr - $DESCR2.addr) >> 31) {
+    switch (signOf($DESCR1.addr - $DESCR2.addr)) {
     case 1:
         return $GTLOC;
     case -1:
@@ -45,7 +49,7 @@ sil.ACOMP = function ($DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC) {
 // 4.  See also ACOMP, AEQL, AEQLC, and AEQLIC.
 sil.ACOMPC = function ($DESCR, $N, $GTLOC, $EQLOC, $LTLOC) {
     // address comparison with constant
-    switch (($DESCR - $N) >> 31) {
+    switch (signOf($DESCR - $N)) {
     case 1:
         return $GTLOC;
     case -1:
@@ -177,6 +181,7 @@ sil.ADDSON = function ($DESCR1, $DESCR2) {
 // 1.  A3 is always an address integer.
 sil.ADJUST = function ($DESCR1, $DESCR2, $DESCR3) {
     // compute adjusted address
+    // alloc[$DESCR2.value]
     return;
 };
 
@@ -869,7 +874,7 @@ sil.EXREAL = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
 // Programming Notes:
 // 1.  The characters assembled by FORMAT  are  treated  as  an
 // `undigested' format by FORTRAN IV routines.
-sil.FORMAT = function ('C1...CL') {
+sil.FORMAT = function () { // 'C1...CL') {
     // assemble format string
     return;
 };
@@ -955,9 +960,13 @@ sil.GETBAL = function (SPEC,DESCR,FLOC,SLOC) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also GETDC, PUTD, and PUTDC.
-sil.GETD = function (DESCR1,DESCR2,DESCR3) {
+sil.GETD = function ($DESCR1, $DESCR2, $DESCR3) {
     // get descriptor
-    return;
+    var descriptor = alloc.get($DESCR2.addr + $DESCR3.addr);
+
+    $DESCR1.addr = descriptor.addr;
+    $DESCR1.flags = descriptor.flags;
+    $DESCR1.val = descriptor.val;
 };
 
 //     GETDC  is  used to get a descriptor with an offset con-
@@ -1952,7 +1961,7 @@ sil.ORDVST = function () {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also STPRNT.
-sil.OUTPUT = function (DESCR,FORMAT,(DESCR1,...,DESCRN)) {
+sil.OUTPUT = function () { // (DESCR,FORMAT,(DESCR1,...,DESCRN)) {
     // output record
     return;
 };
@@ -2037,7 +2046,7 @@ sil.PLUGTB = function (TABLE,KEY,SPEC) {
 // diagnostic  message  indicating  an error may be obtained by
 // transferring to the program location INTR10 if the condition
 // is detected.
-sil.POP = function ((DESCR1,...,DESCRN)) {
+sil.POP = function () { // ((DESCR1,...,DESCRN)) {
     // pop descriptors from stack
     return;
 };
@@ -2108,7 +2117,7 @@ sil.PSTACK = function (DESCR) {
 // Transfer  should be made to the program location OVER, which
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
-sil.PUSH = function ((DESCR1,...,DESCRN)) {
+sil.PUSH = function () { //((DESCR1,...,DESCRN)) {
     // push descriptors onto stack
     return;
 };
@@ -2322,7 +2331,7 @@ sil.PUTVC = function (DESCR1,N,DESCR2) {
 // flag fields  of  descriptors  used  to  save  program  state
 // information must be set to zero.
 // 9.  See also SELBRA.
-sil.RCALL = function (DESCR,PROC,(DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
+sil.RCALL = function () { // (DESCR,PROC,(DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
     return;
 };
@@ -2587,7 +2596,7 @@ sil.SBREAL = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
 // 3.  I is always in the range 1 <= I <= N+1.   For  debugging
 // purposes,  it  may be useful to verify that I is within this
 // range.
-sil.SELBRA = function (DESCR,(LOC1,...,LOCN)) {
+sil.SELBRA = function () { // (DESCR,(LOC1,...,LOCN)) {
     // select branch point
     return;
 };
@@ -2847,7 +2856,7 @@ sil.SPEC = function (A,F,V,O,L) {
 // termination  for  this error may be obtained by transferring
 // to the program location INTR10 if the condition is detected.
 // 2.  See also POP, SPUSH, and PUSH.
-sil.SPOP = function ((SPEC1,...,SPECN)) {
+sil.SPOP = function () { // ((SPEC1,...,SPECN)) {
     // pop specifier from stack
     return;
 };
@@ -2916,7 +2925,7 @@ sil.SPREAL = function (DESCR,SPEC,FLOC,SLOC) {
 // Transfer should be made to the program location OVER,  which
 // will result in an appropriate error termination.
 // 2.  See also PUSH, POP, and SPOP.
-sil.SPUSH = function ((SPEC1,...,SPECN)) {
+sil.SPUSH = function () { // ((SPEC1,...,SPECN)) {
     // push specifiers onto stack
     return;
 };
@@ -3084,7 +3093,7 @@ sil.STREAM = function (SPEC1,SPEC2,TABLE,ERROR,RUNOUT,SLOC) {
 // 1.  Note that LOC is the location of the specifier, not  the
 // string.  The string may immediately follow the specifier, or
 // it may be assembled at a remote location.
-sil.STRING = function ('C1...CL') {
+sil.STRING = function () { // ('C1...CL') {
     // assemble specified string
     return;
 };
@@ -3390,8 +3399,11 @@ sil.VEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  I is always positive.
-sil.ZERBLK = function (DESCR1,DESCR2) {
+sil.ZERBLK = function ($DESCR1, $DESCR2) {
     // zero block
     return;
 };
 
+if (typeof module != 'undefined' && module.exports) {
+    module.exports = sil;
+}
