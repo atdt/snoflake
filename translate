@@ -29,7 +29,7 @@
         var src = fs.readFileSync(infile, 'utf-8'),
             ast = sil.parse(src),
             code = js.generate(ast, {
-                beautify     : true,
+                beautify     : false,
                 indent_level : 4,
                 space_colon  : true
             });

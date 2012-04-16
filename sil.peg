@@ -3,13 +3,10 @@
 // Released under GPL and MIT licenses
 
 {
-    var TYPE = 0, VALUE = 1,
-        namespace = {};
-
-    // Given a JavaScript AST representing some value, return a modified AST
-    // representing an anonymous function that returns that value.
-    var deferred = function (value) {
-        return [ "function", null, [], [ [ "return", value ] ] ]
+    var enclose = function (value) {
+        return [ "function", null, [], [ 
+            [ "return", value ]
+        ] ]
     }
 }
 
@@ -18,13 +15,7 @@ program
 {
     var stack = [ "stack", [ "array", statements ] ],
         identifiers = [],
-        declare = [ "var", identifiers ],
-        i = 0;
-
-    for ( name in namespace ) {
-        identifiers.push([ name, [ "num", i ] ]);
-        i = i + 100;
-    }
+        declare = [ "var", identifiers ];
 
     identifiers.push(stack);
 
@@ -34,7 +25,16 @@ program
 
 statement "statement"
   = comment2* 
-    label:( name:name? { return name || [ "name", "null" ] } )
+    label:(
+        name:name?
+        {
+            if (name.length) {
+                return [ "string", name.pop() ];
+            } else {
+                return [ "name", "null" ];
+            }
+        }
+    )
     blank
     oper:macro
     blank
@@ -43,7 +43,6 @@ statement "statement"
     comment1?
     '\n'
 {
-    oper[TYPE] = "string";
     return [ "array", [ oper, operands, label ] ];
 }
 
@@ -67,7 +66,7 @@ operands "operands"
     for (var i = 0, max = tail.length; i < max; i++) {
         result.push(tail[i][1]);
     }
-    return defer([ "array", result ]);
+    return enclose( [ "array", result ] );
 }
 
 variable
@@ -123,16 +122,14 @@ name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var name = head + tail.join('');
-
-    namespace[name] = null;
-    return [ "name", name ];
+    return [ "dot", [ "name", "rdata" ], name ];
 }
 
 macro "macro"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var macro = head + tail.join('');
-    return [ "string", macro ];
+    return [ "dot", [ "name", "sil" ], macro ]
 }
 
 end

@@ -7,9 +7,10 @@
 (function () {
     "use strict";
 
+    var sil = require('./macros.js');
     // << compiled SIL gets inlined here >>
-    var BEGIN = 0, ATTRIB = 1, DESCR = 2, T = 3, stack = [ [ "TITLE", [ "Program Initialization" ], null ], [ "INIT", [ null ], BEGIN ], [ "EQU", [ 2 * DESCR ], ATTRIB ], [ "EQU", [ 5 ], T ], [ "ISTACK", [ null ], null ] ];
 
+    console.log(sil);
     var end = stack.length,
         sil = {},
         frame = [],
