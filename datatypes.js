@@ -13,7 +13,7 @@
         global = module.exports;
     }
 
-    // Parses an unsigned, 32-bit integer as an IEEE 754 single.
+    // Parses an unsigned, 32-bit integer as an IEEE 754 binary32.
     global.asFloat32 = function (n) {
         uint32a[0] = n;
         return n === uint32a[0]
@@ -21,12 +21,18 @@
             : NaN;
     };
 
-    // Parses an IEEE 754 single as an unsigned, 32-bit integer.
+    // Parses an IEEE 754 binary32 as an unsigned, 32-bit integer.
     global.asUint32 = function (r) {
         float32a[0] = r;
         return r === float32a[0]
             ? uint32a[0]
             : NaN;
+    };
+
+    global.isUint32 = function (n) {
+        // return n === 0 || n === n >>> 0;
+        uint32a[0] = n;
+        return uint32a[0] === n;
     };
 
     global.encodeString = function (s) {
@@ -63,7 +69,5 @@
 
         return String.fromCharCode.apply(null, codes);
     };
-
-
 
 }(this));
