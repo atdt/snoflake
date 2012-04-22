@@ -4,39 +4,42 @@
 
 /*jslint plusplus: true */
 
-(function () {
-    "use strict";
+"use strict";
 
-    var sil = require('./macros.js');
-    // << compiled SIL gets inlined here >>
+var ip = 0,
+    labels = {},
+    d = {},
+    sil = require('./sil.js'),
+    stack = require('./v311.js');
 
-    console.log(sil);
-    var end = stack.length,
-        sil = {},
-        frame = [],
-        ip = 0, // instruction pointer
-        d = [];
+function jmp(dest) {
+    ip = isNaN(dest) ? labels[dest] : dest;
+}
 
-    var op, operands, dest;
-    // << macro defn's go here >>
+function exec (label, oper, getOperands) {
+    var next = op.apply(label, getOperands());
 
-    function exec(macro, operands, dest) {
-        var next, f = sil[macro];
-
-        if (dest !== null) {
-            d[dest] = ip;
-        }
-
-        next = f.apply(dest, operands.map(function (p) {
-            return d[p];
-        }));
-
-        return typeof next !== 'undefined' ? next : ip + 1;
+    if (label !== null) {
+        labels[label] = ip;
     }
 
+    if (typeof next === 'undefined') {
+        next = ip + 1;
+    }
+
+    return next;
+}
+
+function run (stack) {
+    var end = stack.length,
+        frame = [];
+
     do {
-        frame = stack[ip];
+        frame = stack[ip++];
         ip = exec.apply(null, frame);
     } while (ip < end);
 
-}());
+    return 0;
+}
+
+run(stack);

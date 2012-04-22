@@ -6,7 +6,6 @@
 
 "use strict";
 
-
 function SnoMachine(callstack) {
 
     var next_instruction = 0,
@@ -24,4 +23,3 @@ function SnoMachine(callstack) {
 
 };
 
-function Descriptor() {
