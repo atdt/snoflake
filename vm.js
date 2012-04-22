@@ -1,6 +1,8 @@
+//
 // SIL Virtual Machine
 // (C) Copyright 2012 by Ori Livneh
 // Released under GPL and MIT licenses
+//
 
 /*jslint plusplus: true */
 
