@@ -17,7 +17,7 @@
             : NaN;
     };
 
-    // Parses an IEEE 754 single as an unsigned, 32-bit integer
+    // Parses an IEEE 754 single as an unsigned, 32-bit integer.
     global.asUint32 = function (r) {
         float32a[0] = r;
         return r === float32a[0]
