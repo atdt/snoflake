@@ -1,0 +1,9 @@
+       TITLE   'Program Initialization'
+BEGIN  INIT    ,		   Initialize system
+* This is a comment
+* And so it continues
+* la di da
+ATTRIB EQU     2*DESCR		   Offset of label in string structure
+T      EQU     5		   TABLE
+       ISTACK  ,		   Initialize stack
+       END
