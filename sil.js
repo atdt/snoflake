@@ -301,7 +301,7 @@ sil.AEQLIC = function ($DESCR, $N1, $N2, $NELOC, $EQLOC) {
 // 1.  If L1 = 0, C21 is placed at A1+O1.
 // 2.  The  storage  following  C1L1  is  always  adequate  for
 // C21...C2L2.
-sil.APDSP = function (SPEC1,SPEC2) {
+sil.APDSP = function ($SPEC1, $SPEC2) {
     // append specifier
     return;
 };
@@ -320,8 +320,11 @@ sil.APDSP = function (SPEC1,SPEC2) {
 // Programming Notes:
 // 1.  All fields of all descriptors assembled by ARRAY must be
 // zero when program execution begins.
-sil.ARRAY = function (N) {
+sil.ARRAY = function ($N) {
     // assemble array of descriptors
+    while (N--) {
+        heap.push(0, 0, 0);
+    }
     return;
 };
 
@@ -3220,7 +3223,7 @@ sil.TESTFI = function (DESCR,FLAG,FLOC,SLOC) {
 // perform no operation.
 sil.TITLE = function ($MSG) {
     // title assembly listing
-    console.debug($MSG);
+    console.log($MSG);
 };
 
 //     TOP  is  used  to get to the top of a block of descrip-

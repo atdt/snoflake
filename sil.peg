@@ -43,7 +43,7 @@ statement "statement"
     comment1?
     '\n'
 {
-    return [ "array", [ oper, operands, label ] ];
+    return [ "array", [ label, oper, operands ] ];
 }
 
 
@@ -122,7 +122,7 @@ name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var name = head + tail.join('');
-    return [ "dot", [ "name", "rdata" ], name ];
+    return [ "dot", [ "name", "d" ], name ];
 }
 
 macro "macro"
