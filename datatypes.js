@@ -9,6 +9,10 @@
         uint32a  = new Uint32Array(buffer),
         BOM      = '\uFEFF'; // Byte order mark
 
+    if (typeof module !== 'undefined' && module.exports) {
+        global = module.exports;
+    }
+
     // Parses an unsigned, 32-bit integer as an IEEE 754 single.
     global.asFloat32 = function (n) {
         uint32a[0] = n;
@@ -59,4 +63,7 @@
 
         return String.fromCharCode.apply(null, codes);
     };
+
+
+
 }(this));
