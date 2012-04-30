@@ -6,6 +6,7 @@
 
     var buffer   = new ArrayBuffer(4),
         float32a = new Float32Array(buffer),
+        int32a   = new Int32Array(buffer),
         uint32a  = new Uint32Array(buffer),
         BOM      = '\uFEFF'; // Byte order mark
 
@@ -13,26 +14,50 @@
         global = module.exports;
     }
 
-    // Parses an unsigned, 32-bit integer as an IEEE 754 binary32.
-    global.asFloat32 = function (n) {
+    // Signed Integers
+
+    global.encodeInt = function (n) {
+        int32a[0] = n;
+        return uint32a[0];
+    };
+
+    global.decodeInt = function (n) {
+        uint32a[0] = n;
+        return n === uint32a[0]
+            ? int32a[0]
+            : NaN;
+    };
+
+    // Floats
+
+    global.encodeFloat = function (r) {
+        float32a[0] = r;
+        return uint32a[0];
+    };
+
+    global.decodeFloat = function (n) {
         uint32a[0] = n;
         return n === uint32a[0]
             ? float32a[0]
             : NaN;
     };
 
-    // Parses an IEEE 754 binary32 as an unsigned, 32-bit integer.
-    global.asUint32 = function (r) {
-        float32a[0] = r;
-        return r === float32a[0]
-            ? uint32a[0]
-            : NaN;
-    };
 
-    global.isUint32 = function (n) {
-        // return n === 0 || n === n >>> 0;
+    // Data Validation
+
+    global.isValidUint = function (n) {
         uint32a[0] = n;
         return uint32a[0] === n;
+    };
+
+    global.isValidInt = function (n) {
+        int32a[0] = n;
+        return int32a[0] === n;
+    };
+
+    global.isValidFloat = function (n) {
+        float32a[0] = n;
+        return float32a[0] === n;
     };
 
     global.encodeString = function (s) {

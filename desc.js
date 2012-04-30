@@ -1,26 +1,19 @@
-function AssertException(message) {
-    this.message = message;
-}
-
-AssertException.prototype.toString = function () {
-      return 'AssertException: ' + this.message;
-};
-
-function assert(exp, message) {
-    if (!exp) {
-        throw new AssertException(message);
+function assert(expr, msg) {
+    if (!expr) {
+        console.error('Assertion error: ' + msg);
     }
 }
 
 if (typeof require !== 'undefined') {
     var datatypes = require('./datatypes.js'),
-        asFloat32 = datatypes.asFloat32,
-        asUint32 = datatypes.asUint32,
-        isUint32 = datatypes.isUint32,
+        decodeFloat = datatypes.decodeFloat,
+        encodeFloat = datatypes.encodeFloat,
+        encodeInt = datatypes.encodeInt,
+        decodeInt = datatypes.decodeInt,
+        isValidUint = datatypes.isValidUint,
         encodeString = datatypes.encodeString,
         decodeString = datatypes.decodeString;
 }
-
 
 var heap = [];
 
@@ -29,25 +22,51 @@ function Descriptor(offset) {
         return new Descriptor(offset);
     }
 
-    this.offset = typeof offset !== 'undefined'
-        ? offset
-        : heap.length;
+    if (typeof offset !== undefined) {
+        this.offset = offset;
+    } else {
+        this.offset = heap.length;
+        heap.push(0, 0, 0);
+    }
 }
 
-Descriptor.prototype.getAddress = function () {
-    return heap[this.offset];
-};
+Descriptor.prototype = Object.create(null, {
 
-Descriptor.prototype.getAddressReal = function () {
-    return asFloat32(heap[this.offset]);
-};
+    addr: {
+        get: function () {
+            return heap[this.offset];
+        },
+        set: function (n) {
+            assert(isValidUint(n), 'overflow');
+            heap[this.offset] = n;
+        }
+    },
 
-Descriptor.prototype.setAddress = function (n) {
-    assert(isUint32(n), 'overflow');
-    heap[this.offset] = n;
-};
+    r_addr: {
+        get: function () {
+            return decodeFloat( heap[ this.offset ] );
+        },
+        set: function (n) {
+            this.addr = encodeFloat(n);
+        }
+    },
 
-Descriptor.prototype.setAddressReal = function (n) {
-    this.setAddress(asUint32(n));
-};
+    flags: {
+        get: function () {
+            return heap[this.offset + 1];
+        },
+        set: function (n) {
+            heap[this.offset + 1] = n;
+        }
+    },
 
+    value: {
+        get: function () {
+            return heap[this.offset + 2];
+        },
+        set: function (n) {
+            assert(isValidUint(n), 'overflow');
+            heap[this.offset] = n;
+        }
+    }
+});
