@@ -11,6 +11,7 @@ if (typeof require !== 'undefined') {
         encodeInt = datatypes.encodeInt,
         decodeInt = datatypes.decodeInt,
         isValidUint = datatypes.isValidUint,
+        isValidInt = datatypes.isValidInt,
         encodeString = datatypes.encodeString,
         decodeString = datatypes.decodeString;
 }
@@ -23,8 +24,10 @@ function Descriptor(offset) {
     }
 
     if (typeof offset !== undefined) {
+        // Load a descriptor by address
         this.offset = offset;
     } else {
+        // Allocate a new descriptor
         this.offset = heap.length;
         heap.push(0, 0, 0);
     }
@@ -34,11 +37,11 @@ Descriptor.prototype = Object.create(null, {
 
     addr: {
         get: function () {
-            return heap[this.offset];
+            return decodeInt( heap[this.offset] );
         },
         set: function (n) {
-            assert(isValidUint(n), 'overflow');
-            heap[this.offset] = n;
+            assert(isValidInt(n), 'overflow');
+            heap[this.offset] = encodeInt(n);
         }
     },
 
@@ -47,7 +50,8 @@ Descriptor.prototype = Object.create(null, {
             return decodeFloat( heap[ this.offset ] );
         },
         set: function (n) {
-            this.addr = encodeFloat(n);
+            assert(isValidFloat(n), 'overflow');
+            heap[this.offset] = encodeFloat(n);
         }
     },
 
