@@ -1,5 +1,6 @@
 /* MDATA */
 
+// Constructs a string representing all code points in UTF-16
 function getCharacterSet() {
     var charset = [];
     for (var i = 0x0; i < 0x10000; i++)
