@@ -19,7 +19,7 @@ function Memory() {
     // Allocate and zero-fill `size` words
     this.malloc = function (size) {
         var ptr = data.length;
-        while (size--) {
+        while ( size-- ) {
             data.push(0);
         }
         return ptr;
@@ -33,8 +33,8 @@ function Memory() {
 
     this.setUint = function (ptr, value) {
         uint32a[0] = value;
-        if (uint32a[0] !== value) {
-            throw new TypeError("Invalid unsigned integer " + value);
+        if ( uint32a[0] !== value ) {
+            throw new TypeError( "Invalid unsigned integer " + value );
         }
         data[ptr] = uint32a[0];
     };
@@ -48,8 +48,8 @@ function Memory() {
 
     this.setInt = function (ptr, value) {
         int32a[0] = value;
-        if (int32a[0] !== value) {
-            throw new TypeError("Invalid integer " + value);
+        if ( int32a[0] !== value ) {
+            throw new TypeError( "Invalid integer " + value );
         }
         data[ptr] = uint32a[0];
     };
@@ -63,61 +63,74 @@ function Memory() {
 
     this.setReal = function (ptr, value) {
         float32a[0] = value;
-        if (Math.abs(float32a[0] - value) > 1) {
-            throw new TypeError("Invalid real " + value);
+
+        if ( Math.abs(float32a[0] - value) > 1 ) {
+            throw new TypeError( "Invalid real " + value );
         }
         data[ptr] = uint32a[0];
     };
+
+    Object.freeze( this );
 }
 
 var mem = new Memory();
 
-function Descriptor(offset) {
-    this.offset = typeof offset !== 'undefined'
-        ? offset
+function Descriptor(ptr) {
+    this.ptr = typeof ptr !== 'undefined'
+        ? ptr
         : mem.malloc(3);
+    Object.seal( this );
 }
 
-function Specifier(offset) {
-    this.offset = typeof offset !== 'undefined'
-        ? offset
+Descriptor.load = function (ptr) {
+    return new Descriptor( ptr );
+};
+
+function Specifier(ptr) {
+    this.ptr = typeof ptr !== 'undefined'
+        ? ptr
         : mem.malloc(6);
+    Object.seal( this );
 }
 
-Descriptor.prototype = Object.create(null, {
+Specifier.load = function (ptr) {
+    return new Specifier( ptr );
+};
+
+Descriptor.prototype = Object.create( null, {
 
     addr: {
-        get: function ()  { return mem.getInt( this.offset ); },
-        set: function (n) { mem.setInt( this.offset, n ); }
+        get: function ()  { return mem.getInt( this.ptr ); },
+        set: function (n) { mem.setInt( this.ptr, n ); }
     },
 
-    raddr: { /* address field as real */
-        get: function ()  { return mem.getFloat( this.offset ); },
-        set: function (n) { mem.setFloat( this.offset, n ); }
+    raddr: {
+        get: function ()  { return mem.getFloat( this.ptr ); },
+        set: function (n) { mem.setFloat( this.ptr, n ); }
     },
 
     flags: {
-        get: function ()  { return mem.getUint( this.offset + 1 ); },
-        set: function (n) { mem.setUint( this.offset + 1, n ); }
+        get: function ()  { return mem.getUint( this.ptr + 1 ); },
+        set: function (n) { mem.setUint( this.ptr + 1, n ); }
     },
 
     value: {
-        get: function ()  { return mem.getUint( this.offset + 2); },
-        set: function (n) { mem.setUint( this.offset + 2, n ); }
+        get: function ()  { return mem.getUint( this.ptr + 2); },
+        set: function (n) { mem.setUint( this.ptr + 2, n ); }
     }
 
-});
+} );
 
-Specifier.prototype = Object.create(Descriptor.prototype, {
+Specifier.prototype = Object.create( Descriptor.prototype, {
 
     offset: {
-        get: function ()  { return mem.getUint( this.offset + 3); },
-        set: function (n) { mem.setUint( this.offset + 3, n ); }
+        get: function ()  { return mem.getUint( this.ptr + 3); },
+        set: function (n) { mem.setUint( this.ptr + 3, n ); }
     },
     
     length: {
-        get: function ()  { return mem.getUint( this.offset + 4); },
-        set: function (n) { mem.setUint( this.offset + 3, 4 ); }
+        get: function ()  { return mem.getUint( this.ptr + 4); },
+        set: function (n) { mem.setUint( this.ptr + 3, 4 ); }
     }
 
-});
+} );
