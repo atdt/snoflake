@@ -1,8 +1,4 @@
-function assert(expr, msg) {
-    if (!expr) {
-        console.error('Assertion error: ' + msg);
-    }
-}
+function assert() {}; // stub
 
 if (typeof require !== 'undefined') {
     var datatypes = require('./datatypes.js'),
@@ -16,9 +12,10 @@ if (typeof require !== 'undefined') {
         decodeString = datatypes.decodeString;
 }
 
-var heap = [];
+var mem = [];
 
 function Descriptor(offset) {
+
     if (!(this instanceof Descriptor)) {
         return new Descriptor(offset);
     }
@@ -28,49 +25,57 @@ function Descriptor(offset) {
         this.offset = offset;
     } else {
         // Allocate a new descriptor
-        this.offset = heap.length;
-        heap.push(0, 0, 0);
+        this.offset = mem.length;
+        mem.push(0, 0, 0);
     }
 }
+
+Descriptor.create = function () {
+    return 'foo';
+};
+
+Descriptor.load = function () {
+    return 'load';
+};
 
 Descriptor.prototype = Object.create(null, {
 
     addr: {
         get: function () {
-            return decodeInt( heap[this.offset] );
+            return decodeInt( mem[this.offset] );
         },
         set: function (n) {
             assert(isValidInt(n), 'overflow');
-            heap[this.offset] = encodeInt(n);
+            mem[this.offset] = encodeInt(n);
         }
     },
 
     r_addr: {
         get: function () {
-            return decodeFloat( heap[ this.offset ] );
+            return decodeFloat(mem[this.offset]);
         },
         set: function (n) {
             assert(isValidFloat(n), 'overflow');
-            heap[this.offset] = encodeFloat(n);
+            mem[this.offset] = encodeFloat(n);
         }
     },
 
     flags: {
         get: function () {
-            return heap[this.offset + 1];
+            return mem[this.offset + 1];
         },
         set: function (n) {
-            heap[this.offset + 1] = n;
+            mem[this.offset + 1] = n;
         }
     },
 
     value: {
         get: function () {
-            return heap[this.offset + 2];
+            return mem[this.offset + 2];
         },
         set: function (n) {
             assert(isValidUint(n), 'overflow');
-            heap[this.offset] = n;
+            mem[this.offset] = n;
         }
     }
 });
