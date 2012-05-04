@@ -1,98 +1,123 @@
-/*jslint bitwise: true, plusplus: true */
-/*globals ArrayBuffer, Float32Array, Uint32Array */
+/*jslint white:true, vars:true, plusplus:true */
+/*jshint plusplus:false, laxbreak: true */
+/*globals ArrayBuffer, Float32Array, Int32Array, Uint32Array */
 
-(function (global) {
-    "use strict";
+"use strict";
+
+function Memory() {
+
+    var data = [];
+
+    // We store all data as unsigned 32-bit integers and use ES5's ArrayBuffer
+    // interface to handle conversion to and from additional datatypes.
 
     var buffer   = new ArrayBuffer(4),
         float32a = new Float32Array(buffer),
         int32a   = new Int32Array(buffer),
-        uint32a  = new Uint32Array(buffer),
-        BOM      = '\uFEFF'; // Byte order mark
+        uint32a  = new Uint32Array(buffer);
 
-    if (typeof module !== 'undefined' && module.exports) {
-        global = module.exports;
+    // Allocate and zero-fill `size` words
+    this.malloc = function (size) {
+        var ptr = data.length;
+        while (size--) {
+            data.push(0);
+        }
+        return ptr;
+    };
+
+    // Unsigned Integers
+
+    this.getUint = function (ptr) {
+        return data[ptr];
+    };
+
+    this.setUint = function (ptr, value) {
+        uint32a[0] = value;
+        if (uint32a[0] !== value) {
+            throw new TypeError("Invalid unsigned integer " + value);
+        }
+        data[ptr] = uint32a[0];
+    };
+
+    // Signed integers
+
+    this.getInt = function (ptr) {
+        uint32a[0] = data[ptr];
+        return int32a[0];
+    };
+
+    this.setInt = function (ptr, value) {
+        int32a[0] = value;
+        if (int32a[0] !== value) {
+            throw new TypeError("Invalid integer " + value);
+        }
+        data[ptr] = uint32a[0];
+    };
+
+    // Real numbers (binary32)
+
+    this.getReal = function (ptr) {
+        uint32a[0] = data[ptr];
+        return float32a[0];
+    };
+
+    this.setReal = function (ptr, value) {
+        float32a[0] = value;
+        if (Math.abs(float32a[0] - value) > 1) {
+            throw new TypeError("Invalid real " + value);
+        }
+        data[ptr] = uint32a[0];
+    };
+}
+
+var mem = new Memory();
+
+function Descriptor(offset) {
+    this.offset = typeof offset !== 'undefined'
+        ? offset
+        : mem.malloc(3);
+}
+
+function Specifier(offset) {
+    this.offset = typeof offset !== 'undefined'
+        ? offset
+        : mem.malloc(6);
+}
+
+Descriptor.prototype = Object.create(null, {
+
+    addr: {
+        get: function ()  { return mem.getInt( this.offset ); },
+        set: function (n) { mem.setInt( this.offset, n ); }
+    },
+
+    raddr: { /* address field as real */
+        get: function ()  { return mem.getFloat( this.offset ); },
+        set: function (n) { mem.setFloat( this.offset, n ); }
+    },
+
+    flags: {
+        get: function ()  { return mem.getUint( this.offset + 1 ); },
+        set: function (n) { mem.setUint( this.offset + 1, n ); }
+    },
+
+    value: {
+        get: function ()  { return mem.getUint( this.offset + 2); },
+        set: function (n) { mem.setUint( this.offset + 2, n ); }
     }
 
-    // Signed Integers
+});
 
-    global.encodeInt = function (n) {
-        int32a[0] = n;
-        return uint32a[0];
-    };
+Specifier.prototype = Object.create(Descriptor.prototype, {
 
-    global.decodeInt = function (n) {
-        uint32a[0] = n;
-        return n === uint32a[0]
-            ? int32a[0]
-            : NaN;
-    };
+    offset: {
+        get: function ()  { return mem.getUint( this.offset + 3); },
+        set: function (n) { mem.setUint( this.offset + 3, n ); }
+    },
+    
+    length: {
+        get: function ()  { return mem.getUint( this.offset + 4); },
+        set: function (n) { mem.setUint( this.offset + 3, 4 ); }
+    }
 
-    // Floats
-
-    global.encodeFloat = function (r) {
-        float32a[0] = r;
-        return uint32a[0];
-    };
-
-    global.decodeFloat = function (n) {
-        uint32a[0] = n;
-        return n === uint32a[0]
-            ? float32a[0]
-            : NaN;
-    };
-
-
-    // Data Validation
-
-    global.isValidUint = function (n) {
-        uint32a[0] = n;
-        return uint32a[0] === n;
-    };
-
-    global.isValidInt = function (n) {
-        int32a[0] = n;
-        return int32a[0] === n;
-    };
-
-    global.isValidFloat = function (n) {
-        float32a[0] = n;
-        return float32a[0] === n;
-    };
-
-    global.encodeString = function (s) {
-        var i, fst, snd, encoded = [];
-
-        if (s.length % 2) {
-            // If the string contains an odd number of characters, pad it by
-            // prepending a byte order mark.
-            s = BOM + s;
-        }
-
-        for (i = 0; i < s.length; i += 2) {
-            fst = s.charCodeAt(i);
-            snd = s.charCodeAt(i + 1) << 16;
-            encoded.push(fst + snd);
-        }
-
-        return encoded;
-    };
-
-    global.decodeString = function (encoded) {
-        var i, fst, snd, codes = [];
-
-        for (i = 0; i < encoded.length; i++) {
-            fst = encoded[i] & 0xffff;
-            snd = encoded[i] >>> 16;
-            codes.push(fst, snd);
-        }
-
-        if (codes[0] === 0xfeff) {
-            // Discard the byte order mark (BOM), if present.
-            codes.shift();
-        }
-
-        return String.fromCharCode.apply(null, codes);
-    };
-
-}(this));
+});
