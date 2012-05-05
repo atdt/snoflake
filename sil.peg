@@ -3,38 +3,42 @@
 // Released under GPL and MIT licenses
 
 {
-    var enclose = function (value) {
-        return [ "function", null, [], [ 
-            [ "return", value ]
-        ] ]
+    var labels = {},
+        line   = 0;
+
+    function enclose ( value ) {
+        return [ 'function', null, [], [ 
+            [ 'return', value ]
+        ] ];
     }
+    
+    function resolve ( identifier ) {
+        var node = [ 'string', identifier ]; 
+        return [ 'call', [ 'name', '$' ], [ node ] ];
+    }
+
 }
 
 program
   = statements:statement+ end
 {
-    var stack = [ "stack", [ "array", statements ] ],
-        identifiers = [],
-        declare = [ "var", identifiers ];
+    var stack       = [ 'array', statements ],
+        resolver    = [ '$', [ 'name', 'resolve' ] ],
 
-    identifiers.push(stack);
+        params      = [ 'resolve', 'sil' ],
+        body        = [
+            [ 'var',    [ resolver ] ],
+            [ 'return', stack ]
+        ],
+        loader      = [ 'defun', 'loader', params, body ];
 
-    return [ "toplevel", [ declare ] ];
+    return [ 'toplevel', [ loader ] ];
 }
 
 
 statement "statement"
   = comment2* 
-    label:(
-        name:name?
-        {
-            if (name.length) {
-                return [ "string", name.pop() ];
-            } else {
-                return [ "name", "null" ];
-            }
-        }
-    )
+    label:label
     blank
     oper:macro
     blank
@@ -43,30 +47,30 @@ statement "statement"
     comment1?
     '\n'
 {
-    return [ "array", [ label, oper, operands ] ];
+    return [ 'array', [ label, oper, operands ] ];
 }
 
 
 comment1 "trailing comment"
   = comment:[^\n]*
 {
-    return [ "comment1", comment.join('') ];
+    return [ 'comment1', comment.join('') ];
 }
 
 comment2 "multi-line comment"
   = lines:( '*' comment:[^\n]* '\n' { return comment.join(''); } )+
 {
-    return [ "comment2", lines.join('\n') ];
+    return [ 'comment2', lines.join( '\n' ) ];
 }
 
 operands "operands"
-  = head:variable tail:(',' variable)*
+  = head:variable tail:( ',' variable )*
 {
-    var result = [head];
-    for (var i = 0, max = tail.length; i < max; i++) {
-        result.push(tail[i][1]);
+    var result = [ head ];
+    for ( var i = 0, max = tail.length; i < max; i++ ) {
+        result.push( tail[i][1] );
     }
-    return enclose( [ "array", result ] );
+    return enclose( [ 'array', result ] );
 }
 
 variable
@@ -75,64 +79,76 @@ variable
   / expr
   / name
   / integer
-  / &(',') { return [ "name", "null" ]; }
+  / &( ',' ) { return [ 'name', 'null' ]; }
 
 
 expr "expression"
-  = left:(integer / name) operator:[*+-] right:(integer / name)
+  = left:( integer / name ) operator:[*+-] right:( integer / name )
 {
-    return [ "binary", operator, left, right ];
+    return [ 'binary', operator, left, right ];
 }
 
 literal "literal"
   = "'" literal:[^']* "'"
 {
     literal = literal.join('');
-    return [ "string", literal ];
+    return [ 'string', literal ];
 }
 
 integer "integer"
   = digits:[0-9]+
 {
-    var num = parseInt(digits.join(''), 10);
-    return [ "num", num ];
+    var num = parseInt( digits.join(''), 10 );
+    return [ 'num', num ];
 }
 
 list "list operand"
   = '('
     head:variable
-    tail:(',' v:variable { return v; })*
+    tail:( ',' v:variable { return v; } )*
     ')'
 {
     var result = [];
 
-    if (head !== undefined || tail.length) {
-        tail.unshift(head);
+    if ( head !== undefined || tail.length ) {
+        tail.unshift( head );
         result = tail;
     }
 
-    return [ "array", result ];
+    return [ 'array', result ];
 }
 
 blank
   = [\u0009\u0020]+
 
 
+label "label"
+= label:( head:[A-Z] tail:[A-Z0-9]* { return head + tail.join(''); } )?
+{
+    if ( label.length ) {
+        labels[ label ] = line++;
+        return [ 'string', label ];
+    } else {
+        line++;
+        return [ 'name', 'null' ];
+    }
+}
+
 name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var name = head + tail.join('');
-    return [ "dot", [ "name", "d" ], name ];
+    return resolve( name );
 }
 
 macro "macro"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var macro = head + tail.join('');
-    return [ "dot", [ "name", "sil" ], macro ]
+    return [ 'dot', [ 'name', 'sil' ], macro ]
 }
 
 end
-  = blank 'END' (blank / '\n')* !.
+  = blank 'END' ( blank / '\n' )* !.
 
 /* vim: set ft=javascript: */
