@@ -2,43 +2,13 @@
 // (C) Copyright 2012 by Ori Livneh
 
 /*jslint white:true, vars:true, plusplus:true */
-/*jshint plusplus:false, laxbreak: true */
 /*globals ArrayBuffer, Float32Array, Int32Array, Uint32Array */
 
 "use strict";
 
-var sil = {
-    EQU: function ( val ) {
-        return val;
-    },
-    SUM: function ( a, b ) {
-        return a + b;
-    },
-    LOG: function ( s ) {
-        console.log( s );
-    }
-};
-
-function load( resolve, sil ) {
-    var $ = resolve;
-    return [
-        [ "A",       sil.EQU,    function() { return [ 5 ]; } ],
-        [ "B",       sil.EQU,    function() { return [ $("A") + 3 ]; } ],
-        [ "RET",     sil.SUM,    function() { return [ $("A"), $("B") ]; } ],
-        [ null,      sil.LOG,    function() { return [ $("RET") ]; } ]
-    ];
-}
-/*
-var snobol = require('./v311.js'),
-    sil = require('./sil.js');
-*/
-
-
-function setter( obj, prop ) {
-    return function( n ) {
-        obj[ prop ] = n;
-    };
-}
+var parser = require( './sil.peg.js' ),
+    loader = parser.compile( 'sum.sil' ),
+    sil    = require('./dummy.sil.js' );
 
 function TypeValidator() {
 
@@ -181,7 +151,7 @@ function Memory() {
     } );
 
     self.resolve = function ( identifier ) {
-        if ( typeof identifier !== 'string' ) {
+        if ( typeof identifier === 'number' ) {
             return identifier;
         }
 
@@ -226,43 +196,43 @@ module.exports = new Memory();
 
 function SnoMachine() {
 
-    var self   = this,
-        data   = new Memory(),
-        stack  = load( data.resolve, sil ),
-        dest   = '',
-        end    = stack.length,
-        next   = 0,
-        jump   = next,
-        labels = {};
+    var self  = this,
+        data  = new Memory(),
+        stack = loader( data.resolve, sil ),
+        ip    = 0;
 
-    self.return = function ( val ) {
-        data.assign( dest, val );
-    };
+    function evaluate( deferred ) {
+        return deferred.call( self );
+    }
 
-    self.jmp = function ( loc ) {
-        next = isNaN( loc )
-            ? labels[ loc ]
-            : loc;
+    function exec( label, op, deferred_operands ) {
+        var operands = evaluate( deferred_operands ),
+            returned = op.apply( self, operands );
+
+        if ( label !== null ) {
+            if ( returned !== undefined ) {
+                data.assign( label, returned );
+            } else {
+                data.assign( label, ip );
+            }
+        }
+    }
+
+    self.jump = function ( loc ) {
+        if ( loc !== undefined ) {
+            ip = data.resolve( loc ) - 1;
+        }
     };
 
     self.run = function () {
+        var end = stack.length;
+
         console.log(' --- PROGRAM START --- ');
-        do {
-            execute.apply( next, stack[ next++ ] );
-        } while ( next !== end );
+        for ( ip = 0; ip !== end; ip++ ) {
+            exec.apply( null, stack[ ip ] );
+        }
         console.log(' ---  PROGRAM END  --- ');
     };
-
-    function execute( label, op, deferred_params ) {
-        var here   = this,
-            params = deferred_params.call( self ),
-            retval = op.apply( self, params );
-
-        if ( label !== null ) {
-            labels[ label ] = here;
-            data.assign( label, retval );
-        }
-    }
 }
 
 var snobol = new SnoMachine();
