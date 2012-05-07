@@ -6,8 +6,8 @@
 
 "use strict";
 
-var parser = require( './sil.peg.js' ),
-    loader = parser.compile( process.argv[2] ),
+var parser = require( './sil.parse.js' ),
+    loader = parser.compile( 'sum.sil' ), // XXX
     sil    = require( './dummy.sil.js' );
 
 function TypeValidator() {
@@ -57,6 +57,7 @@ function Memory() {
         abs      = Math.abs;
 
     // Allocate and zero-fill `size` words
+    // XXX: should be public (this.alloc) !
     function alloc( size ) {
         var ptr = data.length;
         while ( size-- ) {
@@ -216,6 +217,7 @@ function SnoMachine() {
         }
     }
 
+    self.data = data; // XXX
     self.getd = self.data.getDescriptor;  // for convenience
 
     self.jump = function ( loc ) {
@@ -236,7 +238,7 @@ function SnoMachine() {
 }
 
 if ( typeof module !== 'undefined' && module.exports ) {
-    module.exports = new SnoMachine();
+    module.exports = { SnoMachine: SnoMachine };
 }
 
 // var snobol = new SnoMachine();
