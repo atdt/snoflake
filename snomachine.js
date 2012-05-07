@@ -235,6 +235,9 @@ function SnoMachine() {
     };
 }
 
-var snobol = new SnoMachine();
+if ( typeof module !== 'undefined' && module.exports ) {
+    module.exports = new SnoMachine();
+}
 
-snobol.run();
+// var snobol = new SnoMachine();
+// snobol.run();
