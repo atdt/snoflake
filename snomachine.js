@@ -200,6 +200,9 @@ function SnoMachine() {
         stack = loader( data.resolve, sil ),
         ip    = 0;
 
+    self.data = data;
+    self.getd = self.data.getDescriptor;  // shorthand
+
     function evaluate( deferred ) {
         return deferred.call( self );
     }
@@ -217,8 +220,6 @@ function SnoMachine() {
         }
     }
 
-    self.data = data; // XXX
-    self.getd = self.data.getDescriptor;  // for convenience
 
     self.jump = function ( loc ) {
         if ( loc !== undefined ) {
@@ -241,5 +242,7 @@ if ( typeof module !== 'undefined' && module.exports ) {
     module.exports = { SnoMachine: SnoMachine };
 }
 
-// var snobol = new SnoMachine();
-// snobol.run();
+if ( require.main === module ) {
+    var snobol = new SnoMachine();
+    snobol.run();
+}
