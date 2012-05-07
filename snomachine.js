@@ -216,6 +216,8 @@ function SnoMachine() {
         }
     }
 
+    self.getd = self.data.getDescriptor;  // for convenience
+
     self.jump = function ( loc ) {
         if ( loc !== undefined ) {
             ip = data.resolve( loc ) - 1;
