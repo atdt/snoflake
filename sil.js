@@ -4,8 +4,6 @@ function signOf(x) {
 
 sil = {};
 
-
-
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
 // being considered as signed integers.  If A1 >  A2,  transfer
@@ -21,15 +19,16 @@ sil = {};
 // Programming Notes:
 // 1.  A1 and A2 may be relocatable addresses.
 // 2.  See also LCOMP, ACOMPC, AEQL, AEQLC, and AEQLIC.
-sil.ACOMP = function ($DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC) {
-    // address comparison
-    switch (signOf($DESCR1.addr - $DESCR2.addr)) {
-    case 1:
-        return $GTLOC;
-    case -1:
-        return $LTLOC;
-    case 0:
-        return $EQLOC;
+
+sil.ACOMP = function ( $DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC ) {
+    var diff = $DESCR1.addr - $DESCR2.addr;
+
+    if ( diff > 0 ) {
+        this.jump( $GTLOC );
+    } else if ( diff < 0 ) {
+        this.jump( $LTLOC );
+    } else {
+        this.jump( $EQLOC );
     }
 };
 
@@ -48,14 +47,14 @@ sil.ACOMP = function ($DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC) {
 // 3.  N is often 0.
 // 4.  See also ACOMP, AEQL, AEQLC, and AEQLIC.
 sil.ACOMPC = function ($DESCR, $N, $GTLOC, $EQLOC, $LTLOC) {
-    // address comparison with constant
-    switch (signOf($DESCR - $N)) {
-    case 1:
-        return $GTLOC;
-    case -1:
-        return $LTLOC;
-    case 0:
-        return $EQLOC;
+    var diff = $DESCR1.addr - $N;
+
+    if ( diff > 0 ) {
+        this.jump( $GTLOC );
+    } else if ( diff < 0 ) {
+        this.jump( $LTLOC );
+    } else {
+        this.jump( $EQLOC );
     }
 };
 
@@ -74,9 +73,8 @@ sil.ACOMPC = function ($DESCR, $N, $GTLOC, $EQLOC, $LTLOC) {
 //               +---------------------------------------+
 // Programming Notes:
 // 1.  I is always positive.
-sil.ADDLG = function ($SPEC, $DESCR) {
-    // add to specifier length
-    $SPEC.len += $DESCR.val;
+sil.ADDLG = function ( $SPEC, $DESCR ) {
+    $SPEC.length += $DESCR.value;
 };
 
 //     ADDSIB  is  used  to  add  a  tree node as a sibling to
@@ -115,7 +113,7 @@ sil.ADDLG = function ($SPEC, $DESCR) {
 // 2.  FATHER, RSIB, and CODE are symbols defined in the source
 // program.
 // 3.  See also ADDSON and INSERT.
-sil.ADDSIB = function ($DESCR1, $DESCR2) {
+sil.ADDSIB = function ( $DESCR1, $DESCR2 ) {
     // add sibling to tree node
     return;
 };
@@ -179,10 +177,13 @@ sil.ADDSON = function ($DESCR1, $DESCR2) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  A3 is always an address integer.
-sil.ADJUST = function ($DESCR1, $DESCR2, $DESCR3) {
+sil.ADJUST = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // compute adjusted address
-    // alloc[$DESCR2.value]
-    return;
+    var a3 = $DESCR3.addr,
+        a2 = this.data.getDescriptor( $DESCR2.addr ),
+        a4 = a2.addr;
+
+    $DESCR1.addr = a3 + a4;
 };
 
 //     ADREAL is used to add two real numbers.  If the  result
@@ -202,14 +203,19 @@ sil.ADJUST = function ($DESCR1, $DESCR2, $DESCR3) {
 // Programming Notes:
 // 1.  See also DVREAL, EXREAL, MNREAL, MPREAL, and SBREAL.
 sil.ADREAL = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
-    // add real numbers
-    // TODO: this is *real*
-    var sum = $DESCR2.val + $DESCR3.val;
-    if (sum === (sum & sum)) {
-        $DESCR1.val = sum;
-        return $SLOC;
+    var r2 = $DESCR2.raddr,
+        f2 = $DESCR2.flags,
+        v2 = $DESCR2.value,
+        r3 = $DESCR3.raddr;
+
+    $DESCR1.flags = f2;
+    $DESCR1.value = v2;
+    try {
+        $DESCR2.raddr = r2 + r3;
+        this.jump( $SLOC );
+    } catch ( e if e instanceof RangeError ) {
+        this.jump( $FLOC );
     }
-    return $FLOC;
 };
 
 //     AEQL is used to  compare  the  address  fields  of  two
@@ -228,7 +234,11 @@ sil.ADREAL = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
 // 2.  See  also VEQL, AEQLC, LEQLC, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
     // addresses equal test
-    return $DESCR.addr === $DESCR2.addr ? $EQLOC : $NELOC;
+    if ( $DESCR1.addr === $DESCR2.addr ) {
+        this.jump( $EQLOC );
+    } else {
+        this.jump( $NELOC );
+    }
 };
 
 //     AEQLC is  used  to  compare  the  address  field  of  a
@@ -246,7 +256,11 @@ sil.AEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
 // 4.  See also LEQLC, AEQL, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
     // address equal to constant test
-    return $DESCR.addr === $N ? $EQLOC : $NELOC;
+    if ( $DESCR.addr === $N ) {
+        this.jump( $EQLOC );
+    } else {
+        this.jump( $NELOC );
+    }
 };
 
 //     AEQLIC  is  used  to  compare  an  indirectly specified
@@ -266,13 +280,14 @@ sil.AEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
 // 2.  N2 is never negative.
 // 3.  N1 is always zero.
 // 4.  See also AEQL, AEQLC, LEQLC, ACOMP, and ACOMPC.
-sil.AEQLIC = function ($DESCR, $N1, $N2, $NELOC, $EQLOC) {
-    // address equal to constant indirect test
-    // ok($N1 === 0);
-    // var $A2 = $DESCR.addr + $N1,
-    //     next = $A2 === $N2 ? $EQLOC : $NELOC;
-    // if (next !== null) p = next;
-    return;
+sil.AEQLIC = function ( $DESCR, $N1, $N2, $NELOC, $EQLOC ) {
+    var d = this.data.getDescriptor( $DESCR.addr + $N1 );
+
+    if ( d.addr === $N2 ) {
+        this.jump( $EQLOC );
+    } else {
+        this.jump( $NELOC );
+    }
 };
 
 //     APDSP is used to append one specified string to another
@@ -320,12 +335,11 @@ sil.APDSP = function ($SPEC1, $SPEC2) {
 // Programming Notes:
 // 1.  All fields of all descriptors assembled by ARRAY must be
 // zero when program execution begins.
-sil.ARRAY = function ($N) {
-    // assemble array of descriptors
-    while (N--) {
-        heap.push(0, 0, 0);
+sil.ARRAY = function ( $N ) {
+    this.data.malloc( $N * 3 )
+    while ( $N-- ) {
+        this.data.createDescriptor();
     }
-    return;
 };
 
 //     BKSIZE is used to determine the amount of storage occu-
@@ -353,7 +367,7 @@ sil.ARRAY = function ($N) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also GETLTH.
-sil.BKSIZE = function (DESCR1,DESCR2) {
+sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
     // get block size
     return;
 };
@@ -395,9 +409,8 @@ sil.BRANCH = function ($LOC, $PROC) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  N is always zero
-sil.BRANIC = function ($DESCR, $N) {
+sil.BRANIC = function ( $DESCR, $N ) {
     // branch indirect with offset constant
-    // ok($N === 0);
     return $DESCR.addr + $N;
 };
 
@@ -545,14 +558,12 @@ sil.CLERTB = function (TABLE,KEY) {
 // on the value of its argument as given above.
 // 2.  Any  of  the  COPY  segments  can be used to incorporate
 // other machine-dependent data.
-sil.COPY = function ($FILE) {
-    // copy file into assembly
-    // for (attr in $FILE) {
-    //     if ($FILE.hasOwnAtrribute(attr)) {
-    //         window[attr] = $FILE[attr];
-    //     }
-    // }
-    return;
+sil.COPY = function ( $FILE ) {
+    for ( attr in $FILE ) {
+        if $FILE.hasOwnProperty( attr ) {
+            self.data.assign( attr ) = $FILE[ attr ];
+        }
+    }
 };
 
 //     CPYPAT is used to copy a pattern.  First set
@@ -677,7 +688,7 @@ sil.DATE = function (SPEC) {
 // 3.  N is often 1 or D.
 // 4.  A-N may be negative.
 // 5.  See also INCRA.
-sil.DECRA = function ($DESCR, $N) {
+sil.DECRA = function ( $DESCR, $N ) {
     // decrement address
     $DESCR.addr -= $N;
 };
@@ -697,9 +708,7 @@ sil.DECRA = function ($DESCR, $N) {
 // transfer to EQLOC.
 sil.DEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
     // descriptor equal test
-    if ($DESCR1.addr === $DESCR2.addr &&
-        $DESCR1.flags === $DESCR2.flags &&
-        $DESCR1.val === $DESCR2.val) {
+    if ( $DESCR1.addr === $DESCR2.addr && $DESCR1.flags === $DESCR2.flags && $DESCR1.val === $DESCR2.val ) {
         return $EQLOC;
     } else {
         return $NELOC;
@@ -2434,9 +2443,9 @@ sil.REMSP = function (SPEC1,SPEC2,SPEC3) {
 // flags are left unchanged.
 // 2.  If F does not contain FLAG, no data is altered.
 // 3.  See also RSETFI and SETFI.
-sil.RESETF = function ($DESCR, $FLAG) {
+sil.RESETF = function ( $DESCR, $FLAG ) {
     // reset flag
-    $DESCR &= ~$FLAG;
+    $DESCR.flags &= ~$FLAG;
 };
 
 //     REWIND is used to rewind the file associated  with  the
@@ -2622,7 +2631,7 @@ sil.SELBRA = function () { // (DESCR,(LOC1,...,LOCN)) {
 // 2.  N is often 0, 1, or D.
 // 3.  N is never negative.
 // 4.  See also SETVC, SETLC, and SETAV.
-sil.SETAC = function ($DESCR, $N) {
+sil.SETAC = function ( $DESCR, $N ) {
     // set address to constant
     $DESCR.addr = $N;
 };
@@ -2660,8 +2669,7 @@ sil.SETAV = function ($DESCR1, $DESCR2) {
 // 2.  If F already contains FLAG, no data is altered.
 // 3.  See also SETFI.
 sil.SETF = function ($DESCR, $FLAG) {
-    // set flag
-    $DESCR |= $FLAG;
+    $DESCR.flags |= $FLAG;
 };
 
 //     SETFI is used to set (add) a flag in the flag field  of
@@ -2684,7 +2692,7 @@ sil.SETF = function ($DESCR, $FLAG) {
 // 3.  See also SETF and RSETFI.
 sil.SETFI = function (DESCR,FLAG) {
     // set flag indirect
-    return;
+   return;
 };
 
 //     SETLC is used to set the length of  a  specifier  to  a
@@ -3230,7 +3238,7 @@ sil.TESTFI = function (DESCR,FLAG,FLOC,SLOC) {
 // perform no operation.
 sil.TITLE = function ($MSG) {
     // title assembly listing
-    console.log($MSG);
+    console.log( $MSG );
 };
 
 //     TOP  is  used  to get to the top of a block of descrip-
@@ -3384,9 +3392,13 @@ sil.VEQL = function (DESCR1,DESCR2,NELOC,EQLOC) {
 // Programming Notes:
 // 1.  N is never negative.
 // 2.  See also AEQLC and VEQL.
-sil.VEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
+sil.VEQLC = function ( $DESCR, $N, $NELOC, $EQLOC ) {
     // value field equal to constant test
-    return $DESCR.val === $N ? $EQLOC : $NELOC;
+    if ( $DESCR.val === $N ) {
+        this.jump( $EQLOC );
+    } else {
+        this.jump( $NELOC );
+    }
 };
 
 //     ZERBLK is used to zero a block of I+1 descriptors.
@@ -3409,7 +3421,7 @@ sil.VEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  I is always positive.
-sil.ZERBLK = function ($DESCR1, $DESCR2) {
+sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     // zero block
     return;
 };
