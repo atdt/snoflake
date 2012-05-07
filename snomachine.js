@@ -104,10 +104,10 @@ function Memory() {
     function setReal( ptr, value ) {
         float32a[0] = value;
 
-        if ( abs( float32a[0] - value ) > 1 ) {
+        if ( abs(float32a[0] - value) > 1 ) {
             throw new RangeError( 'Invalid real ' + value );
         }
-        data[ptr] = uint32a[0];
+        data[ ptr ] = uint32a[0];
     }
 
     function Descriptor( ptr ) {
