@@ -57,7 +57,7 @@ function Memory() {
         abs      = Math.abs;
 
     // Allocate and zero-fill `size` words
-    function malloc( size ) {
+    function alloc( size ) {
         var ptr = data.length;
         while ( size-- ) {
             data.push(0);
@@ -175,7 +175,7 @@ function Memory() {
     };
 
     self.createDescriptor = function () {
-        return new Descriptor( malloc(3) );
+        return new Descriptor( alloc(3) );
     };
 
     self.getSpecifier = function ( ptr ) {
@@ -186,7 +186,7 @@ function Memory() {
     };
 
     self.createSpecifier = function () {
-        return new Specifier( malloc(6) );
+        return new Specifier( alloc(6) );
     };
 
     Object.freeze( self );
