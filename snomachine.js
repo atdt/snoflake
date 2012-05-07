@@ -7,8 +7,8 @@
 "use strict";
 
 var parser = require( './sil.peg.js' ),
-    loader = parser.compile( 'sum.sil' ),
-    sil    = require('./dummy.sil.js' );
+    loader = parser.compile( process.argv[2] ),
+    sil    = require( './dummy.sil.js' );
 
 function TypeValidator() {
 
@@ -191,8 +191,6 @@ function Memory() {
 
     Object.freeze( self );
 }
-
-module.exports = new Memory();
 
 function SnoMachine() {
 
