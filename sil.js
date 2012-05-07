@@ -718,7 +718,14 @@ sil.DEQL = function ($DESCR1, $DESCR2, $NELOC, $EQLOC) {
 // omitted.
 sil.DESCR = function (A,F,V) {
     // assemble descriptor
-    return;
+    var desc = new Descriptor();
+
+    desc.addr = A || 0;
+    desc.flags = F || 0;
+    desc.value = V || 0;
+
+
+    d[this] = desc;
 };
 
 //     DIVIDE is used to divide one integer by  another.   Any
