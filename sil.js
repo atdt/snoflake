@@ -180,7 +180,7 @@ sil.ADDSON = function ($DESCR1, $DESCR2) {
 sil.ADJUST = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // compute adjusted address
     var a3 = $DESCR3.addr,
-        a2 = this.data.getDescriptor( $DESCR2.addr ),
+        a2 = this.getd( $DESCR2.addr ),
         a4 = a2.addr;
 
     $DESCR1.addr = a3 + a4;
@@ -281,7 +281,7 @@ sil.AEQLC = function ($DESCR, $N, $NELOC, $EQLOC) {
 // 3.  N1 is always zero.
 // 4.  See also AEQL, AEQLC, LEQLC, ACOMP, and ACOMPC.
 sil.AEQLIC = function ( $DESCR, $N1, $N2, $NELOC, $EQLOC ) {
-    var d = this.data.getDescriptor( $DESCR.addr + $N1 );
+    var d = this.getd( $DESCR.addr + $N1 );
 
     if ( d.addr === $N2 ) {
         this.jump( $EQLOC );
@@ -336,10 +336,7 @@ sil.APDSP = function ($SPEC1, $SPEC2) {
 // 1.  All fields of all descriptors assembled by ARRAY must be
 // zero when program execution begins.
 sil.ARRAY = function ( $N ) {
-    this.data.malloc( $N * 3 )
-    while ( $N-- ) {
-        this.data.createDescriptor();
-    }
+    return this.data.alloc( $N * 3 );
 };
 
 //     BKSIZE is used to determine the amount of storage occu-
@@ -393,7 +390,7 @@ sil.BKSPCE = function (DESCR) {
 // procedure.
 // Programming Notes:
 // 1.  See also PROC.
-sil.BRANCH = function ($LOC, $PROC) {
+sil.BRANCH = function ( $LOC, $PROC ) {
     // branch to program location
     return;
 };
@@ -2198,9 +2195,13 @@ sil.PUTD = function (DESCR1,DESCR2,DESCR3) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also PUTD, PUTAC, PUTVC, and GETD.
-sil.PUTDC = function (DESCR1,N,DESCR2) {
+sil.PUTDC = function ( $DESCR1, $N, $DESCR2) {
     // put descriptor with constant offset
-    return;
+    var d = self.getd( $DESCR1.addr + $N );
+
+    d.addr = $DESCR2.addr;
+    d.flags = $DESCR2.flags;
+    d.value = $DESCR2.value;
 };
 
 //     PUTLG is used to put a length into a specifier.
