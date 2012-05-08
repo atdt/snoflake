@@ -1,7 +1,3 @@
-function signOf(x) {
-    return x > 0 ? 1 : (x >> 31);
-}
-
 sil = {};
 
 //     ACOMP is used to compare  the  address  fields  of  two
@@ -783,9 +779,16 @@ sil.DIVIDE = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
 // is  used  in  the computation of statistics published at the
 // end of a SNOBOL4 run.
 // 2.  See also ADREAL, EXREAL, MNREAL, MPREAL, and SBREAL.
-sil.DVREAL = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
+sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC ) {
     // divide real numbers
-    return;
+    try {
+        $DESCR1.raddr = $DESCR2.raddr / $DESCR3.raddr;
+        this.jump( $SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
+    }
 };
 
 //     END is used to terminate assembly of the  SNOBOL4  sys-
@@ -855,15 +858,18 @@ sil.EQU = function ( $N ) {
 //               +--------+-------+-------+
 //      DESCR1   | I1**I2     F       V   |
 //               +------------------------+
-sil.EXPINT = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
-    // XXX
+sil.EXPINT = function ( $DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC ) {
     // exponentiate integers
-    var res = Math.pow($DESCR2.addr, $DESCR3.addr);
-    if (res === (res & res)) {
-        $DESCR1.addr = res;
-        return $SLOC;
+    try {
+        $DESCR1.addr = Math.pow( $DESCR2.addr, $DESCR3.addr );
+        $DESCR1.flags = $DESCR2.flags;
+        $DESCR1.value = $DESCR2.value;
+        this.jump( $SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
-    return $FLOC;
 };
 
 //     EXREAL is used to raise a real number to a real  power.
@@ -882,9 +888,17 @@ sil.EXPINT = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
 //      DESCR1   | R1**R2     F       V   |
 //               +------------------------+
 sil.EXREAL = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
-    // XXX
     // exponentiate real numbers
-    return;
+    try:
+        $DESCR1.raddr = Math.pow( $DESCR2.raddr, $DESCR3.raddr );
+        $DESCR1.flags = $DESCR2.flags;
+        $DESCR1.value = $DESCR2.value;
+        this.jump( $SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
+    }
 };
 
 //     FORMAT  is used to assemble the characters of a format.
@@ -1238,7 +1252,7 @@ sil.INTRL = function (DESCR1,DESCR2) {
 // 2.  BUFFER  is  local  to  INTSPC  and  its  contents may be
 // overwritten by a subsequent use of INTSPC.
 // 3.  See also SPCINT.
-sil.INTSPC = function (SPEC,DESCR) {
+sil.INTSPC = function ( $SPEC, $DESCR ) {
     // convert integer to specifier
     return;
 };
@@ -1257,7 +1271,7 @@ sil.INTSPC = function (SPEC,DESCR) {
 // 2.  See also PSTACK, RCALL, and RRTURN.
 sil.ISTACK = function () {
     // initialize stack
-    return;
+    this.stack = [];
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -1338,7 +1352,7 @@ sil.LEQLC = function ( $SPEC, $N, $NELOC, $EQLOC ) {
 // desirable  to  handle  this case specially, since a test for
 // equality usually can be performed more efficiently than  the
 // general test.
-sil.LEXCMP = function (SPEC1,SPEC2,GTLOC,EQLOC,LTLOC) {
+sil.LEXCMP = function ( $SPEC1, $SPEC2, $GTLOC, $EQLOC, $LTLOC ) {
     // lexical comparison of strings
     return;
 };
@@ -1825,9 +1839,16 @@ sil.MOVV = function (DESCR1,DESCR2) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also ADREAL, DVREAL, EXREAL, MNREAL, and SBREAL.
-sil.MPREAL = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
+sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
     // multiply real numbers
-    return;
+    try {
+        $DESCR1.raddr = $DESCR2.raddr * $DESCR3.raddr;
+        this.jump( $SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
+    }
 };
 
 //     MSTIME is used to get the millisecond time.
@@ -1965,7 +1986,7 @@ sil.MULTC = function ($DESCR1, $DESCR2, $N) {
 // descriptor are undefined.
 sil.ORDVST = function () {
     // order variable storage
-    return;
+    return void(0); // XXX
 };
 
 //     OUTPUT  is  used to output a list of items according to
@@ -2148,6 +2169,7 @@ sil.PSTACK = function (DESCR) {
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
 sil.PUSH = function () { //((DESCR1,...,DESCRN)) {
+    this.stack.push.apply( null, arguments );
     // push descriptors onto stack
     return;
 };
@@ -2167,9 +2189,9 @@ sil.PUSH = function () { //((DESCR1,...,DESCRN)) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also GETAC, PUTVC, PUTD, and PUTDC.
-sil.PUTAC = function (DESCR1,N,DESCR2) {
+sil.PUTAC = function ( $DESCR1, $N, $DESCR2 ) {
     // put address with offset constant
-    return;
+    this.getd( $DESCR1.addr + $N ).addr = $DESCR2.addr;
 };
 
 //     PUTD is used to put a descriptor.
@@ -2189,9 +2211,9 @@ sil.PUTAC = function (DESCR1,N,DESCR2) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also PUTDC, PUTAC, PUTVC, and GETD.
-sil.PUTD = function (DESCR1,DESCR2,DESCR3) {
+sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // put descriptor
-    return;
+    $DESCR3.copyTo( $DESCR1.addr + $DESCR2.addr );
 };
 
 //     PUTDC  is used to put a descriptor at a location with a
@@ -2211,11 +2233,7 @@ sil.PUTD = function (DESCR1,DESCR2,DESCR3) {
 // 1.  See also PUTD, PUTAC, PUTVC, and GETD.
 sil.PUTDC = function ( $DESCR1, $N, $DESCR2) {
     // put descriptor with constant offset
-    var d = self.getd( $DESCR1.addr + $N );
-
-    d.addr = $DESCR2.addr;
-    d.flags = $DESCR2.flags;
-    d.value = $DESCR2.value;
+    $DESCR2.copyTo( $DESCR1.addr + $N );
 };
 
 //     PUTLG is used to put a length into a specifier.
@@ -2230,9 +2248,9 @@ sil.PUTDC = function ( $DESCR1, $N, $DESCR2) {
 // Programming Notes:
 // 1.  I is always nonnegative.
 // 2.  See also GETLG.
-sil.PUTLG = function (SPEC,DESCR) {
+sil.PUTLG = function ( $SPEC, $DESCR ) {
     // put specifier length
-    return;
+    $SPEC.length = $DESCR.addr;
 };
 
 //     PUTSPC is used to put a specifier.
@@ -2251,8 +2269,7 @@ sil.PUTLG = function (SPEC,DESCR) {
 // 1.  See also GETSPC.
 sil.PUTSPC = function ( $DESCR, $N, $SPEC ) {
     // put specifier with offset constant
-    var spec = this.gets( $DESCR.addr + $N );
-    $SPEC.copyTo( spec );
+    $SPEC.copyTo( this.gets( $DESCR.addr + $N ) );
 };
 
 //     PUTVC is used to put a value field into a descriptor at
@@ -2270,9 +2287,9 @@ sil.PUTSPC = function ( $DESCR, $N, $SPEC ) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also PUTAC, PUTDC, and PUTD.
-sil.PUTVC = function (DESCR1,N,DESCR2) {
+sil.PUTVC = function ( $DESCR1, $N, $DESCR2 ) {
     // put value field with offset constant
-    return;
+    this.getd( $DESCR1.addr + $N ).value = $DESCR2.value;
 };
 
 //     RCALL  is  used  to perform a recursive call.  DESCR is
@@ -2383,9 +2400,15 @@ sil.RCALL = function () { // (DESCR,PROC,(DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also ACOMP and LCOMP.
-sil.RCOMP = function (DESCR1,DESCR2,GTLOC,EQLOC,LTLOC) {
+sil.RCOMP = function ( $DESCR1, $DESCR2, $GTLOC, $EQLOC, $LTLOC ) {
     // real comparison
-    return;
+    if ( $DESCR1.raddr > $DESCR2.raddr ) {
+        this.jump( $GTLOC );
+    } else if ( $DESCR1.raddr < $DESCR2.raddr ) {
+        this.jump( $LTLOC );
+    } else {
+        this.jump( $EQLOC );
+    }
 };
 
 //     REALST  is  used to convert a real number into a speci-
@@ -2647,9 +2670,9 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC ) {
 // 3.  I is always in the range 1 <= I <= N+1.   For  debugging
 // purposes,  it  may be useful to verify that I is within this
 // range.
-sil.SELBRA = function () { // (DESCR,(LOC1,...,LOCN)) {
+sil.SELBRA = function ( $DESCR, LOCI ) {
     // select branch point
-    return;
+    this.jump( LOCI[ $DESCR.addr - 1 ] );
 };
 
 //     SETAC is used to set the address field of a  descriptor
@@ -2866,17 +2889,9 @@ sil.SPCINT = function (DESCR,SPEC,FLOC,SLOC) {
 //               +-------+-------+-------+-------+-------+
 //      LOC      |   A       F       V       O       L   |
 //               +---------------------------------------+
-sil.SPEC = function ( $A, $F, $V, $O, $L ) {
+sil.SPEC = function () {
     // assemble specifier
-    var s = this.data.createSpecifier();
-
-    s.addr   = $A;
-    s.flags  = $F;
-    s.value  = $V;
-    s.offset = $O;
-    s.length = $L;
-
-    return s;
+    return this.data.createSpecifier.apply( null, arguments );
 };
 
 //     SPOP  is used to pop a list of specifiers from the sys-
@@ -3199,12 +3214,16 @@ sil.SUBSP = function (SPEC1,SPEC2,SPEC3,FLOC,SLOC) {
 // 4.  See also SUM.
 sil.SUBTRT = function (DESCR1,DESCR2,DESCR3,FLOC,SLOC) {
     // subtract addresses
-    var diff = $DESC2.addr - $DESCR3.addr;
-    if (diff === (diff & sum)) {
-        $DESCR1.addr = diff;
-        return $SLOC;
+    try {
+        $DESCR1.addr = $DESCR2.addr - $DESCR3.addr;
+        $DESCR1.flags = $DESCR2.flags;
+        $DESCR1.value = $DESCR2.value;
+        this.jump( $SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
-    return $FLOC;
 };
 
 //     SUM  is  used  to  add two address fields.  A and I are
@@ -3292,6 +3311,8 @@ sil.TITLE = function ( $MSG ) {
     // title assembly listing
     console.log( $MSG );
 };
+
+sil.DBG = sil.TITLE; // nonstandard ;)
 
 //     TOP  is  used  to get to the top of a block of descrip-
 // tors.  Descriptors at A, A-D,...,A-(N*D) are  examined  suc-

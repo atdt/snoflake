@@ -219,8 +219,14 @@ function Memory() {
         return new Specifier( ptr );
     };
 
-    self.createSpecifier = function () {
-        return new Specifier( self.alloc(6) );
+    self.createSpecifier = function ( addr, flags, value, offset, length ) {
+        var spec = new Specifier( self.alloc(6) );
+
+        spec.addr  = addr || 0;
+        spec.flags = flags || 0;
+        spec.value = value || 0;
+        spec.offset = offset || 0;
+        spec.length = length || 0;
     };
 
     Object.freeze( self );
@@ -228,12 +234,13 @@ function Memory() {
 
 function SnoMachine() {
 
-    var self  = this,
-        data  = new Memory(),
-        stack = loader( data.resolve, sil ),
-        ip    = 0;
+    var self = this,
+        data = new Memory(),
+        callstack = loader( data.resolve, sil ),
+        ip = 0;
 
     self.data = data;
+    self.stack = [];
 
     // Shortcuts
     self.getd = self.data.getDescriptor;
@@ -264,11 +271,11 @@ function SnoMachine() {
     };
 
     self.run = function () {
-        var end = stack.length;
+        var end = callstack.length;
 
         console.log(' --- PROGRAM START --- ');
         for ( ip = 0; ip !== end; ip++ ) {
-            exec.apply( null, stack[ ip ] );
+            exec.apply( null, callstack[ ip ] );
         }
         console.log(' ---  PROGRAM END  --- ');
     };
