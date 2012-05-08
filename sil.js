@@ -213,8 +213,10 @@ sil.ADREAL = function ($DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC) {
     try {
         $DESCR2.raddr = r2 + r3;
         this.jump( $SLOC );
-    } catch ( e if e instanceof RangeError ) {
-        this.jump( $FLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
 };
 
@@ -563,6 +565,7 @@ sil.CLERTB = function (TABLE,KEY) {
 // 2.  Any  of  the  COPY  segments  can be used to incorporate
 // other machine-dependent data.
 sil.COPY = function ( $FILE ) {
+    var attr;
     for ( attr in $FILE ) {
         if $FILE.hasOwnProperty( attr ) {
             self.data.assign( attr ) = $FILE[ attr ];
@@ -1381,7 +1384,7 @@ sil.LHERE = function () {
 // 3.  See also LOAD and UNLOAD.
 sil.LINK = function (DESCR1,DESCR2,DESCR3,DESCR4,FLOC,SLOC) {
     // link to external function
-    return;
+    this.jump( 'INTR10' );  // Program error
 };
 
 //     LINKOR  links  through `or' (alternative) fields of
@@ -1446,9 +1449,9 @@ sil.LINKOR = function (DESCR1,DESCR2) {
 // bring  an external function from the library whose DDNAME is
 // specified by C21...C2L2.
 // 4.  See also LINK and UNLOAD.
-sil.LOAD = function (DESCR,SPEC1,SPEC2,FLOC,SLOC) {
+sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, $FLOC, $SLOC ) {
     // load external function
-    return;
+    this.jump( 'UNDF' );  // Not implemented
 };
 
 //     LOCAPT is used to locate the `type' descriptor of a
@@ -1676,7 +1679,8 @@ sil.MAKNOD = function (DESCR1,DESCR2,DESCR3,DESCR4,DESCR5,DESCR6) {
 // SBREAL.
 sil.MNREAL = function ($DESCR1, $DESCR2) {
     // minus real number
-    return;
+    $DESCR2.copyTo( $DESCR1 );
+    $DESCR1.addr *= -1;
 };
 
 //     MNSINT is used to change the sign of an integer.  If -I
@@ -1695,12 +1699,15 @@ sil.MNREAL = function ($DESCR1, $DESCR2) {
 // 2.  See also MNREAL.
 sil.MNSINT = function ($DESCR1, $DESCR2, $FLOC, $SLOC) {
     // minus integer
-    var opposite = $DESCR2.addr * -1;
-    if (opposite === (opposite & opposite)) {
-        $DESCR1.addr = opposite;
-        return $SLOC;
+    $DESCR2.copyTo( $DESCR1 );
+    try {
+        $DESCR1.addr *= -1;
+        this.jump( $SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
-    return $FLOC;
 };
 
 //     MOVA is used to move an address field from one descrip-
@@ -1755,11 +1762,9 @@ sil.MOVBLK = function ($DESCR1, $DESCR2, $DESCR3) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also MOVA and MOVV.
-sil.MOVD = function ($DESCR1, $DESCR2) {
+sil.MOVD = function ( $DESCR1, $DESCR2 ) {
     // move descriptor
-    $DESCR1.addr = $DESCR2.addr;
-    $DESCR1.val = $DESCR2.val;
-    $DESCR1.flags = $DESCR2.flags;
+    $DESCR2.copyTo( $DESCR1 );
 };
 
 //     MOVDIC  is used to move a descriptor that is indirectly
@@ -1780,9 +1785,9 @@ sil.MOVD = function ($DESCR1, $DESCR2) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also MOVD, GETDC, and PUTDC.
-sil.MOVDIC = function ($DESCR1, $N1, $DESCR2, $N2) {
+sil.MOVDIC = function ( $DESCR1, $N1, $DESCR2, $N2 ) {
     // move descriptor indirect with constant offset
-    return;
+    this.getd( $DESCR2.addr + $N2 ).copyTo( $DESCR1.addr + $N1 );
 };
 
 //     MOVV is used to move a value field from one  descriptor
@@ -1799,7 +1804,7 @@ sil.MOVDIC = function ($DESCR1, $N1, $DESCR2, $N2) {
 // 1.  See also MOVA and MOVD.
 sil.MOVV = function (DESCR1,DESCR2) {
     // move value field
-    $DESCR1.val = $DESCR2.val;
+    $DESCR1.value = $DESCR2.value;
 };
 
 //     MPREAL  is  used  to multiply two real numbers.  If the
@@ -2496,8 +2501,10 @@ sil.RLINT = function ( $DESCR1, $DESCR2, $FLOC, $SLOC ) {
         $DESCR1.flags = 0;
         $DESCR1.value = this.data.resolve( 'I' );
         this.jump( $SLOC );
-    } catch ( e if e instanceof RangeError ) {
-        this.jump( $FLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
 };
 
@@ -2615,8 +2622,10 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC ) {
     try {
         $DESCR1.raddr = $DESCR2.raddr - $DESCR3.addr;
         this.jump( $SLOC );
-    } catch ( e if e instanceof RangeError ) {
-        this.jump( $FLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
 };
 
@@ -3225,8 +3234,10 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, $FLOC, $SLOC ) {
         $DESCR1.flags = $DESCR2.flags;
         $DESCR1.value = $DESCR2.value;
         this.jump( $SLOC );
-    } catch ( e if e instanceof RangeError ) {
-        this.jump( $FLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            this.jump( $FLOC );
+        }
     }
 };
 
@@ -3354,9 +3365,8 @@ sil.TRIMSP = function (SPEC1,SPEC2) {
 // 3.  UNLOAD  should do nothing if the function C1...CL is not
 // a LOADed function.
 // 4.  See also LOAD and LINK.
-sil.UNLOAD = function (SPEC) {
+sil.UNLOAD = function ( $SPEC ) {
     // unload external function
-    return;
 };
 
 //     VARID is used to compute  two  variable  identification
