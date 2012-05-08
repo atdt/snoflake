@@ -1,7 +1,7 @@
 // SIL Virtual Machine
 // (C) Copyright 2012 by Ori Livneh
 
-/*jslint white:true, vars:true, plusplus:true */
+/*jslint white:true, vars:true, plusplus:true, forin:true */
 /*globals ArrayBuffer, Float32Array, Int32Array, Uint32Array */
 
 "use strict";
@@ -56,16 +56,6 @@ function Memory() {
         uint32a  = new Uint32Array(buffer),
         abs      = Math.abs;
 
-    // Allocate and zero-fill `size` words
-    // XXX: should be public (this.alloc) !
-    function alloc( size ) {
-        var ptr = data.length;
-        while ( size-- ) {
-            data.push(0);
-        }
-        return ptr;
-    }
-
     // Unsigned Integers
 
     function getUint( ptr ) {
@@ -117,39 +107,76 @@ function Memory() {
     }
 
     Descriptor.prototype = Object.create( null, {
+
+        constructor: { value: Descriptor },
+        width:       { value: 3 },
+        
+        next: {
+            value: function () {
+                var ptr = this.ptr + this.width;
+                return new this.constructor( ptr );
+            }
+        },
+        copyTo: {
+            value: function ( obj ) {
+                var attr;
+                for ( attr in this ) {
+                    obj[ attr ] = this[ attr ];
+                }
+            }
+        },
+
         addr: {
+            enumerable: true,
             get: function () { return getInt( this.ptr ); },
             set: function ( n ) { setInt( this.ptr, n ); }
         },
         raddr: {
+            enumerable: true,
             get: function () { return getReal( this.ptr ); },
             set: function ( n ) { setReal( this.ptr, n ); }
         },
         flags: {
+            enumerable: true,
             get: function () { return getUint( this.ptr + 1 ); },
             set: function ( n ) { setUint( this.ptr + 1, n ); }
         },
         value: {
-            get: function () { return getUint( this.ptr + 2); },
+            enumerable: true,
+            get: function () { return getUint( this.ptr + 2 ); },
             set: function ( n ) { setUint( this.ptr + 2, n ); }
         }
     } );
 
     function Specifier( ptr ) {
-        this.ptr = ptr;
-        Object.seal( this );
+        Descriptor.call( this, ptr );
     }
 
     Specifier.prototype = Object.create( Descriptor.prototype, {
+
+        constructor: { value: Specifier },
+        width:       { value: 6 },
+
         offset: {
+            enumerable: true,
             get: function ()  { return getUint( this.ptr + 3); },
             set: function ( n ) { setUint( this.ptr + 3, n ); }
         },
         length: {
+            enumerable: true,
             get: function ()  { return getUint( this.ptr + 4); },
-            set: function ( n ) { setUint( this.ptr + 3, 4 ); }
+            set: function ( n ) { setUint( this.ptr + 4, n ); }
         }
     } );
+
+    // Allocate and zero-fill `size` words
+    self.alloc = function ( size ) {
+        var ptr = data.length;
+        while ( size-- ) {
+            data.push(0);
+        }
+        return ptr;
+    };
 
     self.resolve = function ( identifier ) {
         if ( typeof identifier === 'number' ) {
@@ -175,8 +202,14 @@ function Memory() {
         return new Descriptor( ptr );
     };
 
-    self.createDescriptor = function () {
-        return new Descriptor( alloc(3) );
+    self.createDescriptor = function ( addr, flags, value ) {
+        var desc = new Descriptor( self.alloc(3) );
+
+        desc.addr  = addr || 0;
+        desc.flags = flags || 0;
+        desc.value = value || 0;
+
+        return desc;
     };
 
     self.getSpecifier = function ( ptr ) {
@@ -187,7 +220,7 @@ function Memory() {
     };
 
     self.createSpecifier = function () {
-        return new Specifier( alloc(6) );
+        return new Specifier( self.alloc(6) );
     };
 
     Object.freeze( self );
@@ -201,7 +234,10 @@ function SnoMachine() {
         ip    = 0;
 
     self.data = data;
-    self.getd = self.data.getDescriptor;  // shorthand
+
+    // Shortcuts
+    self.getd = self.data.getDescriptor;
+    self.gets = self.data.getSpecifier;
 
     function evaluate( deferred ) {
         return deferred.call( self );
