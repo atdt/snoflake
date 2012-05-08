@@ -1062,9 +1062,11 @@ sil.GETLTH = function ($DESCR1, $DESCR2) {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also SETSIZ.
-sil.GETSIZ = function ($DESCR1, $DESCR2) {
+sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
     // get size
-    return;
+    $DESCR1.addr   = this.getd( $DESCR2.addr ).value;
+    $DESCR1.flags  = 0;
+    $DESCR1.values = 0;
 };
 
 //     GETSPC is used to get a specifier.
