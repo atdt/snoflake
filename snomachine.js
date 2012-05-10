@@ -6,6 +6,8 @@
 
 "use strict";
 
+var STACKSIZE = 1024;
+
 var parser = require( './sil.parse.js' ),
     loader = parser.compile( 'sum.sil' ), // XXX
     sil    = require( './dummy.sil.js' );
@@ -178,21 +180,30 @@ function Memory() {
         return ptr;
     };
 
-    self.resolve = function ( identifier ) {
-        if ( typeof identifier === 'number' ) {
-            return identifier;
+    self.resolve = function ( key ) {
+        if ( typeof key === 'number' ) {
+            return key;
         }
 
-        var ptr = symbols[ identifier ];
+        var ptr = symbols[ key ];
 
         if ( ptr === undefined ) {
-            throw new ReferenceError( identifier );
+            throw new ReferenceError( key );
         }
         return ptr;
     };
 
-    self.assign = function ( identifier, value ) {
-        symbols[ identifier ] = value.ptr || value;
+    self.assign = function ( assignee, value ) {
+        var key;
+
+        if ( typeof assignee !== 'object' ) {
+            symbols[ assignee ] = value.ptr || value;
+        } else {
+            for ( key in assignee ) {
+                value = assignee[ key ];
+                symbols[ key ] = value.ptr || value;
+            }
+        }
     };
 
     self.getDescriptor = function ( ptr ) {
@@ -229,7 +240,12 @@ function Memory() {
         spec.length = length || 0;
     };
 
+    self.alloc(STACKSIZE * 3);
+
     Object.freeze( self );
+}
+
+function SysStack() {
 }
 
 function SnoMachine() {
