@@ -3,6 +3,10 @@
 
 "use strict";
 
+function reverseString(s) {
+    return s.split( '' ).reverse().join( '' );
+}
+
 function SnobolException(message) {
     this.message = message;
 }
@@ -1696,7 +1700,7 @@ sil.MAKNOD = function (DESCR1,DESCR2,DESCR3,DESCR4,DESCR5,DESCR6) {
 // 1.  R may be negative.
 // 2.  See also MNSINT, ADREAL,  DVREAL,  EXREAL,  MPREAL,  and
 // SBREAL.
-sil.MNREAL = function (DESCR1, DESCR2) {
+sil.MNREAL = function ( DESCR1, DESCR2 ) {
     // minus real number
     DESCR2.copyTo( DESCR1 );
     DESCR1.addr *= -1;
@@ -2446,6 +2450,7 @@ sil.RCOMP = function ( DESCR1, DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( SPEC, DESCR ) {
     // convert real number to string
+    var s = DESCR.addr.toString();
     return;
 };
 
@@ -3170,8 +3175,12 @@ sil.STREAM = function (SPEC1,SPEC2,TABLE,ERROR,RUNOUT,SLOC) {
 // 1.  Note that LOC is the location of the specifier, not  the
 // string.  The string may immediately follow the specifier, or
 // it may be assembled at a remote location.
-sil.STRING = function () { // ('C1...CL') {
+sil.STRING = function ( str ) { // ('C1...CL') {
     // assemble specified string
+    str = encodeString( str );
+    this.data.alloc( str.length );
+    
+        
     return;
 };
 
@@ -3189,9 +3198,15 @@ sil.STRING = function () { // ('C1...CL') {
 //               +-------+-------+-------+-------+-------+
 //      SPEC1    |  A3      F3      V3      O3      L2   |
 //               +---------------------------------------+
-sil.SUBSP = function (SPEC1,SPEC2,SPEC3,FLOC,SLOC) {
+sil.SUBSP = function ( SPEC1, SPEC2, SPEC3, FLOC, SLOC ) {
     // substring specification
-    return;
+    if ( SPEC3.length >= SPEC2.length ) {
+        SPEC3.copyTo( SPEC1 );
+        SPEC1.length = SPEC2.length;
+        this.jump( SLOC );
+    } else {
+        this.jump( FLOC );
+    }
 };
 
 //     SUBTRT is used  to  subtract  one  address  field  from

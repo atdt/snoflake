@@ -104,6 +104,7 @@ function Memory() {
         data[ ptr ] = uint32a[0];
     }
 
+    
     function Descriptor( ptr ) {
         Object.defineProperty( this, 'ptr', { value: ptr } );
         Object.seal( this );
@@ -253,6 +254,17 @@ function Memory() {
         spec.offset = offset || 0;
         spec.length = length || 0;
     };
+
+    self.puts = function ( str ) {
+        var ptr = data.length;
+        data.push( encode(str) );
+        return ptr;
+    }
+
+    self.gets = function ( start, stop ) {
+        var encoded = data.slice( start, stop );
+        return decode( encoded );
+    }
 
     self.alloc(STACKSIZE * 3);
 
