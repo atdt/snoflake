@@ -48,7 +48,9 @@ Contributing
 Documentation for contributors is forthcoming. In the meantime, if you are
 interested in contributing, [e-mail me][1].
 
-[0]: http://en.wikipedia.org/wiki/SNOBOL
-[1]: ori.livneh@gmail.com
+[![Build Status][2]][3]
 
-[![Build Status](https://secure.travis-ci.org/atdt/sno-machine.png?branch=master)](http://travis-ci.org/atdt/sno-machine)
+[0]: http://en.wikipedia.org/wiki/SNOBOL
+[1]: mailto:ori.livneh@gmail.com
+[2]: https://secure.travis-ci.org/atdt/sno-machine.png?branch=master
+[3]: http://travis-ci.org/atdt/sno-machine
