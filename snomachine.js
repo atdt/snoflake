@@ -10,7 +10,8 @@ var STACKSIZE = 1024;
 
 var parser = require( './sil.parse.js' ),
     loader = parser.compile( 'sum.sil' ), // XXX
-    sil    = require( './dummy.sil.js' );
+    sil    = require( './dummy.sil.js' ),
+    str    = require( './lib/string.js' );
 
 function TypeValidator() {
 
@@ -255,23 +256,20 @@ function Memory() {
         spec.length = length || 0;
     };
 
-    self.puts = function ( str ) {
+    self.puts = function ( s ) {
         var ptr = data.length;
-        data.push( encode(str) );
+        data.push( str.encode( s ) );
         return ptr;
-    }
+    };
 
     self.gets = function ( start, stop ) {
         var encoded = data.slice( start, stop );
-        return decode( encoded );
-    }
+        return str.decode( encoded );
+    };
 
     self.alloc(STACKSIZE * 3);
 
     Object.freeze( self );
-}
-
-function SysStack() {
 }
 
 function SnoMachine() {
