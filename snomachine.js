@@ -48,6 +48,7 @@ function Memory() {
         symbols = {};
 
     self.symbols = symbols;
+    self.data = data;
 
     // We store all data as unsigned 32-bit integers and use ES5's ArrayBuffer
     // interface to handle conversion to and from additional datatypes.
@@ -123,8 +124,21 @@ function Memory() {
             value: function ( obj ) {
                 var attr;
                 for ( attr in this ) {
-                    obj[ attr ] = this[ attr ];
+                    if ( attr !== 'ptr' ) {
+                        obj[ attr ] = this[ attr ];
+                    }
                 }
+            }
+        },
+        eq: {
+            value: function ( other ) {
+                var attr;
+                for ( attr in this ) {
+                    if ( attr !== 'ptr' && this[ attr ] !== other[ attr ] ) {
+                        return false;
+                    }
+                }
+                return true;
             }
         },
 
