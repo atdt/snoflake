@@ -1,8 +1,8 @@
 var config = module.exports;
 
-config[ 'snobol' ] = {
+config[ 'sno-machine' ] = {
     rootPath    : '../',
     environment : 'node',
-    sources     : [ 'datatypes.js' ], // 'lib/mylib.js', 'lib/**/*.js' ],
+    sources     : [ 'lib/**/*.js' ],
     tests       : [ 'test/*-test.js' ]
 };
