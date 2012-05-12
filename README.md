@@ -70,5 +70,5 @@ Street, Fifth Floor, Boston, MA  02110-1301, USA.
 [0]: http://en.wikipedia.org/wiki/SNOBOL
 [1]: mailto:ori.livneh@gmail.com
 [2]: http://www.gnu.org/licenses/gpl-2.0.html
-[3]: https://secure.travis-ci.org/atdt/sno-machine.png?branch=master
-[4]: http://travis-ci.org/atdt/sno-machine
+[3]: https://secure.travis-ci.org/atdt/snoflake.png?branch=master
+[4]: http://travis-ci.org/atdt/snoflake
