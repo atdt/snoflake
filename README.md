@@ -1,10 +1,10 @@
 SnoMachine
 ==========
 
-**SnoMachine** is a JavaScript interpreter for the [SNOBOL][0] (_StriNg
-Oriented and symBOlic Language_) programming language, developed between 1962
-and 1967 at AT&T Bell Laboratories by David J. Farber, Ralph E. Griswold and
-Ivan P. Polonsky.
+**SnoMachine** is a JavaScript runtime for the [SNOBOL][0] (_StriNg Oriented
+and symBOlic Language_) programming language, developed between 1962 and 1967
+at AT&T Bell Laboratories by David J. Farber, Ralph E. Griswold and Ivan P.
+Polonsky.
 
 SNOBOL is highly distinct and excels at string manipulation and
 pattern-matching. SNOBOL patterns may be recursive and are available as a
