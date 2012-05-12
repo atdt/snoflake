@@ -2,8 +2,8 @@
 /*global assert */
 
 var buster = require( 'buster' );
-    SnoMachine = require( '../lib/snomachine' );
-    string = SnoMachine.string,
+    Snoflake = require( '../lib/snoflake' );
+    string = Snoflake.string,
     haya = [ -16777473, 154795775, 154077502 ]; // हाय
 
 buster.testCase( 'Strings', {
