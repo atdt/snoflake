@@ -1,0 +1,10 @@
+A      EQU     5
+B      EQU     A+3
+RET    SUM     A,B
+I      EQU     0
+LOC    LHERE   ,
+RET    SUM     RET,1
+I      SUM     I,1
+       CMPN    I,7,LOC
+       LOG     RET
+       END

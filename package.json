@@ -1,9 +1,10 @@
 {
-  "name": "sno-machine",
+  "name": "snomachine",
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
   "version": "0.0.1",
   "engine": "node >= 0.6",
+  "main": "lib/snomachine.js",
   "devDependencies": {
     "buster": "0.5.x"
   },
