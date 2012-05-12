@@ -6,7 +6,8 @@
   "engine": "node >= 0.6",
   "main": "lib/snomachine.js",
   "devDependencies": {
-    "buster": "0.5.x"
+    "buster": "0.5.x",
+    "uglify-js": "1.2.6"
   },
   "scripts": {
     "test": "buster test"
