@@ -3,22 +3,22 @@
 
 var buster = require( 'buster' );
     Snoflake = require( '../lib/snoflake' );
-    string = Snoflake.string,
+    str = Snoflake.str,
     haya = [ -16777473, 154795775, 154077502 ]; // हाय
 
 buster.testCase( 'Strings', {
 
     encode: function () {
-        assert.equals( string.encode('हाय'), haya );
+        assert.equals( str.encode('हाय'), haya );
     },
 
     decode: function () {
-        assert.equals( string.decode(haya), 'हाय' );
+        assert.equals( str.decode(haya), 'हाय' );
     },
 
     invertible: function () {
         var hi = 'こんにちは';
-        assert.equals( string.decode( string.encode( hi ) ), hi );
+        assert.equals( str.decode( str.encode( hi ) ), hi );
     }
 
 });
