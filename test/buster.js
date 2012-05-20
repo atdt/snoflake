@@ -4,5 +4,5 @@ config[ 'sno-machine' ] = {
     rootPath    : '../',
     environment : 'node',
     sources     : [ 'lib/snoflake.js' ],
-    tests       : [ 'test/*-test.js' ]
+    tests       : [ 'test/unit.js' ]
 };
