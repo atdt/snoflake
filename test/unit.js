@@ -2,12 +2,13 @@
 /*global assert */
 
 var buster = require( 'buster' ),
+    testCase = buster.testCase,
     Snoflake = require( '../lib/snoflake' ),
     haya = [ -16777473, 154795775, 154077502 ]; // हाय
 
 with ( Snoflake ) {
 
-    buster.testCase( 'Strings', {
+    testCase( 'Strings', {
         encode: function () {
             assert.equals( str.encode('हाय'), haya );
         },
@@ -16,11 +17,11 @@ with ( Snoflake ) {
         },
         invertible: function () {
             var hi = 'こんにちは';
-            assert.equals( str.decode( str.encode( hi ) ), hi );
+            assert.equals( str.decode( str.encode(hi) ), hi );
         }
     } );
 
-    buster.testCase( 'Typed Setters', {
+    testCase( 'Typed Setters', {
         uint: function () {
             assert.exception( function () {
                 setUint( 0, -4 );
@@ -38,7 +39,7 @@ with ( Snoflake ) {
         }
     } );
 
-    buster.testCase( 'Typed Getters', {
+    testCase( 'Typed Getters', {
         uint: function () {
             setUint( 0, 123 );
             assert.equals( getUint(0), 123 );
@@ -48,15 +49,24 @@ with ( Snoflake ) {
             assert.equals( getInt(0), -123 );
         },
         real: function () {
-            setReal( 0, 3.14 );
+            setReal( 0, Math.PI );
             assert.equals( Math.floor( getReal(0) ), 3 );
         }
     } );
+
+    testCase( 'Symbols', {
+        single: function () {
+            assign( 'answer', 42 );
+            assert.equals( resolve('answer'), 42 );
+        },
+        multi: function () {
+            assign( {
+                e  : Math.E,
+                pi : Math.PI
+            } );
+            assert.equals( resolve('e'), Math.E );
+            assert.equals( resolve('pi'), Math.PI );
+        }
+    } );
+
 }
-
-/*
-    var setUint = Snoflake.setUint,
-        setInt = Snoflake.setInt,
-
-    buster.testCase( 'Typed Descriptors', 
-    */
