@@ -7,7 +7,7 @@ buster.extend( global, require( '../lib/snoflake' ) );
 
 
 // 
-// Test Helpers
+// Scaffolds
 //
 
 var silly = {  // a macro language stub
