@@ -1,10 +1,10 @@
 {
-  "name": "snomachine",
+  "name": "snoflake",
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
   "version": "0.0.1",
   "engine": "node >= 0.6",
-  "main": "lib/snomachine.js",
+  "main": "lib/snoflake.js",
   "devDependencies": {
     "buster": "0.5.x",
     "uglify-js": "1.2.6"
