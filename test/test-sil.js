@@ -1,10 +1,10 @@
 /*jslint node: true, white: true, sloppy: true, forin: true */
 /*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, getspc, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
 
-var buster = require( 'buster' );
+var buster = require( 'buster' ),
+    slice = Array.prototype.slice;
 
 buster.extend( global, require( '../lib/snoflake' ) );
-
 
 // 
 // Scaffolds
@@ -33,9 +33,17 @@ buster.testCase( 'Assembly Control Macros', {
     },
     EQU: function () {
         assert( sil.EQU );
+        run( [ [ 'A', sil.EQU, mkargs(12) ] ] );
+        assert.equals( resolve('A'), 12 );
     },
     LHERE: function () {
         assert( sil.LHERE );
+        run( [
+            [ 'A', sil.LHERE, mkargs() ],
+            [ 'B', sil.LHERE, mkargs() ]
+        ] );
+        assert.equals( resolve('A'), 0 );
+        assert.equals( resolve('B'), 1 );
     },
     TITLE: function () {
         assert( sil.TITLE );
@@ -69,6 +77,15 @@ buster.testCase( 'Branch Macros', {
     setUp: reset,
     BRANCH: function () {
         assert( sil.BRANCH );
+        run( [
+            [ null, sil.BRANCH, mkargs( 'A' ) ],
+            [ 'A', sil.LHERE, mkargs() ],
+            [ 'X', sil.EQU, mkargs(22)  ],
+            [ null, sil.BRANCH, mkargs(5) ],
+            [ 'X', sil.EQU, mkargs(33) ],
+            [ null, sil.END, mkargs() ]
+        ] );
+        assert.equals( resolve('X'), 22 );
     },
     BRANIC: function () {
         assert( sil.BRANIC );
@@ -82,7 +99,19 @@ buster.testCase( 'Branch Macros', {
 buster.testCase( 'Comparison Macros', {
     setUp: reset,
     ACOMP: function () {
-        assert( sil.ACOMP ); 
+        var a = getd(), b = getd();
+        a.addr = 123;
+        b.addr = 456;
+        run( [
+            [ null,  sil.ACOMP,   mkargs( a.ptr, b.ptr ) ],
+            [ 'EQ',  sil.LHERE,   mkargs() ],
+            [ 'A',   sil.EQU,     mkargs( 111 ) ],
+            [ null,  sil.BRANCH,  mkargs( 6 ) ],
+            [ 'NE',  sil.LHERE,   mkargs() ],
+            [ 'A',   sil.EQU,     mkargs( 222 ) ],
+            [ null,  sil.END,     mkargs() ]
+        ] );
+        assert.equals( resolve('A'), 111 );
     },
     ACOMPC: function () {
         assert( sil.ACOMPC ); 

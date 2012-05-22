@@ -115,8 +115,8 @@ buster.testCase( 'Memory Management', {
         assert.equals( mem.slice(-3), [ 0, 0, 0 ] );
     },
     gets: function () {
-        var ptr = puts( 'こんにちは' );
-        assert.equals( gets(ptr), 'こんにちは' );
+        var slice = puts( 'こんにちは' );
+        assert.equals( gets( slice.start ), 'こんにちは' );
     }
 } );
 
@@ -265,6 +265,11 @@ buster.testCase( 'Specifier Datatype', {
 
         s2.update( 1, 2, 3, 4, 5 );
         refute( s1.eq( s2 ) );
+    },
+    specified: function () {
+        var spc = getspc();
+        spc.specified = '안녕';
+        assert.equals( spc.specified, '안녕' ); 
     }
 } );
 
