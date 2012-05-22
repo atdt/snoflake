@@ -10,7 +10,7 @@ buster.extend( global, require( '../lib/snoflake' ) );
 // Scaffolds
 //
 
-var silly = {  // a macro language stub
+var silly = {
     SUM: function ( a, b ) { return a + b; },
     MUL: function ( a, b ) { return a * b; },
     EQU: function ( v )    { return v; },
