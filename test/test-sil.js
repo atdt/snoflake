@@ -24,6 +24,7 @@ function mkargs() {
 //
 
 buster.testCase( 'Assembly Control Macros', {
+    setUp: reset,
     COPY: function () {
         assert( sil.COPY );
     },
@@ -42,6 +43,7 @@ buster.testCase( 'Assembly Control Macros', {
 } );
 
 buster.testCase( 'Macros that Assemble Data', {
+    setUp: reset,
     ARRAY: function () {
         assert( sil.ARRAY );
     },
@@ -64,6 +66,7 @@ buster.testCase( 'Macros that Assemble Data', {
 
 
 buster.testCase( 'Branch Macros', {
+    setUp: reset,
     BRANCH: function () {
         assert( sil.BRANCH );
     },
@@ -77,6 +80,7 @@ buster.testCase( 'Branch Macros', {
 
 
 buster.testCase( 'Comparison Macros', {
+    setUp: reset,
     ACOMP: function () {
         assert( sil.ACOMP ); 
     },
@@ -129,6 +133,7 @@ buster.testCase( 'Comparison Macros', {
 
 
 buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Management', {
+    setUp: reset,
     ISTACK: function () {
         assert( sil.ISTACK ); 
     },
@@ -160,6 +165,7 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
 
 
 buster.testCase( 'Macros that Move and Set Descriptors', {
+    setUp: reset,
     GETD: function () {
         assert( sil.GETD ); 
     },
@@ -193,6 +199,7 @@ buster.testCase( 'Macros that Move and Set Descriptors', {
 
 
 buster.testCase( 'Macros that Modify Address Fields of Descriptors', {
+    setUp: reset,
     ADJUST: function () {
         assert( sil.ADJUST ); 
     },
@@ -233,6 +240,7 @@ buster.testCase( 'Macros that Modify Address Fields of Descriptors', {
 
 
 buster.testCase( 'Macros that Modify Value Fields of Descriptors', {
+    setUp: reset,
     INCRV: function () {
         assert( sil.INCRV ); 
     },
@@ -255,6 +263,7 @@ buster.testCase( 'Macros that Modify Value Fields of Descriptors', {
 
 
 buster.testCase( 'Macros that Modify Flag Fields of Descriptors', {
+    setUp: reset,
     RESETF: function () {
         assert( sil.RESETF ); 
     },
@@ -271,6 +280,7 @@ buster.testCase( 'Macros that Modify Flag Fields of Descriptors', {
 
 
 buster.testCase( 'Macros that Perform Integer Arithmetic on Address Fields', {
+    setUp: reset,
     DECRA: function () {
         assert( sil.DECRA ); 
     },
@@ -302,6 +312,7 @@ buster.testCase( 'Macros that Perform Integer Arithmetic on Address Fields', {
 
 
 buster.testCase( 'Macros that Deal with Real Numbers', {
+    setUp: reset,
     ADREAL: function () {
         assert( sil.ADREAL ); 
     },
@@ -338,6 +349,7 @@ buster.testCase( 'Macros that Deal with Real Numbers', {
 } );
 
 buster.testCase( 'Macros that Move Specifiers', {
+    setUp: reset,
     GETSPC: function () {
         assert( sil.GETSPC ); 
     },
@@ -357,6 +369,7 @@ buster.testCase( 'Macros that Move Specifiers', {
 
 
 buster.testCase( 'Macros that Operate on Specifiers', {
+    setUp: reset,
     ADDLG: function () {
         assert( sil.ADDLG ); 
     },
@@ -400,6 +413,7 @@ buster.testCase( 'Macros that Operate on Specifiers', {
 
 
 buster.testCase( 'Macros that Operate on Syntax Tables', {
+    setUp: reset,
     CLERTB: function () {
         assert( sil.CLERTB );
     },
@@ -410,6 +424,7 @@ buster.testCase( 'Macros that Operate on Syntax Tables', {
 
 
 buster.testCase( 'Macros that Construct Pattern Nodes', {
+    setUp: reset,
     CPYPAT: function () {
         assert( sil.CPYPAT ); 
     },
@@ -419,6 +434,7 @@ buster.testCase( 'Macros that Construct Pattern Nodes', {
 } );
 
 buster.testCase( 'Macros that Operate on Tree Nodes', {
+    setUp: reset,
     ADDSIB: function () {
         assert( sil.ADDSIB ); 
     },
@@ -432,6 +448,7 @@ buster.testCase( 'Macros that Operate on Tree Nodes', {
 
 
 buster.testCase( 'Input and Output Macros', {
+    setUp: reset,
     BKSPCE: function () {
         assert( sil.BKSPCE ); 
     },
@@ -457,6 +474,7 @@ buster.testCase( 'Input and Output Macros', {
 
 
 buster.testCase( 'Macros that Depend on Operating System Facilities', {
+    setUp: reset,
     DATE: function () {
         assert( sil.DATE ); 
     },
@@ -482,6 +500,7 @@ buster.testCase( 'Macros that Depend on Operating System Facilities', {
 
 
 buster.testCase( 'Miscellaneous Macros', {
+    setUp: reset,
     LINKOR: function () {
         assert( sil.LINKOR ); 
     },
