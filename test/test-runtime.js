@@ -29,7 +29,7 @@ function mkargs() {
 // Test Cases
 //
 
-buster.testCase( 'Utils', {
+buster.testCase( 'Miscellaneous Utilities', {
     defineValues: function () {
         "use strict";  // fail loudly
         var o = defineValues( {}, { num: 12 } );
@@ -40,7 +40,7 @@ buster.testCase( 'Utils', {
     }
 } );
 
-buster.testCase( 'Strings', {
+buster.testCase( 'String Encoding', {
     encode: function () {
         assert.equals( str.encode('हाय'), [ -16777473, 154795775, 154077502 ] );
     },
@@ -82,7 +82,7 @@ buster.testCase( 'Typed Getters', {
     }
 } );
 
-buster.testCase( 'Symbols', {
+buster.testCase( 'Name Assignment and Resolution', {
     setUp: reset,
     single: function () {
         assign( 'answer', 42 );
@@ -107,7 +107,7 @@ buster.testCase( 'Symbols', {
 
 } );
 
-buster.testCase( 'Memory', {
+buster.testCase( 'Memory Management', {
     setUp: reset,
     alloc: function () {
         var ptr = alloc( 3 );
@@ -120,7 +120,7 @@ buster.testCase( 'Memory', {
     }
 } );
 
-buster.testCase( 'Descriptor', {
+buster.testCase( 'Descriptor Datatype', {
     setUp: reset,
     enumerables: function () {
         var fields = [ 'addr', 'flags', 'raddr', 'value' ],
@@ -197,7 +197,7 @@ buster.testCase( 'Descriptor', {
     }
 } );
 
-buster.testCase( 'Specifier', {
+buster.testCase( 'Specifier Datatype', {
     setUp: reset,
     enumerables: function () {
         var fields = [ 'addr', 'flags', 'length', 'offset', 'raddr', 'value' ],
@@ -268,7 +268,7 @@ buster.testCase( 'Specifier', {
     }
 } );
 
-buster.testCase( 'Shortcuts', {
+buster.testCase( 'Miscellaneous Shortcuts', {
     setUp: reset,
     getd: function () {
         var d = getd( 6 );
@@ -282,7 +282,7 @@ buster.testCase( 'Shortcuts', {
     }
 } );
 
-buster.testCase( 'Runtime', {
+buster.testCase( 'Execution Environment', {
     setUp: function () {
         reset();
         global.ip = 0;
