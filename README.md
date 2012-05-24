@@ -30,12 +30,12 @@ Status
  * SIL parser / translator
  * Data structures and memory allocation
  * Execution environment
- * 85 (of 131) SIL macros (with some tests)
- * 100% test coverage for VM
+ * 103 (of 139) SIL macros implemented
+ * **100% test coverage for VM**
 
 ### Todo ###
 
- * Better test coverage of SIL macros
+ * Improve test coverage of SIL macros
  * System stack manipulation macros
  * AJAX-powered file IO
  * SNOBOL syntax tables
