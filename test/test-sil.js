@@ -245,7 +245,13 @@ buster.testCase( 'Macros that Modify Address Fields of Descriptors', {
         assert( sil.GETLG ); 
     },
     GETLTH: function () {
-        assert( sil.GETLTH ); 
+        var s = 'Beauty is truth, truth beauty',
+            d1 = new Descriptor(),
+            d2 = new Descriptor();
+        d2.addr = s.length;
+        len = str.encode( s ).length + 9;
+        sil.GETLTH( d1, d2 );
+        assert.equals( d1.addr, len );
     },
     GETSIZ: function () {
         assert( sil.GETSIZ ); 
