@@ -62,7 +62,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the [GNU General Public License][3] for more details.
 
-[![Build Status][3]][4]
+[![Build Status][4]][5]
 
 [0]: http://en.wikipedia.org/wiki/SNOBOL
 [1]: mailto:ori.livneh@gmail.com
