@@ -491,7 +491,8 @@ buster.testCase( 'Input and Output Macros', {
         assert( sil.ENFILE ); 
     },
     FORMAT: function () {
-        assert( sil.FORMAT ); 
+        var s = sil.FORMAT( 'test' );
+        assert.equals( s, 'test' );
     },
     OUTPUT: function () {
         assert( sil.OUTPUT ); 
