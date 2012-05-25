@@ -273,6 +273,31 @@ buster.testCase( 'Specifier Datatype', {
     }
 } );
 
+buster.testCase( 'Stack Manipulation', {
+    setUp: function () {
+        assign( { OSTACK: 0, CSTACK: 0 } );
+    },
+    getters: function () {
+        assign( 'OSTACK', 5 );
+        assert.equals( stack.old, 5 );
+        assign( 'CSTACK', 7 );
+        assert.equals( stack.ptr, 7 );
+    },
+    setters: function () {
+        stack.old = 12;
+        assert.equals( resolve('OSTACK'), 12 );
+        stack.ptr = 42;
+        assert.equals( resolve('CSTACK'), 42 );
+    },
+    autoUpdate: function () {
+        stack.ptr = 8;
+        stack.ptr = 10;
+        assert.equals( stack.old, 8 );
+        stack.ptr = 12;
+        assert.equals( stack.old, 10 );
+    }
+} );
+
 buster.testCase( 'Miscellaneous Shortcuts', {
     setUp: reset,
     getd: function () {
