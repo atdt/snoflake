@@ -1,10 +1,22 @@
 /*jslint node: true, white: true, sloppy: true, forin: true */
-/*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, getspc, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
+/*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, getspc, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp, getterSetter */
 
 var buster = require( 'buster' );
 
 buster.extend( global, require( '../lib/snoflake/format' ) );
 
+buster.testCase( 'Property Constructors', {
+    getterSetter: function () {
+        var goat = Object.create( {}, {
+            age: getterSetter( 'AGE' )
+        } );
+        goat.age = 12;
+        assert.equals( resolve('AGE'), 12 );
+        assign( 'AGE', 13 );  // Happy birthday, Goat.
+        assert.equals( goat.age, 13 );
+    }
+} );
+        
 buster.testCase( 'String Formatting', {
     format: function () {
         assert( String.prototype.format );
