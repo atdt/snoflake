@@ -275,6 +275,13 @@ buster.testCase( 'Specifier Datatype', {
 
 buster.testCase( 'Stack Manipulation', {
     setUp: function () {
+        stack.size = 4; 
+        reset();
+        assign( { OSTACK: 0, CSTACK: 0 } );
+    },
+    tearDown: function () {
+        stack.size = 1024;
+        reset();
         assign( { OSTACK: 0, CSTACK: 0 } );
     },
     getters: function () {
@@ -289,12 +296,35 @@ buster.testCase( 'Stack Manipulation', {
         stack.ptr = 42;
         assert.equals( resolve('CSTACK'), 42 );
     },
-    autoUpdate: function () {
-        stack.ptr = 8;
-        stack.ptr = 10;
-        assert.equals( stack.old, 8 );
-        stack.ptr = 12;
-        assert.equals( stack.old, 10 );
+    push: function () {
+        stack.push( [ 1, 2 ] );
+        assert.equals( stack.trace(), [ 1, 2, 0, 0 ] );
+        stack.push( [ 3, 4 ] );
+        assert.equals( stack.trace(), [ 1, 2, 3, 4 ] );
+    },
+    overflow: function () {
+        assert.exception( function () {
+            stack.push( [ 1, 1, 1, 1, 1 ] );
+        }, 'RangeError' );
+    },
+    pop: function () {
+        stack.push( [ 'a', 'b', 'c', 'd' ] );
+        assert.equals( stack.pop(), [ 'd' ] );
+        assert.equals( stack.pop(3), [ 'a', 'b', 'c' ] );
+    },
+    underflow: function () {
+        stack.push( [ 'a', 'b', 'c' ] );
+        assert.exception( function () {
+            stack.pop(4);
+        }, 'RangeError' );
+    },
+    oldptr: function () {
+        stack.push( [ 'a', 'b', 'c' ] );
+        assert.equals( stack.ptr, 3 );
+        assert.equals( stack.old, 0 );
+        stack.pop(2);
+        assert.equals( stack.ptr, 1 );
+        assert.equals( stack.old, 3 );
     }
 } );
 
