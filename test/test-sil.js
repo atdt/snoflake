@@ -410,7 +410,13 @@ buster.testCase( 'Macros that Deal with Real Numbers', {
         assert( sil.SBREAL ); 
     },
     SPREAL: function () { // stub
-        assert( sil.SPREAL ); 
+        var d = new Descriptor(),
+            s = new Specifier();
+        assign( 'R', 9 );
+        s.specified = '-0.5';
+        sil.SPREAL( d, s, 1, 2 );
+        assert.equals( d.raddr, -0.5 );
+        assert.equals( d.value, 9 );
     }
 } );
 
@@ -473,7 +479,15 @@ buster.testCase( 'Macros that Operate on Specifiers', {
         assert( sil.SUBSP ); 
     },
     TRIMSP: function () { // stub
-        assert( sil.TRIMSP ); 
+        var s1 = new Specifier(),
+            s2 = new Specifier();
+        s2.specified = 'abcd   ';
+        sil.TRIMSP( s1, s2 );
+        assert.equals( 'abcd   ', s2.specified );
+        assert.equals( s1.specified, 'abcd' );
+        s2.specified = 'efgh';
+        sil.TRIMSP( s1, s2 );
+        assert.equals( s1.specified, 'efgh' );
     }
 } );
 
