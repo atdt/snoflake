@@ -607,6 +607,11 @@ buster.testCase( 'Miscellaneous Macros', {
         assert( sil.TOP ); 
     },
     VARID: function () { // stub
-        assert( sil.VARID ); 
+        var d = new Descriptor(),
+            s = new Specifier();
+        s.specified = 'hello';
+        sil.VARID( d, s );
+        assert.equals( d.addr, 1825099640 );
+        assert.equals( d.value, 3035920923 );
     }
 } );
