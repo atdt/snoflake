@@ -89,8 +89,9 @@ buster.testCase( 'Name Assignment and Resolution', {
         assert.equals( resolve('answer'), 42 );
     },
     multi: function () {
+        var len = Object.keys( symbols ).length;
         assign( { e: Math.E, pi: Math.PI } );
-        assert.equals( Object.keys( symbols ).length, 2 );
+        assert.equals( Object.keys( symbols ).length, len + 2 );
         assert.equals( resolve('e'), Math.E );
         assert.equals( resolve('pi'), Math.PI );
     },
@@ -102,7 +103,8 @@ buster.testCase( 'Name Assignment and Resolution', {
     reset: function () {
         assign( { e: Math.E, pi: Math.PI } );
         reset();
-        assert.equals( Object.keys( symbols ).length, 0 );
+        // Resetting should clear all but two keys: CSTACK and OSTACK.
+        assert.equals( Object.keys( symbols ).length, 2 );
     }
 
 } );
@@ -277,12 +279,10 @@ buster.testCase( 'Stack Manipulation', {
     setUp: function () {
         stack.size = 4; 
         reset();
-        assign( { OSTACK: 0, CSTACK: 0 } );
     },
     tearDown: function () {
         stack.size = 1024;
         reset();
-        assign( { OSTACK: 0, CSTACK: 0 } );
     },
     getters: function () {
         assign( 'OSTACK', 5 );

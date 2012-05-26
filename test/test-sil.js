@@ -167,7 +167,18 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         assert( sil.ISTACK ); 
     },
     POP: function () { // stub
-        assert( sil.POP ); 
+        var d1 = new Descriptor(),
+            d2 = new Descriptor(),
+            d3 = new Descriptor(),
+            d4 = new Descriptor();
+        d1.update( 2, 4, 6 );
+        d2.update( 3, 5, 7 );
+        assert.equals( stack.ptr, 0 );
+        sil.PUSH( [ d1, d2 ] );
+        assert.equals( stack.ptr, 6 );
+        sil.POP( [ d3, d4 ] );
+        assert.equals( d1.raw(), d4.raw() );
+        assert.equals( d2.raw(), d3.raw() );
     },
     PROC: function () { // stub
         assert( sil.PROC ); 
@@ -176,7 +187,12 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         assert( sil.PSTACK ); 
     },
     PUSH: function () { // stub
+        var d = new Descriptor();
+        d.update( 4, 1, 6 );
+        stack.push( d.raw() );
         assert( sil.PUSH ); 
+        d = getd( stack.old );
+        assert.equals( d.raw(), [ 4, 1, 6 ] );
     },
     RCALL: function () { // stub
         assert( sil.RCALL ); 
@@ -185,10 +201,25 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         assert( sil.RRTURN ); 
     },
     SPOP: function () { // stub
-        assert( sil.SPOP ); 
+        var s1 = new Specifier(),
+            s2 = new Specifier(),
+            s3 = new Specifier(),
+            s4 = new Specifier();
+        s1.update( 0, 2, 4, 6, 8, 10 );
+        s2.update( 1, 3, 5, 7, 9, 11 );
+        assert.equals( stack.ptr, 0 );
+        sil.PUSH( [ s1, s2 ] );
+        assert.equals( stack.ptr, 12 );
+        sil.POP( [ s3, s4 ] );
+        assert.equals( s1.raw(), s4.raw() );
+        assert.equals( s2.raw(), s3.raw() );
     },
     SPUSH: function () { // stub
-        assert( sil.SPUSH );
+        var s = new Specifier();
+        s.update( 1, 2, 3, 4, 5, 6 );
+        stack.push( s.raw() );
+        d = getspc( stack.old );
+        assert.equals( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
     }
 } );
 
