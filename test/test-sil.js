@@ -55,8 +55,9 @@ buster.testCase( 'Macros that Assemble Data', {
     ARRAY: function () { // stub
         assert( sil.ARRAY );
     },
-    BUFFER: function () { // stub
-        assert( sil.BUFFER );
+    BUFFER: function () {
+        var ptr = sil.BUFFER( 4 );
+        assert.equals( getspc( ptr ).specified, '    ' );
     },
     DESCR: function () { // stub
         assert( sil.DESCR );
@@ -67,8 +68,9 @@ buster.testCase( 'Macros that Assemble Data', {
     SPEC: function () { // stub
         assert( sil.SPEC );
     },
-    STRING: function () { // stub
-        assert( sil.STRING );
+    STRING: function () {
+        var ptr = sil.STRING( 'Bananaphone' );
+        assert.equals( getspc( ptr ).specified, 'Bananaphone' );
     }
 } );
 
@@ -166,7 +168,7 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
     ISTACK: function () { // stub
         assert( sil.ISTACK ); 
     },
-    POP: function () { // stub
+    POP: function () {
         var d1 = new Descriptor(),
             d2 = new Descriptor(),
             d3 = new Descriptor(),
@@ -186,7 +188,7 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
     PSTACK: function () { // stub
         assert( sil.PSTACK ); 
     },
-    PUSH: function () { // stub
+    PUSH: function () {
         var d = new Descriptor();
         d.update( 4, 1, 6 );
         stack.push( d.raw() );
@@ -200,7 +202,7 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
     RRTURN: function () { // stub
         assert( sil.RRTURN ); 
     },
-    SPOP: function () { // stub
+    SPOP: function () {
         var s1 = new Specifier(),
             s2 = new Specifier(),
             s3 = new Specifier(),
@@ -214,7 +216,7 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         assert.equals( s1.raw(), s4.raw() );
         assert.equals( s2.raw(), s3.raw() );
     },
-    SPUSH: function () { // stub
+    SPUSH: function () {
         var s = new Specifier();
         s.update( 1, 2, 3, 4, 5, 6 );
         stack.push( s.raw() );
@@ -409,7 +411,7 @@ buster.testCase( 'Macros that Deal with Real Numbers', {
     SBREAL: function () { // stub
         assert( sil.SBREAL ); 
     },
-    SPREAL: function () { // stub
+    SPREAL: function () {
         var d = new Descriptor(),
             s = new Specifier();
         assign( 'R', 9 );
@@ -445,7 +447,7 @@ buster.testCase( 'Macros that Operate on Specifiers', {
     ADDLG: function () { // stub
         assert( sil.ADDLG ); 
     },
-    APDSP: function () { // stub
+    APDSP: function () {
         var s1 = new Specifier(),
             s2 = new Specifier();
         s1.specified = 'hello ';
@@ -483,7 +485,7 @@ buster.testCase( 'Macros that Operate on Specifiers', {
     SUBSP: function () { // stub
         assert( sil.SUBSP ); 
     },
-    TRIMSP: function () { // stub
+    TRIMSP: function () {
         var s1 = new Specifier(),
             s2 = new Specifier();
         s2.specified = 'abcd   ';
@@ -611,7 +613,7 @@ buster.testCase( 'Miscellaneous Macros', {
     TOP: function () { // stub
         assert( sil.TOP ); 
     },
-    VARID: function () { // stub
+    VARID: function () {
         var d = new Descriptor(),
             s = new Specifier();
         s.specified = 'hello';
