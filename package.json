@@ -3,13 +3,13 @@
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
   "version": "0.0.1",
-  "engine": "node >= 0.6",
+  "engine": "node >= 0.8.0",
   "main": "./lib/snoflake.js",
   "repository" : { "type":"git", "url":"http://github.com/atdt/snoflake" },
   "devDependencies": {
-    "pegjs": "0.7.x",
-    "buster": "0.5.x",
-    "uglify-js": "1.2.6"
+    "pegjs":     ">= 0.7.0",
+    "buster":    ">= 0.6.2",
+    "uglify-js": ">= 1.2.6"
   },
   "scripts": {
     "test": "buster test"
