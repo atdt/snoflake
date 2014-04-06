@@ -9,9 +9,9 @@
   "devDependencies": {
     "pegjs":     ">= 0.7.0",
     "buster":    ">= 0.6.2",
-    "uglify-js": ">= 1.2.6"
+    "uglify-js": "1.2.6"
   },
   "scripts": {
-    "test": "buster test"
+    "test": "buster-test"
   }
 }

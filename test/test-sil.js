@@ -2,9 +2,11 @@
 /*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, getspc, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
 
 var buster = require( 'buster' ),
-    slice = Array.prototype.slice;
+    assert = buster.assert,
+    slice = Array.prototype.slice,
+    Snoflake = require( '../lib/snoflake' );
 
-buster.extend( global, require( '../lib/snoflake' ) );
+Snoflake.extend( global, Snoflake );
 
 // 
 // Scaffolds
