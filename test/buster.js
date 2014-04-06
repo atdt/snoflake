@@ -1,6 +1,6 @@
 var config = module.exports;
 
-config[ 'sno-machine' ] = {
+config[ 'snoflake' ] = {
     rootPath    : '../',
     environment : 'node',
     sources     : [ 'lib/snoflake.js' ],
