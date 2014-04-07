@@ -141,8 +141,27 @@ buster.testCase( 'Comparison Macros', {
     LEQLC: function () { // stub
         assert( sil.LEQLC ); 
     },
-    LEXCMP: function () { // stub
-        assert( sil.LEXCMP ); 
+    LEXCMP: function () {
+        var SPEC1 = new Specifier(),
+            SPEC2 = new Specifier(),
+            GTLOC = 1,
+            EQLOC = 2,
+            LTLOC = 3;
+
+        SPEC1.specified = 'abd';
+        SPEC2.specified = 'abc';
+        sil.LEXCMP( SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
+        assert.equals( ip + 1, GTLOC );
+
+        SPEC1.specified = 'abc';
+        SPEC2.specified = 'abc';
+        sil.LEXCMP( SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
+        assert.equals( ip + 1, EQLOC );
+
+        SPEC1.specified = 'abc';
+        SPEC2.specified = 'abd';
+        sil.LEXCMP( SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
+        assert.equals( ip + 1, LTLOC );
     },
     RCOMP: function () { // stub
         assert( sil.RCOMP ); 
@@ -600,8 +619,25 @@ buster.testCase( 'Miscellaneous Macros', {
     LOCAPV: function () { // stub
         assert( sil.LOCAPV ); 
     },
-    LVALUE: function () { // stub
-        assert( sil.LVALUE ); 
+    LVALUE: function () {
+        var values = [ 42, 28, 96, 14, 2, 77 ],
+            least = Math.min.apply( Math, values ),
+            DESCR1 = new Descriptor(),
+            DESCR2 = new Descriptor(),
+            step = 2*3, offset = 0;
+
+        DESCR2.addr = alloc( values.length * step );
+        while ( values.length ) {
+            mem.splice(
+                DESCR2.addr + offset, step,
+                values.length === 1 ? 0 : offset + step, 0, 0,
+                values.pop(), 0, 0
+            );
+            offset += step;
+        }
+
+        sil.LVALUE( DESCR1, DESCR2 );
+        assert.equals( DESCR1.addr, least );
     },
     ORDVST: function () { // stub
         assert( sil.ORDVST ); 
