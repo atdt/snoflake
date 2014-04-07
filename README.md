@@ -14,8 +14,7 @@ a virtual machine that was designed expressly for that purpose (a first, as far
 as I know). 
 
 **Snoflake** is a port of the macro implementation of SNOBOL4. It is
-currently only about 50-60% complete and is not yet usable, but the work is
-moving at a rapid pace. A working implementation is expected by late summer.
+currently only about 75% complete and is not yet usable.
 
 Compatibility
 -------------
@@ -30,7 +29,7 @@ Status
  * SIL parser / translator
  * Data structures and memory allocation
  * Execution environment
- * 103 (of 139) SIL macros implemented
+ * 126 (of 139) SIL macros implemented
  * **100% test coverage for VM**
 
 ### Todo ###
@@ -51,7 +50,7 @@ you are interested in contributing, please [e-mail me][1].
 
 License
 -------
-Copyright (C) 2012 [Ori Livneh][2]
+Copyright (C) 2014 [Ori Livneh][2]
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
