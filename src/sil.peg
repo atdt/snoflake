@@ -151,4 +151,4 @@ macro "macro"
 end
   = blank 'END' ( blank / '\n' )* !.
 
-/* vim: set ft=javascript: */
+/* vim: set ft=pegjs: */
