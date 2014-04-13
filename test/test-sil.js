@@ -471,10 +471,10 @@ buster.testCase( 'Macros that Operate on Specifiers', {
     APDSP: function () {
         var s1 = new Specifier(),
             s2 = new Specifier();
-        s1.specified = 'hello ';
-        s2.specified = 'world';
+        s1.specified = 'supercalifragilistic';
+        s2.specified = 'expialidocious';
         sil.APDSP( s1, s2 );
-        assert.equals( s1.specified, 'hello world' );
+        assert.equals( s1.specified, 'supercalifragilisticexpialidocious' );
     },
     FSHRTN: function () { // stub
         assert( sil.FSHRTN ); 
