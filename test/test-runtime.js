@@ -45,10 +45,10 @@ buster.testCase( 'Miscellaneous Utilities', {
 
 buster.testCase( 'String Encoding', {
     encode: function () {
-        assert.equals( str.encode('हाय'), [ -16777473, 154795775, 154077502 ] );
+        assert.equals( str.encode('हाय'), [155060537, -63185, -1] );
     },
     decode: function () {
-        assert.equals( str.decode( [ -16777473, 154795775, 154077502 ] ), 'हाय' );
+        assert.equals( str.decode( [155060537, -63185, -1] ), 'हाय' );
     }
 } );
 
