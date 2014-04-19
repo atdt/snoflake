@@ -272,7 +272,7 @@ buster.testCase( 'Specifier Datatype', {
         refute( s1.eq( s2 ) );
     },
     specified: function () {
-        var spc = getspc();
+        var spc = new Specifier();
         spc.specified = '안녕';
         assert.equals( spc.specified, '안녕' ); 
     }
@@ -339,8 +339,8 @@ buster.testCase( 'Miscellaneous Shortcuts', {
         assert.equals( d.ptr, 6 );
     },
     getspc: function () {
-        var s = getspc( 6 );
-        assert ( s instanceof Specifier );
+        var s = new Specifier( 6 );
+        assert( s instanceof Specifier );
         assert.equals( s.ptr, 6 );
     }
 } );
