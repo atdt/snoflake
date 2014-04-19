@@ -1,50 +1,21 @@
 {
-    "predef": [
-        "console",
-        "Ember",
-        "DS",
-        "Handlebars",
-        "Metamorph",
-        "ember_assert",
-        "ember_warn",
-        "ember_deprecate",
-        "ember_deprecateFunc",
-        "require",
-        "equal",
-        "test",
-        "testBoth",
-        "raises",
-        "deepEqual",
-        "start",
-        "stop",
-        "ok",
-        "strictEqual",
-        "module"
-    ],
-
-    "node" : true,
-    "es5" : true,
-    "browser" : true,
-
-    "boss" : true,
-    "curly": false,
-    "debug": false,
-    "devel": false,
     "eqeqeq": true,
-    "evil": true,
-    "forin": false,
-    "immed": false,
-    "laxbreak": false,
-    "newcap": true,
+    "latedef": true,
     "noarg": true,
-    "noempty": false,
-    "nonew": false,
-    "nomen": false,
-    "onevar": false,
-    "plusplus": false,
-    "regexp": false,
+    "nonew": true,
     "undef": true,
-    "sub": true,
+    "unused": true,
+
+    "forin": false,
+    "regexp": false,
     "strict": false,
-    "white": false
+
+    "laxbreak": true,
+    "smarttabs": true,
+    "multistr": true,
+    "globalstrict": true,
+
+    "node": true,
+
+    "predef": [ "mem", "assign", "Descriptor", "Specifier", "jmp", "getd", "getf", "gets", "puts", "alloc", "resolve", "str" ]
 }
