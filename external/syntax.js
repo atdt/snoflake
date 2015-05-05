@@ -15,139 +15,139 @@ var SyntaxTable = {
         KEYSYM  : [ 'BIAMFN', 'TBLKTB' ],
         NOTSYM  : [ 'BINGFN', 'TBLKTB' ],
         QUESYM  : [ 'BIQSFN', 'TBLKTB' ],
-        ELSE    : [ 'ERROR' ],
+        ELSE    : [ ERROR() ],
     },
 
     CARDTB: {
-        CMT  : [ 'CMTTYP', 'STOPSH' ],
-        CTL  : [ 'CTLTYP', 'STOPSH' ],
-        CNT  : [ 'CNTTYP', 'STOPSH' ],
-        ELSE : [ 'NEWTYP', 'STOPSH' ],
+        CMT  : [ 'CMTTYP', STOPSH() ],
+        CTL  : [ 'CTLTYP', STOPSH() ],
+        CNT  : [ 'CNTTYP', STOPSH() ],
+        ELSE : [ 'NEWTYP', STOPSH() ],
     },
 
     DQLITB: {
-        DQUOTE : [ 'STOP' ],
-        ELSE   : [ 'CONTIN' ],
+        DQUOTE : [ STOP() ],
+        ELSE   : [ CONTIN() ],
     },
 
     ELEMTB: {
         NUMBER    : [ 'ILITYP', 'INTGTB' ],
-        LETTER    : [ 'VARTYP', 'VARTB' ],
+        LETTER    : [ 'VARTYP', GOTO('VARTB') ],
         SQUOTE    : [ 'QLITYP', 'SQLITB' ],
         DQUOTE    : [ 'QLITYP', 'DQLITB' ],
-        LEFTPAREN : [ 'NSTTYP', 'STOP' ],
-        ELSE      : [ 'ERROR' ],
+        LEFTPAREN : [ 'NSTTYP', STOP() ],
+        ELSE      : [ ERROR() ],
     },
 
     EOSTB: {
-        EOS  : [ 'STOP' ],
-        ELSE : [ 'CONTIN' ],
+        EOS  : [ STOP() ],
+        ELSE : [ CONTIN() ],
     },
 
     FLITB: {
-        NUMBER     : [ 'CONTIN' ],
-        TERMINATOR : [ 'STOPSH' ],
-        ELSE       : [ 'ERROR' ],
+        NUMBER     : [ CONTIN() ],
+        TERMINATOR : [ STOPSH() ],
+        ELSE       : [ ERROR() ],
     },
 
     FRWDTB: {
-        BLANK      : [ 'CONTIN' ],
-        EQUAL      : [ 'EQTYP', 'STOP' ],
-        RIGHTPAREN : [ 'RPTYP', 'STOP' ],
-        RIGHTBR    : [ 'RBTYP', 'STOP' ],
-        COMMA      : [ 'CMATYP', 'STOP' ],
-        COLON      : [ 'CLNTYP', 'STOP' ],
-        EOS        : [ 'EOSTYP', 'STOP' ],
-        ELSE       : [ 'NBTYP', 'STOPSH' ],
+        BLANK      : [ CONTIN() ],
+        EQUAL      : [ 'EQTYP', STOP() ],
+        RIGHTPAREN : [ 'RPTYP', STOP() ],
+        RIGHTBR    : [ 'RBTYP', STOP() ],
+        COMMA      : [ 'CMATYP', STOP() ],
+        COLON      : [ 'CLNTYP', STOP() ],
+        EOS        : [ 'EOSTYP', STOP() ],
+        ELSE       : [ 'NBTYP', STOPSH() ],
     },
 
     GOTFTB: {
-        LEFTPAREN : [ 'FGOTYP', 'STOP' ],
-        LEFTBR    : [ 'FTOTYP', 'STOP' ],
-        ELSE      : [ 'ERROR' ],
+        LEFTPAREN : [ 'FGOTYP', STOP() ],
+        LEFTBR    : [ 'FTOTYP', STOP() ],
+        ELSE      : [ ERROR() ],
     },
 
     GOTOTB: {
         SGOSYM    : [ 'GOTSTB' ],
         FGOSYM    : [ 'GOTFTB' ],
-        LEFTPAREN : [ 'UGOTYP', 'STOP' ],
-        LEFTBR    : [ 'UTOTYP', 'STOP' ],
-        ELSE      : [ 'ERROR' ],
+        LEFTPAREN : [ 'UGOTYP', STOP() ],
+        LEFTBR    : [ 'UTOTYP', STOP() ],
+        ELSE      : [ ERROR() ],
     },
 
     GOTSTB: {
-        LEFTPAREN : [ 'SGOTYP', 'STOP' ],
-        LEFTBR    : [ 'STOTYP', 'STOP' ],
-        ELSE      : [ 'ERROR' ],
+        LEFTPAREN : [ 'SGOTYP', STOP() ],
+        LEFTBR    : [ 'STOTYP', STOP() ],
+        ELSE      : [ ERROR() ],
     },
 
     IBLKTB: {
         BLANK : [ 'FRWDTB' ],
-        EOS   : [ 'EOSTYP', 'STOP' ],
-        ELSE  : [ 'ERROR' ],
+        EOS   : [ 'EOSTYP', STOP() ],
+        ELSE  : [ ERROR() ],
     },
 
     INTGTB: {
-        NUMBER     : [ 'CONTIN' ],
-        TERMINATOR : [ 'ILITYP', 'STOPSH' ],
+        NUMBER     : [ CONTIN() ],
+        TERMINATOR : [ 'ILITYP', STOPSH() ],
         DOT        : [ 'FLITYP', 'FLITB' ],
-        ELSE       : [ 'ERROR' ],
+        ELSE       : [ ERROR() ],
     },
 
     LBLTB: {
         ALPHANUMERIC : [ 'LBLXTB' ],
-        BLANK        : [ 'STOPSH' ],
-        EOS          : [ 'STOPSH' ],
-        ELSE         : [ 'ERROR' ],
+        BLANK        : [ STOPSH() ],
+        EOS          : [ STOPSH() ],
+        ELSE         : [ ERROR() ],
     },
 
     LBLXTB: {
-        BLANK : [ 'STOPSH' ],
-        EOS   : [ 'STOPSH' ],
-        ELSE  : [ 'CONTIN' ],
+        BLANK : [ STOPSH() ],
+        EOS   : [ STOPSH() ],
+        ELSE  : [ CONTIN() ],
     },
 
     NBLKTB: {
-        TERMINATOR : [ 'ERROR' ],
-        ELSE       : [ 'STOPSH' ],
+        TERMINATOR : [ ERROR() ],
+        ELSE       : [ STOPSH() ],
     },
 
     NUMBTB: {
         NUMBER : [ 'NUMCTB' ],
         PLUS   : [ 'NUMCTB' ],
         MINUS  : [ 'NUMCTB' ],
-        COMMA  : [ 'CMATYP', 'STOPSH' ],
-        COLON  : [ 'DIMTYP', 'STOPSH' ],
-        ELSE   : [ 'ERROR' ],
+        COMMA  : [ 'CMATYP', STOPSH() ],
+        COLON  : [ 'DIMTYP', STOPSH() ],
+        ELSE   : [ ERROR() ],
     },
 
     NUMCTB: {
-        NUMBER : [ 'CONTIN' ],
-        COMMA  : [ 'CMATYP', 'STOPSH' ],
-        COLON  : [ 'DIMTYP', 'STOPSH' ],
-        ELSE   : [ 'ERROR' ],
+        NUMBER : [ CONTIN() ],
+        COMMA  : [ 'CMATYP', STOPSH() ],
+        COLON  : [ 'DIMTYP', STOPSH() ],
+        ELSE   : [ ERROR() ],
     },
 
     SNABTB: {
-        FGOSYM : [ 'STOP' ],
-        SGOSYM : [ 'STOPSH' ],
-        ELSE   : [ 'ERROR' ],
+        FGOSYM : [ STOP() ],
+        SGOSYM : [ STOPSH() ],
+        ELSE   : [ ERROR() ],
     },
 
     SQLITB: {
-        SQUOTE : [ 'STOP' ],
-        ELSE   : [ 'CONTIN' ],
+        SQUOTE : [ STOP() ],
+        ELSE   : [ CONTIN() ],
     },
 
     STARTB: {
-        BLANK : [ 'STOP' ],
+        BLANK : [ STOP() ],
         STAR  : [ 'EXPFN', 'TBLKTB' ],
-        ELSE  : [ 'ERROR' ],
+        ELSE  : [ ERROR() ],
     },
 
     TBLKTB: {
-        BLANK : [ 'STOP' ],
-        ELSE  : [ 'ERROR' ],
+        BLANK : [ STOP() ],
+        ELSE  : [ ERROR() ],
     },
 
     UNOPTB: {
@@ -165,32 +165,32 @@ var SyntaxTable = {
         ORSYM   : [ 'BARFN', 'NBLKTB' ],
         QUESYM  : [ 'QUESFN', 'NBLKTB' ],
         RAISE   : [ 'AROWFN', 'NBLKTB' ],
-        ELSE    : [ 'ERROR' ],
+        ELSE    : [ ERROR() ],
     },
 
     VARATB: {
         LETTER     : [ 'VARBTB' ],
-        COMMA      : [ 'CMATYP', 'STOPSH' ],
-        RIGHTPAREN : [ 'RPTYP', 'STOPSH' ],
-        ELSE       : [ 'ERROR' ],
+        COMMA      : [ 'CMATYP', STOPSH() ],
+        RIGHTPAREN : [ 'RPTYP', STOPSH() ],
+        ELSE       : [ ERROR() ],
     },
 
     VARBTB: {
-        ALPHANUMERIC : [ 'CONTIN' ],
-        BREAK        : [ 'CONTIN' ],
-        LEFTPAREN    : [ 'LPTYP', 'STOPSH' ],
-        COMMA        : [ 'CMATYP', 'STOPSH' ],
-        RIGHTPAREN   : [ 'RPTYP', 'STOPSH' ],
-        ELSE         : [ 'ERROR' ],
+        ALPHANUMERIC : [ CONTIN() ],
+        BREAK        : [ CONTIN() ],
+        LEFTPAREN    : [ 'LPTYP', STOPSH() ],
+        COMMA        : [ 'CMATYP', STOPSH() ],
+        RIGHTPAREN   : [ 'RPTYP', STOPSH() ],
+        ELSE         : [ ERROR() ],
     },
 
     VARTB: {
-        ALPHANUMERIC : [ 'CONTIN' ],
-        BREAK        : [ 'CONTIN' ],
-        TERMINATOR   : [ 'VARTYP', 'STOPSH' ],
-        LEFTPAREN    : [ 'FNCTYP', 'STOP' ],
-        LEFTBR       : [ 'ARYTYP', 'STOP' ],
-        ELSE         : [ 'ERROR' ],
+        ALPHANUMERIC : [ CONTIN() ],
+        BREAK        : [ CONTIN() ],
+        TERMINATOR   : [ 'VARTYP', STOPSH() ],
+        LEFTPAREN    : [ 'FNCTYP', STOP() ],
+        LEFTBR       : [ 'ARYTYP', STOP() ],
+        ELSE         : [ ERROR() ],
     }
 
 };
