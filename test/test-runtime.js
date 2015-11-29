@@ -6,7 +6,9 @@ var buster = require( 'buster' ),
     refute = buster.refute,
     Snoflake = require( '../lib/snoflake' );
 
-Snoflake.extend( global, Snoflake );
+Object.keys( Snoflake ).forEach( function ( k ) {
+    global[k] = Snoflake[k];
+} );
 
 
 // 

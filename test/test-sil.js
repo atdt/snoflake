@@ -6,7 +6,9 @@ var buster = require( 'buster' ),
     slice = Array.prototype.slice,
     Snoflake = require( '../lib/snoflake' );
 
-Snoflake.extend( global, Snoflake );
+Object.keys( Snoflake ).forEach( function ( k ) {
+    global[k] = Snoflake[k];
+} );
 
 // 
 // Scaffolds
