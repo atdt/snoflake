@@ -34,6 +34,7 @@ var is = {
     SQUOTE       : /'/,
     STAR         : /\*/,
     TERMINATOR   : /[;)>,\]\s]/,
+    ELSE         : /.*/,
 };
 
 for ( var k in is ) if ( is.hasOwnProperty( k ) ) {
