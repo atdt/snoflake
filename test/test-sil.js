@@ -503,7 +503,12 @@ buster.testCase( 'Macros that Operate on Specifiers', {
         assert( sil.SHORTN ); 
     },
     STREAM: function () { // stub
-        assert( sil.STREAM ); 
+        var s1 = new Specifier(),
+            s2 = new Specifier();
+        s2.specified = '43.2   ';
+
+        sil.STREAM( s1, s2, resolve( 'INTGTB' ), -1, -2, -3 );
+        assert.equals( s1.specified, '43.2' );
     },
     SUBSP: function () { // stub
         assert( sil.SUBSP ); 
