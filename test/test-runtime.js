@@ -15,11 +15,6 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 // Scaffolds
 //
 
-var silly = {
-    SUM: function ( a, b ) { return a + b; },
-    MUL: function ( a, b ) { return a * b; },
-    EQU: function ( v )    { return v; },
-};
 
 function mkargs( vm ) {
     // Construct a deferred operands object
@@ -307,9 +302,19 @@ buster.testCase( 'Miscellaneous Shortcuts', {
     }
 } );
 
+
 buster.testCase( 'Execution Environment', {
     setUp: function () {
         this.vm = new SNOBOL.VM();
+        SNOBOL._sil = SNOBOL.sil;
+        SNOBOL.sil = {
+            SUM: function ( a, b ) { return a + b; },
+            MUL: function ( a, b ) { return a * b; },
+            EQU: function ( v )    { return v; },
+        };
+    },
+    tearDown: function () {
+        SNOBOL.sil = SNOBOL._sil;
     },
     jmp: function () {
         this.vm.jmp(4);
@@ -317,15 +322,14 @@ buster.testCase( 'Execution Environment', {
     },
     exec: function () {
         this.vm.assign( { a: 5, b: 8 } );
-        this.vm.exec( 'result', silly.SUM, mkargs( this.vm, 'a', 'b' ) );
+        this.vm.exec( 'result', 'SUM', mkargs( this.vm, 'a', 'b' ) );
         assert.equals( this.vm.resolve('result'), 13 );
     },
     run: function () {
-        var args = silly.args;
         this.vm.run( [
-            [ 'a', silly.EQU, mkargs( this.vm, 11 ) ],
-            [ 'b', silly.EQU, mkargs( this.vm, 17 ) ],
-            [ 'c', silly.MUL, mkargs( this.vm, 'a', 'b' ) ]
+            [ 'a', 'EQU', mkargs( this.vm, 11 ) ],
+            [ 'b', 'EQU', mkargs( this.vm, 17 ) ],
+            [ 'c', 'MUL', mkargs( this.vm, 'a', 'b' ) ]
         ] );
         assert.equals( this.vm.resolve('c'), 187 );
     }

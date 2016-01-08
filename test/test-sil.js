@@ -41,14 +41,14 @@ buster.testCase( 'Assembly Control Macros', {
     },
     EQU: function () {
         assert( sil.EQU );
-        this.vm.run( [ [ 'A', sil.EQU, mkargs( this.vm, 12) ] ] );
+        this.vm.run( [ [ 'A', 'EQU', mkargs( this.vm, 12 ) ] ] );
         assert.equals( this.vm.resolve('A'), 12 );
     },
     LHERE: function () {
         assert( sil.LHERE );
         this.vm.run( [
-            [ 'A', sil.LHERE, mkargs( this.vm ) ],
-            [ 'B', sil.LHERE, mkargs( this.vm ) ]
+            [ 'A', 'LHERE', mkargs( this.vm ) ],
+            [ 'B', 'LHERE', mkargs( this.vm ) ]
         ] );
         assert.equals( this.vm.resolve('A'), 0 );
         assert.equals( this.vm.resolve('B'), 1 );
@@ -92,12 +92,12 @@ buster.testCase( 'Branch Macros', {
     BRANCH: function () {
         assert( sil.BRANCH );
         this.vm.run( [
-            [ null, sil.BRANCH, mkargs( this.vm, 'A' ) ],
-            [ 'A', sil.LHERE, mkargs( this.vm ) ],
-            [ 'X', sil.EQU, mkargs( this.vm, 22)  ],
-            [ null, sil.BRANCH, mkargs( this.vm, 5) ],
-            [ 'X', sil.EQU, mkargs( this.vm, 33) ],
-            [ null, sil.END, mkargs( this.vm ) ]
+            [ null, 'BRANCH', mkargs( this.vm, 'A' ) ] ,
+            [ 'A',  'LHERE',  mkargs( this.vm  ) ] ,
+            [ 'X',  'EQU',    mkargs( this.vm, 22) ] ,
+            [ null, 'BRANCH', mkargs( this.vm, 5) ] ,
+            [ 'X',  'EQU',    mkargs( this.vm, 33) ] ,
+            [ null, 'END',    mkargs( this.vm  ) ]
         ] );
         assert.equals( this.vm.resolve('X'), 22 );
     },
@@ -119,13 +119,13 @@ buster.testCase( 'Comparison Macros', {
         a.addr = 123;
         b.addr = 456;
         this.vm.run( [
-            [ null,  sil.ACOMP,   mkargs( this.vm, a.ptr, b.ptr ) ],
-            [ 'EQ',  sil.LHERE,   mkargs( this.vm ) ],
-            [ 'A',   sil.EQU,     mkargs( this.vm, 111 ) ],
-            [ null,  sil.BRANCH,  mkargs( this.vm, 6 ) ],
-            [ 'NE',  sil.LHERE,   mkargs( this.vm ) ],
-            [ 'A',   sil.EQU,     mkargs( this.vm, 222 ) ],
-            [ null,  sil.END,     mkargs( this.vm ) ]
+            [ null,  'ACOMP',   mkargs( this.vm, a.ptr, b.ptr ) ],
+            [ 'EQ',  'LHERE',   mkargs( this.vm ) ],
+            [ 'A',   'EQU',     mkargs( this.vm, 111 ) ],
+            [ null,  'BRANCH',  mkargs( this.vm, 6 ) ],
+            [ 'NE',  'LHERE',   mkargs( this.vm ) ],
+            [ 'A',   'EQU',     mkargs( this.vm, 222 ) ],
+            [ null,  'END',     mkargs( this.vm ) ]
         ] );
         assert.equals( this.vm.resolve('A'), 111 );
     },
