@@ -1,14 +1,9 @@
 /*jslint node: true, forin: true, undef:true, white:true, plusplus:true, vars:true */
-/*globals ArrayBuffer, Float32Array, Int32Array, Uint32Array, str */
 
 "use strict";
 
-var DEBUG = true;
-
-var Snoflake = require( './base' ),
-    VM = Snoflake.VM,
-    str = Snoflake.str,
-    push = Array.prototype.push;
+var SNOBOL = require( './base' ),
+    VM = SNOBOL.VM;
 
 var buf = new ArrayBuffer( 4 ),
     f32 = new Float32Array( buf ),
@@ -17,10 +12,10 @@ var buf = new ArrayBuffer( 4 ),
 
 // var mem = [], symbols = {};
 
-Snoflake.SymbolTable = function () {};
-Snoflake.SymbolTable.prototype = {};
+SNOBOL.SymbolTable = function () {};
+SNOBOL.SymbolTable.prototype = {};
 
-global.symbols = new Snoflake.SymbolTable;
+global.symbols = new SNOBOL.SymbolTable();
 
 VM.prototype.getUint = function ( ptr ) {
     return this.mem[ ptr ];
@@ -37,7 +32,7 @@ VM.prototype.setUint = function ( ptr, value ) {
 VM.prototype.getInt = function ( ptr ) {
     u32[ 0 ] = this.mem[ ptr ];
     return i32[ 0 ];
-}
+};
 
 VM.prototype.setInt = function ( ptr, value ) {
     i32[ 0 ] = value;
@@ -83,6 +78,7 @@ VM.prototype.resolve = function ( key ) {
     return ptr;
 };
 
+
 VM.prototype.assign = function ( assignee, value ) {
     if ( typeof assignee !== 'object' ) {
         this.symbols[ assignee ] = value.ptr || value;
@@ -94,73 +90,31 @@ VM.prototype.assign = function ( assignee, value ) {
     }
 };
 
+VM.prototype.$ = function ( key, value ) {
+    return value !== undefined
+        ? this.assign( key, value )
+        : this.resolve( key );
+}
+
 VM.prototype.puts = function ( s ) {
     var ptr = this.mem.length,
-        encoded = str.encode( s );
+        encoded = SNOBOL.str.encode( s );
     Array.prototype.push.apply( this.mem, encoded );
     return { start: ptr, stop: this.mem.length };
 };
 
 VM.prototype.gets = function ( start, stop ) {
     var encoded = this.mem.slice( start, stop );
-    return str.decode( encoded );
+    return SNOBOL.str.decode( encoded );
 };
 
-VM.prototype.reset = function ( start, stop ) {
+VM.prototype.reset = function () {
+    var STACK = 1024;
+
     this.mem = [];
-    this.symbols = new Snoflake.SymbolTable;
-    this.alloc( this.stack.size * 3 );
-    this.stack.ptr = 0;
-    this.stack.old = 0;
-}
-
-function getterSetter( symbol, extra ) {
-    var property = {
-        get: resolve.bind( null, symbol ),
-        set: assign.bind( null, symbol )
-    };
-    if ( extra !== undefined ) {
-        Object.keys( extra ).forEach( function ( k ) {
-            property[k] = extra[k];
-        } );
-    }
-    return property;
-}
-
-var stack = Object.create( {}, {
-    old  : getterSetter( 'OSTACK' ),
-    ptr  : getterSetter( 'CSTACK' ),
-    size : { value: 1024, writable: DEBUG },
-} );
-
-stack.trace = function () {
-    return mem.slice( 0, stack.size );
+    this.symbols = new SNOBOL.SymbolTable();
+    this.alloc( STACK );
+    this.$( 'STACK', STACK );
+    this.$( 'CSTACK', 0 );
+    this.$( 'OSTACK', 0 );
 };
-
-stack.push = function ( ar ) {
-    if ( ar.length + stack.ptr > stack.size )  {
-        throw new RangeError( 'Stack overflow' );
-    }
-
-    stack.old = stack.ptr;
-
-    for ( var i = 0; i < ar.length; i++ ) {
-        mem[ stack.ptr++ ] = ar[ i ];
-    }
-
-    return stack.ptr;
-};
-
-stack.pop = function ( len ) {
-    len = len || 1;
-    stack.old = stack.ptr;
-    stack.ptr = stack.ptr - len;
-
-    if ( stack.ptr < 0 ) {
-        throw new RangeError( 'Stack underflow' );
-    }
-
-    return mem.slice( stack.ptr, stack.old );
-};
-
-reset();

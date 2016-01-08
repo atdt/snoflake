@@ -1,13 +1,13 @@
 /*jslint node: true, white: true, sloppy: true, forin: true */
-/*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, getspc, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
+/*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
 
 var buster = require( 'buster' ),
     assert = buster.assert,
     refute = buster.refute,
-    Snoflake = require( '../lib/snoflake' );
+    SNOBOL = require( '../js/SNOBOL' );
 
-Object.keys( Snoflake ).forEach( function ( k ) {
-    global[k] = Snoflake[k];
+Object.keys( SNOBOL ).forEach( function ( k ) {
+    global[k] = SNOBOL[k];
 } );
 
 
@@ -21,9 +21,11 @@ var silly = {
     EQU: function ( v )    { return v; },
 };
 
-function mkargs() {
+function mkargs( vm ) {
     // Construct a deferred operands object
-    var args = [].slice.call( arguments );
+    var args = [].slice.call( arguments, 1 ),
+        resolve = vm.resolve.bind( vm );
+        
     return function () {
         return args.map( resolve );
     };
@@ -34,104 +36,110 @@ function mkargs() {
 // Test Cases
 //
 
-buster.testCase( 'Miscellaneous Utilities', {
-    defineValues: function () {
-        "use strict";  // fail loudly
-        var o = defineValues( {}, { num: 12 } );
-        assert.equals( Object.keys(o), [] );
-        assert.exception( function () {
-            o.num = 42;
-        }, 'TypeError' );
-    }
-} );
-
 buster.testCase( 'String Encoding', {
     encode: function () {
-        assert.equals( str.encode('हाय'), [155060537, -63185, -1] );
+        assert.equals( SNOBOL.str.encode('हाय'), [155060537, -63185, -1] );
     },
     decode: function () {
-        assert.equals( str.decode( [155060537, -63185, -1] ), 'हाय' );
+        assert.equals( SNOBOL.str.decode( [155060537, -63185, -1] ), 'हाय' );
     }
 } );
 
 buster.testCase( 'Typed Setters', {
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
     uint: function () {
+        var vm = this.vm;
         assert.exception( function () {
-            setUint( 0, -4 );
+            vm.setUint( 0, -4 );
         }, 'RangeError' );
     },
     int: function () {
+        var vm = this.vm;
         assert.exception( function () {
-            setUint( 0, 4.2 );
+            vm.setUint( 0, 4.2 );
         }, 'RangeError' );
     },
     real: function () {
+        var vm = this.vm;
         assert.exception( function () {
-            setReal( 0, 10e100 );
+            vm.setReal( 0, 10e100 );
         }, 'RangeError' );
     }
 } );
 
 buster.testCase( 'Typed Getters', {
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
     uint: function () {
-        setUint( 0, 123 );
-        assert.equals( getUint(0), 123 );
+        this.vm.setUint( 0, 123 );
+        assert.equals( this.vm.getUint(0), 123 );
     },
     int: function () {
-        setInt( 0, -123 );
-        assert.equals( getInt(0), -123 );
+        this.vm.setInt( 0, -123 );
+        assert.equals( this.vm.getInt(0), -123 );
     },
     real: function () {
-        setReal( 0, Math.PI );
-        assert.equals( Math.floor( getReal(0) ), 3 );
+        this.vm.setReal( 0, Math.PI );
+        assert.equals( Math.floor( this.vm.getReal(0) ), 3 );
     }
 } );
 
 buster.testCase( 'Name Assignment and Resolution', {
-    setUp: reset,
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
     single: function () {
-        assign( 'answer', 42 );
-        assert.equals( resolve('answer'), 42 );
+        this.vm.assign( 'answer', 42 );
+        assert.equals( this.vm.resolve('answer'), 42 );
     },
     multi: function () {
-        var len = Object.keys( symbols ).length;
-        assign( { e: Math.E, pi: Math.PI } );
-        assert.equals( Object.keys( symbols ).length, len + 2 );
-        assert.equals( resolve('e'), Math.E );
-        assert.equals( resolve('pi'), Math.PI );
+        var len = Object.keys( this.vm.symbols ).length;
+        this.vm.assign( { e: Math.E, pi: Math.PI } );
+        assert.equals( Object.keys( this.vm.symbols ).length, len + 2 );
+        assert.equals( this.vm.resolve('e'), Math.E );
+        assert.equals( this.vm.resolve('pi'), Math.PI );
     },
     missing: function () {
+        var vm = this.vm;
         assert.exception( function () {
-            resolve( 'missing' );
+            vm.resolve( 'missing' );
         }, 'ReferenceError' );
     },
     reset: function () {
-        assign( { e: Math.E, pi: Math.PI } );
-        reset();
-        // Resetting should clear all but two keys: CSTACK and OSTACK.
-        assert.equals( Object.keys( symbols ).length, 2 );
+        this.vm.assign( { e: Math.E, pi: Math.PI } );
+        this.vm.reset();
+        // Resetting should clear all but three keys: STACK, CSTACK, and OSTACK.
+        assert.equals( Object.keys( this.vm.symbols ).length, 3 );
     }
 
 } );
 
 buster.testCase( 'Memory Management', {
-    setUp: reset,
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
     alloc: function () {
-        var ptr = alloc( 3 );
-        assert.equals( mem.length, ptr + 3 );
-        assert.equals( mem.slice(-3), [ 0, 0, 0 ] );
+        var vm = new SNOBOL.VM(), 
+            ptr = vm.alloc( 3 );
+        assert.equals( vm.mem.length, ptr + 3 );
+        assert.equals( vm.mem.slice(-3), [ 0, 0, 0 ] );
     },
     gets: function () {
-        var slice = puts( 'こんにちは' );
-        assert.equals( gets( slice.start ), 'こんにちは' );
+        var slice = this.vm.puts( 'こんにちは' );
+        assert.equals( this.vm.gets( slice.start ), 'こんにちは' );
     }
 } );
 
 buster.testCase( 'Descriptor Datatype', {
-    setUp: reset,
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
     enumerables: function () {
-        var fields = [ 'addr', 'flags', 'raddr', 'value' ],
-            d = new Descriptor(),
+        var d = this.vm.d(),
+            fields = [ 'addr', 'flags', 'raddr', 'value' ],
             keys = [];
         for ( var key in d ) {
             keys.push( key );
@@ -139,26 +147,26 @@ buster.testCase( 'Descriptor Datatype', {
         assert.equals( keys.sort(), fields );
     },
     frozen: function () {
-        var d = new Descriptor();
+        var d = this.vm.d();
         assert( Object.isFrozen(d) );
     },
     next: function () {
-        var desc = new Descriptor(),
-            next = new Descriptor();
+        var desc = this.vm.d(),
+            next = this.vm.d();
         assert.equals( next.ptr, desc.next().ptr );
     },
     init: function () {
-        var orig = new Descriptor(),
-            copy = new Descriptor( orig.ptr );
+        var orig = this.vm.d(),
+            copy = this.vm.d( orig.ptr );
         orig.addr = 90210;
         assert.equals( copy.addr, 90210 );
     },
     width: function () {
-        var d = new Descriptor();
+        var d = this.vm.d();
         assert.equals( d.width, 3 );
     },
     getters_setters: function () {
-        var d = new Descriptor();
+        var d = this.vm.d();
         d.addr = -123;
         assert.equals( d.addr, -123 );
         d.raddr = 6.1;
@@ -169,31 +177,32 @@ buster.testCase( 'Descriptor Datatype', {
         assert.equals( d.value, 777 );
     },
     not_specifier: function () {
-        var d = new Descriptor();
+        var d = this.vm.d();
         refute( d.length );
     },
     raw: function () {
-        var d = new Descriptor();
+        var d = this.vm.d();
         d.addr = 6;
         d.flags = 7;
         d.value = 8;
         assert.equals( d.raw(), [ 6, 7, 8 ] );
     },
     read: function () {
-        var src = new Descriptor(),
-            dst = new Descriptor();
+        var src = this.vm.d(), dst = this.vm.d();
         src.update( 6, 7, 8 );
         dst.read( src );
         assert.equals( dst.raw(), src.raw() );
     },
     update: function () {
-        var d = new Descriptor();
+        var vm = new SNOBOL.VM(),
+            d = new SNOBOL.Descriptor( vm );
         d.update( 6, 7, 8 );
         assert.equals( d.raw(), [ 6, 7, 8 ] );
     },
     eq: function () {
-        var d1 = new Descriptor(),
-            d2 = new Descriptor();
+        var vm = new SNOBOL.VM(),
+            d1 = new SNOBOL.Descriptor( vm ),
+            d2 = new SNOBOL.Descriptor( vm );
 
         d1.update( 6, 7, 8 );
         d2.update( 6, 7, 8 );
@@ -205,10 +214,12 @@ buster.testCase( 'Descriptor Datatype', {
 } );
 
 buster.testCase( 'Specifier Datatype', {
-    setUp: reset,
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
     enumerables: function () {
         var fields = [ 'addr', 'flags', 'length', 'offset', 'raddr', 'value' ],
-            s = new Specifier(),
+            s = new SNOBOL.Specifier( this.vm ),
             keys = [];
         for ( var key in s ) {
             keys.push( key );
@@ -216,33 +227,33 @@ buster.testCase( 'Specifier Datatype', {
         assert.equals( keys.sort(), fields );
     },
     frozen: function () {
-        var d = new Specifier();
-        assert( Object.isFrozen(d) );
+        var s = new SNOBOL.Specifier( this.vm );
+        assert( Object.isFrozen(s) );
     },
     next: function () {
-        var spec = new Specifier(),
-            next = new Specifier();
+        var spec = new SNOBOL.Specifier( this.vm ),
+            next = new SNOBOL.Specifier( this.vm );
         assert.equals( next.ptr, spec.next().ptr );
     },
     init: function () {
-        var orig = new Specifier(),
-            copy = new Specifier( orig.ptr );
+        var orig = new SNOBOL.Specifier( this.vm ),
+            copy = new SNOBOL.Specifier( this.vm, orig.ptr );
         orig.offset = 90210;
         assert.equals( copy.offset, 90210 );
     },
     width: function () {
-        var s = new Specifier();
+        var s = new SNOBOL.Specifier( this.vm );
         assert.equals( s.width, 6 );
     },
     getters_setters: function () {
-        var s = new Specifier();
+        var s = new SNOBOL.Specifier( this.vm );
         s.offset = 123;
         assert.equals( s.offset, 123 );
         s.length = 456;
         assert.equals( s.length, 456 );
     },
     raw: function () {
-        var s = new Specifier();
+        var s = new SNOBOL.Specifier( this.vm );
         s.addr = 6;
         s.flags = 7;
         s.value = 8;
@@ -251,20 +262,20 @@ buster.testCase( 'Specifier Datatype', {
         assert.equals( s.raw(), [ 6, 7, 8, 9, 10, 0 ] );
     },
     read: function () {
-        var src = new Specifier(),
-            dst = new Specifier();
+        var src = new SNOBOL.Specifier( this.vm ),
+            dst = new SNOBOL.Specifier( this.vm );
         src.update( 6, 7, 8, 9, 10 );
         dst.read( src );
         assert.equals( dst.raw(), src.raw() );
     },
     update: function () {
-        var s = new Specifier();
+        var s = new SNOBOL.Specifier( this.vm );
         s.update( 6, 7, 8, 9, 10 );
         assert.equals( s.raw(), [ 6, 7, 8, 9, 10, 0 ] );
     },
     eq: function () {
-        var s1 = new Specifier(),
-            s2 = new Specifier();
+        var s1 = new SNOBOL.Specifier( this.vm ),
+            s2 = new SNOBOL.Specifier( this.vm );
 
         s1.update( 6, 7, 8, 9, 10 );
         s2.update( 6, 7, 8, 9, 10 );
@@ -274,100 +285,48 @@ buster.testCase( 'Specifier Datatype', {
         refute( s1.eq( s2 ) );
     },
     specified: function () {
-        var spc = new Specifier();
+        var spc = new SNOBOL.Specifier( this.vm );
         spc.specified = '안녕';
         assert.equals( spc.specified, '안녕' ); 
     }
 } );
 
-buster.testCase( 'Stack Manipulation', {
-    setUp: function () {
-        stack.size = 4; 
-        reset();
-    },
-    tearDown: function () {
-        stack.size = 1024;
-        reset();
-    },
-    getters: function () {
-        assign( 'OSTACK', 5 );
-        assert.equals( stack.old, 5 );
-        assign( 'CSTACK', 7 );
-        assert.equals( stack.ptr, 7 );
-    },
-    setters: function () {
-        stack.old = 12;
-        assert.equals( resolve('OSTACK'), 12 );
-        stack.ptr = 42;
-        assert.equals( resolve('CSTACK'), 42 );
-    },
-    push: function () {
-        stack.push( [ 1, 2 ] );
-        assert.equals( stack.trace(), [ 1, 2, 0, 0 ] );
-        stack.push( [ 3, 4 ] );
-        assert.equals( stack.trace(), [ 1, 2, 3, 4 ] );
-    },
-    overflow: function () {
-        assert.exception( function () {
-            stack.push( [ 1, 1, 1, 1, 1 ] );
-        }, 'RangeError' );
-    },
-    pop: function () {
-        stack.push( [ 'a', 'b', 'c', 'd' ] );
-        assert.equals( stack.pop(), [ 'd' ] );
-        assert.equals( stack.pop(3), [ 'a', 'b', 'c' ] );
-    },
-    underflow: function () {
-        stack.push( [ 'a', 'b', 'c' ] );
-        assert.exception( function () {
-            stack.pop(4);
-        }, 'RangeError' );
-    },
-    oldptr: function () {
-        stack.push( [ 'a', 'b', 'c' ] );
-        assert.equals( stack.ptr, 3 );
-        assert.equals( stack.old, 0 );
-        stack.pop(2);
-        assert.equals( stack.ptr, 1 );
-        assert.equals( stack.old, 3 );
-    }
-} );
-
 buster.testCase( 'Miscellaneous Shortcuts', {
-    setUp: reset,
-    getd: function () {
-        var d = getd( 6 );
-        assert( d instanceof Descriptor );
+    setUp: function () {
+        this.vm = new SNOBOL.VM();
+    },
+    d: function () {
+        var d = this.vm.d( 6 );
+        assert( d instanceof SNOBOL.Descriptor );
         assert.equals( d.ptr, 6 );
     },
-    getspc: function () {
-        var s = new Specifier( 6 );
-        assert( s instanceof Specifier );
+    s: function () {
+        var s = this.vm.s( 6 );
+        assert( s instanceof SNOBOL.Specifier );
         assert.equals( s.ptr, 6 );
     }
 } );
 
 buster.testCase( 'Execution Environment', {
     setUp: function () {
-        reset();
-        global.ip = 0;
+        this.vm = new SNOBOL.VM();
     },
     jmp: function () {
-        jmp(4);
-        assert.equals( ip, 3 );
+        this.vm.jmp(4);
+        assert.equals( this.vm.instructionPointer, 3 );
     },
     exec: function () {
-        assign( { a: 5, b: 8 } );
-        exec( 'result', silly.SUM, mkargs( 'a', 'b' ) );
-        assert.equals( resolve('result'), 13 );
+        this.vm.assign( { a: 5, b: 8 } );
+        this.vm.exec( 'result', silly.SUM, mkargs( this.vm, 'a', 'b' ) );
+        assert.equals( this.vm.resolve('result'), 13 );
     },
     run: function () {
         var args = silly.args;
-        run( [
-            [ 'a', silly.EQU, mkargs( 11 ) ],
-            [ 'b', silly.EQU, mkargs( 17 ) ],
-            [ 'c', silly.MUL, mkargs( 'a', 'b' ) ]
+        this.vm.run( [
+            [ 'a', silly.EQU, mkargs( this.vm, 11 ) ],
+            [ 'b', silly.EQU, mkargs( this.vm, 17 ) ],
+            [ 'c', silly.MUL, mkargs( this.vm, 'a', 'b' ) ]
         ] );
-        assert.equals( resolve('c'), 187 );
+        assert.equals( this.vm.resolve('c'), 187 );
     }
 } );

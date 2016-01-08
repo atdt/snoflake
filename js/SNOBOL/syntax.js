@@ -1,4 +1,4 @@
-var Snoflake = require( './base' );
+var SNOBOL = require( './base' );
 
 // See section 4.1 (Characters) in S4D58
 var characterClasses = {
@@ -40,7 +40,7 @@ var characterClasses = {
     ELSE         : /.*/,
 };
 
-Snoflake.match = function ( characterClass, char ) {
+SNOBOL.match = function ( characterClass, char ) {
     return characterClasses[ characterClass ].test( char );
 };
 
@@ -240,7 +240,7 @@ var syntaxTables = {
 };
 
 Object.keys( syntaxTables ).forEach( function ( tableName ) {
-    Snoflake.SymbolTable.prototype[ tableName ] = syntaxTables[ tableName ];
+    SNOBOL.SymbolTable.prototype[ tableName ] = syntaxTables[ tableName ];
 } );
 
 /* MDATA */
@@ -278,15 +278,15 @@ var PARMS = {
     UNITI   : 5,
     UNITO   : 6,
     UNITP   : 7,
-}
+};
 
 Object.keys( MDATA ).forEach( function ( symbol ) {
-    Snoflake.SymbolTable.prototype[ symbol ] = MDATA[ symbol ];
+    SNOBOL.SymbolTable.prototype[ symbol ] = MDATA[ symbol ];
 } );
 
 Object.keys( PARMS ).forEach( function ( symbol ) {
-    Snoflake.SymbolTable.prototype[ symbol ] = PARMS[ symbol ];
+    SNOBOL.SymbolTable.prototype[ symbol ] = PARMS[ symbol ];
 } );
 
-Snoflake.SymbolTable.prototype.MLINK = -1;
-Snoflake.SymbolTable.prototype.PARMS = -1;
+SNOBOL.SymbolTable.prototype.MLINK = -1;
+SNOBOL.SymbolTable.prototype.PARMS = -1;

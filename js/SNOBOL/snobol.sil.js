@@ -1,6 +1,6 @@
-var Snoflake = require( './base' );
+var SNOBOL = require( './base' );
 
-Snoflake.loader = function ( resolve ) {
+SNOBOL.loader = function ( resolve ) {
     var $ = resolve;
     return [
         [ null,      sil.TITLE,  function () { return [ 'Table of Contents' ]; } ],

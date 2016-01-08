@@ -1,6 +1,6 @@
 /*jslint white: true, node: true, vars: true, evil: true */
 
-var Snoflake = require( './base' ),
+var SNOBOL = require( './base' ),
     fs = require( 'fs' );
 
 
@@ -9,10 +9,10 @@ function getGenerator() {
     return ug.gen_code.bind( ug );
 }
 
-var parser = Snoflake.peg_parser;
+var parser = SNOBOL.peg_parser,
     generate = getGenerator();
 
-Snoflake.parser = {
+SNOBOL.parser = {
     parse: function ( source ) {
         var ast = parser.parse( source ),
             code = generate( ast, {
