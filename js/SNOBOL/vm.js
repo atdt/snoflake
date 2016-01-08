@@ -1,9 +1,9 @@
-var Snoflake = require( './base' );
+var SNOBOL = require( './base' );
 
-Snoflake.VM.prototype.exec = function ( label, opCode, deferred ) {
+SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
     var currentInstruction = this.instructionPointer,
         args = deferred.call(),
-        returnValue = opCode.apply( null, args );
+        returnValue = opCode.apply( this, args );
 
     if ( label !== null ) {
         if ( returnValue !== undefined ) {
@@ -14,13 +14,13 @@ Snoflake.VM.prototype.exec = function ( label, opCode, deferred ) {
     }
 };
 
-Snoflake.VM.prototype.jmp = function ( ptr ) {
+SNOBOL.VM.prototype.jmp = function ( ptr ) {
     if ( ptr !== undefined ) {
         this.instructionPointer = this.resolve( ptr ) - 1;
     }
 };
 
-Snoflake.VM.prototype.run = function ( program ) {
+SNOBOL.VM.prototype.run = function ( program ) {
     for ( var i = 0; i < program.length; i++ ) {
         if ( program[ i ][ 0 ] !== null ) {
             this.assign( program[ i ][ 0 ], i );
@@ -33,4 +33,16 @@ Snoflake.VM.prototype.run = function ( program ) {
         this.exec.apply( this, program[ this.instructionPointer ] );
         this.instructionPointer++;
     }
+};
+
+SNOBOL.VM.prototype.d = function ( ptr ) {
+    return ptr instanceof SNOBOL.Descriptor
+        ? ptr
+        : new SNOBOL.Descriptor( this, ptr );
+};
+
+SNOBOL.VM.prototype.s = function ( ptr ) {
+    return ptr instanceof SNOBOL.Specifier
+        ? ptr
+        : new SNOBOL.Specifier( this, ptr );
 };

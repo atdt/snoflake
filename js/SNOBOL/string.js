@@ -2,9 +2,9 @@
 
 "use strict";
 
-var Snoflake = require( './base' );
+var SNOBOL = require( './base' );
 
-var str = {
+SNOBOL.str = {
 
     encode: function ( s ) {
         var i, lo, hi, encoded = [];
@@ -59,6 +59,3 @@ var str = {
         return hash;
     }
 };
-
-
-Snoflake.str = str;

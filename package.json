@@ -4,7 +4,7 @@
   "author": "Ori Livneh <ori.livneh@gmail.com>",
   "version": "0.0.1",
   "engine": "node >= 0.8.0",
-  "main": "./lib/snoflake.js",
+  "main": "./js/snobol.js",
   "repository" : { "type":"git", "url":"http://github.com/atdt/snoflake" },
   "devDependencies": {
     "pegjs":      ">= 0.7",
