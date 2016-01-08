@@ -3,7 +3,7 @@ var SNOBOL = require( './base' );
 SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
     var currentInstruction = this.instructionPointer,
         args = deferred.call(),
-        returnValue = opCode.apply( this, args );
+        returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
     if ( label !== null ) {
         if ( returnValue !== undefined ) {
@@ -21,8 +21,11 @@ SNOBOL.VM.prototype.jmp = function ( ptr ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
+    var args;
+
     for ( var i = 0; i < program.length; i++ ) {
         if ( program[ i ][ 0 ] !== null ) {
+            console.log( program[ i ][ 0 ] );
             this.assign( program[ i ][ 0 ], i );
         }
     }
@@ -30,7 +33,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointer = 0;
 
     while ( this.instructionPointer !== program.length ) {
-        this.exec.apply( this, program[ this.instructionPointer ] );
+        args = program[ this.instructionPointer ];
+        this.exec.apply( this, args );
         this.instructionPointer++;
     }
 };
