@@ -288,5 +288,7 @@ Object.keys( PARMS ).forEach( function ( symbol ) {
     SNOBOL.SymbolTable.prototype[ symbol ] = PARMS[ symbol ];
 } );
 
+SNOBOL.SymbolTable.prototype.R = 314;
 SNOBOL.SymbolTable.prototype.MLINK = -1;
 SNOBOL.SymbolTable.prototype.PARMS = -1;
+

@@ -207,13 +207,17 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
             d3 = this.vm.d(),
-            d4 = this.vm.d();
+            d4 = this.vm.d(),
+            cur = this.vm.CSTACK.addr;
+
         d1.update( 2, 4, 6 );
         d2.update( 3, 5, 7 );
-        assert.equals( this.vm.$( 'CSTACK' ), 0 );
+
+        assert.equals( this.vm.CSTACK.addr, cur );
         sil.PUSH.call( this.vm, [ d1, d2 ] );
-        assert.equals( this.vm.$( 'CSTACK' ), 6 );
+        assert.equals( this.vm.CSTACK.addr, cur + d1.width + d2.width );
         sil.POP.call( this.vm, [ d3, d4 ] );
+        assert.equals( this.vm.CSTACK.addr, cur );
         assert.equals( d1.raw(), d4.raw() );
         assert.equals( d2.raw(), d3.raw() );
     },
@@ -224,10 +228,11 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         assert( sil.PSTACK ); 
     },
     PUSH: function () {
-        var ostack = this.vm.$( 'OSTACK' ), d = this.vm.d();
+        var cur = this.vm.CSTACK.addr,
+            d = this.vm.d();
         d.update( 4, 1, 6 );
         sil.PUSH.call( this.vm, d );
-        d = this.vm.d( ostack );
+        d = this.vm.d( cur );
         assert.equals( d.raw(), [ 4, 1, 6 ] );
     },
     RCALL: function () { // stub
@@ -240,24 +245,27 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
             s3 = this.vm.s(),
-            s4 = this.vm.s();
+            s4 = this.vm.s(),
+            cur = this.vm.CSTACK.addr;
+
         s1.update( 0, 2, 4, 6, 8, 10 );
         s2.update( 1, 3, 5, 7, 9, 11 );
-        assert.equals( this.vm.$( 'CSTACK' ), 0 );
+        assert.equals( this.vm.CSTACK.addr, cur );
         sil.PUSH.call( this.vm, [ s1, s2 ] );
-        assert.equals( this.vm.$( 'CSTACK' ), 12 );
+        assert.equals( this.vm.CSTACK.addr, cur + s1.width + s2.width );
         sil.POP.call( this.vm, [ s3, s4 ] );
+        assert.equals( this.vm.CSTACK.addr, cur );
         assert.equals( s1.raw(), s4.raw() );
         assert.equals( s2.raw(), s3.raw() );
     },
     SPUSH: function () {
-        var CSTACK = this.vm.$( 'CSTACK' ),
+        var cur = this.vm.CSTACK.addr,
             s = this.vm.s();
 
         s.update( 1, 2, 3, 4, 5, 6 );
         sil.PUSH.call( this.vm, s );
 
-        s = this.vm.s( CSTACK );
+        s = this.vm.s( cur );
         assert.equals( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
     }
 } );

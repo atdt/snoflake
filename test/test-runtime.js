@@ -106,8 +106,8 @@ buster.testCase( 'Name Assignment and Resolution', {
     reset: function () {
         this.vm.assign( { e: Math.E, pi: Math.PI } );
         this.vm.reset();
-        // Resetting should clear all but three keys: STACK, CSTACK, and OSTACK.
-        assert.equals( Object.keys( this.vm.symbols ).length, 3 );
+        // Resetting should clear all keys
+        assert.equals( Object.keys( this.vm.symbols ).length, 0 );
     }
 
 } );

@@ -1,9 +1,20 @@
 var SNOBOL = require( './base' );
 
+SNOBOL.D = 3;
+SNOBOL.$OSTACK = 0 * SNOBOL.D;  // ptr to OSTACK descriptor
+SNOBOL.$CSTACK = 1 * SNOBOL.D;  // ptr to CSTACK descriptor
+SNOBOL.STACK   = 2 * SNOBOL.D;  // pos of first slot in stack
+
 SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
     var currentInstruction = this.instructionPointer,
         args = deferred.call(),
         returnValue = SNOBOL.sil[ opCode ].apply( this, args );
+
+    console.log( '[%s] %s (%s)', currentInstruction, opCode, args.length );
+
+    if ( returnValue < 0 ) {
+        return returnValue++;
+    }
 
     if ( label !== null ) {
         if ( returnValue !== undefined ) {
@@ -21,11 +32,10 @@ SNOBOL.VM.prototype.jmp = function ( ptr ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args;
+    var args, status;
 
     for ( var i = 0; i < program.length; i++ ) {
         if ( program[ i ][ 0 ] !== null ) {
-            console.log( program[ i ][ 0 ] );
             this.assign( program[ i ][ 0 ], i );
         }
     }
@@ -34,7 +44,11 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     while ( this.instructionPointer !== program.length ) {
         args = program[ this.instructionPointer ];
-        this.exec.apply( this, args );
+        status = this.exec.apply( this, args );
+        if ( status !== undefined ) {
+            console.log( '### TERMINATED (%s) ###', status );
+            return status;
+        }
         this.instructionPointer++;
     }
 };

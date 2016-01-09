@@ -2,6 +2,11 @@
 
 var SNOBOL = require( './base' );
 
+var D = 3;
+var $OSTACK = 0 * D,
+    $CSTACK = 1 * D,
+    STACK   = 2 * D;
+
 var TIMER, sil = {};
 
 //     ACOMP is used to compare  the  address  fields  of  two
@@ -455,9 +460,10 @@ sil.BKSPCE = function ( $DESCR ) {
 // procedure.
 // Programming Notes:
 // 1.  See also PROC.
-sil.BRANCH = function ( LOC /* , PROC */ ) {
+sil.BRANCH = function ( LOC, PROC ) {
     // branch to program location
     // XXX
+    console.log( 'LOC = %s\tPROC = %s', LOC, PROC );
     this.jmp( LOC );
 };
 
@@ -832,9 +838,11 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    return DESCR1.eq( DESCR2 )
-        ? EQLOC
-        : NELOC;
+    if ( DESCR1.eq( DESCR2 ) ) {
+        this.jmp( EQLOC );
+    } else {
+        this.jmp( NELOC );
+    }
 };
 
 //     DESCR  assembles  a  descriptor with specified address,
@@ -947,12 +955,11 @@ sil.END = function () {
 // 3.  See also INIT.
 sil.ENDEX = function ( $DESCR ) {
     // end execution of SNOBOL4 run
-    var DESCR = this.d( $DESCR );
+    var I = this.d( $DESCR ).addr;
 
-    if ( DESCR.addr !== 0 ) {
-        // XXX: dump core.
-        throw new Error( DESCR.addr );
-    }
+    // We need to return a negative number to terminate execution,
+    // but I could be zero. So shift all values down by one.
+    return -1 * ( I + 1 );
 };
 
 //     ENFILE is used to write an end-of-file on  (close)  the
@@ -1511,11 +1518,8 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 // 2.  See also PSTACK, RCALL, and RRTURN.
 sil.ISTACK = function () {
     // initialize stack
-    this.assign( {
-        CSTACK : 0,
-        OSTACK : 0,
-        STACK  : 0,
-    } );
+    this.d( SNOBOL.$CSTACK ).update( SNOBOL.STACK, 0, 0 );
+    this.d( SNOBOL.$OSTACK ).update( 0, 0, 0 );
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2505,23 +2509,29 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
 // diagnostic  message  indicating  an error may be obtained by
 // transferring to the program location INTR10 if the condition
 // is detected.
-sil.POP = function ( ARG ) { // (( DESCR1,...,DESCRN)) {
+sil.POP = function ( ARGs ) { // (( $DESCR1,...,$DESCRN)) {
     // pop descriptors from stack
-    var CSTACK, dst, src;
+    var dst, src;
 
-    if ( !Array.isArray( ARG ) ) {
-        ARG = [ ARG ];
+    if ( !Array.isArray( ARGs ) ) {
+        ARGs = [ ARGs ];
     }
 
-    for ( var i = 0; i < ARG.length; i++ ) {
-        CSTACK = this.$( 'CSTACK' );
-        dst = ARG[i];
-        src = this.mem.slice( CSTACK - dst.width, CSTACK );
+    for ( var i = 0; i < ARGs.length; i++ ) {
+        // FIXME: It's not nice for this code to know the width of descriptors
+        // and specifiers (and to know that they are the only datatypes
+        // possible.)
+        dst = ARGs[i].width === 3 ? this.d( ARGs[i] ) : this.s( ARGs[i] );
 
-        // if ( ( CSTACK - dst.width + 1 ) < this.$( 'STACK' ) ) { throw new RangeError( 'Stack underflow' ); }
+        if ( this.CSTACK.addr - dst.width < SNOBOL.STACK ) {
+            console.log( 'CSTACK: %s\tSTACK: %s\tdst.width: %s', this.CSTACK.addr, SNOBOL.STACK, dst.width );
+            throw new RangeError( 'Stack underflow' );
+        }
+
+        src = this.mem.slice( this.CSTACK.addr - dst.width, this.CSTACK.addr );
 
         dst.update.apply( dst, src );
-        this.$( 'CSTACK', CSTACK - dst.width );
+        this.CSTACK.addr -= dst.width;
     }
 };
 
@@ -2554,7 +2564,7 @@ sil.PSTACK = function ( $DESCR ) {
     // post stack position
     var DESCR = this.d( $DESCR );
 
-    DESCR.addr -= this.resolve( 'CSTACK' );
+    DESCR.addr = this.CSTACK.addr - D;
 };
 
 //     PUSH  is  used  to  push a list of descriptors onto the
@@ -2590,23 +2600,20 @@ sil.PSTACK = function ( $DESCR ) {
 // Transfer  should be made to the program location OVER, which
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
-sil.PUSH = function ( ARG ) {
+sil.PUSH = function ( ARGs ) {
     var arr, data, DATUM;
 
-    if ( !Array.isArray( ARG ) ) {
-        ARG = [ ARG ];
+    if ( !Array.isArray( ARGs ) ) {
+        ARGs = [ ARGs ];
     }
 
-    var CSTACK = this.$( 'CSTACK' );
-
-    for ( var i = 0; i < ARG.length; i++ ) {
-        DATUM = this.d( ARG[i] );
-        this.mem.splice.apply( this.mem, [ CSTACK, DATUM.width ].concat( DATUM.raw() ) );
-        CSTACK += DATUM.width;
+    // Are we iterating in the right direction here?
+    for ( var i = 0; i < ARGs.length; i++ ) {
+        DATUM = this.d( ARGs[i] );
+        this.mem.splice.apply( this.mem, [ this.CSTACK.addr, DATUM.width ].concat( DATUM.raw() ) );
+        this.CSTACK.addr += DATUM.width;
         // XXX throw new RangeError( 'Stack overflow' );
     }
-
-    this.$( 'CSTACK', CSTACK );
 };
 
 //     PUTAC is used to put an address field into a descriptor
@@ -2837,7 +2844,7 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // flag fields  of  descriptors  used  to  save  program  state
 // information must be set to zero.
 // 9.  See also SELBRA.
-sil.RCALL = function ( DESCR, PROC, DESCRs, LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
+sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
     //     RCALL  is  used  to perform a recursive call.  DESCR is
     // the descriptor that receives the value upon return from  the
@@ -2850,26 +2857,43 @@ sil.RCALL = function ( DESCR, PROC, DESCRs, LOCs ) { // ( DESCR,PROC,( DESCR1,..
     // stack  pointer  is generated as indicated.  The return loca-
     // tion LOC is saved on the stack so that  the  return  can  be
     // properly    made.     The    values    of    the   arguments
-    if ( !Array.isArray( DESCRs ) ) {
-        DESCRs = [ DESCRs ];
+    var DESCR = this.d( $DESCR ),
+        retLoc = this.instructionPointer;
+
+    if ( !Array.isArray( $DESCRs ) ) {
+        $DESCRs = [ $DESCRs ];
     }
-    if ( !Array.isArray( LOCs ) ) {
-        LOCs = [ LOCs ];
+
+    if ( !Array.isArray( $LOCs ) ) {
+        $LOCs = [ $LOCs ];
     }
 
-    // stack.retVal = DESCR;
-    // stack.retLocs = SNOBOL.instructionPointer;
+    // The old stack pointer (A0) is saved on the stack.
+    this.d( this.CSTACK.addr ).read( this.OSTACK );
 
-    // stack.
-    // descr -> retval
-    // proc - > proc being called
-    // descr{1..n} -> values for proc
-    // loc{1..n} -> locs per exit signal
-    // a0 -> stack.old
-    // stack.cur = old
-    // and finally
 
-    this.jmp( PROC );
+    // The current stack pointer becomes the old stack pointer.
+    this.OSTACK.read( this.CSTACK );
+
+    // A new current stack pointer is generated.
+    this.CSTACK.addr += D;
+
+    // The return location LOC is saved on the stack so that the return can be
+    // properly made.
+    this.callbacks.push( function () {
+        var nextLoc = $LOCs[ DESCR.addr ];
+        if ( nextLoc === undefined ) {
+            nextLoc = retLoc + 1;
+        }
+        return this.jmp( nextLoc );
+    } );
+
+    // The values of the arguments DESCR1,...,DESCRN are placed on the stack.
+    // XXX order?
+    // XXX throw new RangeError( 'Stack overflow' );
+    sil.PUSH.call( this, $DESCRs );
+
+    this.jmp( $PROC );
 };
 
 //     RCOMP is used to compare two real numbers.  If R1 > R2,
@@ -3105,7 +3129,7 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 //               +-----------------------+
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
-    return;
+    ( this.callbacks.pop() )();
 };
 
 //     RSETFI is used to reset (delete) a flag from a descrip-
@@ -3969,19 +3993,23 @@ sil.SUBSP = function ( $SPEC1, $SPEC2, $SPEC3, FLOC, SLOC ) {
 // 4.  See also SUM.
 sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // subtract addresses
+    console.log( 'yo!' );
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        DESCR3 = this.d( $DESCR3 );
+        DESCR3 = this.d( $DESCR3 ),
+        newAddr = DESCR2.addr - DESCR3.addr;
 
+    console.log( 'yo!' + newAddr );
     try {
-        DESCR1.addr = DESCR2.addr - DESCR3.addr;
+        DESCR1.addr = newAddr;
         DESCR1.flags = DESCR2.flags;
         DESCR1.value = DESCR2.value;
         this.jmp( SLOC );
     } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
+        if ( !( e instanceof RangeError ) ) {
+            throw e;
         }
+        this.jmp( FLOC );
     }
 };
 
