@@ -109,12 +109,10 @@ VM.prototype.gets = function ( start, stop ) {
 };
 
 VM.prototype.reset = function () {
-    var STACK = 1024;
+    var STACK_SIZE = 6 << 14;
 
     this.mem = [];
     this.symbols = new SNOBOL.SymbolTable();
-    this.alloc( STACK );
-    this.$( 'STACK', STACK );
-    this.$( 'CSTACK', 0 );
-    this.$( 'OSTACK', 0 );
+    this.alloc( STACK_SIZE );
+    SNOBOL.sil.ISTACK.call( this );
 };

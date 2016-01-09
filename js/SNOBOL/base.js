@@ -18,6 +18,9 @@ var SNOBOL = {
         this.stackSize = stackSize || 1024;
         this.symbols = new SNOBOL.SymbolTable();
         this.mem = [];
+        this.callbacks = [];
+        this.CSTACK = this.d( SNOBOL.$CSTACK );
+        this.OSTACK = this.d( SNOBOL.$OSTACK );
         this.reset();
     },
 };
