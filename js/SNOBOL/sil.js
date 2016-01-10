@@ -855,10 +855,15 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 1.  Any or all of A, F, and V may be omitted.  A zero  field
 // must   be  assembled  when  the  corresponding  argument  is
 // omitted.
-sil.DESCR = function () {
+sil.DESCR = function ( A, F, V ) {
     // assemble descriptor
     var d = this.d();
-    return d.update.apply( d, arguments );
+
+    d.addr  = A || 0;
+    d.flags = F || 0;
+    d.value = V || 0;
+
+    return d;
 };
 
 //     DIVIDE is used to divide one integer by  another.   Any
@@ -2857,8 +2862,11 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // stack  pointer  is generated as indicated.  The return loca-
     // tion LOC is saved on the stack so that  the  return  can  be
     // properly    made.     The    values    of    the   arguments
-    var DESCR = this.d( $DESCR ),
-        retLoc = this.instructionPointer;
+    var DESCR, retLoc = this.instructionPointer;
+
+    if ( DESCR !== undefined ) {
+        DESCR = this.d( $DESCR );
+    }
 
     if ( !Array.isArray( $DESCRs ) ) {
         $DESCRs = [ $DESCRs ];
@@ -2867,6 +2875,10 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     if ( !Array.isArray( $LOCs ) ) {
         $LOCs = [ $LOCs ];
     }
+
+    var oldStackPtr = this.OSTACK.addr,
+        curStackPtr = this.CSTACK.addr;
+
 
     // The old stack pointer (A0) is saved on the stack.
     this.d( this.CSTACK.addr ).read( this.OSTACK );
@@ -2878,20 +2890,38 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // A new current stack pointer is generated.
     this.CSTACK.addr += D;
 
+
     // The return location LOC is saved on the stack so that the return can be
     // properly made.
-    this.callbacks.push( function () {
-        var nextLoc = $LOCs[ DESCR.addr ];
-        if ( nextLoc === undefined ) {
-            nextLoc = retLoc + 1;
+    this.callbacks.push( function ( $DESCR, N ) {
+        var DESCR;
+        
+        console.log( 'N = ' + N );
+        if ( $DESCR !== undefined ) {
+            DESCR = this.d( $DESCR );
         }
-        return this.jmp( nextLoc );
+
+        this.OSTACK.addr = oldStackPtr;
+        this.CSTACK.addr = curStackPtr;
+
+        if ( N && $LOCs[ N ] !== undefined ) {
+            this.jmp( $LOCs[ N ] );
+        } else {
+            this.jmp( retLoc + 1 );
+        }
+        // if ( DESCR && $LOCs[ DESCR.addr ] !== undefined ) {
+        //     this.jmp( $LOCs[ DESCR.addr ] );
+        // } else {
+        //     this.jmp( retLoc + 1 );
+        // }
+        return DESCR;
+
     } );
 
     // The values of the arguments DESCR1,...,DESCRN are placed on the stack.
     // XXX order?
     // XXX throw new RangeError( 'Stack overflow' );
-    sil.PUSH.call( this, $DESCRs );
+    sil.PUSH.call( this, $DESCRs.reverse() );
 
     this.jmp( $PROC );
 };
@@ -3129,7 +3159,8 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 //               +-----------------------+
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
-    ( this.callbacks.pop() )();
+    var callback = this.callbacks.pop();
+    return callback.call( this, $DESCR, N );
 };
 
 //     RSETFI is used to reset (delete) a flag from a descrip-

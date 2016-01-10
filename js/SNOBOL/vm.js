@@ -10,7 +10,7 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
         args = deferred.call(),
         returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
-    console.log( '[%s] %s (%s)', currentInstruction, opCode, args.length );
+    console.log( '[%s] [%s] %s(%s)', currentInstruction, label || '-', opCode, JSON.stringify( args ).slice( 1, -1 ) );
 
     if ( returnValue < 0 ) {
         return returnValue++;
