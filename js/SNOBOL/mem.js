@@ -75,6 +75,8 @@ VM.prototype.resolve = function ( key ) {
         throw new ReferenceError( key );
     }
 
+    console.log( '  - %s[%s]', key, ptr );
+
     return ptr;
 };
 
