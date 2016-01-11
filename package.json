@@ -7,7 +7,7 @@
   "main": "./js/snobol.js",
   "repository" : { "type":"git", "url":"http://github.com/atdt/snoflake" },
   "devDependencies": {
-    "pegjs":      ">= 0.7",
+    "pegjs":      ">= 0.9",
     "buster":     ">= 0.6",
     "uglify-js":  "1.2.6",
     "jshint":     "~ 2.5"
