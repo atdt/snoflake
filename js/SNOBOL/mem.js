@@ -37,7 +37,7 @@ VM.prototype.getInt = function ( ptr ) {
 VM.prototype.setInt = function ( ptr, value ) {
     i32[ 0 ] = value;
     if ( i32[ 0 ] !== value ) {
-        throw new RangeError( 'Invalid integer ' + value );
+        throw new RangeError( 'Invalid integer ' + JSON.stringify ( value ) );
     }
     this.mem[ ptr ] = u32[ 0 ];
 };
@@ -74,8 +74,6 @@ VM.prototype.resolve = function ( key ) {
     if ( ptr === undefined ) {
         throw new ReferenceError( key );
     }
-
-    console.log( '  - %s[%s]', key, ptr );
 
     return ptr;
 };
