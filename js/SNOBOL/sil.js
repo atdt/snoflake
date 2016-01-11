@@ -2,7 +2,9 @@
 
 var SNOBOL = require( './base' );
 
-var D = 3;
+var D = 3,
+    S = 2 * D;
+
 var $OSTACK = 0 * D,
     $CSTACK = 1 * D,
     STACK   = 2 * D;
@@ -444,7 +446,7 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 sil.BKSPCE = function ( $DESCR ) {
     // backspace record
     var DESCR = this.d( $DESCR ),
-        file = new SNOBOL.File( DESCR.addr );
+        file = new SNOBOL.File( this, DESCR.addr );
 
     if ( file.pos > 0 ) {
         file.pos--;
@@ -1141,7 +1143,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
         DESCR = this.d( $DESCR ),
         start = SPEC.addr + SPEC.offset + SPEC.length,
         stop = start + DESCR.addr,
-        string = gets( start, stop ),
+        string = this.gets( start, stop ),
         j,
         stack;
 
@@ -1317,10 +1319,11 @@ sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
 // 1.  See also PUTSPC.
 sil.GETSPC = function ( $SPEC, $DESCR, N ) {
     // get specifier with constant offset
-    var SPEC = this.s( SPEC ),
-        DESCR = this.d( $DESCR );
+    var DESCR = this.d( $DESCR ),
+        dst = this.s( $SPEC ),
+        src = this.s( DESCR.addr + N );
 
-    SPEC.read( gets( DESCR.addr + N ) );
+    dst.read( src );
 };
 
 //     INCRA is used to  increment  the  address  field  of  a
@@ -1386,8 +1389,24 @@ sil.INCRV = function ( $DESCR, N ) {
 // 1.  See also ENDEX.
 sil.INIT = function () {
     // initialize SNOBOL4 run
-    this.assign( 'TIMECL', this.d() );
-    TIMER = + new Date();
+    var dynamicStorageSize = D * 16384,
+        FRSGPT = this.d( 'FRSGPT' ),
+        HDSGPT = this.d( 'HDSGPT' ),
+        TLSGP1 = this.d( 'TLSGP1' );
+
+    this.timeStart = ( new Date() ).getTime();
+    FRSGPT.addr = this.alloc( dynamicStorageSize );
+    HDSGPT.addr = FRSGPT.addr;
+    TLSGP1.addr = this.mem.length;
+
+    // initialized.  The address fields of FRSGPT  and  HDSGPT  are
+    // set  to  point  to  the first descriptor in dynamic storage.
+    // The address field of TLSGP1 is set to the  first  descriptor
+    // past  the end of dynamic storage.  Space for dynamic storage
+    // may be preallocated or obtained from the operating system by
+    // INIT.   The  timer  is initialized for subsequent use by the
+    // MSTIME macro (q.v.).
+
 };
 
 //     INSERT is used to insert  a  tree  node  above  another
@@ -1505,7 +1524,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
         DESCR = this.d( $DESCR );
 
     SPEC.update( 0, 0, 0, 0, 0, 0 );
-    SPEC.specify( DESCR.addr );
+    SPEC.specified = '' + DESCR.addr;
     return SPEC;
 };
 
@@ -2263,10 +2282,9 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // 5.  See also INIT.
 sil.MSTIME = function ( $DESCR ) {
     // get millisecond time
-    var DESCR = this.d( $DESCR ),
-        now = ( new Date() ).getTime();
+    var DESCR = this.d( $DESCR );
 
-    DESCR.addr = now - TIMER;
+    DESCR.addr = ( new Date() ).getTime() - this.timeStart;
 };
 
 //     MULT is used to multiply two integers.  In the event of
@@ -2422,9 +2440,8 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ITEMS ) {
     // output record
     var DESCR = this.d( $DESCR );
 
-    console.log( JSON.stringify( arguments ) );
     /*
-    var file = new SNOBOL.File( DESCR.addr ),
+    var file = new SNOBOL.File( this, DESCR.addr ),
         formatted = FORMAT.apply( FORMAT, ITEMS );
     file.write( formatted );
     XXX
@@ -2896,7 +2913,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     this.callbacks.push( function ( $DESCR, N ) {
         var DESCR;
         
-        console.log( 'N = ' + N );
         if ( $DESCR !== undefined ) {
             DESCR = this.d( $DESCR );
         }
@@ -3054,7 +3070,7 @@ sil.RESETF = function ( $DESCR, FLAG ) {
 sil.REWIND = function ( $DESCR ) {
     // rewind file
     var DESCR = this.d( $DESCR ),
-        f = new SNOBOL.File( DESCR.addr );
+        f = new SNOBOL.File( this, DESCR.addr );
 
     f.seek( 0 );
 };
@@ -3497,11 +3513,21 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +-------+-------+-------+-------+-------+
 //      LOC      |   A       F       V       O       L   |
 //               +---------------------------------------+
-sil.SPEC = function () {
+sil.SPEC = function ( A, F, V, O, L ) {
     // assemble specifier
-    var spec = new SNOBOL.Specifier( this );
-    spec.update.apply( spec, arguments );
-    return spec.ptr;
+    var s = this.s();
+
+    if ( typeof A === 'string' ) {
+        A = this.puts( A ).start;
+    }
+    
+    s.addr   = A || 0;
+    s.flags  = F || 0;
+    s.value  = V || 0;
+    s.offset = O || 0;
+    s.length = L || 0;
+
+    return s.ptr;
 };
 
 //     SPOP  is used to pop a list of specifiers from the sys-
@@ -3669,8 +3695,9 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
         I = this.d( A + 3 ).addr,
         A2 = this.d( A + 6 ).addr,
         M = this.d( A2 ).value,
-        fmt = gets( A2 + 12, A2 + 12 + M );
-    ( new SNOBOL.File( I ) ).write( SPEC.specified.format( fmt ) );
+        fmt = this.gets( A2 + 12, A2 + 12 + M );
+    // FIXME: apply the format, don't just tack it on.
+    ( new SNOBOL.File( this, I ) ).write( SPEC.specified + fmt );
     DESCR1.addr = 0;  // OK
 };
 
@@ -3701,14 +3728,14 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     // string read
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
-        file = new SNOBOL.File( DESCR.addr ),
+        file = new SNOBOL.File( this, DESCR.addr ),
         words;
 
     if ( !file ) {
         // invalid file descriptor
         return this.jmp( ERROR );
     }
-    words = file.read( SPEC.length );
+    words = file.read( null, SPEC.length );
     if ( words.length === 0 ) {
         return this.jmp( EOF );
     }
@@ -3964,11 +3991,13 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 // 1.  Note that LOC is the location of the specifier, not  the
 // string.  The string may immediately follow the specifier, or
 // it may be assembled at a remote location.
-sil.STRING = function ( STR ) { // ('C1...CL') {
+sil.STRING = function ( STR ) {
     // assemble specified string
-    var spec = new SNOBOL.Specifier( this );
-    spec.specified = STR;
-    return spec.ptr;
+    var SPEC = this.s();
+
+    SPEC.specified = STR;
+
+    return SPEC;
 };
 
 //     SUBSP is used to specify  an  initial  substring  of  a
@@ -4024,13 +4053,11 @@ sil.SUBSP = function ( $SPEC1, $SPEC2, $SPEC3, FLOC, SLOC ) {
 // 4.  See also SUM.
 sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // subtract addresses
-    console.log( 'yo!' );
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
         newAddr = DESCR2.addr - DESCR3.addr;
 
-    console.log( 'yo!' + newAddr );
     try {
         DESCR1.addr = newAddr;
         DESCR1.flags = DESCR2.flags;

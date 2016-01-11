@@ -3,8 +3,6 @@ var SNOBOL = require( './SNOBOL/base' );
 module.exports = SNOBOL;
 
 require( './SNOBOL/string' );
-require( './SNOBOL/sil.peg' );
-require( './SNOBOL/parser' );
 require( './SNOBOL/sil' );
 require( './SNOBOL/mem' );
 require( './SNOBOL/syntax' );

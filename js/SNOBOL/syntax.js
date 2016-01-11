@@ -248,7 +248,8 @@ Object.keys( syntaxTables ).forEach( function ( tableName ) {
 // Constructs a string representing all code points in UTF-16
 function getCharacterSet() {
     var charset = [];
-    for (var i = 0x0; i < 0x10000; i++)
+    // for (var i = 0x0; i < 0x10000; i++)
+    for (var i = 0x0; i <= 0x7f; i++)
         charset.push(String.fromCharCode(i));
     return charset.join('');
 }
@@ -263,10 +264,10 @@ var MDATA = {
 /* PARMS */
 
 var PARMS = {
-    ALPHASZ : MDATA.ALPHA.length,
+    ALPHSZ  : MDATA.ALPHA.length,
     CPA     : 1,
     DESCR   : 64,
-    SIZLIM  : Number.MAX_VALUE,
+    SIZLIM  : 0x7FFFFFFF,
     SPEC    : 64,
 
     FNC     : 0x1,
