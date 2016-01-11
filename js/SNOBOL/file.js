@@ -17,6 +17,7 @@ SNOBOL.File = function ( vm, unitNum ) {
 };
 
 SNOBOL.File.prototype.open = function ( path ) {
+    console.log( 'path: %s', path );
     this.fd = fs.openSync( path, 'r+' );
     this.pos = 0;
 };
@@ -34,11 +35,15 @@ SNOBOL.File.prototype.seek = function ( pos ) {
 };
 
 SNOBOL.File.prototype.read = function ( position, length ) { 
+    // XXX hack
+    if ( !this.fd  ) {
+        this.open( '/Users/ori/git/snoflake/hello.sno' );
+    }
     var buf = new Buffer( length );
     fs.readSync( this.fd, buf, 0, length, position );
     return buf.toString( 'utf8' );
 };
 
 SNOBOL.File.prototype.write = function ( /* ... */ ) {
-    console.log( 'File.write() called.' );
+    console.log( 'File.write() called: %s', JSON.stringify( arguments ) );
 };
