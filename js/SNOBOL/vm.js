@@ -13,7 +13,7 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
         returnValue;
         // returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
-    console.log( '[%s] [%s] %s(%s)', currentInstruction, label || '-', opCode, JSON.stringify( args ).slice( 1, -1 ) );
+    // console.log( '[%s] [%s] %s(%s)', currentInstruction, label || '-', opCode, JSON.stringify( args ).slice( 1, -1 ) );
     returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
     if ( typeof returnValue === 'number' && returnValue < 0 ) {

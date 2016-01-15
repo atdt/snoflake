@@ -4,6 +4,23 @@
 
 var SNOBOL = require( './base' );
 
+var FORMAT_RE = /(\d*)([HI])(\d*)([^,\/]*)([,\/]\s*)?/g;
+
+function pad( str, width, align, padChar ) {
+        var padding;
+
+        if ( str.length >= width ) {
+                return str;
+        }
+
+        if ( padChar === undefined ) {
+                padChar = ' ';
+        }
+
+        padding = new Array( width - str.length + 1 ).join( padChar );
+        return align === 'left' ? str + padding : padding + str;
+}
+
 SNOBOL.str = {
 
     encode: function ( s ) {
@@ -57,5 +74,46 @@ SNOBOL.str = {
         hash ^= (hash >> 11);
         hash += (hash << 15);
         return hash;
-    }
+    },
+
+        format: function ( template, items ) {
+            var item, match, count, code, width, formatted = '';
+
+            var orig = template;
+            template = template.slice( 1, -1 );  // trim parentheses
+
+            while ( template.length ) {
+                    match = /^(\d+)H/.exec( template );
+                    if ( match ) {
+                            count = parseInt( match[1], 10 );
+                            template = template.slice( match[0].length );
+                            formatted += template.slice( 0, count );
+                            template = template.slice( count + 1 );
+                            continue;
+                    }
+
+                    match = /^I(\d+)/.exec( template );
+                    if ( match ) {
+                            width = parseInt( match[1], 10 );
+                            template = template.slice( match[0].length + 1 );
+                            item = items.length ? items.shift().toString() : '';
+                            formatted += pad( item, width );
+                            continue;
+                    }
+
+                    match = /^F(\d+(\.\d+)?)/.exec( template );
+                    if ( match ) {
+                            width = parseFloat( match[1], 10 );
+                            template = template.slice( match[0].length + 1 );
+                            item = items.length ? items.shift().toString() : '';
+                            formatted += pad( item, width ); // XXX fix me
+                            continue;
+                    }
+                    if ( /^\//.test( template ) ) break;
+
+                    throw new Error('FAIL: "' + template + '" (orig: "' + orig + '")');
+            }
+
+            return formatted;
+        }
 };
