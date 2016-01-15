@@ -19,7 +19,7 @@ var SNOBOL = {
         this.symbols = new SNOBOL.SymbolTable();
         this.mem = [];
         this.callbacks = [];
-        this.units = [];
+        this.units = {};
         this.CSTACK = this.d( SNOBOL.$CSTACK );
         this.OSTACK = this.d( SNOBOL.$OSTACK );
         this.reset();

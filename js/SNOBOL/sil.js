@@ -464,8 +464,9 @@ sil.BKSPCE = function ( $DESCR ) {
 // 1.  See also PROC.
 sil.BRANCH = function ( LOC, PROC ) {
     // branch to program location
-    // XXX
-    console.log( 'LOC = %s\tPROC = %s', LOC, PROC );
+    if ( PROC !== undefined ) {
+        throw new Error( 'BRANCH: PROC is unsupported' );
+    }
     this.jmp( LOC );
 };
 
@@ -2436,10 +2437,15 @@ sil.ORDVST = function () {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also STPRNT.
-sil.OUTPUT = function ( $DESCR, FORMAT, ITEMS ) {
+sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
     var DESCR = this.d( $DESCR );
 
+    if ( !Array.isArray( ARGs ) ) {
+        ARGs = [ ARGs ];
+    }
+
+    console.log( SNOBOL.str.format.apply( null, [ FORMAT ].concat( ARGs ) ) );
     /*
     var file = new SNOBOL.File( this, DESCR.addr ),
         formatted = FORMAT.apply( FORMAT, ITEMS );
@@ -2546,7 +2552,7 @@ sil.POP = function ( ARGs ) { // (( $DESCR1,...,$DESCRN)) {
         dst = ARGs[i].width === 3 ? this.d( ARGs[i] ) : this.s( ARGs[i] );
 
         if ( this.CSTACK.addr - dst.width < SNOBOL.STACK ) {
-            console.log( 'CSTACK: %s\tSTACK: %s\tdst.width: %s', this.CSTACK.addr, SNOBOL.STACK, dst.width );
+            // console.log( 'CSTACK: %s\tSTACK: %s\tdst.width: %s', this.CSTACK.addr, SNOBOL.STACK, dst.width );
             throw new RangeError( 'Stack underflow' );
         }
 
@@ -3256,8 +3262,12 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 sil.SELBRA = function ( $DESCR, LOCI ) {
     // select branch point
     var DESCR = this.d( $DESCR );
+    if ( DESCR.addr < 1 || DESCR.addr > LOCI.length ) {
+        throw new Error( 'SELBRA: out of range' );
+    }
 
-    this.jmp( LOCI[ DESCR.addr - 1 ] );
+    // XXX should the index be DESCR.addr - 1 ?
+    this.jmp( LOCI[ DESCR.addr ] );
 };
 
 //     SETAC is used to set the address field of a  descriptor
@@ -3688,17 +3698,26 @@ sil.SPUSH = sil.PUSH;
 // 4.  See also OUTPUT and STREAD.
 sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     // string print
-    var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        SPEC = this.s( $SPEC ),
+    var DESCR2 = this.d( $DESCR2 ),
         A = DESCR2.addr,
-        I = this.d( A + 3 ).addr,
-        A2 = this.d( A + 6 ).addr,
+        I = this.d( A + D ).addr,
+        A2 = this.d( A + ( 2 * D ) ).addr,
         M = this.d( A2 ).value,
-        fmt = this.gets( A2 + 12, A2 + 12 + M );
-    // FIXME: apply the format, don't just tack it on.
-    ( new SNOBOL.File( this, I ) ).write( SPEC.specified + fmt );
-    DESCR1.addr = 0;  // OK
+        fmt = this.mem.slice( A2 + ( 4 * D ), A2 + ( 4 * D + M ) ),
+
+        SPEC = this.s( $SPEC ),
+        A1 = SPEC.addr,
+        O1 = SPEC.offset,
+        L = SPEC.length,
+        item = this.mem.slice( A1 + O1, A1 + O1 + L );
+
+    // console.log( '========' );
+    // console.log( 'fmt  : %s', SNOBOL.str.decode( fmt ) );
+    // console.log( 'item : %s', SNOBOL.str.decode( item ) );
+    fmt = SNOBOL.str.decode( fmt );
+    item = SNOBOL.str.decode( item );
+    console.log( SNOBOL.str.format( fmt, item ) );
+    this.d( $DESCR1 ).addr = 1;
 };
 
 //     STREAD is used to read a string.  The string C1...CL is
@@ -3735,8 +3754,9 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         // invalid file descriptor
         return this.jmp( ERROR );
     }
-    words = file.read( null, SPEC.length );
-    if ( words.length === 0 ) {
+    words = file.read( SPEC.length );
+    if ( !words.length ) {
+        console.log('EOF');
         return this.jmp( EOF );
     }
     for ( var i = 0; i < words.length; i++ ) {
@@ -3833,51 +3853,36 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
 sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // stream for token
 
-    var
-        SPEC1 = this.s( $SPEC1 ),
+    var SPEC1 = this.s( $SPEC1 ),
         SPEC2 = this.s( $SPEC2 ),
+        STYPE = this.d( 'STYPE' ), // Descriptor return by STREAM
+        str = SPEC2.specified,     // The string that we're scanning
+        I,  // The 1-based string index of the current character, between 1 and L)
+        J,  // J is the smallest value of I for which TI is STOP or STOPSH
+        ch, // The current character
+        TI, // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
+        t;  // The table row (rule) index that we are currently applying
 
-        // The string that we're scanning
-        str = SPEC2.specified,
-
-        // The 1-based string index of the current character, between 1 and L)
-        I,
-
-        // J is the smallest value of I for which TI is STOP or STOPSH
-        J,
-
-        // The current character
-        ch,
-
-        // Value the table told us to PUT(), or zero.
-        P = 0,
-
-        // Not sure what this is. It is mentioned in the specification above.
-        // It sounds like it is a descriptor that should have its address value
-        // set to P.
-        STYPE,
-
-        // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
-        TI,
-
-        // The table row (rule) index that we are currently applying
-        t;
+    STYPE.addr = 0;
 
     for ( I = 1; I <= str.length; I++ ) {
         ch = str.charAt( I - 1 );
-        console.log( 'current char: ' + ch );
+        // console.log( 'current char: ' + ch );
 
         for ( t = 0; t < TABLE.length; t++ ) {
             if ( SNOBOL.match( TABLE[t][0], ch ) ) {
-                console.log( ch + ' matches ' + TABLE[t][0] );
+                // console.log( ch + ' matches ' + TABLE[t][0] );
+
                 // if table specifies a value to PUT(), assign it to P
-                P  = TABLE[t][1] || P;
+                if ( TABLE[t][1] !== null ) {
+                    STYPE.addr = this.$( TABLE[t][1] );
+                }
                 TI = TABLE[t][2];
                 break;
             }
         }
 
-        console.log( 'TI: ' + TI );
+        // console.log( 'TI: ' + TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
@@ -3894,17 +3899,15 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             //      SPEC2    |   A       F       V     O+J-1   L-J+1 |
             //               +---------------------------------------+
             J = I;
-            console.log( J );
-
-            STYPE = P;
+            // console.log( J );
 
             SPEC1.addr   = SPEC2.addr;    // A
             SPEC1.flags  = SPEC2.flags;   // F
             SPEC1.value  = SPEC2.value;   // V
             SPEC1.offset = SPEC2.offset;  // O
             SPEC1.length = J - 1;         // J-1
-            console.log( 'SPEC1.specified: ' + JSON.stringify( SPEC1.specified ) );
-            console.log( 'SPEC2.specified: ' + JSON.stringify( SPEC2.specified ) );
+            // console.log( 'SPEC1.specified: ' + JSON.stringify( SPEC1.specified ) );
+            // console.log( 'SPEC2.specified: ' + JSON.stringify( SPEC2.specified ) );
 
             SPEC2.offset += ( J - 1 );  // O+J-1
             SPEC2.length -= ( J + 1 );  // L-J+1
@@ -3929,8 +3932,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             // SPEC1
             J = I;
 
-            STYPE = P;
-
             SPEC1.addr   = SPEC2.addr;    // A
             SPEC1.flags  = SPEC2.flags;   // F
             SPEC1.value  = SPEC2.value;   // V
@@ -3950,8 +3951,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             //          +-------+-------+-------+-------+-------+
             // SPEC1    |   A       F       V       O       L   |
             //          +---------------------------------------+
-            STYPE = 0;
-
+            STYPE.addr = 0;
             SPEC1.read( SPEC2 );
 
             return this.jmp( ERROR );
@@ -3972,7 +3972,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     //          +-------+-------+-------+-------+-------+
     // SPEC2    |   A       F       V       O       0   |
     //          +---------------------------------------+
-    STYPE = P;
     SPEC2.length = 0;
 
     return this.jmp( RUNOUT );
@@ -4379,7 +4378,6 @@ sil.VEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 sil.VEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
     // value field equal to constant test
     var DESCR = this.d( $DESCR );
-
     this.jmp( DESCR.value === N ? EQLOC : NELOC );
 };
 
@@ -4406,9 +4404,10 @@ sil.VEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     // zero block
     var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 );
+        DESCR2 = this.d( $DESCR2 ),
+        pos;
 
-    for ( var pos = DESCR1.addr; pos <= DESCR2.addr; pos++ ) {
+    for ( pos = DESCR1.addr; pos <= DESCR2.addr; pos++ ) {
         this.mem[ pos ] = 0;
     }
 };
