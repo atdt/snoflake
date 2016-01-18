@@ -13,7 +13,13 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
         returnValue;
         // returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
-    // console.log( '[%s] [%s] %s(%s)', currentInstruction, label || '-', opCode, JSON.stringify( args ).slice( 1, -1 ) );
+    if ( SNOBOL.DEBUG && DATA_MACROS.indexOf( opCode ) === -1 ) {
+        var prettyOpCode = '\x1b[36m' + opCode + '\x1b[0m';
+        var prettyLabel = SNOBOL.str.pad( label || '', 6, 'left' );
+        var prettyCur = SNOBOL.str.pad( currentInstruction.toString(), 4 );
+        this.log( '[%s] [%s] %s(%s)', prettyCur, prettyLabel, prettyOpCode, JSON.stringify( args ).slice( 1, -1 ) );
+    }
+
     returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
     if ( typeof returnValue === 'number' && returnValue < 0 ) {
@@ -88,4 +94,12 @@ SNOBOL.VM.prototype.s = function ( ptr ) {
     return ptr instanceof SNOBOL.Specifier
         ? ptr
         : new SNOBOL.Specifier( this, ptr );
+};
+
+SNOBOL.VM.prototype.log = function ( msg ) {
+    if ( !SNOBOL.DEBUG ) return;
+    var whitespace = Array( this.indent + 1 ).join( '  ' ),
+        args = Array.prototype.slice.call( arguments, 1 );
+    args.unshift( whitespace + msg );
+    console.log.apply( console.log, args );
 };

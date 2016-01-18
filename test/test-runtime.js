@@ -317,8 +317,8 @@ buster.testCase( 'Execution Environment', {
         SNOBOL.sil = SNOBOL._sil;
     },
     jmp: function () {
-        this.vm.jmp(4);
-        assert.equals( this.vm.instructionPointer, 3 );
+        this.vm.jmp( 4 );
+        assert.equals( this.vm.instructionPointer, 4 );
     },
     exec: function () {
         this.vm.assign( { a: 5, b: 8 } );

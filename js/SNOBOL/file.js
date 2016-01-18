@@ -2,7 +2,7 @@
 
 var SNOBOL = require( './base' ),
     fs = require( 'fs' ),
-    buf = fs.readFileSync( '/Users/ori/git/snoflake/hello.sno' );
+    buf = fs.readFileSync( '/Users/ori/git/snoflake/tmp/hello.sno' );
 
 SNOBOL.File = function ( vm, unitNum ) {
     if ( vm.units[unitNum] !== undefined ) {

@@ -32,6 +32,7 @@ sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
         DESCR2 = this.d( $DESCR2 ),
         diff = DESCR1.addr - DESCR2.addr;
 
+    console.log('ACOMP: comparing %s to %s', $DESCR1, $DESCR2 );
     if ( diff > 0 ) {
         this.jmp( GTLOC );
     } else if ( diff < 0 ) {
@@ -2442,10 +2443,16 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     var DESCR = this.d( $DESCR );
 
     if ( !Array.isArray( ARGs ) ) {
-        ARGs = [ ARGs ];
+        ARGs = [ this.d( ARGs ) ];
+    } else {
+        ARGs = ARGs.map( function ( ARG ) {
+            // console.log( '> ADDR: ' + this.d(ARG).addr );
+            return this.d( ARG );
+        }, this );
     }
 
-    console.log( SNOBOL.str.format.apply( null, [ FORMAT ].concat( ARGs ) ) );
+    console.log( SNOBOL.str.format( FORMAT, ARGs ) );
+
     /*
     var file = new SNOBOL.File( this, DESCR.addr ),
         formatted = FORMAT.apply( FORMAT, ITEMS );
@@ -2887,6 +2894,8 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // properly    made.     The    values    of    the   arguments
     var DESCR, retLoc = this.instructionPointer;
 
+    this.indent++;
+
     if ( DESCR !== undefined ) {
         DESCR = this.d( $DESCR );
     }
@@ -3162,6 +3171,7 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
 // priate error comment.
 sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
     // replace characters
+    throw new Error( 'RPLACE is undefined' );
     this.jmp( 'UNDF' );  // XXX
 };
 
@@ -3181,6 +3191,7 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 //               +-----------------------+
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
+    this.indent--;
     var callback = this.callbacks.pop();
     return callback.call( this, $DESCR, N );
 };
@@ -3205,9 +3216,9 @@ sil.RRTURN = function ( $DESCR, N ) {
 // 3.  See also RESETF and SETFI.
 sil.RSETFI = function ( $DESCR, FLAG ) {
     // reset flag indirect
-    var DESCR = this.d( $DESCR );
+    var A = this.d( $DESCR ).addr;
 
-    this.d( DESCR.addr ).flags &= ( ~FLAG );
+    this.d( A ).flags &= ( ~FLAG );
 };
 
 //     SBREAL  is  used  to  subtract  one  real  number  from
@@ -3262,6 +3273,13 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 sil.SELBRA = function ( $DESCR, LOCI ) {
     // select branch point
     var DESCR = this.d( $DESCR );
+
+    if ( !Array.isArray( LOCI ) ) {
+        LOCI = [ LOCI ];
+    }
+
+    console.log( 'SELBRA: DESCR.addr: ' + DESCR.addr );
+    console.log( 'SELBRA: LOCI: %s', JSON.stringify( LOCI ) );
     if ( DESCR.addr < 1 || DESCR.addr > LOCI.length ) {
         throw new Error( 'SELBRA: out of range' );
     }
