@@ -163,17 +163,17 @@ buster.testCase( 'Comparison Macros', {
         SPEC1.specified = 'abd';
         SPEC2.specified = 'abc';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equals( this.vm.instructionPointer + 1, GTLOC );
+        assert.equals( this.vm.instructionPointer, GTLOC );
 
         SPEC1.specified = 'abc';
         SPEC2.specified = 'abc';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equals( this.vm.instructionPointer + 1, EQLOC );
+        assert.equals( this.vm.instructionPointer, EQLOC );
 
         SPEC1.specified = 'abc';
         SPEC2.specified = 'abd';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equals( this.vm.instructionPointer + 1, LTLOC );
+        assert.equals( this.vm.instructionPointer, LTLOC );
     },
     RCOMP: function () { // stub
         assert( sil.RCOMP ); 
@@ -541,11 +541,18 @@ buster.testCase( 'Macros that Operate on Specifiers', {
         assert( sil.SHORTN ); 
     },
     STREAM: function () { // stub
+
         var s1 = this.vm.s(),
-            s2 = this.vm.s();
+            s2 = this.vm.s(),
+            stype = this.vm.d();
+
+        this.vm.assign( 'STYPE', stype );
+        this.vm.assign( 'FLITYP', 6 );
+
         s2.specified = '43.2   ';
 
         sil.STREAM.call( this.vm, s1, s2, this.vm.resolve( 'INTGTB' ), -1, -2, -3 );
+
         assert.equals( s1.specified, '43.2' );
     },
     SUBSP: function () { // stub

@@ -20,6 +20,7 @@ var SNOBOL = {
         this.mem = [];
         this.callbacks = [];
         this.units = {};
+        this.indent = 0;
         this.CSTACK = this.d( SNOBOL.$CSTACK );
         this.OSTACK = this.d( SNOBOL.$OSTACK );
         this.reset();

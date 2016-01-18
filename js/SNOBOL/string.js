@@ -20,11 +20,11 @@ function pad( str, width, align, padChar ) {
         padding = new Array( width - str.length + 1 ).join( padChar );
         return align === 'left' ? str + padding : padding + str;
 }
-
 SNOBOL.str = {
 
+    pad: pad,
     encode: function ( s ) {
-        var i, lo, hi, encoded = [];
+        var i, lo, hi, control, encoded = [];
 
         s = s.toString();
 
@@ -76,44 +76,50 @@ SNOBOL.str = {
         return hash;
     },
 
-        format: function ( template, items ) {
-            var item, match, count, code, width, formatted = '';
+    format: function ( template, items ) {
+        var item, match, count, code, width, control, formatted = '';
 
-            var orig = template;
-            template = template.slice( 1, -1 );  // trim parentheses
+        var orig = template;
+        template = template.slice( 1, -1 );  // trim parentheses
 
-            while ( template.length ) {
-                    match = /^(\d+)H/.exec( template );
-                    if ( match ) {
-                            count = parseInt( match[1], 10 );
-                            template = template.slice( match[0].length );
-                            formatted += template.slice( 0, count );
-                            template = template.slice( count + 1 );
-                            continue;
-                    }
+        var fraction, whole;
+        while ( template.length ) {
+                match = /^(\d+)H/.exec( template );
+                if ( match ) {
+                        template = template.slice( match[0].length );
+                        count = parseInt( match[1], 10 );
+                        formatted += ' ' + template.slice( 0, count );
+                        template = template.slice( count + 1 );
+                        continue;
+                }
 
-                    match = /^I(\d+)/.exec( template );
-                    if ( match ) {
-                            width = parseInt( match[1], 10 );
-                            template = template.slice( match[0].length + 1 );
-                            item = items.length ? items.shift().toString() : '';
-                            formatted += pad( item, width );
-                            continue;
-                    }
+                match = /^I(\d+)/.exec( template );
+                if ( match ) {
+                        template = template.slice( match[0].length + 1 );
+                        item = items.length ? items.shift().addr : '';
+                        formatted += ' ' + item;
+                        continue;
+                }
 
-                    match = /^F(\d+(\.\d+)?)/.exec( template );
-                    if ( match ) {
-                            width = parseFloat( match[1], 10 );
-                            template = template.slice( match[0].length + 1 );
-                            item = items.length ? items.shift().toString() : '';
-                            formatted += pad( item, width ); // XXX fix me
-                            continue;
-                    }
-                    if ( /^\//.test( template ) ) break;
+                match = /^F(\d+)(\.(\d+))?/.exec( template );
+                if ( match ) {
+                        template = template.slice( match[0].length + 1 );
+                        item = items.length ? items.shift().raddr : '';
 
-                    throw new Error('FAIL: "' + template + '" (orig: "' + orig + '")');
-            }
+                        formatted += ' ' + Number( item ).toFixed( 3 );
 
-            return formatted;
+                        continue;
+                }
+                if ( /^\//.test( template ) ) break;
+
+                throw new Error('FAIL: "' + template + '" (orig: "' + orig + '")');
         }
+
+        control = formatted.charAt( 0 );
+        formatted = formatted.slice( 2 );
+
+         // the first character of information in each line is used
+         // for carriage control of the printer.
+        return formatted;
+    }
 };
