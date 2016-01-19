@@ -1,5 +1,43 @@
 var SNOBOL = require( './base' );
 
+// 0x7F is just the ASCII range; it should really be
+// 0x10000, but we get crashes.
+var CHAR_MAX = 0x7F;
+    ALPHA = '';
+
+for ( var i = 0; i <= CHAR_MAX; i++ ) {
+    ALPHA += String.fromCharCode(i);
+}
+
+SNOBOL.SymbolTable = function () {};
+SNOBOL.SymbolTable.prototype = {
+    // MDATA
+    ALPHA   : ALPHA,
+    AMPST   : '&',
+    COLSTR  : ': ',
+    QTSTR   : "'",
+
+    // PARMS
+    ALPHSZ  : ALPHA.length,
+    CPA     : 1,
+    DESCR   : 64,
+    SIZLIM  : 0x7FFFFFFF,
+    SPEC    : 64,
+
+    FNC     : 0x1,
+    MARK    : 0x2,
+    PTR     : 0x4,
+    STTL    : 0x8,
+    TTL     : 0x10,
+
+    UNITI   : 5,
+    UNITO   : 6,
+    UNITP   : 7,
+
+    MLINK   : -1,
+    PARMS   : -1
+};
+
 // See section 4.1 (Characters) in S4D58
 var characterClasses = {
     ALPHANUMERIC : /[a-z0-9]/i,
@@ -242,54 +280,3 @@ var syntaxTables = {
 Object.keys( syntaxTables ).forEach( function ( tableName ) {
     SNOBOL.SymbolTable.prototype[ tableName ] = syntaxTables[ tableName ];
 } );
-
-/* MDATA */
-
-// Constructs a string representing all code points in UTF-16
-function getCharacterSet() {
-    var charset = [];
-    // for (var i = 0x0; i < 0x10000; i++)
-    for (var i = 0x0; i <= 0x7f; i++)
-        charset.push(String.fromCharCode(i));
-    return charset.join('');
-}
-
-var MDATA = {
-    ALPHA  :  getCharacterSet(),
-    AMPST  :  '&',
-    COLSTR :  ': ',
-    QTSTR  :  "'",
-};
-
-/* PARMS */
-
-var PARMS = {
-    ALPHSZ  : MDATA.ALPHA.length,
-    CPA     : 1,
-    DESCR   : 64,
-    SIZLIM  : 0x7FFFFFFF,
-    SPEC    : 64,
-
-    FNC     : 0x1,
-    MARK    : 0x2,
-    PTR     : 0x4,
-    STTL    : 0x8,
-    TTL     : 0x10,
-
-    UNITI   : 5,
-    UNITO   : 6,
-    UNITP   : 7,
-};
-
-Object.keys( MDATA ).forEach( function ( symbol ) {
-    SNOBOL.SymbolTable.prototype[ symbol ] = MDATA[ symbol ];
-} );
-
-Object.keys( PARMS ).forEach( function ( symbol ) {
-    SNOBOL.SymbolTable.prototype[ symbol ] = PARMS[ symbol ];
-} );
-
-SNOBOL.SymbolTable.prototype.R = 314;
-SNOBOL.SymbolTable.prototype.MLINK = -1;
-SNOBOL.SymbolTable.prototype.PARMS = -1;
-

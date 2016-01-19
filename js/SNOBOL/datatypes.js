@@ -14,8 +14,26 @@ function defineValues( dst, src ) {
     return dst;
 }
 
-var SNOBOL = require( './base' );
+function titleCase( str ) {
+    return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
+}
 
+function MemorySlot( type, offset ) {
+    type   = titleCase( type );
+    offset = offset || 0;
+
+    this.enumerable = true;
+
+    this.get = function () {
+        return this.vm[ 'get' + type ]( this.ptr + offset );
+    };
+
+    this.set = function ( n ) {
+        this.vm[ 'set' + type ]( this.ptr + offset, n );
+    };
+}
+
+MemorySlot.prototype.enumerable = true;
 
 SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
     Object.defineProperty( this, 'vm', { value: vm } );
@@ -34,54 +52,30 @@ SNOBOL.Specifier = function Specifier( vm, ptr ) {
     SNOBOL.Descriptor.call( this, vm, ptr );
 };
 
-var datum = Object.create( null, {
-    
+SNOBOL.Descriptor.prototype = Object.create( null, {
+    name        : { value: 'Descriptor' },
     constructor : { value : SNOBOL.Descriptor },
     width       : { value : 3 },
-
-    addr: {
-        enumerable: true,
-        get: function () { return this.vm.getInt( this.ptr ); },
-        set: function ( n ) { this.vm.setInt( this.ptr, n ); }
-    },
-
-    raddr: {
-        enumerable: true,
-        get: function () { return this.vm.getReal( this.ptr ); },
-        set: function ( n ) { this.vm.setReal( this.ptr, n ); }
-    },
-
-    flags: {
-        enumerable: true,
-        get: function () { return this.vm.getUint( this.ptr + 1 ); },
-        set: function ( n ) { this.vm.setUint( this.ptr + 1, n ); }
-    },
-
-    value: {
-        enumerable: true,
-        get: function () { return this.vm.getUint( this.ptr + 2 ); },
-        set: function ( n ) { this.vm.setUint( this.ptr + 2, n ); }
-    }
+    addr        : new MemorySlot( 'int',  0 ),
+    raddr       : new MemorySlot( 'real', 0 ),
+    flags       : new MemorySlot( 'uint', 1 ),
+    value       : new MemorySlot( 'uint', 2 ),
 
 } );
 
-defineValues( datum, {
+defineValues( SNOBOL.Descriptor.prototype, {
     update: function () {
-        var values = Array.prototype.slice.call( arguments );
-        if ( values.length > this.width ) {
-            throw new TypeError( 'Too many keys to unpack' );
+        if ( arguments.length > this.width ) {
+            throw new TypeError( 'Too many parameters' );
         }
-        for ( var i = 0; i < values.length; i++ ) {
-            this.vm.setUint( this.ptr + i, values[ i ] );
+        for ( var i = 0; i < arguments.length; i++ ) {
+            this.vm.setUint( this.ptr + i, arguments[ i ] );
         }
         return this;
     },
 
     // Test two instances for equality
-    eq: function ( other ) {
-        if ( this.width === undefined ) {
-            throw new TypeError( other );
-        }
+    isEqualTo: function ( other ) {
         if ( this.width !== other.width ) {
             return false;
         }
@@ -107,30 +101,33 @@ defineValues( datum, {
 
     raw: function () {
         return this.vm.mem.slice( this.ptr, this.ptr + this.width );
+    },
+
+    toString: function () {
+        var fields = [], props = {};
+
+        for ( var k in this ) {
+            props[ k.charAt( 0 ).toUpperCase() ] = this[ k ];
+        }
+
+        [ 'A', 'F', 'V', 'O', 'L' ].forEach( function ( k ) {
+            if ( k in props ) {
+                fields.push( k + '=' + props[k] );
+            }
+        } );
+
+        return this.name + '<' + fields.join( ', ' ) + '>';
     }
 } );
 
 
-SNOBOL.Descriptor.prototype = datum;
-
-SNOBOL.Specifier.prototype = Object.create( datum, {
-
-    constructor: { value: SNOBOL.Specifier },
-    width:       { value: 6 },
-
-    offset: {
-        enumerable: true,
-        get: function ()  { return this.vm.getUint( this.ptr + 3 ); },
-        set: function ( n ) { this.vm.setUint( this.ptr + 3, n ); }
-    },
-
-    length: {
-        enumerable: true,
-        get: function ()  { return this.vm.getUint( this.ptr + 4 ); },
-        set: function ( n ) { this.vm.setUint( this.ptr + 4, n ); }
-    },
-
-    specified: {
+SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
+    name        : { value: 'Specifier' },
+    constructor : { value: SNOBOL.Specifier },
+    width       : { value: 6 },
+    offset      : new MemorySlot( 'uint', 3 ),
+    length      : new MemorySlot( 'uint', 4 ),
+    specified   : {
         enumerable: false,
         get: function () {
             var memLength = Math.ceil( ( this.offset + this.length ) / 12 ) * 6,

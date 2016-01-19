@@ -842,7 +842,7 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    if ( DESCR1.eq( DESCR2 ) ) {
+    if ( DESCR1.isEqualTo( DESCR2 ) ) {
         this.jmp( EQLOC );
     } else {
         this.jmp( NELOC );
@@ -1878,7 +1878,7 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     for ( var i = 0; ; i++ ) {
         ptr = A + 6 + ( 6 * i );
 
-        if ( this.d( ptr ).eq( DESCR3 ) ) {
+        if ( this.d( ptr ).isEqualTo( DESCR3 ) ) {
             DESCR1.update( ptr - 6, DESCR2.flags, DESCR2.values );
             return this.jmp( SLOC );
         }
@@ -2443,22 +2443,14 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     var DESCR = this.d( $DESCR );
 
     if ( !Array.isArray( ARGs ) ) {
-        ARGs = [ this.d( ARGs ) ];
-    } else {
-        ARGs = ARGs.map( function ( ARG ) {
-            // console.log( '> ADDR: ' + this.d(ARG).addr );
-            return this.d( ARG );
-        }, this );
+        ARGs = [ ARGs ];
     }
 
-    console.log( SNOBOL.str.format( FORMAT, ARGs ) );
+    ARGs = ARGs.map( function ( ARG ) {
+        return this.d( ARG );
+    }, this );
 
-    /*
-    var file = new SNOBOL.File( this, DESCR.addr ),
-        formatted = FORMAT.apply( FORMAT, ITEMS );
-    file.write( formatted );
-    XXX
-    */
+    console.log( SNOBOL.str.format( FORMAT, ARGs ) );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3885,7 +3877,9 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
     for ( I = 1; I <= str.length; I++ ) {
         ch = str.charAt( I - 1 );
-        // console.log( 'current char: ' + ch );
+        // console.log( 'length: ' + SPEC2.length );
+        // console.log( 'I = %s; str: "%s"; str.length = %s', I, str, str.length );
+        // console.log( 'current char: ' + ch.charCodeAt(0) );
 
         for ( t = 0; t < TABLE.length; t++ ) {
             if ( SNOBOL.match( TABLE[t][0], ch ) ) {
