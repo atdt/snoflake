@@ -1,5 +1,3 @@
-/*jslint node: true, white: true, sloppy: true, forin: true */
-/*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
 
 var buster = require( 'buster' ),
     assert = buster.assert,
@@ -201,10 +199,10 @@ buster.testCase( 'Descriptor Datatype', {
 
         d1.update( 6, 7, 8 );
         d2.update( 6, 7, 8 );
-        assert( d1.eq( d2 ) );
+        assert( d1.isEqualTo( d2 ) );
 
         d2.update( 9, 10, 11 );
-        refute( d1.eq( d2 ) );
+        refute( d1.isEqualTo( d2 ) );
     }
 } );
 
@@ -274,10 +272,10 @@ buster.testCase( 'Specifier Datatype', {
 
         s1.update( 6, 7, 8, 9, 10 );
         s2.update( 6, 7, 8, 9, 10 );
-        assert( s1.eq( s2 ) );
+        assert( s1.isEqualTo( s2 ) );
 
         s2.update( 1, 2, 3, 4, 5 );
-        refute( s1.eq( s2 ) );
+        refute( s1.isEqualTo( s2 ) );
     },
     specified: function () {
         var spc = new SNOBOL.Specifier( this.vm );

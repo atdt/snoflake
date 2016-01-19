@@ -1,6 +1,3 @@
-/*jslint node: true, white: true, sloppy: true, forin: true */
-/*global assert, mem, refute, alloc, resolve, assign, defineValues, Descriptor, Specifier, gets, puts, getd, getspc, symbols, reset, str, setUint, getUint, setInt, getInt, setReal, getReal, run, exec, ip, jmp */
-
 var buster = require( 'buster' ),
     assert = buster.assert,
     slice = Array.prototype.slice,

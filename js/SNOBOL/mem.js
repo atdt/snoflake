@@ -10,51 +10,39 @@ var buf = new ArrayBuffer( 4 ),
     i32 = new Int32Array( buf ),
     u32 = new Uint32Array( buf );
 
-// var mem = [], symbols = {};
-
 SNOBOL.SymbolTable = function () {};
 SNOBOL.SymbolTable.prototype = {};
 
-global.symbols = new SNOBOL.SymbolTable();
+function nearlyEqual( a, b ) {
+    return a === b || Math.abs( a - b ) < 0.001;
+}
 
-VM.prototype.getUint = function ( ptr ) {
-    return this.mem[ ptr ];
-};
+function typedGetter( typeArray ) {
+    return function ( ptr ) {
+        u32[ 0 ] = this.mem[ ptr ];
+        return typeArray[ 0 ];
+    };
+}
 
-VM.prototype.setUint = function ( ptr, value ) {
-    u32[ 0 ] = value;
-    if ( u32[ 0 ] !== value ) {
-        throw new RangeError( 'Invalid unsigned integer ' + value );
-    }
-    this.mem[ ptr ] = u32[ 0 ];
-};
+function typedSetter( typeArray ) {
+    return function ( ptr, value ) {
+        typeArray[ 0 ] = value;
+        if ( !nearlyEqual( typeArray[ 0 ], value ) ) {
+            throw new RangeError( value );
+        }
+        this.mem[ ptr ] = u32[ 0 ];
+    };
+}
 
-VM.prototype.getInt = function ( ptr ) {
-    u32[ 0 ] = this.mem[ ptr ];
-    return i32[ 0 ];
-};
 
-VM.prototype.setInt = function ( ptr, value ) {
-    i32[ 0 ] = value;
-    if ( i32[ 0 ] !== value ) {
-        throw new RangeError( 'Invalid integer ' + JSON.stringify ( value ) );
-    }
-    this.mem[ ptr ] = u32[ 0 ];
-};
+VM.prototype.getUint = typedGetter( u32 );
+VM.prototype.setUint = typedSetter( u32 );
 
-VM.prototype.getReal = function ( ptr ) {
-    u32[ 0 ] = this.mem[ ptr ];
-    return f32[ 0 ];
-};
+VM.prototype.getInt  = typedGetter( i32 );
+VM.prototype.setInt  = typedSetter( i32 );
 
-VM.prototype.setReal = function ( ptr, value ) {
-    f32[ 0 ] = value;
-
-    if ( Math.abs(f32[ 0 ] - value) > 1 ) {
-        throw new RangeError( 'Invalid real ' + value );
-    }
-    this.mem[ ptr ] = u32[ 0 ];
-};
+VM.prototype.getReal = typedGetter( f32 );
+VM.prototype.setReal = typedSetter( f32 );
 
 VM.prototype.alloc = function ( size ) {
     var ptr = this.mem.length;
