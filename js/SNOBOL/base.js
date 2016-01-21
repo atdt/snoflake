@@ -21,8 +21,8 @@ var SNOBOL = {
         this.callbacks = [];
         this.units = {};
         this.indent = 0;
-        this.CSTACK = this.d( SNOBOL.$CSTACK );
-        this.OSTACK = this.d( SNOBOL.$OSTACK );
+        this.CSTACK = this.d( 'CSTACK' );
+        this.OSTACK = this.d( 'OSTACK' );
         this.reset();
     },
 };

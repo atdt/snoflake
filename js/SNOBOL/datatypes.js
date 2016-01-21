@@ -2,7 +2,9 @@
 
 "use strict";
 
-var SNOBOL = require( './base' );
+var SNOBOL = require( './base' ),
+    assert = require('assert');
+
 
 // Extend `dst` by copying enumerable properties on `src`
 // as non-enumerable data descriptors.
@@ -44,6 +46,10 @@ SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
         ptr = vm.resolve( ptr );
     }
     Object.defineProperty( this, 'ptr', { value: ptr } );
+
+    while ( this.ptr + this.width > vm.mem.length ) {
+        vm.mem.push( 0 );
+    }
 
     Object.freeze( this );
 };
@@ -130,16 +136,18 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
     specified   : {
         enumerable: false,
         get: function () {
-            var memLength = Math.ceil( ( this.offset + this.length ) / 12 ) * 6,
-                memSegment = this.vm.mem.slice( this.addr, this.addr + memLength + 1 );
+            var start = this.addr + this.offset,
+                end = start + this.length;
 
-            return SNOBOL.str.decode( memSegment ).slice( this.offset, this.length );
+            return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
         },
         set: function ( s ) {
-            this.addr = this.vm.mem.length;
-            this.offset = 0;
-            this.length = s.length;
-            this.vm.mem = this.vm.mem.concat( SNOBOL.str.encode( s ) );
+            var start = this.addr + this.offset,
+                raw = SNOBOL.str.encode( s ),
+                args = [ start, raw.length ].concat( raw );
+
+            this.vm.mem.splice.apply( this.vm.mem, args );
+            this.length = raw.length;
         }
     }
 } );

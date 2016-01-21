@@ -10,6 +10,12 @@ var buf = new ArrayBuffer( 4 ),
     i32 = new Int32Array( buf ),
     u32 = new Uint32Array( buf );
 
+
+SNOBOL.isInt32 = function isInteger( v ) {
+    i32[0] = v;
+    return i32[0] === v;
+};
+
 SNOBOL.SymbolTable = function () {};
 SNOBOL.SymbolTable.prototype = {};
 
@@ -17,23 +23,24 @@ function nearlyEqual( a, b ) {
     return a === b || Math.abs( a - b ) < 0.001;
 }
 
-function typedGetter( typeArray ) {
+function typedGetter( typedArray ) {
     return function ( ptr ) {
+        u32.fill( 0 );
         u32[ 0 ] = this.mem[ ptr ];
-        return typeArray[ 0 ];
+        return typedArray[ 0 ];
     };
 }
 
-function typedSetter( typeArray ) {
+function typedSetter( typedArray ) {
     return function ( ptr, value ) {
-        typeArray[ 0 ] = value;
-        if ( !nearlyEqual( typeArray[ 0 ], value ) ) {
-            throw new RangeError( value );
+        u32.fill( 0 );
+        typedArray[ 0 ] = value;
+        if ( !nearlyEqual( typedArray[ 0 ], value ) ) {
+            throw new RangeError( 'typedArray[0]:' + JSON.stringify( typedArray[0] ) + ' value:' + JSON.stringify( value ) );
         }
         this.mem[ ptr ] = u32[ 0 ];
     };
 }
-
 
 VM.prototype.getUint = typedGetter( u32 );
 VM.prototype.setUint = typedSetter( u32 );
@@ -52,11 +59,18 @@ VM.prototype.alloc = function ( size ) {
     return ptr;
 };
 
+VM.prototype.recent = [];
+
 VM.prototype.resolve = function ( key ) {
     if ( typeof key === 'number' ) {
         return key;
     }
 
+    if ( typeof key.addr === 'number' ) {
+        return key;
+    }
+
+    this.recent.push( key );
     var ptr = this.symbols[ key ];
 
     if ( ptr === undefined ) {
@@ -84,11 +98,15 @@ VM.prototype.$ = function ( key, value ) {
         : this.resolve( key );
 }
 
-VM.prototype.puts = function ( s ) {
-    var ptr = this.mem.length,
-        encoded = SNOBOL.str.encode( s );
-    Array.prototype.push.apply( this.mem, encoded );
-    return { start: ptr, stop: this.mem.length };
+VM.prototype.puts = function ( str ) {
+    var spec = this.s(),
+        encoded = SNOBOL.str.encode( str );
+
+    spec.addr = this.mem.length,
+    spec.length = encoded.length;
+    this.mem.push.apply( this.mem, encoded );
+
+    return spec;
 };
 
 VM.prototype.gets = function ( start, stop ) {
