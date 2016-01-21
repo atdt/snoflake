@@ -31,10 +31,10 @@ function mkargs( vm ) {
 
 buster.testCase( 'String Encoding', {
     encode: function () {
-        assert.equals( SNOBOL.str.encode('हाय'), [155060537, -63185, -1] );
+        assert.equals( SNOBOL.str.encode( 'हाय' ), [ 2361, 2366, 2351 ] );
     },
     decode: function () {
-        assert.equals( SNOBOL.str.decode( [155060537, -63185, -1] ), 'हाय' );
+        assert.equals( SNOBOL.str.decode( [ 2361, 2366, 2351 ] ), 'हाय' );
     }
 } );
 
@@ -120,9 +120,9 @@ buster.testCase( 'Memory Management', {
         assert.equals( vm.mem.length, ptr + 3 );
         assert.equals( vm.mem.slice(-3), [ 0, 0, 0 ] );
     },
-    gets: function () {
-        var slice = this.vm.puts( 'こんにちは' );
-        assert.equals( this.vm.gets( slice.start ), 'こんにちは' );
+    puts: function () {
+        var spec = this.vm.puts( 'こんにちは' );
+        assert.equals( spec.specified, 'こんにちは' );
     }
 } );
 

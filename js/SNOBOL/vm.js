@@ -3,11 +3,10 @@ var SNOBOL = require( './base' );
 var DATA_MACROS = [ 'EQU', 'LHERE', 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ];
 
 SNOBOL.D = 3;
-SNOBOL.$OSTACK = 0 * SNOBOL.D;  // ptr to OSTACK descriptor
-SNOBOL.$CSTACK = 1 * SNOBOL.D;  // ptr to CSTACK descriptor
-SNOBOL.STACK   = 2 * SNOBOL.D;  // pos of first slot in stack
 
 SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
+    this.recent = [];
+
     var currentInstruction = this.instructionPointer,
         args = deferred.call( this ),
         returnValue;
@@ -17,7 +16,7 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
         var prettyOpCode = '\x1b[36m' + opCode + '\x1b[0m';
         var prettyLabel = SNOBOL.str.pad( label || '', 6, 'left' );
         var prettyCur = SNOBOL.str.pad( currentInstruction.toString(), 4 );
-        this.log( '[%s] [%s] %s(%s)', prettyCur, prettyLabel, prettyOpCode, JSON.stringify( args ).slice( 1, -1 ) );
+        this.log( '[%s] [%s] %s(%s)', prettyCur, prettyLabel, prettyOpCode, JSON.stringify( this.recent ).slice( 1, -1 ).replace( /"/g, '' ) );
     }
 
     returnValue = SNOBOL.sil[ opCode ].apply( this, args );

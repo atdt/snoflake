@@ -28,7 +28,7 @@ SNOBOL.File.prototype.read = function ( length ) {
     var slice = buf.slice( this.pos, this.pos + length );
     this.pos += length;
 
-    return slice;
+    return slice.toString( 'utf-8' );
 };
 
 SNOBOL.File.prototype.write = function ( a /* ... */ ) {

@@ -151,14 +151,12 @@ buster.testCase( 'Comparison Macros', {
         assert( sil.LEQLC ); 
     },
     LEXCMP: function () {
-        var SPEC1 = this.vm.s(),
-            SPEC2 = this.vm.s(),
+        var SPEC1 = this.vm.puts( 'abd' ),
+            SPEC2 = this.vm.puts( 'abc' ),
             GTLOC = 1,
             EQLOC = 2,
             LTLOC = 3;
 
-        SPEC1.specified = 'abd';
-        SPEC2.specified = 'abc';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
         assert.equals( this.vm.instructionPointer, GTLOC );
 
@@ -248,9 +246,9 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         s1.update( 0, 2, 4, 6, 8, 10 );
         s2.update( 1, 3, 5, 7, 9, 11 );
         assert.equals( this.vm.CSTACK.addr, cur );
-        sil.PUSH.call( this.vm, [ s1, s2 ] );
+        sil.SPUSH.call( this.vm, [ s1, s2 ] );
         assert.equals( this.vm.CSTACK.addr, cur + s1.width + s2.width );
-        sil.POP.call( this.vm, [ s3, s4 ] );
+        sil.SPOP.call( this.vm, [ s3, s4 ] );
         assert.equals( this.vm.CSTACK.addr, cur );
         assert.equals( s1.raw(), s4.raw() );
         assert.equals( s2.raw(), s3.raw() );
@@ -260,7 +258,7 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
             s = this.vm.s();
 
         s.update( 1, 2, 3, 4, 5, 6 );
-        sil.PUSH.call( this.vm, s );
+        sil.SPUSH.call( this.vm, s );
 
         s = this.vm.s( cur );
         assert.equals( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
@@ -506,10 +504,8 @@ buster.testCase( 'Macros that Operate on Specifiers', {
         assert( sil.ADDLG ); 
     },
     APDSP: function () {
-        var s1 = this.vm.s(),
-            s2 = this.vm.s();
-        s1.specified = 'supercalifragilistic';
-        s2.specified = 'expialidocious';
+        var s1 = this.vm.puts( 'supercalifragilistic' ),
+            s2 = this.vm.puts( 'expialidocious' );
         sil.APDSP.call( this.vm, s1, s2 );
         assert.equals( s1.specified, 'supercalifragilisticexpialidocious' );
     },

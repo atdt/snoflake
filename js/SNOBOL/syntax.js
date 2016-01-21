@@ -3,9 +3,10 @@ var SNOBOL = require( './base' );
 // 0x7F is just the ASCII range; it should really be
 // 0x10000, but we get crashes.
 var CHAR_MAX = 0x7F;
-    ALPHA = '';
+    ALPHA = '',
+    D = 3;
 
-for ( var i = 0; i <= CHAR_MAX; i++ ) {
+for ( var i = 1; i <= CHAR_MAX; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
@@ -35,7 +36,12 @@ SNOBOL.SymbolTable.prototype = {
     UNITP   : 7,
 
     MLINK   : -1,
-    PARMS   : -1
+    PARMS   : -1,
+
+    // Misc
+    OSTACK  : 0 * D,
+    CSTACK  : 1 * D,
+    STACK   : 2 * D,
 };
 
 // See section 4.1 (Characters) in S4D58

@@ -20,45 +20,34 @@ function pad( str, width, align, padChar ) {
         padding = new Array( width - str.length + 1 ).join( padChar );
         return align === 'left' ? str + padding : padding + str;
 }
+
 SNOBOL.str = {
 
     pad: pad,
-    encode: function ( s ) {
-        var i, lo, hi, control, encoded = [];
 
-        s = s.toString();
+    encode: function ( s ) {
+        var encoded = s.toString().split( '' ).map( function ( ch ) {
+            return ch.charCodeAt( 0 );
+        } );
 
         // Strings are stored in whole descriptors, which have a width of
-        // six UTF-16 code points, so pad to the nearest multiple of six
+        // three UTF-16 code points, so pad to the nearest multiple of three
         // with Unicode Noncharacter U+FFFF.
-        while ( s.length % 6 ) {
-            s = s + '\uFFFF';
-        }
-
-        for ( i = 0; i < s.length; i += 2 ) {
-            lo = s.charCodeAt( i );
-            hi = s.charCodeAt( i + 1 ) << 16;
-            encoded.push( lo + hi );
+        while ( encoded.length % 3 ) {
+            encoded.push( 0 );
         }
 
         return encoded;
     },
 
     decode: function ( encoded ) {
-        var i, lo, hi, codes = [];
-
-        for ( i = 0; i < encoded.length; i++ ) {
-            lo = encoded[ i ] & 0xFFFF;
-            if ( lo !== 0xFFFF ) {
-                codes.push( lo );
-            }
-            hi = encoded[ i ] >>> 16;
-            if ( hi !== 0xFFFF ) {
-                codes.push( hi );
-            }
+        while ( encoded[ encoded.length -1 ] === 0 ) {
+            encoded.pop();
         }
 
-        return String.fromCharCode.apply( null, codes );
+        return encoded.map( function ( charCode ) {
+            return String.fromCharCode( charCode );
+        } ).join( '' );
     },
 
     // An implementation of Jenkins's one-at-a-time hash
