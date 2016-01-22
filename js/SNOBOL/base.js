@@ -23,6 +23,7 @@ var SNOBOL = {
         this.indent = 0;
         this.CSTACK = this.d( 'CSTACK' );
         this.OSTACK = this.d( 'OSTACK' );
+        this.STACK = this.$( 'STACK' );
         this.reset();
     },
 };

@@ -11,30 +11,27 @@ var TIMER, sil = {};
 
 function stackPopper( dataType ) {
     return function ( ARGs ) {
-        var CSTACK = this.d( 'CSTACK' ), src, dst;
+        var src, dst, arg;
 
         if ( !Array.isArray( ARGs ) ) {
             ARGs = [ ARGs ];
         }
 
         for ( var i = 0; i < ARGs.length; i++ ) {
-            dst = new dataType( this, ARGs[i] );
-            CSTACK.addr -= dst.width;
-            src = new dataType( this, CSTACK.addr );
+            dst = this[ dataType ]( ARGs[i] );
+            if ( this.CSTACK.addr - dst.width < this.STACK ) {
+                throw new RangeError( 'Stack underflow' );
+            }
+            this.CSTACK.addr -= dst.width;
+            src = this[ dataType ]( this.CSTACK.addr );
             dst.read( src );
-
-            // if ( this.CSTACK.addr - dst.width < SNOBOL.STACK ) {
-                // console.log( 'CSTACK: %s\tSTACK: %s\tdst.width: %s', this.CSTACK.addr, SNOBOL.STACK, dst.width );
-                // throw new RangeError( 'Stack underflow' );
-            // }
-            console.log( 'POPping ' + dst.toString() );
         }
     }
 }
 
 function stackPusher( dataType ) {
     return function ( ARGs ) {
-        var CSTACK = this.d( 'CSTACK' ), src, dst;
+        var src, dst;
 
         if ( !Array.isArray( ARGs ) ) {
             ARGs = [ ARGs ];
@@ -42,13 +39,13 @@ function stackPusher( dataType ) {
 
         // Are we iterating in the right direction here?
         for ( var i = 0; i < ARGs.length; i++ ) {
-            src = new dataType( this, ARGs[i] );
-            dst = new dataType( this, CSTACK.addr );
+            src = this[ dataType ]( ARGs[i] );
+            if ( this.CSTACK.addr + src.width > this.STACK + ( D * this.STSIZE ) ) {
+                throw new RangeError( 'Stack overflow' );
+            }
+            dst = this[ dataType ]( this.CSTACK.addr );
             dst.read( src );
-            console.log( 'PUSHing ' + src.toString() );
-            console.log( 'PUSHed  ' + dst.toString() );
-            CSTACK.addr += dst.width;
-            // XXX throw new RangeError( 'Stack overflow' );
+            this.CSTACK.addr += dst.width;
         }
     };
 }
@@ -868,6 +865,7 @@ sil.DECRA = function ( $DESCR, N ) {
     // decrement address
     var DESCR = this.d( $DESCR );
 
+    console.log( DESCR.addr - N );
     assert( N > 0 );
     DESCR.addr -= N;
 };
@@ -1611,8 +1609,8 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 // 2.  See also PSTACK, RCALL, and RRTURN.
 sil.ISTACK = function () {
     // initialize stack
-    this.d( 'OSTACK' ).addr = 0;
-    this.d( 'CSTACK' ).addr = this.$( 'STACK' );
+    this.OSTACK.addr = 0;
+    this.CSTACK.addr = this.$( 'STACK' );
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2608,7 +2606,7 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
 // diagnostic  message  indicating  an error may be obtained by
 // transferring to the program location INTR10 if the condition
 // is detected.
-sil.POP = stackPopper( SNOBOL.Descriptor );
+sil.POP = stackPopper( 'd' );
 
 //     PROC is used to identify a procedure entry point.  LOC2
 // may be omitted, in which case LOC1 is the primary  procedure
@@ -2638,7 +2636,7 @@ sil.PROC = sil.LHERE;
 sil.PSTACK = function ( $DESCR ) {
     // post stack position
     var DESCR = this.d( $DESCR ),
-        CSTACK = this.d( 'CSTACK' ),
+        CSTACK = this.CSTACK,
         A = CSTACK.addr;
 
     DESCR.addr  = A - D;
@@ -2679,7 +2677,7 @@ sil.PSTACK = function ( $DESCR ) {
 // Transfer  should be made to the program location OVER, which
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
-sil.PUSH = stackPusher( SNOBOL.Descriptor );
+sil.PUSH = stackPusher( 'd' );
 
 //     PUTAC is used to put an address field into a descriptor
 // located at a constant offset.
@@ -2926,8 +2924,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // console.log( 'RCALL arguments: ' + JSON.stringify( arguments ) );
     // console.log( 'RCALL 99093: ' + this.s( 99093 ).toString() );
     var retLoc = this.instructionPointer,
-        OSTACK = this.d( 'OSTACK' ),
-        CSTACK = this.d( 'CSTACK' ),
         DESCR;
 
     this.indent++;
@@ -2944,19 +2940,19 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         $LOCs = [ $LOCs ];
     }
 
-    var oldStackPtr = OSTACK.addr,
-        curStackPtr = CSTACK.addr;
+    var oldStackPtr = this.OSTACK.addr,
+        curStackPtr = this.CSTACK.addr;
 
 
     // The old stack pointer (A0) is saved on the stack.
     // sil.PUSH
-    this.d( CSTACK.addr ).read( OSTACK );
+    this.d( this.CSTACK.addr ).read( this.OSTACK );
 
     // The current stack pointer becomes the old stack pointer.
-    OSTACK.read( CSTACK );
+    this.OSTACK.read( this.CSTACK );
 
     // A new current stack pointer is generated.
-    CSTACK.addr += D;
+    this.CSTACK.addr += D;
 
 
     // The return location LOC is saved on the stack so that the return can be
@@ -2968,8 +2964,8 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
             DESCR = this.d( $DESCR );
         }
 
-        this.d( 'OSTACK' ).addr = oldStackPtr;
-        this.d( 'CSTACK' ).addr = curStackPtr;
+        this.OSTACK.addr = oldStackPtr;
+        this.CSTACK.addr = curStackPtr;
 
         if ( N && $LOCs[ N ] !== undefined ) {
             this.jmp( $LOCs[ N ] );
@@ -3642,7 +3638,7 @@ sil.SPEC = function ( A, F, V, O, L ) {
 // termination  for  this error may be obtained by transferring
 // to the program location INTR10 if the condition is detected.
 // 2.  See also POP, SPUSH, and PUSH.
-sil.SPOP = stackPopper( SNOBOL.Specifier );
+sil.SPOP = stackPopper( 's' );
 
 //     SPREAL  is  used  to  convert a specified string into a
 // real number.  R(S) is a signed real  number  resulting  from
@@ -3723,7 +3719,7 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 // Transfer should be made to the program location OVER,  which
 // will result in an appropriate error termination.
 // 2.  See also PUSH, POP, and SPOP.
-sil.SPUSH = stackPusher( SNOBOL.Specifier );
+sil.SPUSH = stackPusher( 's' );
 
 //     STPRNT is used to print a string.  The string C11...C1L
 // is printed on the file associated with unit reference number
@@ -3829,12 +3825,6 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     }
 
     SPEC.specified = words;
-    console.log( '<STREAD>' );
-    console.log( 'specified in stread: ' + SPEC.specified );
-    console.log( SPEC.toString() );
-    console.log( 'ptr: ' + SPEC.ptr );
-    console.log( '</STREAD>' );
-
 
     return this.jmp( SLOC );
 };
@@ -3937,10 +3927,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         TI, // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
         t;  // The table row (rule) index that we are currently applying
 
-    console.log( '<STREAM>' );
-    console.log( JSON.stringify( str ) );
-    console.log( 'ptr: ' + SPEC2.ptr );
-    console.log( '</STREAM>' );
     STYPE.addr = 0;
 
     var tableName;

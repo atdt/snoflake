@@ -42,6 +42,8 @@ SNOBOL.SymbolTable.prototype = {
     OSTACK  : 0 * D,
     CSTACK  : 1 * D,
     STACK   : 2 * D,
+    OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
+    STSIZE  : 1000,   // ditto
 };
 
 // See section 4.1 (Characters) in S4D58
