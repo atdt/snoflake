@@ -123,6 +123,14 @@ buster.testCase( 'Memory Management', {
     puts: function () {
         var spec = this.vm.puts( 'こんにちは' );
         assert.equals( spec.specified, 'こんにちは' );
+    },
+    sizlim: function () {
+        var SIZLIM = this.vm.$( 'SIZLIM' ),
+            DESCR = this.vm.d();
+
+        DESCR.value = SIZLIM;
+        assert.equals( DESCR.value, SIZLIM );
+        DESCR.value++;
     }
 } );
 
