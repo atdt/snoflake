@@ -170,21 +170,39 @@ sil.ADDLG = function ( $SPEC, $DESCR ) {
 // 3.  See also ADDSON and INSERT.
 sil.ADDSIB = function ( $DESCR1, $DESCR2 ) {
     // add sibling to tree node
-    var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        father = this.resolve( 'FATHER' ),
-        rsib = this.resolve( 'RSIB' ),
-        code = this.resolve( 'CODE' ),
-        a1_father = this.d( DESCR1.addr + father ),
-        a1_rsib = this.d( DESCR1.addr + rsib ),
-        a3_code = this.d( a1_father.addr + code ),
-        a2_rsib = this.d( DESCR2.addr + rsib ),
-        a2_father = this.d( DESCR2.addr + father );
+    var FATHER = this.$( 'FATHER' ),
+        LSON   = this.$( 'LSON' ),
+        RSIB   = this.$( 'RSIB' ),
+        CODE   = this.$( 'CODE' ),
 
-    a2_rsib.read( a1_rsib );
-    a2_father.read( a1_father );
-    a1_rsib.read( DESCR2 );
-    a3_code.value++;
+        DESCR1 = this.d( $DESCR1 ),
+        A1 = DESCR1.addr,
+
+        DESCR2 = this.d( $DESCR2 ),
+        A2 = DESCR2.addr,
+        F2 = DESCR2.flags,
+        V2 = DESCR2.value,
+
+        A1_FATHER = this.d( A1 + FATHER ),
+        A3 = A1_FATHER.addr,
+        F3 = A1_FATHER.flags,
+        V3 = A1_FATHER.value,
+
+        A1_RSIB = this.d( A1 + RSIB ),
+        A4 = A1_RSIB.addr,
+        F4 = A1_RSIB.flags,
+        V4 = A1_RSIB.value,
+
+        A3_CODE = this.d( A3 + CODE ),
+        I = A3_CODE.value,
+
+        A2_RSIB = this.d( A2 + RSIB ),
+        A2_FATHER = this.d( A2 + FATHER );
+
+    A2_RSIB.update( A4, F4, V4 );
+    A2_FATHER.update( A3, F3, V3 );
+    A1_RSIB.update( A2, F2, V2 );
+    A3_CODE.value = I + 1;
 };
 
 //     ADDSON  is  used to add a tree node as a son to another
@@ -348,8 +366,10 @@ sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
     assert( N >= 0 );
 
     if ( DESCR.addr === N ) {
+        console.log( 'AEQLC: EQLOC' );
         this.jmp( EQLOC );
     } else {
+        console.log( 'AEQLC: NELOC' );
         this.jmp( NELOC );
     }
 };
@@ -412,9 +432,11 @@ sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
 sil.APDSP = function ( $SPEC1, $SPEC2 ) {
     // append specifier
     var SPEC1 = this.s( $SPEC1 ),
-        SPEC2 = this.s( $SPEC2 );
+        SPEC2 = this.s( $SPEC2 ),
+        newStr = SPEC1.specified + SPEC2.specified;
 
-    SPEC1.specified = SPEC1.specified + SPEC2.specified;
+    SPEC1.length = SNOBOL.str.encode( newStr ).length;
+    SPEC1.specified = newStr;
 };
 
 //     ARRAY is used to assemble an array of descriptors.
@@ -544,8 +566,9 @@ sil.BRANIC = function ( $DESCR, N ) {
 // blank (not zero) when program execution begins.
 sil.BUFFER = function ( N ) {
     // assemble buffer of blank characters
-    var s = new SNOBOL.Specifier( this );
-    s.specified = ( new Array( N + 1 ) ).join( ' ' );
+    var blanks = ( new Array( N + 1 ) ).join( ' ' ),
+        s = this.puts( blanks );
+
     return s.ptr;
 };
 
@@ -1152,19 +1175,10 @@ sil.FSHRTN = function ( $SPEC, N ) {
 // 1.  N may be negative.
 // 2.  See also PUTAC, GETDC, and PUTDC.
 sil.GETAC = function ( $DESCR1, $DESCR2, N ) {
-    console.log( 'mem.length: ' + this.mem.length );
-    console.log( '$DESCR1: ' + $DESCR1 );
-    console.log( '$DESCR2: ' + $DESCR2 );
-    console.log( 'N:       ' + N );
-
-
     // get address with offset constant
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR_indirect, A;
-
-    console.log( 'DESCR2.addr    : ' + ( DESCR2.addr ) );
-    console.log( 'DESCR2.addr + N: ' + ( DESCR2.addr + N ) );
 
     DESCR_indirect = this.d( DESCR2.addr + N ),
     A = DESCR_indirect.addr;
@@ -1362,6 +1376,7 @@ sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR_indirect = this.d( DESCR2.addr );
 
+    console.log( 'Setting ' + $DESCR1 + ' addr to ' + DESCR_indirect.value );
     DESCR1.addr  = DESCR_indirect.value;
     DESCR1.flags = 0;
     DESCR1.value = 0;
@@ -1388,7 +1403,6 @@ sil.GETSPC = function ( $SPEC, $DESCR, N ) {
         src = this.s( DESCR.addr + N );
 
     dst.read( src );
-    // console.log( 'GETSPC: dst=' + dst.toString() + '; src=' + src.toString() );
 };
 
 //     INCRA is used to  increment  the  address  field  of  a
@@ -1411,6 +1425,7 @@ sil.INCRA = function ( $DESCR, N ) {
     // increment address
     var DESCR = this.d( $DESCR );
 
+    console.log( 'DESCR.addr = ' + DESCR.addr + ' and N = ' + N );
     assert( DESCR.addr >= 0 &&  N > 0 );
     DESCR.addr += N;
 };
@@ -1521,24 +1536,42 @@ sil.INIT = function () {
 // 4.  See also ADDSIB and ADDSON.
 sil.INSERT = function ( $DESCR1, $DESCR2 ) {
     // insert node in tree
-    var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        father = this.resolve( 'FATHER' ),
-        lson = this.resolve( 'LSON' ),
-        rsib = this.resolve( 'RSIB' ),
-        code = this.resolve( 'CODE' ),
-        a1_father = this.d( DESCR1.addr + father ),
-        a3_lson = this.d( a1_father.addr + lson ),
-        a2_code = this.d( DESCR2.addr + code ),
-        a4_rsib = this.d( a3_lson.addr + rsib ),
-        a2_father = this.d( DESCR2.addr + father ),
-        a2_lson = this.d( DESCR2.addr + lson );
+    var FATHER = this.$( 'FATHER' ),
+        LSON   = this.$( 'LSON' ),
+        RSIB   = this.$( 'RSIB' ),
+        CODE   = this.$( 'CODE' ),
 
-    a2_father.read( a1_father );
-    a1_father.read( DESCR2 );
-    a4_rsib.read( DESCR2 );
-    a2_lson.read( DESCR1 );
-    a2_code.value++;
+        DESCR1 = this.d( $DESCR1 ),
+        A1 = DESCR1.addr,
+        F1 = DESCR1.flags,
+        V1 = DESCR1.value,
+
+        DESCR2 = this.d( $DESCR2 ),
+        A2 = DESCR2.addr,
+        F2 = DESCR2.flags,
+        V2 = DESCR2.value,
+
+        A1_FATHER = this.d( A1 + FATHER ),
+        A3 = A1_FATHER.addr,
+        F3 = A1_FATHER.flags,
+        V3 = A1_FATHER.value,
+
+        A3_LSON = this.d( A3 + LSON ),
+        A4 = A3_LSON.addr,
+        F4 = A3_LSON.flags,
+        V4 = A3_LSON.value,
+
+        A2_CODE = this.d( A2 + CODE ),
+        I = A2_CODE.value,
+
+        A4_RSIB = this.d( A4 + RSIB );
+        
+
+    A1_FATHER.update( A2, F2, V2 );
+    A4_RSIB.update( A2, F2, V2 );
+    A2_FATHER.update( A3, F3, V3 );
+    A2_LSON.update( A1, F1, V1 );
+    A2_CODE.value = I + 1;
 };
 
 //     INTRL  is  used to convert a (signed) integer to a real
@@ -1653,6 +1686,7 @@ sil.LEQLC = function ( $SPEC, N, NELOC, EQLOC ) {
     // length equal to constant test
     var SPEC = this.s( $SPEC );
 
+    assert( SPEC.length >= 0 && N >= 0 );
     if ( SPEC.length === N ) {
         this.jmp( EQLOC );
     } else {
@@ -4322,8 +4356,7 @@ sil.TRIMSP = function ( $SPEC1, $SPEC2 ) {
         SPEC2 = this.s( $SPEC2 );
 
     SPEC1.read( SPEC2 );
-
-    while ( / $/.test( SPEC1.specified ) ) {
+    while ( /[\u0020\u0000]$/.test( SPEC1.specified ) ) {
         SPEC1.length--;
     }
 };

@@ -72,6 +72,9 @@ VM.prototype.resolve = function ( key ) {
 
     this.recent.push( key );
     var ptr = this.symbols[ key ];
+    if ( ptr === 'DESCR' ) {
+        console.log( ptr );
+    }
 
     if ( ptr === undefined ) {
         throw new ReferenceError( key );
@@ -115,10 +118,17 @@ VM.prototype.gets = function ( start, stop ) {
 };
 
 VM.prototype.reset = function () {
-    var STACK_SIZE = 6 << 14;
-
-    this.mem = [];
+    this.instructionPointer = null;
     this.symbols = new SNOBOL.SymbolTable();
-    this.alloc( STACK_SIZE );
+    this.mem = [];
+    this.callbacks = [];
+    this.units = {};
+    this.indent = 0;
+
+    this.alloc( this.STSIZE * 3 );
+    this.CSTACK = this.d( 'CSTACK' );
+    this.OSTACK = this.d( 'OSTACK' );
+    this.STACK  = this.$( 'STACK' );
+
     SNOBOL.sil.ISTACK.call( this );
 };

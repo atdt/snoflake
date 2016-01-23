@@ -466,10 +466,8 @@ buster.testCase( 'Macros that Deal with Real Numbers', {
         assert( sil.SBREAL ); 
     },
     SPREAL: function () {
-        var d = this.vm.d(),
-            s = this.vm.s();
+        var d = this.vm.d(), s = this.vm.puts( '-0.5' );
         this.vm.assign( 'R', 9 );
-        s.specified = '-0.5';
         sil.SPREAL.call( this.vm, d, s, 1, 2 );
         assert.equals( d.raddr, -0.5 );
         assert.equals( d.value, 9 );
@@ -538,13 +536,11 @@ buster.testCase( 'Macros that Operate on Specifiers', {
     STREAM: function () { // stub
 
         var s1 = this.vm.s(),
-            s2 = this.vm.s(),
+            s2 = this.vm.puts( '43.2   ' ),
             stype = this.vm.d();
 
         this.vm.assign( 'STYPE', stype );
         this.vm.assign( 'FLITYP', 6 );
-
-        s2.specified = '43.2   ';
 
         sil.STREAM.call( this.vm, s1, s2, this.vm.resolve( 'INTGTB' ), -1, -2, -3 );
 
@@ -555,11 +551,12 @@ buster.testCase( 'Macros that Operate on Specifiers', {
     },
     TRIMSP: function () {
         var s1 = this.vm.s(),
-            s2 = this.vm.s();
-        s2.specified = 'abcd   ';
+            s2 = this.vm.puts( 'abcd   ' );
+
         sil.TRIMSP.call( this.vm, s1, s2 );
-        assert.equals( 'abcd   ', s2.specified );
+        assert.equals( s2.specified, 'abcd   ' );
         assert.equals( s1.specified, 'abcd' );
+
         s2.specified = 'efgh';
         sil.TRIMSP.call( this.vm, s1, s2 );
         assert.equals( s1.specified, 'efgh' );
@@ -713,9 +710,8 @@ buster.testCase( 'Miscellaneous Macros', {
     },
     VARID: function () {
         var d = this.vm.d(),
-            s = this.vm.s();
+            s = this.vm.puts( 'hello' );
 
-        s.specified = 'hello';
         sil.VARID.call( this.vm, d, s );
         assert.equals( d.addr, 226 );
         assert.equals( d.value, 3679317 );

@@ -74,8 +74,8 @@ defineValues( SNOBOL.Descriptor.prototype, {
         if ( arguments.length > this.width ) {
             throw new TypeError( 'Too many parameters' );
         }
-        for ( var i = 0; i < arguments.length; i++ ) {
-            this.vm.setUint( this.ptr + i, arguments[ i ] );
+        for ( var i = 0; i < this.width; i++ ) {
+            this.vm.setUint( this.ptr + i, arguments[ i ] || 0 );
         }
         return this;
     },
@@ -146,6 +146,7 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
                 raw = SNOBOL.str.encode( s ),
                 args = [ start, raw.length ].concat( raw );
 
+            assert( raw.length <= this.length );
             this.vm.mem.splice.apply( this.vm.mem, args );
             this.length = raw.length;
         }

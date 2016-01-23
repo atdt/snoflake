@@ -286,9 +286,8 @@ buster.testCase( 'Specifier Datatype', {
         refute( s1.isEqualTo( s2 ) );
     },
     specified: function () {
-        var spc = new SNOBOL.Specifier( this.vm );
-        spc.specified = '안녕';
-        assert.equals( spc.specified, '안녕' ); 
+        var s = this.vm.puts( '안녕' );
+        assert.equals( s.specified, '안녕' ); 
     }
 } );
 
