@@ -13,13 +13,23 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
         // returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
     if ( SNOBOL.DEBUG && DATA_MACROS.indexOf( opCode ) === -1 ) {
+        var symbols = {};
+        var that=this;
+        this.recent.forEach( function ( sym ) {
+            symbols[sym] = that.resolve( sym );
+        } );
         var prettyOpCode = '\x1b[36m' + opCode + '\x1b[0m';
         var prettyLabel = SNOBOL.str.pad( label || '', 6, 'left' );
         var prettyCur = SNOBOL.str.pad( currentInstruction.toString(), 4 );
-        this.log( '[%s] [%s] %s(%s)', prettyCur, prettyLabel, prettyOpCode, JSON.stringify( this.recent ).slice( 1, -1 ).replace( /"/g, '' ) );
+        this.log( '[%s] [%s] %s(%s)', prettyCur, prettyLabel, prettyOpCode, JSON.stringify( symbols, null, 2 ).slice( 1, -1 ).replace( /"/g, '' ) );
     }
 
-    returnValue = SNOBOL.sil[ opCode ].apply( this, args );
+    try {
+        returnValue = SNOBOL.sil[ opCode ].apply( this, args );
+    } catch ( e ) {
+        // console.log( JSON.stringify( this.symbols ) );
+        throw e;
+    }
 
     if ( typeof returnValue === 'number' && returnValue < 0 ) {
         return returnValue++;

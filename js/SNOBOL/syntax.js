@@ -21,15 +21,15 @@ SNOBOL.SymbolTable.prototype = {
     // PARMS
     ALPHSZ  : ALPHA.length,
     CPA     : 1,
-    DESCR   : 64,
+    DESCR   : 3,
+    SPEC    : 6,
     SIZLIM  : 0x7FFFFFFF,
-    SPEC    : 64,
 
-    FNC     : 0x1,
-    MARK    : 0x2,
-    PTR     : 0x4,
-    STTL    : 0x8,
-    TTL     : 0x10,
+    FNC     : 1 << 1,
+    MARK    : 1 << 2,
+    PTR     : 1 << 3,
+    STTL    : 1 << 4, 
+    TTL     : 1 << 5,
 
     UNITI   : 5,
     UNITO   : 6,
@@ -43,7 +43,7 @@ SNOBOL.SymbolTable.prototype = {
     CSTACK  : 1 * D,
     STACK   : 2 * D,
     OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
-    STSIZE  : 1000,   // ditto
+    // STSIZE  : 1000,   // ditto
 };
 
 // See section 4.1 (Characters) in S4D58

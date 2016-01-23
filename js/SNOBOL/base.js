@@ -13,17 +13,7 @@ var SNOBOL = {
             console.log.apply( console, arguments );
         }
     },
-    VM: function ( stackSize ) {
-        this.instructionPointer = null;
-        this.stackSize = stackSize || 1024;
-        this.symbols = new SNOBOL.SymbolTable();
-        this.mem = [];
-        this.callbacks = [];
-        this.units = {};
-        this.indent = 0;
-        this.CSTACK = this.d( 'CSTACK' );
-        this.OSTACK = this.d( 'OSTACK' );
-        this.STACK = this.$( 'STACK' );
+    VM: function () {
         this.reset();
     },
 };
