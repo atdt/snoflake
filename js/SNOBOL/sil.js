@@ -3025,13 +3025,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         } else {
             this.jmp( retLoc + 1 );
         }
-        // if ( DESCR && $LOCs[ DESCR.addr ] !== undefined ) {
-        //     this.jmp( $LOCs[ DESCR.addr ] );
-        // } else {
-        //     this.jmp( retLoc + 1 );
-        // }
-        return DESCR;
-
     } );
 
     // The values of the arguments DESCR1,...,DESCRN are placed on the stack.
@@ -3283,7 +3276,7 @@ sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
     this.indent--;
     var callback = this.callbacks.pop();
-    return callback.call( this, $DESCR, N );
+    callback.call( this, $DESCR, N );
 };
 
 //     RSETFI is used to reset (delete) a flag from a descrip-
@@ -3362,7 +3355,8 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 sil.SELBRA = function ( $DESCR, LOCI ) {
     // select branch point
     var DESCR = this.d( $DESCR ),
-        I = DESCR.addr;
+        I = DESCR.addr,
+        N;
 
     if ( !Array.isArray( LOCI ) ) {
         LOCI = [ LOCI ];
@@ -3495,11 +3489,12 @@ sil.SETLC = function ( $SPEC, N ) {
 sil.SETSIZ = function ( $DESCR1, $DESCR2 ) {
     // set size
     var DESCR1 = this.d( $DESCR1 ),
+        A = DESCR1.addr,
         DESCR2 = this.d( $DESCR2 ),
-        DESCR_indirect = this.d( DESCR1.addr );
+        I = DESCR2.addr;
 
-    assert( DESCR2.addr > 0 );
-    DESCR_indirect.value = DESCR2.addr;
+    assert( I > 0 );
+    this.d( A ).value = I;
 };
 
 //     SETSP is used to set one specifier equal to another.
@@ -4204,16 +4199,18 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // sum addresses
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        DESCR3 = this.d( $DESCR3 ),
-        newAddr = DESCR2.addr + DESCR3.addr;
+        A = DESCR2.addr, F = DESCR2.addr, V = DESCR2.addr,
 
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+        DESCR3 = this.d( $DESCR3 ),
+        I = DESCR3.addr;
+
+    if ( !SNOBOL.isInt32( A + I ) ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.addr  = newAddr;
-    DESCR1.flags = DESCR2.flags;
-    DESCR1.value = DESCR2.value;
+    DESCR1.addr  = A + I;
+    DESCR1.flags = F;
+    DESCR1.value = V;
 };
 
 //     TESTF is used to test a flag field for the presence  of
