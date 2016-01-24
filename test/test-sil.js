@@ -127,7 +127,24 @@ buster.testCase( 'Comparison Macros', {
         assert.equals( this.vm.resolve('A'), 111 );
     },
     ACOMPC: function () { // stub
-        assert( sil.ACOMPC ); 
+        var DESCR = this.vm.d(),
+            N = 4,
+            NELOC = 1,
+            EQLOC = 2;
+
+        this.vm.assign( 'NELOC', NELOC );
+        this.vm.assign( 'EQLOC', NELOC );
+
+        this.vm.run( [
+            [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
+        ] );
+        assert.equals( this.vm.instructionPointer, NELOC );
+
+        DESCR.addr = N;
+        this.vm.run( [
+            [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
+        ] );
+        assert.equals( this.vm.instructionPointer, EQLOC );
     },
     AEQL: function () { // stub
         assert( sil.AEQL ); 

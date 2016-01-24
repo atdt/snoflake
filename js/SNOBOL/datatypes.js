@@ -98,6 +98,11 @@ defineValues( SNOBOL.Descriptor.prototype, {
         return new this.constructor( this.vm, this.ptr + this.width );
     },
 
+    // Get prev aligned data structure
+    prev: function () {
+        return new this.constructor( this.vm, this.ptr - this.width );
+    },
+
     // Read (copy) the content of another instance into self
     read: function ( src ) {
         for ( var i = 0; i < this.width; i++ ) {
@@ -122,7 +127,10 @@ defineValues( SNOBOL.Descriptor.prototype, {
             }
         } );
 
-        return this.name + '<' + fields.join( ', ' ) + '>';
+        return [
+            '<', this.name, '@', this.ptr, ' ',
+                fields.join( ', ' ), '>' 
+        ].join( '' );
     }
 } );
 
