@@ -15,13 +15,23 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
     if ( SNOBOL.DEBUG && DATA_MACROS.indexOf( opCode ) === -1 ) {
         var symbols = {};
         var that=this;
-        this.recent.forEach( function ( sym ) {
-            symbols[sym] = that.resolve( sym );
-        } );
         var prettyOpCode = '\x1b[36m' + opCode + '\x1b[0m';
         var prettyLabel = SNOBOL.str.pad( label || '', 6, 'left' );
         var prettyCur = SNOBOL.str.pad( currentInstruction.toString(), 4 );
-        this.log( '[%s] [%s] %s(%s)', prettyCur, prettyLabel, prettyOpCode, JSON.stringify( symbols, null, 2 ).slice( 1, -1 ).replace( /"/g, '' ) );
+        this.log( '[%s] [%s] %s:', prettyCur, prettyLabel, opCode );
+        this.recent.forEach( function ( sym ) {
+            var resolved = that.resolve( sym ),
+                msg;
+
+            if ( resolved % 3 === 0 && resolved > 6 ) {
+                try {
+                    console.log( '\t' + sym + '\t' + that.d( resolved ).toString() );
+                    return;
+                } catch ( e ) { }
+            }
+            console.log( '\t' + sym + '\t' + resolved );
+        } );
+        console.log('\n');
     }
 
     try {

@@ -129,7 +129,8 @@ sil.ADDLG = function ( $SPEC, $DESCR ) {
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR );
 
-    SPEC.length += DESCR.value;
+    assert( DESCR.addr > 0 );
+    SPEC.length += DESCR.addr;
 };
 
 //     ADDSIB  is  used  to  add  a  tree node as a sibling to
@@ -282,9 +283,12 @@ sil.ADJUST = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // compute adjusted address
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        DESCR3 = this.d( $DESCR3 );
+        DESCR3 = this.d( $DESCR3 ),
+        DESCR_A2 = this.d( DESCR2.addr ),
+        A3 = DESCR3.addr,
+        A4 = DESCR_A2.addr;
 
-    DESCR1.addr = DESCR3.addr + this.d( DESCR2.addr ).addr;
+    DESCR1.addr = A3 + A4;
 };
 
 //     ADREAL is used to add two real numbers.  If the  result
@@ -361,15 +365,13 @@ sil.AEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 4.  See also LEQLC, AEQL, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
     // address equal to constant test
-    var DESCR = this.d( $DESCR );
+    var DESCR = this.d( $DESCR ),
+        A = DESCR.addr;
 
     assert( N >= 0 );
-
-    if ( DESCR.addr === N ) {
-        console.log( 'AEQLC: EQLOC' );
+    if ( A === N ) {
         this.jmp( EQLOC );
     } else {
-        console.log( 'AEQLC: NELOC' );
         this.jmp( NELOC );
     }
 };
@@ -393,10 +395,12 @@ sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 // 4.  See also AEQL, AEQLC, LEQLC, ACOMP, and ACOMPC.
 sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
     var DESCR = this.d( $DESCR ),
-        d = this.d( DESCR.addr + N1 );
+        A1 = DESCR.addr,
+        DESCR_indirect = this.d( A1 + N1 ),
+        A2 = DESCR_indirect.addr;
 
     assert( N1 === 0 && N2 >= 0 );
-    if ( d.addr === N2 ) {
+    if ( A2 === N2 ) {
         this.jmp( EQLOC );
     } else {
         this.jmp( NELOC );
@@ -484,13 +488,14 @@ sil.ARRAY = function ( N ) {
 // 1.  See also GETLTH.
 sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
     // get block size
-    var DESCR1 = this.d( $DESCR1 ),
+    var STTL = this.$( 'STTL' ),
+        DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         A = this.d( DESCR2.addr ),
         V = A.value,
         F = A.flags;
 
-    if ( F & this.$( 'STTL' ) ) {
+    if ( F & STTL ) {
         DESCR1.addr = D * ( 4 + Math.floor( ( V - 1 ) / CPD + 1 ) );
     } else {
         DESCR1.addr = V + D;
@@ -530,9 +535,6 @@ sil.BKSPCE = function ( $DESCR ) {
 // 1.  See also PROC.
 sil.BRANCH = function ( LOC, PROC ) {
     // branch to program location
-    if ( PROC !== undefined ) {
-        throw new Error( 'BRANCH: PROC is unsupported' );
-    }
     this.jmp( LOC );
 };
 
@@ -549,10 +551,11 @@ sil.BRANCH = function ( LOC, PROC ) {
 // 1.  N is always zero
 sil.BRANIC = function ( $DESCR, N ) {
     // branch indirect with offset constant
-    var DESCR = this.d( $DESCR );
+    var DESCR = this.d( $DESCR ),
+        DESCR_indirect = this.d( DESCR.addr + N );
 
     assert( N === 0 );
-    return this.d( DESCR.addr + N ).addr;
+    this.jmp( DESCR_indirect.addr );
 };
 
 //     BUFFER  is used to assemble a string of N blank charac-
@@ -567,9 +570,9 @@ sil.BRANIC = function ( $DESCR, N ) {
 sil.BUFFER = function ( N ) {
     // assemble buffer of blank characters
     var blanks = ( new Array( N + 1 ) ).join( ' ' ),
-        s = this.puts( blanks );
+        SPEC = this.puts( blanks );
 
-    return s.ptr;
+    return SPEC.ptr;
 };
 
 //     CHKVAL is used to compare an integer to the length of a
@@ -591,16 +594,20 @@ sil.BUFFER = function ( N ) {
 // 2.  CHKVAL is used only in pattern matching.
 sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
     var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        SPEC = this.s( $SPEC ),
-        cmp = SPEC.length + DESCR2.addr;
+        I1 = DESCR1.addr,
 
-    if ( cmp > DESCR1.addr ) {
+        DESCR2 = this.d( $DESCR2 ),
+        I2 = DESCR2.addr,
+
+        SPEC = this.s( $SPEC ),
+        L = SPEC.length;
+
+    if ( L + I2 > I1 ) {
         this.jmp( GTLOC );
-    } else if ( cmp < DESCR1.addr ) {
-        this.jmp( LTLOC );
-    } else {
+    } else if ( L + I2 === I1 ) {
         this.jmp( EQLOC );
+    } else {
+        this.jmp( LTLOC );
     }
 };
 
@@ -715,7 +722,7 @@ sil.CLERTB = function ( TABLE, KEY ) {
 // 2.  Any  of  the  COPY  segments  can be used to incorporate
 // other machine-dependent data.
 sil.COPY = function ( FILE ) {
-    // assign( FILE );
+    // pass
 };
 
 //     CPYPAT is used to copy a pattern.  First set
@@ -888,7 +895,6 @@ sil.DECRA = function ( $DESCR, N ) {
     // decrement address
     var DESCR = this.d( $DESCR );
 
-    console.log( DESCR.addr - N );
     assert( N > 0 );
     DESCR.addr -= N;
 };
@@ -930,13 +936,13 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // omitted.
 sil.DESCR = function ( A, F, V ) {
     // assemble descriptor
-    var d = this.d();
+    var DESCR = this.d();
 
-    d.addr  = A || 0;
-    d.flags = F || 0;
-    d.value = V || 0;
+    DESCR.addr  = A || 0;
+    DESCR.flags = F || 0;
+    DESCR.value = V || 0;
 
-    return d;
+    return DESCR;
 };
 
 //     DIVIDE is used to divide one integer by  another.   Any
@@ -960,13 +966,15 @@ sil.DIVIDE = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // divide integers
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        DESCR3 = this.d( $DESCR3 );
+        DESCR3 = this.d( $DESCR3 ),
+        A = DESCR2.addr,
+        I = DESCR3.addr;
 
-    if ( DESCR3.addr === 0 ) {
+    if ( I === 0 ) {
         this.jmp( FLOC );
     }
 
-    DESCR1.addr = Math.floor( DESCR2.addr / DESCR3.addr );
+    DESCR1.addr = Math.floor( A / I );
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -1275,9 +1283,14 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // get descriptor
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        DESCR3 = this.d( $DESCR3 );
+        A2 = DESCR2.addr,
 
-    DESCR1.read( this.d( DESCR2.addr + DESCR3.addr ) );
+        DESCR3 = this.d( $DESCR3 ),
+        A3 = DESCR3.addr,
+
+        DESCR_indirect = this.d( A2 + A3 );
+
+    DESCR1.read( DESCR_indirect );
 };
 
 //     GETDC  is  used to get a descriptor with an offset con-
@@ -1298,9 +1311,11 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 sil.GETDC = function ( $DESCR1, $DESCR2, N ) {
     // get descriptor with offset constant
     var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 );
+        DESCR2 = this.d( $DESCR2 ),
+        A2 = DESCR2.addr,
+        DESCR_indirect = this.d( A2 + N );
 
-    DESCR1.read( this.d( DESCR2.addr + N ) );
+    DESCR1.read( DESCR_indirect );
 };
 
 //     GETLG is used to get the length of a specifier.
@@ -1376,7 +1391,6 @@ sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR_indirect = this.d( DESCR2.addr );
 
-    console.log( 'Setting ' + $DESCR1 + ' addr to ' + DESCR_indirect.value );
     DESCR1.addr  = DESCR_indirect.value;
     DESCR1.flags = 0;
     DESCR1.value = 0;
@@ -1399,10 +1413,12 @@ sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
 sil.GETSPC = function ( $SPEC, $DESCR, N ) {
     // get specifier with constant offset
     var DESCR = this.d( $DESCR ),
-        dst = this.s( $SPEC ),
-        src = this.s( DESCR.addr + N );
+        A1    = DESCR.addr,
 
-    dst.read( src );
+        SPEC = this.s( $SPEC ),
+        SPEC_indirect = this.s( A1 + N );
+
+    SPEC.read( SPEC_indirect );
 };
 
 //     INCRA is used to  increment  the  address  field  of  a
@@ -1425,7 +1441,6 @@ sil.INCRA = function ( $DESCR, N ) {
     // increment address
     var DESCR = this.d( $DESCR );
 
-    console.log( 'DESCR.addr = ' + DESCR.addr + ' and N = ' + N );
     assert( DESCR.addr >= 0 &&  N > 0 );
     DESCR.addr += N;
 };
@@ -1472,23 +1487,16 @@ sil.INCRV = function ( $DESCR, N ) {
 sil.INIT = function () {
     // initialize SNOBOL4 run
     var dynamicStorageSize = D * 16384,
+        dynamicStoragePtr = this.alloc( dynamicStorageSize ),
+
         FRSGPT = this.d( 'FRSGPT' ),
         HDSGPT = this.d( 'HDSGPT' ),
         TLSGP1 = this.d( 'TLSGP1' );
 
-    this.timeStart = ( new Date() ).getTime();
-    FRSGPT.addr = this.alloc( dynamicStorageSize );
-    HDSGPT.addr = FRSGPT.addr;
-    TLSGP1.addr = this.mem.length;
-
-    // initialized.  The address fields of FRSGPT  and  HDSGPT  are
-    // set  to  point  to  the first descriptor in dynamic storage.
-    // The address field of TLSGP1 is set to the  first  descriptor
-    // past  the end of dynamic storage.  Space for dynamic storage
-    // may be preallocated or obtained from the operating system by
-    // INIT.   The  timer  is initialized for subsequent use by the
-    // MSTIME macro (q.v.).
-
+    this.timeStart = new Date().getTime();
+    FRSGPT.addr = dynamicStoragePtr;
+    HDSGPT.addr = dynamicStoragePtr;
+    TLSGP1.addr = this.alloc( dynamicStorageSize );
 };
 
 //     INSERT is used to insert  a  tree  node  above  another
@@ -1661,14 +1669,16 @@ sil.ISTACK = function () {
 sil.LCOMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
     // length comparison
     var SPEC1 = this.s( $SPEC1 ),
-        SPEC2 = this.s( $SPEC2 );
+        L1 = SPEC1.length,
+        SPEC2 = this.s( $SPEC2 ),
+        L2 = SPEC2.length;
 
-    if ( SPEC1.length > SPEC2.length ) {
+    if ( L1 > L2 ) {
         this.jmp( GTLOC );
-    } else if ( SPEC1.length < SPEC2.length ) {
-        this.jmp( LTLOC );
-    } else {
+    } else if ( L1 === L2 ) {
         this.jmp( EQLOC );
+    } else {
+        this.jmp( LTLOC );
     }
 };
 
@@ -1684,10 +1694,10 @@ sil.LCOMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
 // 2.  See also LCOMP, AEQLC, and AEQLIC.
 sil.LEQLC = function ( $SPEC, N, NELOC, EQLOC ) {
     // length equal to constant test
-    var SPEC = this.s( $SPEC );
+    var SPEC = this.s( $SPEC ), L = SPEC.length;
 
-    assert( SPEC.length >= 0 && N >= 0 );
-    if ( SPEC.length === N ) {
+    assert( L >= 0 && N >= 0 );
+    if ( L === N ) {
         this.jmp( EQLOC );
     } else {
         this.jmp( NELOC );
@@ -1819,14 +1829,16 @@ sil.LINK = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, FLOC, SLOC ) {
 sil.LINKOR = function ( $DESCR1, $DESCR2 ) {
     // link ```or''' fields of pattern nodes
     var DESCR1 = this.d( $DESCR1 ),
+        A = DESCR1.addr,
         DESCR2 = this.d( $DESCR2 ),
-        node = new SNOBOL.Descriptor( this, DESCR1.addr + 6 );
+        I = DESCR2.addr,
+        DESCR = this.d( A + ( 2 * D ) );
 
-    while ( node.addr !== 0 ) {
-        node = node.next();
+    while ( DESCR.addr !== 0 ) {
+        DESCR = this.d( A + ( 2 * D ) + DESCR.addr );
     }
 
-    node.addr = DESCR2.addr;
+    DESCR.addr = I;
 };
 
 //     LOAD  is used to load an external function.  C11...C1L1
@@ -2388,9 +2400,10 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // 5.  See also INIT.
 sil.MSTIME = function ( $DESCR ) {
     // get millisecond time
-    var DESCR = this.d( $DESCR );
+    var DESCR = this.d( $DESCR ),
+        timeCurrent = new Date();
 
-    DESCR.addr = ( new Date() ).getTime() - this.timeStart;
+    DESCR.addr = timeCurrent - this.timeStart;
 };
 
 //     MULT is used to multiply two integers.  In the event of
@@ -2731,9 +2744,11 @@ sil.PUSH = stackPusher( 'd' );
 sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
     // put address with offset constant
     var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 );
+        A1 = DESCR1.addr,
+        DESCR2 = this.d( $DESCR2 ),
+        A2 = DESCR2.addr;
 
-    this.d( DESCR1.addr + N ).addr = DESCR2.addr;
+    this.d( A1 + N ).addr = A2;
 };
 
 //     PUTD is used to put a descriptor.
@@ -2780,9 +2795,10 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 sil.PUTDC = function ( $DESCR1, N, $DESCR2 ) {
     // put descriptor with constant offset
     var DESCR1 = this.d( $DESCR1 ),
+        A1 = DESCR1.addr,
         DESCR2 = this.d( $DESCR2 );
 
-    this.d( DESCR1.addr + N ).read( DESCR2 );
+    this.d( A1 + N ).read( DESCR2 );
 };
 
 //     PUTLG is used to put a length into a specifier.
@@ -2800,10 +2816,11 @@ sil.PUTDC = function ( $DESCR1, N, $DESCR2 ) {
 sil.PUTLG = function ( $SPEC, $DESCR ) {
     // put specifier length
     var SPEC = this.s( $SPEC ),
-        DESCR = this.d( $DESCR );
+        DESCR = this.d( $DESCR ),
+        I = DESCR.addr;
 
-    assert( DESCR.addr >= 0 );
-    SPEC.length = DESCR.addr;
+    assert( I >= 0 );
+    SPEC.length = I;
 };
 
 //     PUTSPC is used to put a specifier.
@@ -2955,14 +2972,12 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // stack  pointer  is generated as indicated.  The return loca-
     // tion LOC is saved on the stack so that  the  return  can  be
     // properly    made.     The    values    of    the   arguments
-    // console.log( 'RCALL arguments: ' + JSON.stringify( arguments ) );
-    // console.log( 'RCALL 99093: ' + this.s( 99093 ).toString() );
     var retLoc = this.instructionPointer,
         DESCR;
 
     this.indent++;
 
-    if ( DESCR !== undefined ) {
+    if ( $DESCR !== undefined ) {
         DESCR = this.d( $DESCR );
     }
 
@@ -2991,18 +3006,22 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
 
     // The return location LOC is saved on the stack so that the return can be
     // properly made.
-    this.callbacks.push( function ( $DESCR, N ) {
-        var DESCR;
+    this.callbacks.push( function ( $DESCR_SRC, N ) {
+        var DESCR_SRC;
         
-        if ( $DESCR !== undefined ) {
-            DESCR = this.d( $DESCR );
+        if ( $DESCR_SRC !== undefined ) {
+            DESCR_SRC = this.d( $DESCR_SRC );
+        }
+
+        if ( DESCR && DESCR_SRC ) {
+            DESCR.read( DESCR_SRC );
         }
 
         this.OSTACK.addr = oldStackPtr;
         this.CSTACK.addr = curStackPtr;
 
-        if ( N && $LOCs[ N ] !== undefined ) {
-            this.jmp( $LOCs[ N ] );
+        if ( N !== undefined && $LOCs[ N ] !== undefined ) {
+            this.jmp( $LOCs[ N - 1 ] );
         } else {
             this.jmp( retLoc + 1 );
         }
@@ -3287,9 +3306,8 @@ sil.RRTURN = function ( $DESCR, N ) {
 // 3.  See also RESETF and SETFI.
 sil.RSETFI = function ( $DESCR, FLAG ) {
     // reset flag indirect
-    var A = this.d( $DESCR ).addr;
-
-    this.d( A ).flags &= ( ~FLAG );
+    var DESCR = this.d( $DESCR );
+    sil.RSETF.call( this, DESCR.addr, FLAG );
 };
 
 //     SBREAL  is  used  to  subtract  one  real  number  from
@@ -3370,6 +3388,7 @@ sil.SETAC = function ( $DESCR, N ) {
     // set address to constant
     var DESCR = this.d( $DESCR );
 
+    assert( N >= 0 );
     DESCR.addr = N;
 };
 
@@ -3434,10 +3453,8 @@ sil.SETF = function ( $DESCR, FLAG ) {
 // 3.  See also SETF and RSETFI.
 sil.SETFI = function ( $DESCR, FLAG ) {
     // set flag indirect
-    var DESCR = this.d( $DESCR ),
-        DESCR_indirect = this.d( DESCR.addr );
-
-    DESCR_indirect.flags |= FLAG;
+    var DESCR = this.d( $DESCR );
+    sil.SETF.call( this, DESCR.addr, FLAG );
 };
 
 //     SETLC is used to set the length of  a  specifier  to  a
@@ -3454,6 +3471,7 @@ sil.SETLC = function ( $SPEC, N ) {
     // set length of specifier to constant
     var SPEC = this.s( $SPEC );
 
+    assert( N >= 0 );
     SPEC.length = N;
 };
 
@@ -3480,10 +3498,6 @@ sil.SETSIZ = function ( $DESCR1, $DESCR2 ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR_indirect = this.d( DESCR1.addr );
 
-    console.log( '<SETSIZ>' );
-    console.log( DESCR2.toString() );
-    console.log( this.d( 'BLOCL' ).toString() );
-    console.log( '</SETSIZ>' );
     assert( DESCR2.addr > 0 );
     DESCR_indirect.value = DESCR2.addr;
 };
@@ -3705,18 +3719,13 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     var DESCR = this.d( $DESCR ),
         SPEC = this.s( $SPEC );
 
-    try {
-        if ( SPEC.length === 0 ) {
-            DESCR.raddr = 0;
-        } else {
-            DESCR.raddr = parseFloat( SPEC.specified, 10 );
-        }
-        DESCR.value = this.resolve( 'R' );
+    if ( /^([+-]?0*\d+\.\d*|)$/.test( SPEC.specified ) ) {
+        DESCR.raddr = parseFloat( SPEC.specified + '0', 10 );
+        DESCR.flags = 0;
+        DESCR.value = this.$( 'R' );
         this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    } else {
+        this.jmp( FLOC );
     }
 };
 
@@ -3808,9 +3817,6 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
         L = SPEC.length,
         item = this.mem.slice( A1 + O1, A1 + O1 + L );
 
-    // console.log( '========' );
-    // console.log( 'fmt  : %s', SNOBOL.str.decode( fmt ) );
-    // console.log( 'item : %s', SNOBOL.str.decode( item ) );
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
     console.log( SNOBOL.str.format( fmt, item ) );
@@ -4162,10 +4168,6 @@ sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newAddr = DESCR2.addr - DESCR3.addr;
 
-    // SUBTRT(BLOCL,BLOCL,STKPTR)
-    console.log( 'BLOCL  : ' + DESCR1.toString() );
-    console.log( 'BLOCL  : ' + DESCR2.toString() );
-    console.log( 'STKPTR : ' + DESCR3.toString() );
     if ( !SNOBOL.isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
@@ -4209,11 +4211,6 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         return this.jmp( FLOC );
     }
 
-    console.log( 'sil.SUM DESCR2.addr: ' + DESCR2.addr );
-    console.log( 'sil.SUM DESCR3.addr: ' + DESCR3.addr );
-    console.log( 'sil.SUM DESCR3.ptr:  ' + DESCR3.ptr );
-    console.log( 'sil.SUM newAddr: ' + newAddr );
-
     DESCR1.addr  = newAddr;
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
@@ -4254,12 +4251,7 @@ sil.TESTF = function ( $DESCR, FLAG, FLOC, SLOC ) {
 sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
     // test flag indirect
     var DESCR = this.d( $DESCR );
-
-    if ( this.d( DESCR.addr).flags & FLAG ) {
-        this.jmp( SLOC );
-    } else {
-        this.jmp( FLOC );
-    }
+    sil.TESTF.call( this, DESCR.addr, FLAG, FLOC, SLOC );
 };
 
 //     TITLE is used at assembly time to  title  the  assembly
@@ -4307,29 +4299,25 @@ sil.DBG = sil.TITLE; // nonstandard ;)
 // 1.  N may be 0.  That is, F30 may contain TTL.
 sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // get to top of block
-    var DESCR1 = this.d( $DESCR1 ),
+    var TTL = this.resolve( 'TTL' ),
+        DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        TTL = this.resolve( 'TTL' ),
-        pos = DESCR3.addr;
+        A = DESCR3.addr,
+        N;
 
-    while ( pos >= 0 ) {
-        if ( this.d(pos).flags & TTL ) {
+    for ( N = 0; ; N++ ) {
+        DESCR = this.d( A - ( N * D ) );
+        if ( DESCR.flags & TTL ) {
             break;
-        } else {
-            pos = pos - 3;
         }
     }
 
-    if ( pos < 0 ) {
-        throw new Error( "Couldn't find top of block!" );
-    }
-    
-    DESCR1.addr = DESCR3.addr - pos;
+    DESCR1.addr  = A - ( N * D );
     DESCR1.flags = DESCR3.flags;
     DESCR1.value = DESCR3.value;
 
-    DESCR2.addr = pos;
+    DESCR2.addr  = N * D,
     DESCR2.flags = 0;
     DESCR2.value = 0;
 };
@@ -4436,11 +4424,14 @@ sil.VCMPIC = function ( $DESCR1, N, $DESCR2, GTLOC, EQLOC, LTLOC ) {
     // value field compare indirect with offset
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        ref = this.d( DESCR1.addr + N );
+        A1 = DESCR1.addr,
+        V2 = DESCR2.value,
+        A1_N = this.d( A1 + N ),
+        V1 = A1_N.value;
 
-    if ( ref.value > DESCR2.value ) {
+    if ( V1 > V2 ) {
         this.jmp( GTLOC );
-    } else if ( ref.value < DESCR2.value ) {
+    } else if ( V1 < v2 ) {
         this.jmp( LTLOC );
     } else {
         this.jmp( EQLOC );
@@ -4515,10 +4506,11 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     // zero block
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        pos;
+        idx;
 
-    for ( pos = DESCR1.addr; pos <= DESCR2.addr; pos++ ) {
-        this.mem[ pos ] = 0;
+    assert( DESCR2.addr >= 0 );
+    for ( idx = 0; idx < DESCR2.addr; idx++ ) {
+        this.mem[ DESCR1.addr + idx ] = 0;
     }
 };
 
