@@ -1,6 +1,10 @@
 var SNOBOL = require( './base' );
 
-var DATA_MACROS = [ 'EQU', 'LHERE', 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ];
+var DATA_ASSEMBLY_MACROS = [
+    'ARRAY', 'BUFFER', 'DESCR',
+    'EQU',   'FORMAT', 'LHERE',
+    'REAL',  'SPEC',   'STRING'
+];
 
 SNOBOL.D = 3;
 
@@ -12,7 +16,10 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
         returnValue;
         // returnValue = SNOBOL.sil[ opCode ].apply( this, args );
 
-    if ( SNOBOL.DEBUG && DATA_MACROS.indexOf( opCode ) === -1 ) {
+    if ( label === 'INBFSP' ) {
+        console.log( 'INBFSP' );
+    }
+    if ( true ) { // SNOBOL.DEBUG && DATA_MACROS.indexOf( opCode ) === -1 ) {
         var symbols = {};
         var that=this;
         var prettyOpCode = '\x1b[36m' + opCode + '\x1b[0m';
@@ -25,7 +32,11 @@ SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
 
             if ( resolved % 3 === 0 && resolved > 6 ) {
                 try {
-                    console.log( '\t' + sym + '\t' + that.d( resolved ).toString() );
+                    if ( /SP/.test( sym ) ) {
+                        console.log( '\t' + sym + '\t' + that.s( resolved ).toString() );
+                    } else {
+                        console.log( '\t' + sym + '\t' + that.d( resolved ).toString() );
+                    }
                     return;
                 } catch ( e ) { }
             }
@@ -79,7 +90,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.instructionPointer++
     ) {
         stmt = program[ this.instructionPointer ];
-        if ( DATA_MACROS.indexOf( stmt[ 1 ] ) !== -1 ) {
+        if ( DATA_ASSEMBLY_MACROS.indexOf( stmt[ 1 ] ) !== -1 ) {
             this.exec.apply( this, stmt );
         }
     }

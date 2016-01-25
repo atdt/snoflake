@@ -569,10 +569,16 @@ sil.BRANIC = function ( $DESCR, N ) {
 // blank (not zero) when program execution begins.
 sil.BUFFER = function ( N ) {
     // assemble buffer of blank characters
-    var blanks = ( new Array( N + 1 ) ).join( ' ' ),
-        SPEC = this.puts( blanks );
+    var ptr = this.puts( SNOBOL.str.repeat( ' ', N ) ).addr;  // leaks the specifier
+    console.log( 'BUFFER(%d): %d', N, ptr );
+    return ptr;
+    /*
+    var blanks = SNOBOL.str.repeat( ' ', N ),
+        ptr = this.mem.length;
 
-    return SPEC.ptr;
+    this.mem.push.apply( this.mem, SNOBOL.str.encode( blanks ) );
+    return ptr;
+    */
 };
 
 //     CHKVAL is used to compare an integer to the length of a
@@ -1186,10 +1192,9 @@ sil.GETAC = function ( $DESCR1, $DESCR2, N ) {
     // get address with offset constant
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        DESCR_indirect, A;
-
-    DESCR_indirect = this.d( DESCR2.addr + N ),
-    A = DESCR_indirect.addr;
+        A2 = DESCR2.addr,
+        DESCR_indirect = this.d( A2 + N ),
+        A = DESCR_indirect.addr;
 
     DESCR1.addr = A;
 };
@@ -1332,7 +1337,7 @@ sil.GETDC = function ( $DESCR1, $DESCR2, N ) {
 sil.GETLG = function ( $DESCR, $SPEC ) {
     // get length of specifier
     var DESCR = this.d( $DESCR ),
-        SPEC = this.s( SPEC );
+        SPEC  = this.s( $SPEC );
 
     DESCR.addr  = SPEC.length;
     DESCR.flags = 0;
@@ -1366,6 +1371,9 @@ sil.GETLTH = function ( $DESCR1, $DESCR2 ) {
         L = DESCR2.addr;
 
     DESCR1.addr  = D * ( 3 + Math.floor( ( L - 1 ) / CPD + 1 ) );
+    // var raw = SNOBOL.str.encode( SNOBOL.str.repeat( 'X', L ) );
+    // console.log( 'L = ' + L );
+    // assert.equal( raw.length + ( 3 * D ), DESCR1.addr );
     DESCR1.flags = 0;
     DESCR1.value = 0;
 };
@@ -1629,11 +1637,20 @@ sil.INTRL = function ( $DESCR1, $DESCR2 ) {
 sil.INTSPC = function ( $SPEC, $DESCR ) {
     // convert integer to specifier
     var SPEC = this.s( $SPEC ),
-        DESCR = this.d( $DESCR );
+        DESCR = this.d( $DESCR ),
+        I = DESCR.addr,
+        I_enc = SNOBOL.str.encode( I.toString() ),
+        idx;
 
-    SPEC.update( 0, 0, 0, 0, 0, 0 );
-    SPEC.specified = '' + DESCR.addr;
-    return SPEC;
+    if ( !SPEC.addr ) {
+        SPEC.addr = this.alloc( 255 );
+    }
+
+    assert( I_enc.length <= 255 );
+    for ( idx = 0; idx < I_enc.length; idx++ ) {
+        this.mem[ SPEC.addr + SPEC.offset + idx ] = I_enc[ idx ];
+    }
+    SPEC.length = I_enc.length;
 };
 
 //     ISTACK is used to initialize the system stack.
@@ -3845,9 +3862,12 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     // string read
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
-        file = new SNOBOL.File( this, DESCR.addr ),
+        I = DESCR.addr,
+        file = new SNOBOL.File( this, I ),
         words, raw;
 
+    console.log( 'STREAD: ' + SPEC.toString() );
+    console.log( 'STREAD: ' + JSON.stringify( SPEC.specified ) );
     if ( !file ) {
         // invalid file descriptor
         return this.jmp( ERROR );
@@ -3855,11 +3875,13 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
 
     words = file.read( SPEC.length );
     if ( !words.length ) {
-        console.log('EOF');
+        console.log( 'EOF' );
         return this.jmp( EOF );
     }
 
     SPEC.specified = words;
+    console.log( JSON.stringify( SPEC.specified ) );
+    console.log( JSON.stringify( SPEC.length ) );
 
     return this.jmp( SLOC );
 };
@@ -3951,7 +3973,6 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
 // If no PUT is specified, P is zero.
 sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // stream for token
-
     var SPEC1 = this.s( $SPEC1 ),
         SPEC2 = this.s( $SPEC2 ),
         STYPE = this.d( 'STYPE' ), // Descriptor return by STREAM
@@ -3972,6 +3993,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     }
     if ( !tableName ) throw tableName;
 
+    console.log( SPEC2.toString() );
     console.log( 'Scanning %s using table %s', JSON.stringify( str ), tableName );
     for ( I = 1; I <= str.length; I++ ) {
         ch = str.charAt( I - 1 );
