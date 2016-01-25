@@ -129,7 +129,7 @@ defineValues( SNOBOL.Descriptor.prototype, {
 
         return [
             '<', this.name, '@', this.ptr, ' ',
-                fields.join( ', ' ), '>' 
+                fields.join( ', ' ), '>'
         ].join( '' );
     }
 } );

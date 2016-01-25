@@ -65,6 +65,10 @@ SNOBOL.str = {
         return hash;
     },
 
+    repeat: function ( str, count ) {
+        return new Array( count + 1 ).join( str );
+    },
+
     format: function ( template, items ) {
         var item, match, count, code, width, control, formatted = '';
 
