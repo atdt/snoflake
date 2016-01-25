@@ -569,16 +569,12 @@ sil.BRANIC = function ( $DESCR, N ) {
 // blank (not zero) when program execution begins.
 sil.BUFFER = function ( N ) {
     // assemble buffer of blank characters
-    var ptr = this.puts( SNOBOL.str.repeat( ' ', N ) ).addr;  // leaks the specifier
-    console.log( 'BUFFER(%d): %d', N, ptr );
-    return ptr;
-    /*
     var blanks = SNOBOL.str.repeat( ' ', N ),
+        encodedBlanks = SNOBOL.str.encode( blanks ),
         ptr = this.mem.length;
 
-    this.mem.push.apply( this.mem, SNOBOL.str.encode( blanks ) );
+    this.mem.push.apply( this.mem, encodedBlanks );
     return ptr;
-    */
 };
 
 //     CHKVAL is used to compare an integer to the length of a

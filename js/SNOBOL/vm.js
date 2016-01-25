@@ -6,51 +6,24 @@ var DATA_ASSEMBLY_MACROS = [
     'REAL',  'SPEC',   'STRING'
 ];
 
+function isDataAssemblyMacro( macro ) {
+    return DATA_ASSEMBLY_MACROS.indexOf( macro ) !== -1;
+}
+
 SNOBOL.D = 3;
 
-SNOBOL.VM.prototype.exec = function ( label, opCode, deferred ) {
+SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
     this.recent = [];
 
+    console.log( '[%s] [%s] %s',
+        SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
+        SNOBOL.str.pad( label || '', 6 ),
+        macro
+    );
+
     var currentInstruction = this.instructionPointer,
-        args = deferred.call( this ),
-        returnValue;
-        // returnValue = SNOBOL.sil[ opCode ].apply( this, args );
-
-    if ( label === 'INBFSP' ) {
-        console.log( 'INBFSP' );
-    }
-    if ( true ) { // SNOBOL.DEBUG && DATA_MACROS.indexOf( opCode ) === -1 ) {
-        var symbols = {};
-        var that=this;
-        var prettyOpCode = '\x1b[36m' + opCode + '\x1b[0m';
-        var prettyLabel = SNOBOL.str.pad( label || '', 6, 'left' );
-        var prettyCur = SNOBOL.str.pad( currentInstruction.toString(), 4 );
-        this.log( '[%s] [%s] %s:', prettyCur, prettyLabel, opCode );
-        this.recent.forEach( function ( sym ) {
-            var resolved = that.resolve( sym ),
-                msg;
-
-            if ( resolved % 3 === 0 && resolved > 6 ) {
-                try {
-                    if ( /SP/.test( sym ) ) {
-                        console.log( '\t' + sym + '\t' + that.s( resolved ).toString() );
-                    } else {
-                        console.log( '\t' + sym + '\t' + that.d( resolved ).toString() );
-                    }
-                    return;
-                } catch ( e ) { }
-            }
-            console.log( '\t' + sym + '\t' + resolved );
-        } );
-        console.log('\n');
-    }
-
-    try {
-        returnValue = SNOBOL.sil[ opCode ].apply( this, args );
-    } catch ( e ) {
-        // console.log( JSON.stringify( this.symbols ) );
-        throw e;
-    }
+        args = argsCallback.call( this ),
+        returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
     if ( typeof returnValue === 'number' && returnValue < 0 ) {
         return returnValue++;

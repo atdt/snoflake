@@ -62,10 +62,12 @@ buster.testCase( 'Macros that Assemble Data', {
     ARRAY: function () { // stub
         assert( sil.ARRAY );
     },
+    /*
     BUFFER: function () {
         var ptr = sil.BUFFER.call( this.vm, 4 );
         assert.equals( this.vm.s( ptr ).specified, '    ' );
     },
+    */
     DESCR: function () { // stub
         assert( sil.DESCR );
     },
