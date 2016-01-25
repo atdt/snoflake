@@ -39,9 +39,9 @@ SNOBOL.SymbolTable.prototype = {
     PARMS   : -1,
 
     // Misc
-    OSTACK  : 0 * D,
-    CSTACK  : 1 * D,
-    STACK   : 2 * D,
+    OSTACK  : 2000 * D,
+    CSTACK  : 2001 * D,
+    STACK   : 2002 * D,
     OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
     // STSIZE  : 1000,   // ditto
 };
