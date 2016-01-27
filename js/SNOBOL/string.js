@@ -1,5 +1,3 @@
-/*jslint bitwise: true, plusplus: true, white: true */
-
 "use strict";
 
 var SNOBOL = require( './base' );

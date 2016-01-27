@@ -1,5 +1,3 @@
-/*jslint passfail: false, indent: 4, undef:true, white:true, plusplus:true,vars:true */
-
 "use strict";
 
 var SNOBOL = require( './base' ),

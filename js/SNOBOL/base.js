@@ -1,3 +1,5 @@
+"use strict";
+
 var SNOBOL = {
     extend: function ( dst, src ) {
         for ( var attr in src ) {

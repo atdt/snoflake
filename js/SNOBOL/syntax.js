@@ -1,3 +1,5 @@
+"use string";
+
 var SNOBOL = require( './base' );
 
 // 0x7F is just the ASCII range; it should really be
