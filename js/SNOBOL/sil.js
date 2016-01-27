@@ -4283,7 +4283,7 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
 // perform no operation.
 sil.TITLE = function ( MSG ) {
     // title assembly listing
-    console.log( MSG );
+    if ( SNOBOL.DEBUG ) console.log( MSG );
 };
 
 sil.DBG = sil.TITLE; // nonstandard ;)

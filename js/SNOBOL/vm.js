@@ -22,14 +22,15 @@ function getArgs( f ) {
 SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
-    /*
-    console.log( '[%s] [%s] %s(%s)',
-        SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
-        SNOBOL.str.pad( label || '', 6 ),
-        macro,
-        getArgs( argsCallback )
-    );
-    */
+
+    if ( SNOBOL.DEBUG ) {
+        console.log( '[%s] [%s] %s(%s)',
+            SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
+            SNOBOL.str.pad( label || '', 6 ),
+            macro,
+            getArgs( argsCallback )
+        );
+    }
 
     var currentInstruction = this.instructionPointer,
         args = argsCallback.call( this ),
