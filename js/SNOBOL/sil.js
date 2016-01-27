@@ -944,7 +944,7 @@ sil.DESCR = function ( A, F, V ) {
     DESCR.flags = F || 0;
     DESCR.value = V || 0;
 
-    return DESCR;
+    return DESCR.ptr;
 };
 
 //     DIVIDE is used to divide one integer by  another.   Any
@@ -1140,19 +1140,6 @@ sil.EXREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     }
 };
 
-//     FORMAT  is used to assemble the characters of a format.
-//      Data Assembled by FORMAT:
-//               +-------+-------+-------+
-//      LOC      |  C1      ...     CL   |
-//               +-----------------------+
-// Programming Notes:
-// 1.  The characters assembled by FORMAT  are  treated  as  an
-// `undigested' format by FORTRAN IV routines.
-sil.FORMAT = function ( STR ) {
-    // assemble format string
-    return STR;
-};
-
 //     FSHRTN  is  used  to  exclude initial characters from a
 // string specification.
 //      Data Input to FSHRTN:
@@ -1227,7 +1214,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
         DESCR = this.d( $DESCR ),
         start = SPEC.addr + SPEC.offset + SPEC.length,
         stop = start + DESCR.addr,
-        string = this.gets( start, stop ),
+        string = SNOBOL.str.decode( this.mem.slice( start, stop ) ),
         j,
         stack;
 
@@ -2570,17 +2557,15 @@ sil.ORDVST = function () {
 // 1.  See also STPRNT.
 sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
-    var DESCR = this.d( $DESCR );
+    var DESCR = this.d( $DESCR ),
+        fmt = this.s( FORMAT ).specified;
 
     if ( !Array.isArray( ARGs ) ) {
         ARGs = [ ARGs ];
     }
 
-    ARGs = ARGs.map( function ( ARG ) {
-        return this.d( ARG );
-    }, this );
-
-    console.log( SNOBOL.str.format( FORMAT, ARGs ) );
+    ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
+    console.log( SNOBOL.str.format( fmt, ARGs ) );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -2849,13 +2834,15 @@ sil.PUTLG = function ( $SPEC, $DESCR ) {
 //      A1+N     |   A       F       V       O       L   |
 //               +---------------------------------------+
 // Programming Notes:
-// 1.  See also this.s.
+// 1.  See also SPEC.
 sil.PUTSPC = function ( $DESCR, N, $SPEC ) {
     // put specifier with offset constant
     var DESCR = this.d( $DESCR ),
-        SPEC = this.s( $SPEC );
+        A1 = DESCR.addr,
+        SPEC = this.s( $SPEC ),
+        SPEC_indirect = this.s( A1 + N );
 
-    gets( DESCR.addr + N ).read( SPEC );
+    SPEC_indirect.read( SPEC );
 };
 
 //     PUTVC is used to put a value field into a descriptor at
@@ -3111,7 +3098,7 @@ sil.REALST = function ( $SPEC, $DESCR ) {
     SPEC.update( 0, 0, 0, 0, 0, 0 );
     SPEC.specified = DESCR.raddr;
 
-    return SPEC;
+    return SPEC.ptr;
 };
 
 //     REMSP is used to obtain a remainder specifier resulting
@@ -3642,7 +3629,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +---------------------------------------+
 sil.SPEC = function ( A, F, V, O, L ) {
     // assemble specifier
-    var ptr, s = this.s();
+    var SPEC = this.s(), ptr;
 
     if ( typeof A === 'string' ) {
         ptr = this.mem.length;
@@ -3650,13 +3637,13 @@ sil.SPEC = function ( A, F, V, O, L ) {
         A = ptr;
     }
     
-    s.addr   = A || 0;
-    s.flags  = F || 0;
-    s.value  = V || 0;
-    s.offset = O || 0;
-    s.length = L || 0;
+    SPEC.addr   = A || 0;
+    SPEC.flags  = F || 0;
+    SPEC.value  = V || 0;
+    SPEC.offset = O || 0;
+    SPEC.length = L || 0;
 
-    return s.ptr;
+    return SPEC.ptr;
 };
 
 //     SPOP  is used to pop a list of specifiers from the sys-
@@ -4118,10 +4105,28 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 // 1.  Note that LOC is the location of the specifier, not  the
 // string.  The string may immediately follow the specifier, or
 // it may be assembled at a remote location.
+//
 sil.STRING = function ( STR ) {
     // assemble specified string
-    return this.puts( STR );
+    var SPEC = this.s(), encodedString = SNOBOL.str.encode( STR );
+
+    SPEC.addr = this.mem.length,
+    SPEC.length = encodedString.length;
+    this.mem.push.apply( this.mem, encodedString );
+
+    return SPEC.ptr;
 };
+
+//     FORMAT  is used to assemble the characters of a format.
+//      Data Assembled by FORMAT:
+//               +-------+-------+-------+
+//      LOC      |  C1      ...     CL   |
+//               +-----------------------+
+// Programming Notes:
+// 1.  The characters assembled by FORMAT  are  treated  as  an
+// `undigested' format by FORTRAN IV routines.
+sil.FORMAT = sil.STRING;
+
 
 //     SUBSP is used to specify  an  initial  substring  of  a
 // specified string.  If L3 >= L2, transfer is to SLOC.  Other-

@@ -1,3 +1,5 @@
+"use strict";
+
 var SNOBOL = require( './base' );
 
 var DATA_ASSEMBLY_MACROS = [
@@ -9,29 +11,20 @@ var DATA_ASSEMBLY_MACROS = [
 function isDataAssemblyMacro( macro ) {
     return DATA_ASSEMBLY_MACROS.indexOf( macro ) !== -1;
 }
-function getSig( f ) {
-    return f.toString().slice( 12 );
-}
 
 SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
-    this.recent = [];
-
     console.log( '[%s] [%s] %s(%s)',
         SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
         SNOBOL.str.pad( label || '', 6 ),
         macro,
-        getSig( argsCallback )
+        '' // getSig( argsCallback )
     );
 
     var currentInstruction = this.instructionPointer,
         args = argsCallback.call( this ),
         returnValue = SNOBOL.sil[ macro ].apply( this, args );
-
-    if ( typeof returnValue === 'number' && returnValue < 0 ) {
-        return returnValue++;
-    }
 
     if ( label !== null ) {
         if ( returnValue !== undefined ) {
@@ -47,8 +40,11 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // `loc` will be undefined when a procedure takes an optional
     // location argument which the caller ommitted. In such cases
     // execution should fall through to the next instruction.
-    if ( loc !== undefined && loc !== null ) {
-        this.instructionPointer = this.resolve( loc );
+    if ( typeof loc === 'string' ) {
+        throw new Error( 'loc is a string: ' + loc );
+    }
+    if ( typeof loc === 'number' ) {
+        this.instructionPointer = loc;
     }
 };
 

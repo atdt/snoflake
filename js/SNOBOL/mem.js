@@ -1,8 +1,7 @@
-/*jslint node: true, forin: true, undef:true, white:true, plusplus:true, vars:true */
-
 "use strict";
 
 var SNOBOL = require( './base' ),
+    assert = require( 'assert' ),
     VM = SNOBOL.VM;
 
 var buf = new ArrayBuffer( 4 ),
@@ -61,45 +60,20 @@ VM.prototype.alloc = function ( size ) {
     return ptr;
 };
 
-VM.prototype.recent = [];
-
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
-    if ( typeof key === 'number' ) {
-        console.log('+++');
-        return key;
-    } else if ( this.symbols[ key ] === undefined ) {
+    if ( this.symbols[ key ] === undefined ) {
         throw new ReferenceError( key );
-    } else {
-        return this.symbols[ key ];
     }
+    return this.symbols[ key ];
 };
 
 
 VM.prototype.assign = function ( assignee, value ) {
-    if ( typeof assignee !== 'object' ) {
-        this.symbols[ assignee ] = value.ptr || value;
-    } else {
-        for ( var key in assignee ) {
-            value = assignee[ key ];
-            this.symbols[ key ] = value.ptr || value;
-        }
+    if ( value.ptr ) {
+        console.trace( value );
+        throw new Error();
     }
-};
-
-VM.prototype.puts = function ( str ) {
-    var spec = this.s(),
-        encoded = SNOBOL.str.encode( str );
-
-    spec.addr = this.mem.length,
-    spec.length = encoded.length;
-    this.mem.push.apply( this.mem, encoded );
-
-    return spec;
-};
-
-VM.prototype.gets = function ( start, stop ) {
-    var encoded = this.mem.slice( start, stop );
-    return SNOBOL.str.decode( encoded );
+    this.symbols[ assignee ] = value.ptr || value;
 };
 
 VM.prototype.reset = function () {
