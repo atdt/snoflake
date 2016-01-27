@@ -399,7 +399,8 @@ sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
         DESCR_indirect = this.d( A1 + N1 ),
         A2 = DESCR_indirect.addr;
 
-    assert( N1 === 0 && N2 >= 0 );
+    // assert( N1 === 0 );
+    assert( N2 >= 0 );
     if ( A2 === N2 ) {
         this.jmp( EQLOC );
     } else {
