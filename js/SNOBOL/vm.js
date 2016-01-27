@@ -12,15 +12,24 @@ function isDataAssemblyMacro( macro ) {
     return DATA_ASSEMBLY_MACROS.indexOf( macro ) !== -1;
 }
 
+function getArgs( f ) {
+    return f
+        .toString()
+        .replace( /([\s\S]+return \[|\];[\s\S]+)/g, '' )
+        .replace( /(vm\.\$\("|"\))/g, '' );
+}
+
 SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
+    /*
     console.log( '[%s] [%s] %s(%s)',
         SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
         SNOBOL.str.pad( label || '', 6 ),
         macro,
-        '' // getSig( argsCallback )
+        getArgs( argsCallback )
     );
+    */
 
     var currentInstruction = this.instructionPointer,
         args = argsCallback.call( this ),
@@ -40,9 +49,6 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // `loc` will be undefined when a procedure takes an optional
     // location argument which the caller ommitted. In such cases
     // execution should fall through to the next instruction.
-    if ( typeof loc === 'string' ) {
-        throw new Error( 'loc is a string: ' + loc );
-    }
     if ( typeof loc === 'number' ) {
         this.instructionPointer = loc;
     }
@@ -70,14 +76,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     this.instructionPointer = 0;
 
-    while ( this.instructionPointer < program.length ) {
+    while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         loc = this.instructionPointer;
         args = program[ loc ];
         status = this.exec.apply( this, args );
-        if ( status !== undefined ) {
-            console.log( '### TERMINATED (%s) ###', status );
-            return status;
-        }
 
         // If the procedure did not update the instruction pointer,
         // fall through to the next instruction.
@@ -85,6 +87,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
             this.instructionPointer++;
         }
     }
+
+    return !( this.instructionPointer < 0 );
 };
 
 SNOBOL.VM.prototype.d = function ( ptr ) {
