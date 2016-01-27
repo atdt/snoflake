@@ -52,35 +52,26 @@ VM.prototype.getReal = typedGetter( f32 );
 VM.prototype.setReal = typedSetter( f32 );
 
 VM.prototype.alloc = function ( size ) {
-    var ptr = this.mem.length;
-    while ( size-- ) {
-        this.mem.push(0);
+    var i, ptr = this.mem.length;
+
+    for ( i = 0; i < size; i++ ) {
+        this.mem.push( 0 );
     }
+
     return ptr;
 };
 
 VM.prototype.recent = [];
 
-VM.prototype.resolve = function ( key ) {
+VM.prototype.$ = VM.prototype.resolve = function ( key ) {
     if ( typeof key === 'number' ) {
+        console.log('+++');
         return key;
-    }
-
-    if ( typeof key.addr === 'number' ) {
-        return key;
-    }
-
-    this.recent.push( key );
-    var ptr = this.symbols[ key ];
-    if ( ptr === 'DESCR' ) {
-        console.log( ptr );
-    }
-
-    if ( ptr === undefined ) {
+    } else if ( this.symbols[ key ] === undefined ) {
         throw new ReferenceError( key );
+    } else {
+        return this.symbols[ key ];
     }
-
-    return ptr;
 };
 
 
@@ -94,12 +85,6 @@ VM.prototype.assign = function ( assignee, value ) {
         }
     }
 };
-
-VM.prototype.$ = function ( key, value ) {
-    return value !== undefined
-        ? this.assign( key, value )
-        : this.resolve( key );
-}
 
 VM.prototype.puts = function ( str ) {
     var spec = this.s(),

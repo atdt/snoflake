@@ -9,16 +9,20 @@ var DATA_ASSEMBLY_MACROS = [
 function isDataAssemblyMacro( macro ) {
     return DATA_ASSEMBLY_MACROS.indexOf( macro ) !== -1;
 }
+function getSig( f ) {
+    return f.toString().slice( 12 );
+}
 
 SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
     this.recent = [];
 
-    console.log( '[%s] [%s] %s',
+    console.log( '[%s] [%s] %s(%s)',
         SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
         SNOBOL.str.pad( label || '', 6 ),
-        macro
+        macro,
+        getSig( argsCallback )
     );
 
     var currentInstruction = this.instructionPointer,
