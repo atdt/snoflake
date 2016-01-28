@@ -1046,9 +1046,7 @@ sil.ENDEX = function ( $DESCR ) {
     // end execution of SNOBOL4 run
     var I = this.d( $DESCR ).addr;
 
-    // We need to return a negative number to terminate execution,
-    // but I could be zero. So shift all values down by one.
-    return -1 * ( I + 1 );
+    return I === 0;
 };
 
 //     ENFILE is used to write an end-of-file on  (close)  the
@@ -3850,8 +3848,6 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         file = new SNOBOL.File( this, I ),
         words, raw;
 
-    console.log( 'STREAD: ' + SPEC.toString() );
-    console.log( 'STREAD: ' + JSON.stringify( SPEC.specified ) );
     if ( !file ) {
         // invalid file descriptor
         return this.jmp( ERROR );
@@ -3859,13 +3855,10 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
 
     words = file.read( SPEC.length );
     if ( !words.length ) {
-        console.log( 'EOF' );
         return this.jmp( EOF );
     }
 
     SPEC.specified = words;
-    console.log( JSON.stringify( SPEC.specified ) );
-    console.log( JSON.stringify( SPEC.length ) );
 
     return this.jmp( SLOC );
 };
@@ -3967,7 +3960,15 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         TI, // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
         t;  // The table row (rule) index that we are currently applying
 
-    STYPE.addr = 0;
+        //      SPEC2    |   A       F       V       O       L   |
+        //
+    var P = 0,
+        A = SPEC2.addr,
+        F = SPEC2.flags,
+        V = SPEC2.value,
+        O = SPEC2.offset,
+        L = SPEC2.length;
+
 
     var tableName;
     for ( var k in SNOBOL.SymbolTable.prototype ) {
@@ -3975,11 +3976,11 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             tableName = k;
         }
     }
-    if ( !tableName ) throw tableName;
 
-    console.log( SPEC2.toString() );
     console.log( 'Scanning %s using table %s', JSON.stringify( str ), tableName );
+
     for ( I = 1; I <= str.length; I++ ) {
+        J = I;
         ch = str.charAt( I - 1 );
         // console.log( 'length: ' + SPEC2.length );
         // console.log( 'I = %s; str: "%s"; str.length = %s', I, str, str.length );
@@ -3987,90 +3988,38 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         for ( t = 0; t < TABLE.length; t++ ) {
             if ( SNOBOL.match( TABLE[t][0], ch ) ) {
-                // console.log( ch + ' matches ' + TABLE[t][0] );
-
                 // if table specifies a value to PUT(), assign it to P
                 if ( TABLE[t][1] !== null ) {
-                    STYPE.addr = this.$( TABLE[t][1] );
+                    P = this.$( TABLE[t][1] );
                 }
                 TI = TABLE[t][2];
                 break;
             }
         }
 
-        console.log( 'TI: ' + TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
 
         case 'STOPSH':
-            //      Data Altered by STREAM if Termination is STOPSH:
-            //               +-------+-------+-------+
-            //      STYPE    |   P                   |
-            //               +-----------------------+
-            //               +-------+-------+-------+-------+-------+
-            //      SPEC1    |   A       F       V       O      J-1  |
-            //               +---------------------------------------+
-            //               +-------+-------+-------+-------+-------+
-            //      SPEC2    |   A       F       V     O+J-1   L-J+1 |
-            //               +---------------------------------------+
-            J = I;
-            // console.log( J );
-
-            SPEC1.addr   = SPEC2.addr;    // A
-            SPEC1.flags  = SPEC2.flags;   // F
-            SPEC1.value  = SPEC2.value;   // V
-            SPEC1.offset = SPEC2.offset;  // O
-            SPEC1.length = J - 1;         // J-1
-            // console.log( 'SPEC1.specified: ' + JSON.stringify( SPEC1.specified ) );
-            // console.log( 'SPEC2.specified: ' + JSON.stringify( SPEC2.specified ) );
-
-            SPEC2.offset += ( J - 1 );  // O+J-1
-            SPEC2.length -= ( J + 1 );  // L-J+1
-
-            return this.jmp( SLOC );
+            STYPE.addr = P;
+            SPEC1.update( A, F, V, O, J - 1 );
+            SPEC2.update( A, F, V, O + J - 1, L - J + 1 );
+            this.jmp( SLOC );
+            return;
 
         case 'STOP':
-            //      Data Input to STREAM:
-            //               +-------+-------+-------+-------+-------+
-            //      SPEC2    |   A       F       V       O       L   |
-            //               +---------------------------------------+
-            //      Data Altered by STREAM if Termination is STOP:
-            //               +-------+-------+-------+
-            //      STYPE    |   P                   |
-            //               +-----------------------+
-            //               +-------+-------+-------+-------+-------+
-            //      SPEC1    |   A       F       V       O       J   |
-            //               +---------------------------------------+
-            //               +-------+-------+-------+-------+-------+
-            //      SPEC2    |   A       F       V      O+J     L-J  |
-            //               +---------------------------------------+
-            // SPEC1
-            J = I;
-
-            SPEC1.addr   = SPEC2.addr;    // A
-            SPEC1.flags  = SPEC2.flags;   // F
-            SPEC1.value  = SPEC2.value;   // V
-            SPEC1.offset = SPEC2.offset;  // O
-            SPEC1.length = J;             // J
-
-            SPEC2.length -= J;  // O+J
-            SPEC2.offset += J;  // L-J
-
-            return this.jmp( RUNOUT );
+            STYPE.addr = P;
+            SPEC1.update( A, F, V, O, J );
+            SPEC2.update( A, F, V, O + J, L - J );
+            this.jmp( RUNOUT );
+            return;
 
         case 'ERROR':
-            // Data Altered by STREAM if Termination is ERROR:
-            //          +-------+-------+-------+
-            // STYPE    |   0                   |
-            //          +-----------------------+
-            //          +-------+-------+-------+-------+-------+
-            // SPEC1    |   A       F       V       O       L   |
-            //          +---------------------------------------+
             STYPE.addr = 0;
-            SPEC1.read( SPEC2 );
-
-            return this.jmp( ERROR );
+            SPEC1.update( A, F, V, O, L );
+            this.jmp( ERROR );
+            return;
 
         default:
             // GOTO
@@ -4088,9 +4037,11 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     //          +-------+-------+-------+-------+-------+
     // SPEC2    |   A       F       V       O       0   |
     //          +---------------------------------------+
-    SPEC2.length = 0;
+    STYPE.addr = P;
+    SPEC1.update( A, F, V, O, L );
+    SPEC2.update( A, F, V, O, 0 );
 
-    return this.jmp( RUNOUT );
+    this.jmp( RUNOUT );
 };
 
 //     STRING  is used to assemble a string and a specifier to

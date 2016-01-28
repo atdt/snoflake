@@ -36,6 +36,10 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
         args = argsCallback.call( this ),
         returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
+    if ( typeof returnValue === 'boolean' ) {
+        process.exit( returnValue );
+    }
+
     if ( label !== null ) {
         if ( returnValue !== undefined ) {
             this.assign( label, returnValue );
