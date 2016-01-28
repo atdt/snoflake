@@ -36,6 +36,28 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
         args = argsCallback.call( this ),
         returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
+    ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
+        var value = this.symbols[ variable ];
+        var ref = ' ';
+        if ( value !== undefined ) {
+            if ( /PTR$/.test( variable ) ) {
+                value = this.d( value ).addr;
+                ref = '*';
+            }
+            if ( /SP/.test( variable ) ) {
+                value = ref + this.s( value ).toString()
+            } else {
+                value = ref + this.d( value ).toString()
+            }
+
+            console.log(
+                '→ %s: %s',
+                SNOBOL.str.pad( variable, 6, 'left' ),
+                value
+            );
+        }
+    }, this );
+
     if ( typeof returnValue === 'boolean' ) {
         process.exit( returnValue );
     }
@@ -82,6 +104,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointer = 0;
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
+        if ( this.instructionPointer === 3608 ) process.exit();
         loc = this.instructionPointer;
         args = program[ loc ];
         status = this.exec.apply( this, args );
