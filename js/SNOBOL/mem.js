@@ -69,11 +69,7 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
 
 
 VM.prototype.assign = function ( assignee, value ) {
-    if ( value.ptr ) {
-        console.trace( value );
-        throw new Error();
-    }
-    this.symbols[ assignee ] = value.ptr || value;
+    this.symbols[ assignee ] = value;
 };
 
 VM.prototype.reset = function () {

@@ -24,6 +24,9 @@ function stackPopper( dataType ) {
             }
             this.CSTACK.addr -= dst.width;
             src = this[ dataType ]( this.CSTACK.addr );
+            if ( this.instructionPointer === 262 ) {
+                console.log( 'POP: %s -> %s', src.toString(), dst.toString() );
+            }
             dst.read( src );
         }
     }
@@ -1408,6 +1411,7 @@ sil.GETSPC = function ( $SPEC, $DESCR, N ) {
         SPEC = this.s( $SPEC ),
         SPEC_indirect = this.s( A1 + N );
 
+    console.log( 'Getting SPC: ' + SPEC_indirect.toString() );
     SPEC.read( SPEC_indirect );
 };
 
@@ -2974,8 +2978,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     var retLoc = this.instructionPointer,
         DESCR;
 
-    this.indent++;
-
     if ( $DESCR !== undefined ) {
         DESCR = this.d( $DESCR );
     }
@@ -3013,6 +3015,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
 
         if ( DESCR && DESCR_SRC ) {
+            console.log( '%s -> %s', DESCR_SRC.toString(), DESCR.toString() );
             DESCR.read( DESCR_SRC );
         }
 
@@ -3029,6 +3032,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // The values of the arguments DESCR1,...,DESCRN are placed on the stack.
     // XXX order?
     // XXX throw new RangeError( 'Stack overflow' );
+    if ( this.instructionPointer === 128 ) {
+        console.log( this.d( $DESCRs[0] ).toString() );
+    }
     sil.PUSH.call( this, $DESCRs.reverse() );
 
     this.jmp( $PROC );
@@ -3273,7 +3279,6 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 //               +-----------------------+
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
-    this.indent--;
     var callback = this.callbacks.pop();
     callback.call( this, $DESCR, N );
 };
@@ -3960,8 +3965,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         TI, // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
         t;  // The table row (rule) index that we are currently applying
 
-        //      SPEC2    |   A       F       V       O       L   |
-        //
     var P = 0,
         A = SPEC2.addr,
         F = SPEC2.flags,
@@ -3977,15 +3980,12 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    console.log( 'Scanning %s using table %s', JSON.stringify( str ), tableName );
+    console.log( 'STREAM: %s using %s', JSON.stringify( str ), tableName );
 
     for ( I = 1; I <= str.length; I++ ) {
         J = I;
         ch = str.charAt( I - 1 );
-        // console.log( 'length: ' + SPEC2.length );
-        // console.log( 'I = %s; str: "%s"; str.length = %s', I, str, str.length );
-        // console.log( 'current char: ' + ch.charCodeAt(0) );
-
+        TI = 'RUNOUT';
         for ( t = 0; t < TABLE.length; t++ ) {
             if ( SNOBOL.match( TABLE[t][0], ch ) ) {
                 // if table specifies a value to PUT(), assign it to P
@@ -3997,11 +3997,13 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
+        console.log( TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
 
         case 'STOPSH':
+            console.log( 'P = ' + P );
             STYPE.addr = P;
             SPEC1.update( A, F, V, O, J - 1 );
             SPEC2.update( A, F, V, O + J - 1, L - J + 1 );
@@ -4021,27 +4023,20 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             this.jmp( ERROR );
             return;
 
+        case 'RUNOUT':
+            STYPE.addr = P;
+            SPEC1.update( A, F, V, O, L );
+            SPEC2.update( A, F, V, O, 0 );
+            this.jmp( RUNOUT );
+            return;
+
         default:
             // GOTO
+            assert( TI in SNOBOL.syntaxTables );
+            console.log( 'Using table ' + TI );
             TABLE = this.resolve( TI );
         }
     }
-
-    // Data Altered by STREAM if Termination is RUNOUT:
-    //          +-------+-------+-------+
-    // STYPE    |   P                   |
-    //          +-----------------------+
-    //          +-------+-------+-------+-------+-------+
-    // SPEC1    |   A       F       V       O       L   |
-    //          +---------------------------------------+
-    //          +-------+-------+-------+-------+-------+
-    // SPEC2    |   A       F       V       O       0   |
-    //          +---------------------------------------+
-    STYPE.addr = P;
-    SPEC1.update( A, F, V, O, L );
-    SPEC2.update( A, F, V, O, 0 );
-
-    this.jmp( RUNOUT );
 };
 
 //     STRING  is used to assemble a string and a specifier to

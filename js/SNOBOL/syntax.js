@@ -1,10 +1,10 @@
-"use string";
+"use strict";
 
 var SNOBOL = require( './base' );
 
 // 0x7F is just the ASCII range; it should really be
 // 0x10000, but we get crashes.
-var CHAR_MAX = 0x7F;
+var CHAR_MAX = 0x7F,
     ALPHA = '',
     D = 3;
 
@@ -89,10 +89,16 @@ var characterClasses = {
 };
 
 SNOBOL.match = function ( characterClass, char ) {
-    return characterClasses[ characterClass ].test( char );
+    var rv = characterClasses[ characterClass ].test( char );
+    if ( rv ) {
+        console.log( '%s matches %s', JSON.stringify( char ), characterClass );
+    } else {
+        console.log( '%s does not match %s', JSON.stringify( char ), characterClass );
+    }
+    return rv;
 };
 
-var syntaxTables = {
+SNOBOL.syntaxTables = {
     BIOPTB: [
         [ 'PLUS', 'ADDFN', 'TBLKTB' ],
         [ 'MINUS', 'SUBFN', 'TBLKTB' ],
@@ -287,6 +293,6 @@ var syntaxTables = {
     ]
 };
 
-Object.keys( syntaxTables ).forEach( function ( tableName ) {
-    SNOBOL.SymbolTable.prototype[ tableName ] = syntaxTables[ tableName ];
+Object.keys( SNOBOL.syntaxTables ).forEach( function ( tableName ) {
+    SNOBOL.SymbolTable.prototype[ tableName ] = SNOBOL.syntaxTables[ tableName ];
 } );
