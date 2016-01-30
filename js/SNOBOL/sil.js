@@ -4271,11 +4271,12 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
         A = DESCR3.addr,
+        DESCR_indirect,
         N;
 
     for ( N = 0; ; N++ ) {
-        DESCR = this.d( A - ( N * D ) );
-        if ( DESCR.flags & TTL ) {
+        DESCR_indirect = this.d( A - ( N * D ) );
+        if ( DESCR_indirect.flags & TTL ) {
             break;
         }
     }
