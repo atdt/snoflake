@@ -1027,7 +1027,7 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // bly.
 sil.END = function () {
     // end assembly
-    SNOBOL.log( 'END' );
+    console.log( 'END' );
 };
 
 //     ENDEX is used to terminate execution of a SNOBOL4  run.
