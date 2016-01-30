@@ -130,11 +130,3 @@ SNOBOL.VM.prototype.s = function ( ptr ) {
         ? ptr
         : new SNOBOL.Specifier( this, ptr );
 };
-
-SNOBOL.VM.prototype.log = function ( msg ) {
-    if ( !SNOBOL.DEBUG ) return;
-    var whitespace = Array( this.indent + 1 ).join( '  ' ),
-        args = Array.prototype.slice.call( arguments, 1 );
-    args.unshift( whitespace + msg );
-    console.log.apply( console.log, args );
-};
