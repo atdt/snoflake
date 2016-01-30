@@ -4399,7 +4399,7 @@ sil.VCMPIC = function ( $DESCR1, N, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 
     if ( V1 > V2 ) {
         this.jmp( GTLOC );
-    } else if ( V1 < v2 ) {
+    } else if ( V1 < V2 ) {
         this.jmp( LTLOC );
     } else {
         this.jmp( EQLOC );
