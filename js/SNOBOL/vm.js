@@ -104,7 +104,9 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointer = 0;
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
-        if ( this.instructionPointer === 3608 ) process.exit();
+        if ( this.instructionPointer === 3608 ) {
+            throw new Error();
+        }
         loc = this.instructionPointer;
         args = program[ loc ];
         status = this.exec.apply( this, args );
@@ -120,12 +122,18 @@ SNOBOL.VM.prototype.run = function ( program ) {
 };
 
 SNOBOL.VM.prototype.d = function ( ptr ) {
+    if ( typeof ptr === 'number' && ptr < 6000 ) {
+        ptr = this.mem[ ptr ];
+    }
     return ptr instanceof SNOBOL.Descriptor
         ? ptr
         : new SNOBOL.Descriptor( this, ptr );
 };
 
 SNOBOL.VM.prototype.s = function ( ptr ) {
+    if ( typeof ptr === 'number' && ptr < 6000 ) {
+        ptr = this.mem[ ptr ];
+    }
     return ptr instanceof SNOBOL.Specifier
         ? ptr
         : new SNOBOL.Specifier( this, ptr );
