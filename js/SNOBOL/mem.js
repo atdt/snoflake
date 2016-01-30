@@ -69,10 +69,6 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
 };
 
 
-VM.prototype.assign = function ( assignee, value ) {
-    this.symbols[ assignee ] = value;
-};
-
 VM.prototype.reset = function () {
     this.instructionPointer = null;
     this.symbols = new SNOBOL.SymbolTable();
@@ -81,7 +77,8 @@ VM.prototype.reset = function () {
     this.units = {};
     this.indent = 0;
 
-    this.alloc( this.STSIZE * 3 );
+    // this.alloc( this.STSIZE * 3 );
+    this.alloc( 9000 );
     this.CSTACK = this.d( 'CSTACK' );
     this.OSTACK = this.d( 'OSTACK' );
     this.STACK  = this.$( 'STACK' );
