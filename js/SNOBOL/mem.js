@@ -31,11 +31,12 @@ function typedGetter( typedArray ) {
 }
 
 function typedSetter( typedArray ) {
+    var typeName = /(\w+)Array/.exec( typedArray.constructor )[1];
     return function ( ptr, value ) {
         u32.fill( 0 );
         typedArray[ 0 ] = value;
         if ( !nearlyEqual( typedArray[ 0 ], value ) ) {
-            throw new RangeError( 'typedArray[0]:' + JSON.stringify( typedArray[0] ) + ' value:' + JSON.stringify( value ) );
+            throw new RangeError( 'Invalid ' + typeName + ': ' + JSON.stringify( value ) );
         }
         this.mem[ ptr ] = u32[ 0 ];
     };
