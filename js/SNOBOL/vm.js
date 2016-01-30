@@ -63,11 +63,10 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
     }
 
     if ( label !== null ) {
-        if ( returnValue !== undefined ) {
-            this.assign( label, returnValue );
-        } else {
-            this.assign( label, currentInstruction );
+        if ( returnValue === undefined ) {
+            returnValue = currentInstruction;
         }
+        this.symbols[ label ] = returnValue;
     }
 };
 
@@ -82,11 +81,12 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt;
+    var args, status, loc, stmt, label;
 
     for ( var i = 0; i < program.length; i++ ) {
-        if ( program[ i ][ 0 ] !== null ) {
-            this.assign( program[ i ][ 0 ], i );
+        label = program[ i ][ 0 ];
+        if ( label !== null ) {
+            this.symbols[ label ] = i;
         }
     }
 
