@@ -1,6 +1,7 @@
 "use strict";
 
-var SNOBOL = require( './base' );
+var SNOBOL = require( './base' ),
+    assert = require( 'assert' );
 
 var DATA_ASSEMBLY_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
@@ -63,10 +64,12 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
     }
 
     if ( label !== null ) {
+        assert( this.symbols[ label ] !== undefined );
         if ( returnValue === undefined ) {
             returnValue = currentInstruction;
         }
-        this.symbols[ label ] = returnValue;
+        var ptr = this.symbols[ label ];
+        this.mem[ ptr ] = returnValue;
     }
 };
 
@@ -83,10 +86,17 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 SNOBOL.VM.prototype.run = function ( program ) {
     var args, status, loc, stmt, label;
 
-    for ( var i = 0; i < program.length; i++ ) {
-        label = program[ i ][ 0 ];
-        if ( label !== null ) {
-            this.symbols[ label ] = i;
+    var sym;
+    var i;
+
+    for ( sym in SNOBOL.programSymbols ) {
+        this.define( sym, SNOBOL.programSymbols[sym] );
+    }
+
+    for ( i = 0; i < program.length; i++ ) {
+        sym = program[ i ][ 0 ];
+        if ( sym !== null ) {
+            this.define( sym, i );
         }
     }
 
@@ -104,9 +114,6 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointer = 0;
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
-        if ( this.instructionPointer === 3608 ) {
-            throw new Error();
-        }
         loc = this.instructionPointer;
         args = program[ loc ];
         status = this.exec.apply( this, args );
@@ -122,18 +129,12 @@ SNOBOL.VM.prototype.run = function ( program ) {
 };
 
 SNOBOL.VM.prototype.d = function ( ptr ) {
-    if ( typeof ptr === 'number' && ptr < 6000 ) {
-        ptr = this.mem[ ptr ];
-    }
     return ptr instanceof SNOBOL.Descriptor
         ? ptr
         : new SNOBOL.Descriptor( this, ptr );
 };
 
 SNOBOL.VM.prototype.s = function ( ptr ) {
-    if ( typeof ptr === 'number' && ptr < 6000 ) {
-        ptr = this.mem[ ptr ];
-    }
     return ptr instanceof SNOBOL.Specifier
         ? ptr
         : new SNOBOL.Specifier( this, ptr );

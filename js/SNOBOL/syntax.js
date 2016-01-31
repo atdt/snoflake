@@ -12,8 +12,7 @@ for ( var i = 1; i <= CHAR_MAX; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
-SNOBOL.SymbolTable = function () {};
-SNOBOL.SymbolTable.prototype = {
+SNOBOL.programSymbols = {
     // MDATA
     ALPHA   : ALPHA,
     AMPST   : '&',
@@ -41,10 +40,10 @@ SNOBOL.SymbolTable.prototype = {
     PARMS   : -1,
 
     // Misc
-    OSTACK  : 2000 * D,
-    CSTACK  : 2001 * D,
-    STACK   : 2002 * D,
-    OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
+    // OSTACK  : 2000 * D,
+    // CSTACK  : 2001 * D,
+    // STACK   : 2002 * D,
+    // OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
     // STSIZE  : 1000,   // ditto
 };
 
@@ -294,5 +293,5 @@ SNOBOL.syntaxTables = {
 };
 
 Object.keys( SNOBOL.syntaxTables ).forEach( function ( tableName ) {
-    SNOBOL.SymbolTable.prototype[ tableName ] = SNOBOL.syntaxTables[ tableName ];
+    SNOBOL.programSymbols[ tableName ] = SNOBOL.syntaxTables[ tableName ];
 } );
