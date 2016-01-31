@@ -1480,16 +1480,15 @@ sil.INCRV = function ( $DESCR, N ) {
 // 1.  See also ENDEX.
 sil.INIT = function () {
     // initialize SNOBOL4 run
-    var dynamicStorageSize = D * 16384,
-        dynamicStoragePtr = this.alloc( dynamicStorageSize ),
+    var dynamicStorageSize = D * 1000,
 
         FRSGPT = this.d( 'FRSGPT' ),
         HDSGPT = this.d( 'HDSGPT' ),
         TLSGP1 = this.d( 'TLSGP1' );
 
     this.timeStart = new Date().getTime();
-    FRSGPT.addr = dynamicStoragePtr;
-    HDSGPT.addr = dynamicStoragePtr;
+    FRSGPT.addr = this.alloc( dynamicStorageSize );
+    HDSGPT.addr = FRSGPT.addr;
     TLSGP1.addr = this.alloc( dynamicStorageSize );
 };
 
@@ -3973,14 +3972,15 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         L = SPEC2.length;
 
 
+        /*
     var tableName;
     for ( var k in SNOBOL.SymbolTable.prototype ) {
         if ( SNOBOL.SymbolTable.prototype[k] === TABLE ) {
             tableName = k;
         }
     }
-
     console.log( 'STREAM: %s using %s', JSON.stringify( str ), tableName );
+    */
 
     for ( I = 1; I <= str.length; I++ ) {
         J = I;

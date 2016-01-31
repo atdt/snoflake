@@ -15,9 +15,6 @@ SNOBOL.isInt32 = function isInteger( v ) {
     return i32[0] === v;
 };
 
-SNOBOL.SymbolTable = function () {};
-SNOBOL.SymbolTable.prototype = {};
-
 function nearlyEqual( a, b ) {
     return a === b || Math.abs( a - b ) < 0.001;
 }
@@ -61,27 +58,35 @@ VM.prototype.alloc = function ( size ) {
     return ptr;
 };
 
+SNOBOL.VM.prototype.define = function ( symbol, value ) {
+    this.symbols[ symbol ] = this.mem.length;
+    this.mem.push( value );
+}
+
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
-    if ( this.symbols[ key ] === undefined ) {
+    var ptr = this.symbols[ key ], val = this.mem[ ptr ];
+
+    if ( ptr === undefined || val === undefined ) {
         throw new ReferenceError( key );
     }
-    return this.symbols[ key ];
+
+    return val;
 };
 
 
 VM.prototype.reset = function () {
     this.instructionPointer = null;
-    this.symbols = new SNOBOL.SymbolTable();
+    this.symbols = {};
     this.mem = [];
     this.callbacks = [];
     this.units = {};
-    this.indent = 0;
 
-    // this.alloc( this.STSIZE * 3 );
-    this.alloc( 9000 );
-    this.CSTACK = this.d( 'CSTACK' );
-    this.OSTACK = this.d( 'OSTACK' );
-    this.STACK  = this.$( 'STACK' );
+    this.symbols.CSTACK = this.d().ptr;
+    this.symbols.OSTACK = this.d().ptr;
+    this.symbols.STACK  = this.alloc( 1000 );
+
+    this.CSTACK = this.d( this.symbols.CSTACK );
+    this.OSTACK = this.d( this.symbols.OSTACK );
 
     SNOBOL.sil.ISTACK.call( this );
 };
