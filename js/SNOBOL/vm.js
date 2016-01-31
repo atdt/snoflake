@@ -38,7 +38,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
         returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
-        var value = this.symbols[ variable ];
+        var value = this.mem[ this.symbols[ variable ] ];
         var ref = ' ';
         if ( value !== undefined ) {
             if ( /PTR$/.test( variable ) ) {
