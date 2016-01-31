@@ -88,13 +88,7 @@ var characterClasses = {
 };
 
 SNOBOL.match = function ( characterClass, char ) {
-    var rv = characterClasses[ characterClass ].test( char );
-    if ( rv ) {
-        console.log( '%s matches %s', JSON.stringify( char ), characterClass );
-    } else {
-        console.log( '%s does not match %s', JSON.stringify( char ), characterClass );
-    }
-    return rv;
+    return characterClasses[ characterClass ].test( char );
 };
 
 SNOBOL.syntaxTables = {

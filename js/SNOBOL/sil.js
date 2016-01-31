@@ -24,9 +24,6 @@ function stackPopper( dataType ) {
             }
             this.CSTACK.addr -= dst.width;
             src = this[ dataType ]( this.CSTACK.addr );
-            if ( this.instructionPointer === 262 ) {
-                console.log( 'POP: %s -> %s', src.toString(), dst.toString() );
-            }
             dst.read( src );
         }
     }
@@ -1356,9 +1353,6 @@ sil.GETLTH = function ( $DESCR1, $DESCR2 ) {
         L = DESCR2.addr;
 
     DESCR1.addr  = D * ( 3 + Math.floor( ( L - 1 ) / CPD + 1 ) );
-    // var raw = SNOBOL.str.encode( SNOBOL.str.repeat( 'X', L ) );
-    // console.log( 'L = ' + L );
-    // assert.equal( raw.length + ( 3 * D ), DESCR1.addr );
     DESCR1.flags = 0;
     DESCR1.value = 0;
 };
@@ -1411,7 +1405,6 @@ sil.GETSPC = function ( $SPEC, $DESCR, N ) {
         SPEC = this.s( $SPEC ),
         SPEC_indirect = this.s( A1 + N );
 
-    console.log( 'Getting SPC: ' + SPEC_indirect.toString() );
     SPEC.read( SPEC_indirect );
 };
 
@@ -1480,7 +1473,7 @@ sil.INCRV = function ( $DESCR, N ) {
 // 1.  See also ENDEX.
 sil.INIT = function () {
     // initialize SNOBOL4 run
-    var dynamicStorageSize = D * 1000,
+    var dynamicStorageSize = D * 5000,
 
         FRSGPT = this.d( 'FRSGPT' ),
         HDSGPT = this.d( 'HDSGPT' ),
@@ -3014,7 +3007,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
 
         if ( DESCR && DESCR_SRC ) {
-            console.log( '%s -> %s', DESCR_SRC.toString(), DESCR.toString() );
             DESCR.read( DESCR_SRC );
         }
 
@@ -3028,12 +3020,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
     } );
 
-    // The values of the arguments DESCR1,...,DESCRN are placed on the stack.
-    // XXX order?
-    // XXX throw new RangeError( 'Stack overflow' );
-    if ( this.instructionPointer === 128 ) {
-        console.log( this.d( $DESCRs[0] ).toString() );
-    }
     sil.PUSH.call( this, $DESCRs.reverse() );
 
     this.jmp( $PROC );
@@ -3997,13 +3983,11 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
-        console.log( TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
 
         case 'STOPSH':
-            console.log( 'P = ' + P );
             STYPE.addr = P;
             SPEC1.update( A, F, V, O, J - 1 );
             SPEC2.update( A, F, V, O + J - 1, L - J + 1 );
@@ -4033,7 +4017,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         default:
             // GOTO
             assert( TI in SNOBOL.syntaxTables );
-            console.log( 'Using table ' + TI );
             TABLE = this.resolve( TI );
         }
     }
