@@ -3083,12 +3083,18 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 sil.REALST = function ( $SPEC, $DESCR ) {
     // convert real number to string
     var SPEC = this.s( $SPEC ),
-        DESCR = this.d( $DESCR );
+        DESCR = this.d( $DESCR ),
+        R = SNOBOL.str.encode( '' + DESCR.raddr );
 
-    SPEC.update( 0, 0, 0, 0, 0, 0 );
-    SPEC.specified = DESCR.raddr;
+    SPEC.addr   = this.mem.length;
+    SPEC.flags  = 0;
+    SPEC.value  = 0;
+    SPEC.offset = 0;
+    SPEC.length = R.length;
 
-    return SPEC.ptr;
+    while ( R.length ) {
+        this.mem.push( R.shift() );
+    }
 };
 
 //     REMSP is used to obtain a remainder specifier resulting
