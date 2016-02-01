@@ -26,14 +26,14 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
 
     if ( SNOBOL.DEBUG ) {
         console.log( '[%s] [%s] %s(%s)',
-            SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
+            SNOBOL.str.pad( '' + this.ip, 4 ),
             SNOBOL.str.pad( label || '', 6 ),
             macro,
             getArgs( argsCallback )
         );
     }
 
-    var currentInstruction = this.instructionPointer,
+    var currentInstruction = this.ip,
         args = argsCallback.call( this ),
         returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
@@ -79,7 +79,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // location argument which the caller ommitted. In such cases
     // execution should fall through to the next instruction.
     if ( typeof loc === 'number' ) {
-        this.instructionPointer = loc;
+        this.ip = loc;
     }
 };
 
@@ -101,31 +101,31 @@ SNOBOL.VM.prototype.run = function ( program ) {
     }
 
     for (
-        this.instructionPointer = 0;
-        this.instructionPointer < program.length;
-        this.instructionPointer++
+        this.ip = 0;
+        this.ip < program.length;
+        this.ip++
     ) {
-        stmt = program[ this.instructionPointer ];
+        stmt = program[ this.ip ];
         if ( DATA_ASSEMBLY_MACROS.indexOf( stmt[ 1 ] ) !== -1 ) {
             this.exec.apply( this, stmt );
         }
     }
 
-    this.instructionPointer = 0;
+    this.ip = 0;
 
-    while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
-        loc = this.instructionPointer;
+    while ( this.ip >= 0 && this.ip < program.length ) {
+        loc = this.ip;
         args = program[ loc ];
         status = this.exec.apply( this, args );
 
         // If the procedure did not update the instruction pointer,
         // fall through to the next instruction.
-        if ( this.instructionPointer === loc ) {
-            this.instructionPointer++;
+        if ( this.ip === loc ) {
+            this.ip++;
         }
     }
 
-    return !( this.instructionPointer < 0 );
+    return !( this.ip < 0 );
 };
 
 SNOBOL.VM.prototype.d = function ( ptr ) {

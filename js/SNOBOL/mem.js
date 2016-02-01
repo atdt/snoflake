@@ -75,7 +75,7 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
 
 
 VM.prototype.reset = function () {
-    this.instructionPointer = null;
+    this.ip = null;
     this.symbols = {};
     this.mem = [];
     this.callbacks = [];

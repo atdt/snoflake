@@ -2967,7 +2967,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // stack  pointer  is generated as indicated.  The return loca-
     // tion LOC is saved on the stack so that  the  return  can  be
     // properly    made.     The    values    of    the   arguments
-    var retLoc = this.instructionPointer,
+    var retLoc = this.ip,
         DESCR;
 
     if ( $DESCR !== undefined ) {
