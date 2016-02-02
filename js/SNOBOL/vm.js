@@ -5,8 +5,7 @@ var SNOBOL = require( './base' ),
 
 var DATA_ASSEMBLY_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
-    'EQU',   'FORMAT', 'LHERE',
-    'REAL',  'SPEC',   'STRING'
+    'EQU',   'FORMAT', 'REAL',  'SPEC',   'STRING',
 ];
 
 function isDataAssemblyMacro( macro ) {
@@ -84,39 +83,68 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label;
+    var symbol, tbd, loc, statement, label, macro, argsCb;
 
-    var sym;
-    var i;
+    this.program = program;
 
-    for ( sym in SNOBOL.programSymbols ) {
-        this.define( sym, SNOBOL.programSymbols[sym] );
+    for ( symbol in SNOBOL.programSymbols ) {
+        this.symbols[ symbol ] = SNOBOL.programSymbols[ symbol ];
     }
 
-    for ( i = 0; i < program.length; i++ ) {
-        sym = program[ i ][ 0 ];
-        if ( sym !== null ) {
-            this.define( sym, i );
+    tbd = [];
+    for ( this.ip = 0; this.ip < program.length; this.ip++ ) {
+        statement = program[ this.ip ];
+        label     = statement[ 0 ];
+        macro     = statement[ 1 ];
+        if ( isDataAssemblyMacro( macro ) ) {
+            tbd.push( this.ip );
+        } else if ( label !== null ) {
+            this.symbols[ label ] = this.ip;
         }
     }
 
-    for (
-        this.ip = 0;
-        this.ip < program.length;
-        this.ip++
-    ) {
-        stmt = program[ this.ip ];
-        if ( DATA_ASSEMBLY_MACROS.indexOf( stmt[ 1 ] ) !== -1 ) {
-            this.exec.apply( this, stmt );
+    do {
+        if ( tbd.length === 4 ) {
+            for ( var i = 0; i < tbd.length; i++ ) {
+                console.log( this.program[ tbd[i] ].map( function ( x ) { return x.toString() } ) );
+            }
+            process.exit();
         }
-    }
+        console.log( tbd.length );
+        tbd = tbd.filter( function ( i ) {
+            var statement = this.program[ i ],
+                label     = statement[ 0 ],
+                macro     = statement[ 1 ],
+                argsCb    = statement[ 2 ],
+                args, rv;
+
+            this.symbols[ label ] = this.mem.length;
+
+            try {
+                args = argsCb.call( this );
+            } catch ( e ) {
+                // We'll need to try again.
+                delete this.symbols[ label ];
+                return true;
+            }
+            rv = SNOBOL.sil[ macro ].apply( this, args );
+            if ( label !== null ) {
+                this.symbols[ label ] = rv;
+            }
+            return false;
+        }, this );
+    } while ( tbd.length > 0 );
 
     this.ip = 0;
-
     while ( this.ip >= 0 && this.ip < program.length ) {
-        loc = this.ip;
-        args = program[ loc ];
-        status = this.exec.apply( this, args );
+        loc       = this.ip;
+        statement = program[ loc ];
+        label     = statement[ 0 ];
+        macro     = statement[ 1 ];
+        argsCb    = statement[ 2 ];
+        if ( !isDataAssemblyMacro( macro ) ) {
+            SNOBOL.sil[ macro ].apply( this, argsCb.call( this ) );
+        }
 
         // If the procedure did not update the instruction pointer,
         // fall through to the next instruction.

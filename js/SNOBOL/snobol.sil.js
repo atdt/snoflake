@@ -7907,7 +7907,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "BLNSP", "SPEC", function () {
     return [ vm.$("BLNBUF"), 0, 0, 0, vm.$("STNOSZ") ];
   } ], [ "ERRSP", "SPEC", function () {
-    return [ vm.$("ERRBUF"), 0, 0, 0, vm.$("CARDSZ") + (vm.$("STNOSZ") - (vm.$("SEQSIZ") + 1)) ];
+    return [ vm.$("ERRBUF"), 0, 0, 0, vm.$("CARDSZ") + vm.$("STNOSZ") - vm.$("SEQSIZ") + 1 ];
   } ], [ "INBFSP", "SPEC", function () {
     return [ vm.$("INBUF"), 0, 0, vm.$("STNOSZ"), vm.$("CARDSZ") ];
   } ], [ "LNBFSP", "SPEC", function () {

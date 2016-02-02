@@ -59,18 +59,15 @@ VM.prototype.alloc = function ( size ) {
 };
 
 SNOBOL.VM.prototype.define = function ( symbol, value ) {
-    this.symbols[ symbol ] = this.mem.length;
-    this.mem.push( value );
+    this.symbols[ symbol ] = value;
 }
 
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
-    var ptr = this.symbols[ key ], val = this.mem[ ptr ];
-
-    if ( ptr === undefined || val === undefined ) {
+    if ( this.symbols[ key ] === undefined ) {
         throw new ReferenceError( key );
     }
 
-    return val;
+    return this.symbols[ key ];
 };
 
 
