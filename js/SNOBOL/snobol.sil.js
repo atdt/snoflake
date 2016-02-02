@@ -7359,7 +7359,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ null, "TITLE", function () {
     return [ "Data" ];
   } ], [ "DTLIST", "DESCR", function () {
-    return [ vm.$("DTLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("DTLEND") - (vm.$("DTLIST") - vm.$("DESCR")) ];
+    return [ vm.$("DTLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("DTLEND") - vm.$("DTLIST") - vm.$("DESCR") ];
   } ], [ null, "DESCR", function () {
     return [ 0, 0, vm.$("S") ];
   } ], [ null, "DESCR", function () {
@@ -7403,7 +7403,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "DTLEND", "LHERE", function () {
     return [ null ];
   } ], [ "KNLIST", "DESCR", function () {
-    return [ vm.$("KNLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("KNEND") - (vm.$("KNLIST") - vm.$("DESCR")) ];
+    return [ vm.$("KNLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("KNEND") - vm.$("KNLIST") - vm.$("DESCR") ];
   } ], [ "TRIMCL", "DESCR", function () {
     return [ 0, 0, vm.$("I") ];
   } ], [ null, "DESCR", function () {
@@ -7459,7 +7459,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "KNEND", "LHERE", function () {
     return [ null ];
   } ], [ "KVLIST", "DESCR", function () {
-    return [ vm.$("KVLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("KVEND") - (vm.$("KVLIST") - vm.$("DESCR")) ];
+    return [ vm.$("KVLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("KVEND") - vm.$("KVLIST") - vm.$("DESCR") ];
   } ], [ "ERRTYP", "DESCR", function () {
     return [ 0, 0, vm.$("I") ];
   } ], [ "ERRTKY", "DESCR", function () {
@@ -7827,7 +7827,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "EMSGCL", "DESCR", function () {
     return [ 0, 0, 0 ];
   } ], [ "ERRBAS", "DESCR", function () {
-    return [ vm.$("CARDSZ") + (vm.$("STNOSZ") - vm.$("SEQSIZ")), 0, 0 ];
+    return [ vm.$("CARDSZ") + vm.$("STNOSZ") - vm.$("SEQSIZ"), 0, 0 ];
   } ], [ "ESAICL", "DESCR", function () {
     return [ 0, 0, 0 ];
   } ], [ "ETMCL", "DESCR", function () {
@@ -7861,7 +7861,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "PATICL", "DESCR", function () {
     return [ 0, 0, 0 ];
   } ], [ "PDLEND", "DESCR", function () {
-    return [ vm.$("PDLBLK") + (vm.$("SPDLDR") - vm.$("NODESZ")), 0, 0 ];
+    return [ vm.$("PDLBLK") + vm.$("SPDLDR") - vm.$("NODESZ"), 0, 0 ];
   } ], [ "PDLPTR", "DESCR", function () {
     return [ vm.$("PDLBLK"), 0, 0 ];
   } ], [ "SCL", "DESCR", function () {
@@ -7911,13 +7911,13 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "INBFSP", "SPEC", function () {
     return [ vm.$("INBUF"), 0, 0, vm.$("STNOSZ"), vm.$("CARDSZ") ];
   } ], [ "LNBFSP", "SPEC", function () {
-    return [ vm.$("INBUF"), 0, 0, 0, vm.$("CARDSZ") + (vm.$("DSTSZ") + 1) ];
+    return [ vm.$("INBUF"), 0, 0, 0, vm.$("CARDSZ") + vm.$("DSTSZ") + 1 ];
   } ], [ "NEXTSP", "SPEC", function () {
     return [ vm.$("INBUF"), 0, 0, vm.$("STNOSZ"), vm.$("CARDSZ") - vm.$("SEQSIZ") ];
   } ], [ "LNOSP", "SPEC", function () {
     return [ vm.$("INBUF"), 0, 0, 0, vm.$("STNOSZ") ];
   } ], [ "RNOSP", "SPEC", function () {
-    return [ vm.$("INBUF"), 0, 0, vm.$("CARDSZ") + (vm.$("STNOSZ") + 1), vm.$("STNOSZ") ];
+    return [ vm.$("INBUF"), 0, 0, vm.$("CARDSZ") + vm.$("STNOSZ") + 1, vm.$("STNOSZ") ];
   } ], [ "ALPHSP", "SPEC", function () {
     return [ vm.$("ALPHA"), 0, 0, 0, vm.$("ALPHSZ") ];
   } ], [ "AMPSP", "SPEC", function () {
@@ -7983,13 +7983,13 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "DTARBF", "BUFFER", function () {
     return [ vm.$("ARRLEN") + 7 ];
   } ], [ "ERRBUF", "BUFFER", function () {
-    return [ vm.$("CARDSZ") + (vm.$("STNOSZ") - (vm.$("SEQSIZ") + 1)) ];
+    return [ vm.$("CARDSZ") + vm.$("STNOSZ") - vm.$("SEQSIZ") + 1 ];
   } ], [ "INBUF", "BUFFER", function () {
-    return [ vm.$("CARDSZ") + (vm.$("DSTSZ") + 1) ];
+    return [ vm.$("CARDSZ") + vm.$("DSTSZ") + 1 ];
   } ], [ "REALBF", "BUFFER", function () {
     return [ 36 ];
   } ], [ "ICLBLK", "DESCR", function () {
-    return [ vm.$("ICLBLK"), vm.$("TTL") + vm.$("MARK"), vm.$("ICLEND") - (vm.$("ICLBLK") - vm.$("DESCR")) ];
+    return [ vm.$("ICLBLK"), vm.$("TTL") + vm.$("MARK"), vm.$("ICLEND") - vm.$("ICLBLK") - vm.$("DESCR") ];
   } ], [ "DTATL", "DESCR", function () {
     return [ vm.$("DTLIST"), 0, 0 ];
   } ], [ "FNCPL", "DESCR", function () {
@@ -8249,7 +8249,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ null, "COPY", function () {
     return [ vm.$("MDATA") ];
   } ], [ "FTABLE", "DESCR", function () {
-    return [ vm.$("FTABLE"), vm.$("TTL") + vm.$("MARK"), vm.$("FTBLND") - (vm.$("FTABLE") - vm.$("DESCR")) ];
+    return [ vm.$("FTABLE"), vm.$("TTL") + vm.$("MARK"), vm.$("FTBLND") - vm.$("FTABLE") - vm.$("DESCR") ];
   } ], [ "ANYFN", "DESCR", function () {
     return [ vm.$("ANY"), 0, 1 ];
   } ], [ null, "DESCR", function () {
@@ -8499,7 +8499,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ null, "DESCR", function () {
     return [ vm.$("TRLIST"), 0, 0 ];
   } ], [ "FNLIST", "DESCR", function () {
-    return [ vm.$("FNLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("FNCPLE") - (vm.$("FNLIST") - vm.$("DESCR")) ];
+    return [ vm.$("FNLIST"), vm.$("TTL") + vm.$("MARK"), vm.$("FNCPLE") - vm.$("FNLIST") - vm.$("DESCR") ];
   } ], [ null, "DESCR", function () {
     return [ vm.$("ANYFN"), vm.$("FNC"), 0 ];
   } ], [ null, "DESCR", function () {
@@ -8733,7 +8733,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "FNCPLE", "LHERE", function () {
     return [ null ];
   } ], [ "OPTBL", "DESCR", function () {
-    return [ vm.$("OPTBL"), vm.$("TTL") + vm.$("MARK"), vm.$("OPTBND") - (vm.$("OPTBL") - vm.$("DESCR")) ];
+    return [ vm.$("OPTBL"), vm.$("TTL") + vm.$("MARK"), vm.$("OPTBND") - vm.$("OPTBL") - vm.$("DESCR") ];
   } ], [ "ADDFN", "DESCR", function () {
     return [ vm.$("ADD"), 0, 2 ];
   } ], [ null, "DESCR", function () {
@@ -9253,7 +9253,7 @@ var SNOBOL = require( './base' ); SNOBOL.interp = function (vm) {
   } ], [ "PRMTRM", "LHERE", function () {
     return [ null ];
   } ], [ "PRMSIZ", "EQU", function () {
-    return [ vm.$("PRMTRM") - (vm.$("PRMTBL") - vm.$("DESCR")) ];
+    return [ vm.$("PRMTRM") - vm.$("PRMTBL") - vm.$("DESCR") ];
   } ], [ "OBLOCK", "DESCR", function () {
     return [ vm.$("OBLOCK"), vm.$("TTL") + vm.$("MARK"), vm.$("OBARY") * vm.$("DESCR") ];
   } ], [ null, "ARRAY", function () {
