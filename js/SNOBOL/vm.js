@@ -3,11 +3,6 @@
 var SNOBOL = require( './base' ),
     assert = require( 'assert' );
 
-var DATA_ASSEMBLY_MACROS = [
-    'ARRAY', 'BUFFER', 'DESCR',
-    'EQU',   'FORMAT', 'REAL',  'SPEC',   'STRING',
-];
-
 function isDataAssemblyMacro( macro ) {
     return DATA_ASSEMBLY_MACROS.indexOf( macro ) !== -1;
 }
@@ -21,55 +16,12 @@ function getArgs( f ) {
 
 SNOBOL.D = 3;
 
-SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
+SNOBOL.ExitSignal = function ( code ) {
+    this.code = code;
+};
 
-    if ( SNOBOL.DEBUG ) {
-        console.log( '[%s] [%s] %s(%s)',
-            SNOBOL.str.pad( '' + this.ip, 4 ),
-            SNOBOL.str.pad( label || '', 6 ),
-            macro,
-            getArgs( argsCallback )
-        );
-    }
-
-    var currentInstruction = this.ip,
-        args = argsCallback.call( this ),
-        returnValue = SNOBOL.sil[ macro ].apply( this, args );
-
-    ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
-        var value = this.mem[ this.symbols[ variable ] ];
-        var ref = ' ';
-        if ( value !== undefined ) {
-            if ( /PTR$/.test( variable ) ) {
-                value = this.d( value ).addr;
-                ref = '*';
-            }
-            if ( /SP/.test( variable ) ) {
-                value = ref + this.s( value ).toString()
-            } else {
-                value = ref + this.d( value ).toString()
-            }
-
-            console.log(
-                '→ %s: %s',
-                SNOBOL.str.pad( variable, 6, 'left' ),
-                value
-            );
-        }
-    }, this );
-
-    if ( typeof returnValue === 'boolean' ) {
-        process.exit( returnValue );
-    }
-
-    if ( label !== null ) {
-        assert( this.symbols[ label ] !== undefined );
-        if ( returnValue === undefined ) {
-            returnValue = currentInstruction;
-        }
-        var ptr = this.symbols[ label ];
-        this.mem[ ptr ] = returnValue;
-    }
+SNOBOL.ExitSignal.prototype.toString = function () {
+    return 'SNOBOL.ExitSignal(' + this.code + ')';
 };
 
 
@@ -77,63 +29,139 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // `loc` will be undefined when a procedure takes an optional
     // location argument which the caller ommitted. In such cases
     // execution should fall through to the next instruction.
+    if ( typeof loc === 'string' ) {
+        loc = this.$( loc );
+    }
     if ( typeof loc === 'number' ) {
-        this.ip = loc;
+        this.ip = this.locations[ loc ];
     }
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var symbol, tbd, loc, statement, label, macro, argsCb;
+    var symbol, tbd, loc, statement, label, macro, argsCb, N, val, args, ptr;
 
     this.program = program;
 
-    for ( symbol in SNOBOL.programSymbols ) {
+    Object.keys( SNOBOL.programSymbols ).forEach( function ( symbol ) {
         this.symbols[ symbol ] = SNOBOL.programSymbols[ symbol ];
-    }
+    }, this );
 
-    tbd = [];
+    var enc;
     for ( this.ip = 0; this.ip < program.length; this.ip++ ) {
         statement = program[ this.ip ];
         label     = statement[ 0 ];
         macro     = statement[ 1 ];
-        if ( isDataAssemblyMacro( macro ) ) {
-            tbd.push( this.ip );
-        } else if ( label !== null ) {
-            this.symbols[ label ] = this.ip;
+        argsCb    = statement[ 2 ];
+
+        switch ( macro ) {
+        case 'DESCR':
+            val = this.d();
+            if ( label ) {
+                this.symbols[ label ] = val.ptr;
+                this.locations[ val.ptr ] = this.ip;
+            }
+            break;
+        case 'SPEC':
+            val = this.s();
+            if ( label ) {
+                this.symbols[ label ] = val.ptr;
+                this.locations[ val.ptr ] = this.ip;
+            }
+            break;
+        case 'FORMAT':
+        case 'STRING':
+            val = this.s();
+            enc = SNOBOL.str.encode( argsCb.call( this ).pop() );
+            val.addr = this.mem.length;
+            val.length = enc.length;
+            this.mem.push.apply( this.mem, enc );
+            if ( label ) {
+                this.symbols[ label ] = val.ptr;
+                this.locations[ val.ptr ] = this.ip;
+            }
+            break;
+        case 'ARRAY'  :
+            N = argsCb.call( this ).pop();
+            val = this.alloc( N );
+            if ( label ) {
+                this.symbols[ label ] = val;
+                this.locations[ val ] = this.ip;
+            }
+            break;
+        case 'BUFFER' :
+            N = argsCb.call( this ).pop();
+            val = SNOBOL.str.encode( SNOBOL.str.repeat( ' ', N ) );
+            if ( label ) {
+              this.symbols[ label ] = this.mem.length;
+              this.locations[ this.mem.length ] = label;
+            }
+            this.mem.push.apply( this.mem, val );
+            break;
+        case 'LHERE':
+            val = this.mem.length;
+            this.mem.push( this.ip + 1 );
+            this.locations[ val ] = this.ip + 1;
+            this.symbols[ label ] = val;
+        case 'PROC':
+        default:
+            if ( label && macro !== 'EQU' ) {
+                val = this.mem.length;
+                this.mem.push( this.ip );
+                this.locations[ val ] = this.ip;
+                this.symbols[ label ] = val;
+            }
         }
     }
+    console.log('ok1');
 
-    do {
-        if ( tbd.length === 4 ) {
-            for ( var i = 0; i < tbd.length; i++ ) {
-                console.log( this.program[ tbd[i] ].map( function ( x ) { return x.toString() } ) );
-            }
-            process.exit();
+    for ( this.ip = 0; this.ip < program.length; this.ip++ ) {
+        statement = program[ this.ip ];
+        label     = statement[ 0 ];
+        macro     = statement[ 1 ];
+        argsCb    = statement[ 2 ];
+        if ( macro === 'EQU' ) {
+            this.symbols[ label ] = argsCb.call( this ).pop();
+            this.locations[ this.symbols[ label ] ] = this.ip;  // XXX overwriting here?
         }
-        console.log( tbd.length );
-        tbd = tbd.filter( function ( i ) {
-            var statement = this.program[ i ],
-                label     = statement[ 0 ],
-                macro     = statement[ 1 ],
-                argsCb    = statement[ 2 ],
-                args, rv;
+    }
+    console.log('ok2');
 
-            this.symbols[ label ] = this.mem.length;
+    for ( this.ip = 0; this.ip < program.length; this.ip++ ) {
+        statement = program[ this.ip ];
+        label     = statement[ 0 ];
+        macro     = statement[ 1 ];
+        argsCb    = statement[ 2 ];
+        switch ( macro ) {
+        case 'DESCR':
+            val = this.d( this.symbols[ label ] );
+            val.update.apply( val, argsCb.call( this ) );
+            break;
+        case 'SPEC':
+            val = this.s( this.symbols[ label ] );
+            args = argsCb.call( this );
+            if ( typeof args[0] === 'string' ) {
+                ptr = this.mem.length;
+                this.mem = this.mem.concat( SNOBOL.str.encode( args[0] ) );
+                args[0] = ptr;
+            }
+            val.update.apply( val, args );
+            break;
+        }
+    }
+    console.log('ok3');
 
-            try {
-                args = argsCb.call( this );
-            } catch ( e ) {
-                // We'll need to try again.
-                delete this.symbols[ label ];
-                return true;
-            }
-            rv = SNOBOL.sil[ macro ].apply( this, args );
-            if ( label !== null ) {
-                this.symbols[ label ] = rv;
-            }
-            return false;
-        }, this );
-    } while ( tbd.length > 0 );
+    /*
+    for ( this.ip = 0; this.ip < program.length; this.ip++ ) {
+        statement = program[ this.ip ];
+        label     = statement[ 0 ];
+        macro     = statement[ 1 ];
+        argsCb    = statement[ 2 ];
+        if ( [ 'COPY', 'DESCR', 'SPEC', 'EQU', 'BUFFER', 'ARRAY', 'FORMAT', 'STRING', 'LHERE', 'PROC' ].indexOf( macro ) === -1 ) {
+            SNOBOL.sil[ macro ].apply( this, argsCb.call( this ) );
+        }
+    }
+    console.log('ok4');
+    */
 
     this.ip = 0;
     while ( this.ip >= 0 && this.ip < program.length ) {
@@ -142,7 +170,19 @@ SNOBOL.VM.prototype.run = function ( program ) {
         label     = statement[ 0 ];
         macro     = statement[ 1 ];
         argsCb    = statement[ 2 ];
-        if ( !isDataAssemblyMacro( macro ) ) {
+        if ( [
+            'COPY',   'DESCR', 'SPEC', 'EQU',
+            'BUFFER', 'ARRAY', 'FORMAT',
+            'STRING', 'LHERE', 'PROC'
+        ].indexOf( macro ) === -1 ) {
+            if ( SNOBOL.DEBUG ) {
+                console.log( '[%s] [%s] %s(%s)',
+                    SNOBOL.str.pad( '' + this.ip, 4 ),
+                    SNOBOL.str.pad( label || '', 6 ),
+                    macro,
+                    getArgs( argsCb )
+                );
+            }
             SNOBOL.sil[ macro ].apply( this, argsCb.call( this ) );
         }
 
@@ -152,6 +192,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
             this.ip++;
         }
     }
+    console.log( 'ip: %s ; program length: %s', this.ip, program.length );
+    console.log('ok5');
 
     return !( this.ip < 0 );
 };

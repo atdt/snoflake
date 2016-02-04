@@ -45,6 +45,15 @@ SNOBOL.programSymbols = {
     // STACK   : 2002 * D,
     // OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
     // STSIZE  : 1000,   // ditto
+
+    STNOSZ       : 8,     // Length of statement number field
+    OBSIZ        : 256,   // Number of bin headers
+    SPDLSZ       : 1000,  // Descriptors of pattern stack
+    STSIZE       : 1000,  // Descriptors of interpreter stack
+    ARRLEN       : 20,    // Limit on length of array print image
+    CARDSZ       : 80,    // Width of compiler input
+    SEQSIZ       : 8,     // Width of sequence field
+    DSTSZ        : 16,    // Space for left and right numbering
 };
 
 // See section 4.1 (Characters) in S4D58

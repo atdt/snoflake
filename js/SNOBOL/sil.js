@@ -1046,7 +1046,7 @@ sil.ENDEX = function ( $DESCR ) {
     // end execution of SNOBOL4 run
     var I = this.d( $DESCR ).addr;
 
-    return I === 0;
+    throw new SNOBOL.ExitSignal( I );
 };
 
 //     ENFILE is used to write an end-of-file on  (close)  the
@@ -1759,6 +1759,9 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
 //      LOC  OP
 sil.LHERE = function () {
     // define location here
+    var ptr = this.mem.length;
+    this.mem.push( this.ip );
+    return ptr;
 };
 
 //     LINK is used to link to an external function.  A2 is  a
@@ -3016,12 +3019,13 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         if ( N !== undefined && $LOCs[ N ] !== undefined ) {
             this.jmp( $LOCs[ N - 1 ] );
         } else {
-            this.jmp( retLoc + 1 );
+            this.ip = retLoc + 1;
         }
     } );
 
     sil.PUSH.call( this, $DESCRs.reverse() );
 
+    console.log( $PROC );
     this.jmp( $PROC );
 };
 
@@ -3981,6 +3985,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         for ( t = 0; t < TABLE.length; t++ ) {
             if ( SNOBOL.match( TABLE[t][0], ch ) ) {
                 // if table specifies a value to PUT(), assign it to P
+                console.log( '"%s" matches %s', ch, TABLE[t][0] );
                 if ( TABLE[t][1] !== null ) {
                     P = this.$( TABLE[t][1] );
                 }
@@ -3989,6 +3994,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
+        console.log( '-> ' + TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
