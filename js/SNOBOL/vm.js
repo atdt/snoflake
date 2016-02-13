@@ -14,6 +14,26 @@ function getArgs( f ) {
         .replace( /(vm\.\$\("|"\))/g, '' );
 }
 
+var comments = ( function () {
+    var fs = require( 'fs' );
+    var cmnts = {};
+    var i = 0;
+    fs.readFileSync(
+        '/Users/ori/git/snoflake/external/v311.sil',
+        'utf-8'
+    ).toString().split( '\n' ).forEach( function ( line ) {
+        if ( !/^\s*[A-Z]/.test( line ) ) {
+            return;
+        }
+        var m = /[A-Z][a-z].*/.exec( line );
+        if ( m ) {
+            cmnts[ i ] = m[0];
+        }
+        i++;
+    } );
+    return cmnts;
+} () );
+
 SNOBOL.D = 3;
 
 SNOBOL.ExitSignal = function ( code ) {
@@ -33,6 +53,14 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
         loc = this.$( loc );
     }
     if ( typeof loc === 'number' ) {
+        for ( var k in this.symbols ) {
+            if ( this.symbols[k] === loc ) {
+                if ( k === 'COMP7' ) {
+                    process.exit();
+                }
+                console.log( 'Jumping to %s', k );
+            }
+        }
         this.ip = this.locations[ loc ];
     }
 };
@@ -85,6 +113,9 @@ SNOBOL.VM.prototype.run = function ( program ) {
             val = this.alloc( N );
             if ( label ) {
                 this.symbols[ label ] = val;
+                if ( this.locations[ val ] !== undefined ) {
+                    throw new Error( label );
+                }
                 this.locations[ val ] = this.ip;
             }
             break;
@@ -93,6 +124,9 @@ SNOBOL.VM.prototype.run = function ( program ) {
             val = SNOBOL.str.encode( SNOBOL.str.repeat( ' ', N ) );
             if ( label ) {
               this.symbols[ label ] = this.mem.length;
+              if ( this.locations[ this.mem.length ] !== undefined ) {
+                  throw new Error( label );
+              }
               this.locations[ this.mem.length ] = label;
             }
             this.mem.push.apply( this.mem, val );
@@ -100,6 +134,9 @@ SNOBOL.VM.prototype.run = function ( program ) {
         case 'LHERE':
             val = this.mem.length;
             this.mem.push( this.ip + 1 );
+            if ( this.locations[ this.ip + 1 ] !== undefined ) {
+                throw new Error( label );
+            }
             this.locations[ val ] = this.ip + 1;
             this.symbols[ label ] = val;
         case 'PROC':
@@ -107,6 +144,9 @@ SNOBOL.VM.prototype.run = function ( program ) {
             if ( label && macro !== 'EQU' ) {
                 val = this.mem.length;
                 this.mem.push( this.ip );
+                if ( this.locations[ val ] !== undefined ) {
+                    throw new Error( label );
+                }
                 this.locations[ val ] = this.ip;
                 this.symbols[ label ] = val;
             }
@@ -121,7 +161,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
         argsCb    = statement[ 2 ];
         if ( macro === 'EQU' ) {
             this.symbols[ label ] = argsCb.call( this ).pop();
-            this.locations[ this.symbols[ label ] ] = this.ip;  // XXX overwriting here?
+            // if ( this.locations[ this.symbols[ label ] ] !== undefined ) {
+            //     throw new Error(label);
+            // }
+            // this.locations[ this.symbols[ label ] ] = this.ip;  // XXX overwriting here?
         }
     }
     console.log('ok2');
@@ -163,6 +206,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
     console.log('ok4');
     */
 
+    var comment;
     this.ip = 0;
     while ( this.ip >= 0 && this.ip < program.length ) {
         loc       = this.ip;
@@ -176,6 +220,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
             'STRING', 'LHERE', 'PROC'
         ].indexOf( macro ) === -1 ) {
             if ( SNOBOL.DEBUG ) {
+                comment = comments[ this.ip ] || '';
+                if ( comment ) {
+                    console.log( comment + ':' );
+                }
                 console.log( '[%s] [%s] %s(%s)',
                     SNOBOL.str.pad( '' + this.ip, 4 ),
                     SNOBOL.str.pad( label || '', 6 ),

@@ -23,10 +23,17 @@ SNOBOL.str = {
 
     pad: pad,
 
-    encode: function ( s ) {
+    encode: function ( s, maxLen ) {
         var encoded = s.toString().split( '' ).map( function ( ch ) {
             return ch.charCodeAt( 0 );
         } );
+
+        if ( maxLen ) {
+            while ( maxLen && maxLen % 3 ) {
+                maxLen--;
+            }
+            encoded = encoded.slice( 0, maxLen );
+        }
 
         // Strings are stored in whole descriptors, which have a width of
         // three UTF-16 code points, so pad to the nearest multiple of three
@@ -103,7 +110,8 @@ SNOBOL.str = {
                 }
                 if ( /^\//.test( template ) ) break;
 
-                throw new Error('FAIL: "' + template + '" (orig: "' + orig + '")');
+                // throw new Error('FAIL: "' + template + '" (orig: "' + orig + '")');
+                break; // XXX
         }
 
         control = formatted.charAt( 0 );

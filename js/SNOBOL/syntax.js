@@ -36,8 +36,8 @@ SNOBOL.programSymbols = {
     UNITO   : 6,
     UNITP   : 7,
 
-    MLINK   : -1,
-    PARMS   : -1,
+    MLINK   : 1,
+    PARMS   : 1,
 
     // Misc
     // OSTACK  : 2000 * D,
@@ -51,7 +51,7 @@ SNOBOL.programSymbols = {
     SPDLSZ       : 1000,  // Descriptors of pattern stack
     STSIZE       : 1000,  // Descriptors of interpreter stack
     ARRLEN       : 20,    // Limit on length of array print image
-    CARDSZ       : 80,    // Width of compiler input
+    CARDSZ       : 1024,    // Width of compiler input
     SEQSIZ       : 8,     // Width of sequence field
     DSTSZ        : 16,    // Space for left and right numbering
 };
@@ -70,7 +70,7 @@ var characterClasses = {
     DOLLAR       : /\$/,
     DOT          : /\./,
     DQUOTE       : /"/,
-    EOS          : /;/,
+    EOS          : /\n/,
     EQUAL        : /=/,
     FGOSYM       : /F/,
     KEYSYM       : /&/,
@@ -230,6 +230,7 @@ SNOBOL.syntaxTables = {
     ],
 
     SNABTB: [
+        // [ 'COMMA', null, 'CONTIN' ],
         [ 'FGOSYM', null, 'STOP' ],
         [ 'SGOSYM', null, 'STOPSH' ],
         [ 'ELSE', null, 'ERROR' ]

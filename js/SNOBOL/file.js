@@ -1,8 +1,10 @@
 "use strict";
 
+var assert = require('assert');
 var SNOBOL = require( './base' ),
     fs = require( 'fs' ),
     buf = fs.readFileSync( '/Users/ori/git/snoflake/tmp/hello.sno' );
+
 
 SNOBOL.File = function ( vm, unitNum ) {
     if ( vm.units[unitNum] !== undefined ) {
@@ -24,11 +26,31 @@ SNOBOL.File.prototype.seek = function ( pos ) {
     this.pos = pos;
 };
 
-SNOBOL.File.prototype.read = function ( length ) { 
-    var slice = buf.slice( this.pos, this.pos + length );
-    this.pos += length;
+function last( ar ) {
 
-    return slice.toString( 'utf-8' );
+
+}
+SNOBOL.File.prototype.read = function ( length ) { 
+    var encodedBuf = SNOBOL.str.encode( buf ),
+        retBuf = [], ch;
+
+    while ( encodedBuf.slice( encodedBuf.length - 1 ) === 0 ) {
+        encodedBuf.pop();
+    }
+
+    if ( length > 3 && length % 3 ) {
+        length = length - ( length % 3 );
+    }
+
+    while ( retBuf.length < length && this.pos < encodedBuf.length ) {
+        ch = encodedBuf[ this.pos++ ];
+        retBuf.push( ch );
+        if ( ch === 10 ) {
+            break;
+        }
+    }
+
+    return retBuf;
 };
 
 SNOBOL.File.prototype.write = function ( a /* ... */ ) {

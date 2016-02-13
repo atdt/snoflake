@@ -149,12 +149,16 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
         },
         set: function ( s ) {
             var start = this.addr + this.offset,
-                raw = SNOBOL.str.encode( s ),
-                args = [ start, raw.length ].concat( raw );
+                raw = SNOBOL.str.encode( s ), ch;
 
-            assert( raw.length <= this.length );
-            this.vm.mem.splice.apply( this.vm.mem, args );
-            this.length = raw.length;
+            for ( var i = start; i < start + this.length; i++ ) {
+                ch = raw.length ? raw.shift() : 0;
+                this.vm.mem[ i ] = ch;
+            }
+            console.log( 'raw.length: %d; this.length: %d; this.offset: %d', raw.length, this.length, this.offset );
+            // assert( raw.length <= this.length );
+            // this.vm.mem.splice.apply( this.vm.mem, args );
+            // this.length = raw.length;
         }
     }
 } );

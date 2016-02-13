@@ -244,21 +244,36 @@ sil.ADDSIB = function ( $DESCR1, $DESCR2 ) {
 // 3.  See also ADDSIB and INSERT.
 sil.ADDSON = function ( $DESCR1, $DESCR2 ) {
     // add son to tree node
-    var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        father = this.resolve( 'FATHER' ),
-        lson = this.resolve( 'LSON' ),
-        rsib = this.resolve( 'RSIB' ),
-        code = this.resolve( 'CODE' ),
-        a1_lson = this.d( DESCR1.addr + lson ),
-        a1_code = this.d( DESCR1.addr + code ),
-        a2_father = this.d( DESCR2.addr + father ),
-        a2_rsib = this.d( DESCR2.addr + rsib );
+    var LSON   = this.$( 'LSON' ),
+        CODE   = this.$( 'CODE' ),
+        FATHER = this.$( 'FATHER' ),
+        RSIB   = this.$( 'RSIB' ),
 
-    a2_father.read( DESCR1 );
-    a2_rsib.read( a1_lson );
-    a1_lson.read( DESCR2 );
-    a1_code.value++;
+        DESCR1 = this.d( $DESCR1 ),
+        A1 = DESCR1.addr,
+        F1 = DESCR1.flags,
+        V1 = DESCR1.value,
+
+        DESCR2 = this.d( $DESCR2 ),
+        A2 = DESCR2.addr,
+        F2 = DESCR2.flags,
+        V2 = DESCR2.value,
+
+        DESCR_A1_LSON = this.d( A1 + LSON ),
+        A3 = DESCR_A1_LSON.addr,
+        F3 = DESCR_A1_LSON.flags,
+        V3 = DESCR_A1_LSON.value,
+
+        DESCR_A1_CODE = this.d( A1 + CODE ),
+        I = DESCR_A1_CODE.value,
+
+        DESCR_A2_FATHER = this.d( A2 + FATHER ),
+        DESCR_A2_RSIB = this.d( A2 + RSIB );
+
+    DESCR_A2_FATHER.update( A1, F1, V1 );
+    DESCR_A2_RSIB.update( A3, F3, V3 );
+    DESCR_A1_LSON.update( A2, F2, V2 );
+    DESCR_A1_CODE.value = I + 1;
 };
 
 //     ADJUST  is  used  to  adjust  the  address  field  of a
@@ -1024,7 +1039,6 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // bly.
 sil.END = function () {
     // end assembly
-    console.log( 'END' );
 };
 
 //     ENDEX is used to terminate execution of a SNOBOL4  run.
@@ -1473,7 +1487,7 @@ sil.INCRV = function ( $DESCR, N ) {
 // 1.  See also ENDEX.
 sil.INIT = function () {
     // initialize SNOBOL4 run
-    var dynamicStorageSize = D * 5000,
+    var dynamicStorageSize = D * 10000,
 
         FRSGPT = this.d( 'FRSGPT' ),
         HDSGPT = this.d( 'HDSGPT' ),
@@ -3025,7 +3039,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
 
     sil.PUSH.call( this, $DESCRs.reverse() );
 
-    console.log( $PROC );
     this.jmp( $PROC );
 };
 
@@ -3801,7 +3814,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     var DESCR2 = this.d( $DESCR2 ),
         A = DESCR2.addr,
         I = this.d( A + D ).addr,
-        A2 = this.d( A + ( 2 * D ) ).addr,
+        A2 = this.d( A + D + D ).addr,
         M = this.d( A2 ).value,
         fmt = this.mem.slice( A2 + ( 4 * D ), A2 + ( 4 * D + M ) ),
 
@@ -3814,7 +3827,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
     console.log( SNOBOL.str.format( fmt, item ) );
-    this.d( $DESCR1 ).addr = 1;
+    this.d( $DESCR1 ).addr = 0;
 };
 
 //     STREAD is used to read a string.  The string C1...CL is
@@ -3840,11 +3853,18 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 // truncation  or  reading  of  additional  records  should  be
 // followed.
 // 2.  See also STPRNT.
+var timesCalled = 0;
 sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     // string read
+    timesCalled++;
+
     var SPEC = this.s( $SPEC ),
+        A = SPEC.addr,
+        L = SPEC.length,
+
         DESCR = this.d( $DESCR ),
         I = DESCR.addr,
+
         file = new SNOBOL.File( this, I ),
         words, raw;
 
@@ -3853,12 +3873,20 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( ERROR );
     }
 
-    words = file.read( SPEC.length );
+    var i;
+    words = file.read( L );
+    for ( i = 0; i < words.length; i++ ) {
+        this.mem[ SPEC.addr + SPEC.length + SPEC.offset + i ] = words[ i ];
+        console.log( 'added: ' + String.fromCharCode( words[i] ) );
+    }
+    SPEC.length = words.length;
+    // console.log( JSON.stringify( words ) );
+    // console.log( words.length );
+    // SPEC.specified = words;
+
     if ( !words.length ) {
         return this.jmp( EOF );
     }
-
-    SPEC.specified = words;
 
     return this.jmp( SLOC );
 };
@@ -4351,8 +4379,17 @@ sil.UNLOAD = function ( $SPEC ) {
 //               +-------+-------+-------+-------+-------+
 //      SPEC     |   A                       O       L   |
 //               +---------------------------------------+
+//               +-------+-------+-------+
+//      A+O      |  C1      ...     CL   |
+//               +-----------------------+
+//      Data Altered by VARID:
+//               +-------+-------+-------+
+//      DESCR    |   K               K   |
+//               +-----------------------+
 sil.VARID = function ( $DESCR, $SPEC ) {
     // compute variable identification numbers
+    assert( this.$( 'SIZLIM' ) === 0x7FFFFFFF );
+    assert( this.$( 'OBSIZ' ) === 256 );
     var DESCR = this.d( $DESCR ),
         SPEC = this.s( $SPEC ),
         str = SPEC.specified,

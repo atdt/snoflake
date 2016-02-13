@@ -63,6 +63,9 @@ SNOBOL.VM.prototype.define = function ( symbol, value ) {
 }
 
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
+    if ( key === 'COMP7' ) {
+        return null;
+    }
     if ( this.symbols[ key ] === undefined ) {
         throw new ReferenceError( key );
     }
