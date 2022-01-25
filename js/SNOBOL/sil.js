@@ -4017,7 +4017,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         default:
             // GOTO
             assert( TI in SNOBOL.syntaxTables );
-            TABLE = this.resolve( TI );
+            TABLE = SNOBOL.syntaxTables[ TI ];
         }
     }
 };

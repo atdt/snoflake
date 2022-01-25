@@ -37,6 +37,11 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
         args = argsCallback.call( this ),
         returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
+    // XXX: Added to fix SNOBOL.options.watch undefined issue below
+    if ( !SNOBOL.options ) {
+        SNOBOL.options = [];
+    }
+
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
         var value = this.symbols[ variable ];
         var ref = ' ';
