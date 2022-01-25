@@ -1,5 +1,4 @@
-var buster = require( 'buster' ),
-    assert = buster.assert,
+var assert = require('assert'),
     slice = Array.prototype.slice,
     SNOBOL = require( '../js/SNOBOL' );
 
@@ -8,16 +7,19 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 } );
 
 function reset() {}
+
 // 
 // Scaffolds
 //
 
 function mkargs( vm ) {
     // Construct a deferred operands object
-    var args = [].slice.call( arguments, 1 ),
-        resolve = vm.resolve.bind( vm );
+    var args = [].slice.call( arguments, 1 );
+
     return function () { // stub
-        return args.map( resolve );
+        return args.map( function ( arg ) {
+            return typeof arg === 'number' ? arg : vm.resolve( arg );
+        } );
     };
 }
 
@@ -26,69 +28,81 @@ function mkargs( vm ) {
 // Test Cases
 //
 
-buster.testCase( 'Assembly Control Macros', {
-    setUp: function () {
+describe( 'Assembly Control Macros', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    COPY: function () { // stub
+    } );
+
+    it( 'COPY', function () { // stub
         assert( sil.COPY );
-    },
-    END: function () { // stub
+    } );
+
+    it( 'END', function () { // stub
         assert( sil.END );
-    },
-    EQU: function () {
+    } );
+
+    it( 'EQU', function () {
         assert( sil.EQU );
         this.vm.run( [ [ 'A', 'EQU', mkargs( this.vm, 12 ) ] ] );
-        assert.equals( this.vm.resolve('A'), 12 );
-    },
-    LHERE: function () {
+        assert.equal( this.vm.resolve('A'), 12 );
+    } );
+
+    it( 'LHERE', function () {
         assert( sil.LHERE );
         this.vm.run( [
             [ 'A', 'LHERE', mkargs( this.vm ) ],
             [ 'B', 'LHERE', mkargs( this.vm ) ]
         ] );
-        assert.equals( this.vm.resolve('A'), 0 );
-        assert.equals( this.vm.resolve('B'), 1 );
-    },
-    TITLE: function () { // stub
+        assert.equal( this.vm.resolve('A'), 0 );
+        assert.equal( this.vm.resolve('B'), 1 );
+    } );
+
+    it( 'TITLE', function () { // stub
         assert( sil.TITLE );
-    }
+    } );
 } );
 
-buster.testCase( 'Macros that Assemble Data', {
-    setUp: function () {
+describe( 'Macros that Assemble Data', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    ARRAY: function () { // stub
+    } );
+
+    it( 'ARRAY', function () { // stub
         assert( sil.ARRAY );
-    },
+    } );
+
     /*
-    BUFFER: function () {
+    it( 'BUFFER', function () {
         var ptr = sil.BUFFER.call( this.vm, 4 );
-        assert.equals( this.vm.s( ptr ).specified, '    ' );
-    },
+        assert.equal( this.vm.s( ptr ).specified, '    ' );
+    } );
+
     */
-    DESCR: function () { // stub
+    it( 'DESCR', function () { // stub
         assert( sil.DESCR );
-    },
-    FORMAT: function () { // stub
+    } );
+
+    it( 'FORMAT', function () { // stub
         assert( sil.FORMAT );
-    },
-    SPEC: function () { // stub
+    } );
+
+    it( 'SPEC', function () { // stub
         assert( sil.SPEC );
-    },
-    STRING: function () {
+    } );
+
+    it( 'STRING', function () {
         var ptr = sil.STRING.call( this.vm, 'Bananaphone' );
-        assert.equals( this.vm.s( ptr ).specified, 'Bananaphone' );
-    }
+        assert.equal( this.vm.s( ptr ).specified, 'Bananaphone' );
+    } );
 } );
 
 
-buster.testCase( 'Branch Macros', {
-    setUp: function () {
+describe( 'Branch Macros', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    BRANCH: function () {
+    } );
+
+    it( 'BRANCH', function () {
         assert( sil.BRANCH );
         this.vm.run( [
             [ null, 'BRANCH', mkargs( this.vm, 'A' ) ] ,
@@ -98,22 +112,25 @@ buster.testCase( 'Branch Macros', {
             [ 'X',  'EQU',    mkargs( this.vm, 33) ] ,
             [ null, 'END',    mkargs( this.vm  ) ]
         ] );
-        assert.equals( this.vm.resolve('X'), 22 );
-    },
-    BRANIC: function () { // stub
+        assert.equal( this.vm.resolve('X'), 22 );
+    } );
+
+    it( 'BRANIC', function () { // stub
         assert( sil.BRANIC );
-    },
-    SELBRA: function () { // stub
+    } );
+
+    it( 'SELBRA', function () { // stub
         assert( sil.SELBRA );
-    }
+    } );
 } );
 
 
-buster.testCase( 'Comparison Macros', {
-    setUp: function () {
+describe( 'Comparison Macros', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    ACOMP: function () {
+    } );
+
+    it( 'ACOMP', function () {
         var a = this.vm.d(), b = this.vm.d();
         a.addr = 123;
         b.addr = 456;
@@ -126,100 +143,117 @@ buster.testCase( 'Comparison Macros', {
             [ 'A',   'EQU',     mkargs( this.vm, 222 ) ],
             [ null,  'END',     mkargs( this.vm ) ]
         ] );
-        assert.equals( this.vm.resolve('A'), 111 );
-    },
-    ACOMPC: function () { // stub
+        assert.equal( this.vm.resolve('A'), 111 );
+    } );
+
+    it( 'ACOMPC', function () { // stub
         var DESCR = this.vm.d(),
             N = 4,
             NELOC = 1,
             EQLOC = 2;
 
-        this.vm.assign( 'NELOC', NELOC );
-        this.vm.assign( 'EQLOC', NELOC );
+        this.vm.define( 'NELOC', NELOC );
+        this.vm.define( 'EQLOC', NELOC );
 
         this.vm.run( [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
         ] );
-        assert.equals( this.vm.instructionPointer, NELOC );
+        assert.equal( this.vm.instructionPointer, NELOC );
 
         DESCR.addr = N;
         this.vm.run( [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
         ] );
-        assert.equals( this.vm.instructionPointer, EQLOC );
-    },
-    AEQL: function () { // stub
+        assert.equal( this.vm.instructionPointer, EQLOC );
+    } );
+
+    it( 'AEQL', function () { // stub
         assert( sil.AEQL ); 
-    },
-    AEQLC: function () { // stub
+    } );
+
+    it( 'AEQLC', function () { // stub
         assert( sil.AEQLC ); 
-    },
-    AEQLIC: function () { // stub
+    } );
+
+    it( 'AEQLIC', function () { // stub
         assert( sil.AEQLIC ); 
-    },
-    CHKVAL: function () { // stub
+    } );
+
+    it( 'CHKVAL', function () { // stub
         assert( sil.CHKVAL ); 
-    },
-    DEQL: function () { // stub
+    } );
+
+    it( 'DEQL', function () { // stub
         assert( sil.DEQL ); 
-    },
-    LCOMP: function () { // stub
+    } );
+
+    it( 'LCOMP', function () { // stub
         assert( sil.LCOMP ); 
-    },
-    LEQLC: function () { // stub
+    } );
+
+    it( 'LEQLC', function () { // stub
         assert( sil.LEQLC ); 
-    },
-    LEXCMP: function () {
-        var SPEC1 = this.vm.puts( 'abd' ),
-            SPEC2 = this.vm.puts( 'abc' ),
+    } );
+
+    it( 'LEXCMP', function () {
+        var SPEC1 = this.vm.s( sil.STRING.call( this.vm, 'abd' ) ),
+            SPEC2 = this.vm.s( sil.STRING.call( this.vm, 'abc' ) ),
             GTLOC = 1,
             EQLOC = 2,
             LTLOC = 3;
 
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equals( this.vm.instructionPointer, GTLOC );
+        assert.equal( this.vm.instructionPointer, GTLOC );
 
         SPEC1.specified = 'abc';
         SPEC2.specified = 'abc';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equals( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, EQLOC );
 
         SPEC1.specified = 'abc';
         SPEC2.specified = 'abd';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equals( this.vm.instructionPointer, LTLOC );
-    },
-    RCOMP: function () { // stub
+        assert.equal( this.vm.instructionPointer, LTLOC );
+    } );
+
+    it( 'RCOMP', function () { // stub
         assert( sil.RCOMP ); 
-    },
-    TESTF: function () { // stub
+    } );
+
+    it( 'TESTF', function () { // stub
         assert( sil.TESTF ); 
-    },
-    TESTFI: function () { // stub
+    } );
+
+    it( 'TESTFI', function () { // stub
         assert( sil.TESTFI ); 
-    },
-    VCMPIC: function () { // stub
+    } );
+
+    it( 'VCMPIC', function () { // stub
         assert( sil.VCMPIC ); 
-    },
-    VEQL: function () { // stub
+    } );
+
+    it( 'VEQL', function () { // stub
         assert( sil.VEQL ); 
-    },
-    VEQLC: function () { // stub
+    } );
+
+    it( 'VEQLC', function () { // stub
         assert( sil.VEQLC ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Management', {
-    setUp: function () {
+describe( 'Macros that Relate to Recursive Procedures and Stack Management', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
         this.vm.reset();
         sil.ISTACK.call( this.vm );
-    },
-    ISTACK: function () { // stub
+    } );
+
+    it( 'ISTACK', function () { // stub
         assert( sil.ISTACK ); 
-    },
-    POP: function () {
+    } );
+
+    it( 'POP', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
             d3 = this.vm.d(),
@@ -229,35 +263,41 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         d1.update( 2, 4, 6 );
         d2.update( 3, 5, 7 );
 
-        assert.equals( this.vm.CSTACK.addr, cur );
+        assert.equal( this.vm.CSTACK.addr, cur );
         sil.PUSH.call( this.vm, [ d1, d2 ] );
-        assert.equals( this.vm.CSTACK.addr, cur + d1.width + d2.width );
+        assert.equal( this.vm.CSTACK.addr, cur + d1.width + d2.width );
         sil.POP.call( this.vm, [ d3, d4 ] );
-        assert.equals( this.vm.CSTACK.addr, cur );
-        // assert.equals( d1.raw(), d4.raw() );
-        // assert.equals( d2.raw(), d3.raw() );
-    },
-    PROC: function () { // stub
+        assert.equal( this.vm.CSTACK.addr, cur );
+        // assert.equal( d1.raw(), d4.raw() );
+        // assert.equal( d2.raw(), d3.raw() );
+    } );
+
+    it( 'PROC', function () { // stub
         assert( sil.PROC ); 
-    },
-    PSTACK: function () { // stub
+    } );
+
+    it( 'PSTACK', function () { // stub
         assert( sil.PSTACK ); 
-    },
-    PUSH: function () {
+    } );
+
+    it( 'PUSH', function () {
         var cur = this.vm.CSTACK.addr,
             d = this.vm.d();
         d.update( 4, 1, 6 );
         sil.PUSH.call( this.vm, d );
         d = this.vm.d( cur );
-        assert.equals( d.raw(), [ 4, 1, 6 ] );
-    },
-    RCALL: function () { // stub
+        assert.equal( d.raw(), [ 4, 1, 6 ] );
+    } );
+
+    it( 'RCALL', function () { // stub
         assert( sil.RCALL ); 
-    },
-    RRTURN: function () { // stub
+    } );
+
+    it( 'RRTURN', function () { // stub
         assert( sil.RRTURN ); 
-    },
-    SPOP: function () {
+    } );
+
+    it( 'SPOP', function () {
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
             s3 = this.vm.s(),
@@ -266,15 +306,16 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
 
         s1.update( 0, 2, 4, 6, 8, 10 );
         s2.update( 1, 3, 5, 7, 9, 11 );
-        assert.equals( this.vm.CSTACK.addr, cur );
+        assert.equal( this.vm.CSTACK.addr, cur );
         sil.SPUSH.call( this.vm, [ s1, s2 ] );
-        assert.equals( this.vm.CSTACK.addr, cur + s1.width + s2.width );
+        assert.equal( this.vm.CSTACK.addr, cur + s1.width + s2.width );
         sil.SPOP.call( this.vm, [ s3, s4 ] );
-        assert.equals( this.vm.CSTACK.addr, cur );
-        assert.equals( s1.raw(), s4.raw() );
-        assert.equals( s2.raw(), s3.raw() );
-    },
-    SPUSH: function () {
+        assert.equal( this.vm.CSTACK.addr, cur );
+        assert.equal( s1.raw(), s4.raw() );
+        assert.equal( s2.raw(), s3.raw() );
+    } );
+
+    it( 'SPUSH', function () {
         var cur = this.vm.CSTACK.addr,
             s = this.vm.s();
 
@@ -282,420 +323,518 @@ buster.testCase( 'Macros that Relate to Recursive Procedures and Stack Managemen
         sil.SPUSH.call( this.vm, s );
 
         s = this.vm.s( cur );
-        assert.equals( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
-    }
+        assert.equal( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
+    } );
 } );
 
 
-buster.testCase( 'Macros that Move and Set Descriptors', {
-    setUp: function () {
+describe( 'Macros that Move and Set Descriptors', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    GETD: function () { // stub
+    } );
+
+    it( 'GETD', function () { // stub
         assert( sil.GETD ); 
-    },
-    GETDC: function () { // stub
+    } );
+
+    it( 'GETDC', function () { // stub
         assert( sil.GETDC ); 
-    },
-    MOVBLK: function () { // stub
+    } );
+
+    it( 'MOVBLK', function () { // stub
         assert( sil.MOVBLK ); 
-    },
-    MOVD: function () { // stub
+    } );
+
+    it( 'MOVD', function () { // stub
         assert( sil.MOVD ); 
-    },
-    MOVDIC: function () { // stub
+    } );
+
+    it( 'MOVDIC', function () { // stub
         assert( sil.MOVDIC ); 
-    },
-    POP: function () { // stub
+    } );
+
+    it( 'POP', function () { // stub
         assert( sil.POP ); 
-    },
-    PUSH: function () { // stub
+    } );
+
+    it( 'PUSH', function () { // stub
         assert( sil.PUSH ); 
-    },
-    PUTD: function () { // stub
+    } );
+
+    it( 'PUTD', function () { // stub
         assert( sil.PUTD ); 
-    },
-    PUTDC: function () { // stub
+    } );
+
+    it( 'PUTDC', function () { // stub
         assert( sil.PUTDC ); 
-    },
-    ZERBLK: function () { // stub
-        assert( sil.ZERBLK ); }
+    } );
+
+    it( 'ZERBLK', function () { // stub
+        assert( sil.ZERBLK );
+    } );
 } );
 
 
-buster.testCase( 'Macros that Modify Address Fields of Descriptors', {
-    setUp: function () {
+describe( 'Macros that Modify Address Fields of Descriptors', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    ADJUST: function () { // stub
+    } );
+
+    it( 'ADJUST', function () { // stub
         assert( sil.ADJUST ); 
-    },
-    BKSIZE: function () { // stub
+    } );
+
+    it( 'BKSIZE', function () { // stub
         assert( sil.BKSIZE ); 
-    },
-    DECRA: function () { // stub
+    } );
+
+    it( 'DECRA', function () { // stub
         assert( sil.DECRA ); 
-    },
-    GETAC: function () { // stub
+    } );
+
+    it( 'GETAC', function () { // stub
         assert( sil.GETAC ); 
-    },
-    GETLG: function () { // stub
+    } );
+
+    it( 'GETLG', function () { // stub
         assert( sil.GETLG ); 
-    },
-    GETLTH: function () {
+    } );
+
+    it( 'GETLTH', function () {
         var s = 'Beauty is truth, truth beauty',
             d1 = this.vm.d(),
             d2 = this.vm.d();
         d2.addr = s.length;
         len = SNOBOL.str.encode( s ).length + 9;
         sil.GETLTH.call( this.vm, d1, d2 );
-        assert.equals( d1.addr, len );
-    },
-    GETSIZ: function () { // stub
+        assert.equal( d1.addr, len );
+    } );
+
+    it( 'GETSIZ', function () { // stub
         assert( sil.GETSIZ ); 
-    },
-    INCRA: function () { // stub
+    } );
+
+    it( 'INCRA', function () { // stub
         assert( sil.INCRA ); 
-    },
-    MOVA: function () { // stub
+    } );
+
+    it( 'MOVA', function () { // stub
         assert( sil.MOVA ); 
-    },
-    PUTAC: function () { // stub
+    } );
+
+    it( 'PUTAC', function () { // stub
         assert( sil.PUTAC ); 
-    },
-    SETAC: function () { // stub
+    } );
+
+    it( 'SETAC', function () { // stub
         assert( sil.SETAC ); 
-    },
-    SETAV: function () { // stub
+    } );
+
+    it( 'SETAV', function () { // stub
         assert( sil.SETAV ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Modify Value Fields of Descriptors', {
-    setUp: function () {
+describe( 'Macros that Modify Value Fields of Descriptors', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    INCRV: function () { // stub
+    } );
+
+    it( 'INCRV', function () { // stub
         assert( sil.INCRV ); 
-    },
-    MOVV: function () { // stub
+    } );
+
+    it( 'MOVV', function () { // stub
         assert( sil.MOVV ); 
-    },
-    PUTVC: function () { // stub
+    } );
+
+    it( 'PUTVC', function () { // stub
         assert( sil.PUTVC ); 
-    },
-    SETSIZ: function () { // stub
+    } );
+
+    it( 'SETSIZ', function () { // stub
         assert( sil.SETSIZ ); 
-    },
-    SETVA: function () { // stub
+    } );
+
+    it( 'SETVA', function () { // stub
         assert( sil.SETVA ); 
-    },
-    SETVC: function () { // stub
+    } );
+
+    it( 'SETVC', function () { // stub
         assert( sil.SETVC ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Modify Flag Fields of Descriptors', {
-    setUp: function () {
+describe( 'Macros that Modify Flag Fields of Descriptors', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    RESETF: function () { // stub
+    } );
+
+    it( 'RESETF', function () { // stub
         assert( sil.RESETF ); 
-    },
-    RSETFI: function () { // stub
+    } );
+
+    it( 'RSETFI', function () { // stub
         assert( sil.RSETFI ); 
-    },
-    SETF: function () { // stub
+    } );
+
+    it( 'SETF', function () { // stub
         assert( sil.SETF ); 
-    },
-    SETFI: function () { // stub
+    } );
+
+    it( 'SETFI', function () { // stub
         assert( sil.SETFI ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Perform Integer Arithmetic on Address Fields', {
-    setUp: function () {
+describe( 'Macros that Perform Integer Arithmetic on Address Fields', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    DECRA: function () { // stub
+    } );
+
+    it( 'DECRA', function () { // stub
         assert( sil.DECRA ); 
-    },
-    DIVIDE: function () { // stub
+    } );
+
+    it( 'DIVIDE', function () { // stub
         assert( sil.DIVIDE ); 
-    },
-    EXPINT: function () { // stub
+    } );
+
+    it( 'EXPINT', function () { // stub
         assert( sil.EXPINT ); 
-    },
-    INCRA: function () { // stub
+    } );
+
+    it( 'INCRA', function () { // stub
         assert( sil.INCRA ); 
-    },
-    MNSINT: function () { // stub
+    } );
+
+    it( 'MNSINT', function () { // stub
         assert( sil.MNSINT ); 
-    },
-    MULT: function () { // stub
+    } );
+
+    it( 'MULT', function () { // stub
         assert( sil.MULT ); 
-    },
-    MULTC: function () { // stub
+    } );
+
+    it( 'MULTC', function () { // stub
         assert( sil.MULTC ); 
-    },
-    SUBTRT: function () { // stub
+    } );
+
+    it( 'SUBTRT', function () { // stub
         assert( sil.SUBTRT ); 
-    },
-    SUM: function () { // stub
+    } );
+
+    it( 'SUM', function () { // stub
         assert( sil.SUM ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Deal with Real Numbers', {
-    setUp: function () {
+describe( 'Macros that Deal with Real Numbers', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    ADREAL: function () { // stub
+    } );
+
+    it( 'ADREAL', function () { // stub
         assert( sil.ADREAL ); 
-    },
-    DVREAL: function () { // stub
+    } );
+
+    it( 'DVREAL', function () { // stub
         assert( sil.DVREAL ); 
-    },
-    EXREAL: function () { // stub
+    } );
+
+    it( 'EXREAL', function () { // stub
         assert( sil.EXREAL ); 
-    },
-    INTRL: function () { // stub
+    } );
+
+    it( 'INTRL', function () { // stub
         assert( sil.INTRL ); 
-    },
-    MNREAL: function () { // stub
+    } );
+
+    it( 'MNREAL', function () { // stub
         assert( sil.MNREAL ); 
-    },
-    MPREAL: function () { // stub
+    } );
+
+    it( 'MPREAL', function () { // stub
         assert( sil.MPREAL ); 
-    },
-    RCOMP: function () { // stub
+    } );
+
+    it( 'RCOMP', function () { // stub
         assert( sil.RCOMP ); 
-    },
-    REALST: function () { // stub
+    } );
+
+    it( 'REALST', function () { // stub
         assert( sil.REALST ); 
-    },
-    RLINT: function () { // stub
+    } );
+
+    it( 'RLINT', function () { // stub
         assert( sil.RLINT ); 
-    },
-    SBREAL: function () { // stub
+    } );
+
+    it( 'SBREAL', function () { // stub
         assert( sil.SBREAL ); 
-    },
-    SPREAL: function () {
-        var d = this.vm.d(), s = this.vm.puts( '-0.5' );
-        this.vm.assign( 'R', 9 );
+    } );
+
+    it( 'SPREAL', function () {
+        var d = this.vm.d(), s = sil.STRING.call( this.vm, '-0.5' );
+        this.vm.define( 'R', 9 );
         sil.SPREAL.call( this.vm, d, s, 1, 2 );
-        assert.equals( d.raddr, -0.5 );
-        assert.equals( d.value, 9 );
-    }
+        assert.equal( d.raddr, -0.5 );
+        assert.equal( d.value, 9 );
+    } );
 } );
 
-buster.testCase( 'Macros that Move Specifiers', {
-    setUp: function () {
+describe( 'Macros that Move Specifiers', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    GETSPC: function () { // stub
+    } );
+
+    it( 'GETSPC', function () { // stub
         assert( sil.GETSPC ); 
-    },
-    PUTSPC: function () { // stub
+    } );
+
+    it( 'PUTSPC', function () { // stub
         assert( sil.PUTSPC ); 
-    },
-    SETSP: function () { // stub
+    } );
+
+    it( 'SETSP', function () { // stub
         assert( sil.SETSP ); 
-    },
-    SPOP: function () { // stub
+    } );
+
+    it( 'SPOP', function () { // stub
         assert( sil.SPOP ); 
-    },
-    SPUSH: function () { // stub
+    } );
+
+    it( 'SPUSH', function () { // stub
         assert( sil.SPUSH ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Operate on Specifiers', {
-    setUp: function () {
+describe( 'Macros that Operate on Specifiers', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    ADDLG: function () { // stub
+    } );
+
+    it( 'ADDLG', function () { // stub
         assert( sil.ADDLG ); 
-    },
-    APDSP: function () {
-        var s1 = this.vm.puts( 'supercalifragilistic' ),
-            s2 = this.vm.puts( 'expialidocious' );
+    } );
+
+    it( 'APDSP', function () {
+        var s1 = this.vm.s( sil.STRING.call( this.vm, 'supercalifragilistic' ) ),
+            s2 = this.vm.s( sil.STRING.call( this.vm, 'expialidocious' ) );
         sil.APDSP.call( this.vm, s1, s2 );
-        assert.equals( s1.specified, 'supercalifragilisticexpialidocious' );
-    },
-    FSHRTN: function () { // stub
+        assert.equal( s1.specified, 'supercalifragilisticexpialidocious' );
+    } );
+
+    it( 'FSHRTN', function () { // stub
         assert( sil.FSHRTN ); 
-    },
-    GETBAL: function () { // stub
+    } );
+
+    it( 'GETBAL', function () { // stub
         assert( sil.GETBAL ); 
-    },
-    INTSPC: function () { // stub
+    } );
+
+    it( 'INTSPC', function () { // stub
         assert( sil.INTSPC ); 
-    },
-    LOCSP: function () { // stub
+    } );
+
+    it( 'LOCSP', function () { // stub
         assert( sil.LOCSP ); 
-    },
-    PUTLG: function () { // stub
+    } );
+
+    it( 'PUTLG', function () { // stub
         assert( sil.PUTLG ); 
-    },
-    REMSP: function () { // stub
+    } );
+
+    it( 'REMSP', function () { // stub
         assert( sil.REMSP ); 
-    },
-    SETLC: function () { // stub
+    } );
+
+    it( 'SETLC', function () { // stub
         assert( sil.SETLC ); 
-    },
-    SHORTN: function () { // stub
+    } );
+
+    it( 'SHORTN', function () { // stub
         assert( sil.SHORTN ); 
-    },
-    STREAM: function () { // stub
+    } );
+
+    it( 'STREAM', function () { // stub
 
         var s1 = this.vm.s(),
-            s2 = this.vm.puts( '43.2   ' ),
+            s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) ),
             stype = this.vm.d();
 
-        this.vm.assign( 'STYPE', stype );
-        this.vm.assign( 'FLITYP', 6 );
+        this.vm.define( 'STYPE', stype );
+        this.vm.define( 'FLITYP', 6 );
 
-        sil.STREAM.call( this.vm, s1, s2, this.vm.resolve( 'INTGTB' ), -1, -2, -3 );
+        sil.STREAM.call( this.vm, s1, s2, SNOBOL.syntaxTables.INTGTB, -1, -2, -3 );
 
-        assert.equals( s1.specified, '43.2' );
-    },
-    SUBSP: function () { // stub
+        assert.equal( s1.specified, '43.2' );
+    } );
+
+    it( 'SUBSP', function () { // stub
         assert( sil.SUBSP ); 
-    },
-    TRIMSP: function () {
+    } );
+
+    it( 'TRIMSP', function () {
         var s1 = this.vm.s(),
-            s2 = this.vm.puts( 'abcd   ' );
+            s2 = this.vm.s( sil.STRING.call( this.vm, 'abcd   ' ) );
 
         sil.TRIMSP.call( this.vm, s1, s2 );
-        assert.equals( s2.specified, 'abcd   ' );
-        assert.equals( s1.specified, 'abcd' );
+        assert.equal( s2.specified, 'abcd   ' );
+        assert.equal( s1.specified, 'abcd' );
 
         s2.specified = 'efgh';
         sil.TRIMSP.call( this.vm, s1, s2 );
-        assert.equals( s1.specified, 'efgh' );
-    }
+        assert.equal( s1.specified, 'efgh' );
+    } );
 } );
 
 
-buster.testCase( 'Macros that Operate on Syntax Tables', {
-    setUp: function () {
+describe( 'Macros that Operate on Syntax Tables', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    CLERTB: function () { // stub
+    } );
+
+    it( 'CLERTB', function () { // stub
         assert( sil.CLERTB );
-    },
-    PLUGTB: function () { // stub
+    } );
+
+    it( 'PLUGTB', function () { // stub
         assert( sil.PLUGTB );
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Construct Pattern Nodes', {
-    setUp: function () {
+describe( 'Macros that Construct Pattern Nodes', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    CPYPAT: function () { // stub
+    } );
+
+    it( 'CPYPAT', function () { // stub
         assert( sil.CPYPAT ); 
-    },
-    MAKNOD: function () { // stub
+    } );
+
+    it( 'MAKNOD', function () { // stub
         assert( sil.MAKNOD ); 
-    }
+    } );
 } );
 
-buster.testCase( 'Macros that Operate on Tree Nodes', {
-    setUp: function () {
+describe( 'Macros that Operate on Tree Nodes', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    ADDSIB: function () { // stub
+    } );
+
+    it( 'ADDSIB', function () { // stub
         assert( sil.ADDSIB ); 
-    },
-    ADDSON: function () { // stub
+    } );
+
+    it( 'ADDSON', function () { // stub
         assert( sil.ADDSON ); 
-    },
-    INSERT: function () { // stub
+    } );
+
+    it( 'INSERT', function () { // stub
         assert( sil.INSERT ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Input and Output Macros', {
-    setUp: function () {
+describe( 'Input and Output Macros', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    BKSPCE: function () { // stub
+    } );
+
+    it( 'BKSPCE', function () { // stub
         assert( sil.BKSPCE ); 
-    },
-    ENFILE: function () { // stub
+    } );
+
+    it( 'ENFILE', function () { // stub
         assert( sil.ENFILE ); 
-    },
-    FORMAT: function () {
-        var s = sil.FORMAT.call( this.vm, 'test' );
-        assert.equals( s, 'test' );
-    },
-    OUTPUT: function () { // stub
+    } );
+
+    it( 'FORMAT', function () {
+        var ptr = sil.FORMAT.call( this.vm, 'test' );
+        assert.equal( this.vm.s( ptr ).specified, 'test' );
+    } );
+
+    it( 'OUTPUT', function () { // stub
         assert( sil.OUTPUT ); 
-    },
-    REWIND: function () { // stub
+    } );
+
+    it( 'REWIND', function () { // stub
         assert( sil.REWIND ); 
-    },
-    STPRNT: function () { // stub
+    } );
+
+    it( 'STPRNT', function () { // stub
         assert( sil.STPRNT ); 
-    },
-    STREAD: function () { // stub
+    } );
+
+    it( 'STREAD', function () { // stub
         assert( sil.STREAD ); 
-    }
+    } );
 } );
 
 
-buster.testCase( 'Macros that Depend on Operating System Facilities', {
-    setUp: function () {
+describe( 'Macros that Depend on Operating System Facilities', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    DATE: function () { // stub
+    } );
+
+    it( 'DATE', function () { // stub
         assert( sil.DATE ); 
-    },
-    ENDEX: function () { // stub
+    } );
+
+    it( 'ENDEX', function () { // stub
         assert( sil.ENDEX ); 
-    },
-    INIT: function () { // stub
+    } );
+
+    it( 'INIT', function () { // stub
         assert( sil.INIT ); 
-    },
-    LINK: function () { // stub
+    } );
+
+    it( 'LINK', function () { // stub
         assert( sil.LINK ); 
-    },
-    LOAD: function () { // stub
+    } );
+
+    it( 'LOAD', function () { // stub
         assert( sil.LOAD ); 
-    },
-    MSTIME: function () { // stub
+    } );
+
+    it( 'MSTIME', function () { // stub
         assert( sil.MSTIME ); 
-    },
-    UNLOAD: function () { // stub
+    } );
+
+    it( 'UNLOAD', function () { // stub
         assert( sil.UNLOAD ); 
-    }
+    } );
 } );
 
 
 
-buster.testCase( 'Miscellaneous Macros', {
-    setUp: function () {
+describe( 'Miscellaneous Macros', function () {
+    beforeEach( function () {
         this.vm = new SNOBOL.VM();
-    },
-    LINKOR: function () { // stub
+        // XXX: Needed for VARID test. Move to generic setup?
+        this.vm.run( [ [ 'OBSIZ', 'EQU', mkargs( this.vm, 256 ) ] ] );
+    } );
+
+    it( 'LINKOR', function () { // stub
         assert( sil.LINKOR ); 
-    },
-    LOCAPT: function () { // stub
+    } );
+
+    it( 'LOCAPT', function () { // stub
         assert( sil.LOCAPT ); 
-    },
-    LOCAPV: function () { // stub
+    } );
+
+    it( 'LOCAPV', function () { // stub
         assert( sil.LOCAPV ); 
-    },
-    LVALUE: function () {
+    } );
+
+    it( 'LVALUE', function () {
         var values = [ 42, 28, 96, 14, 2, 77 ],
             least = Math.min.apply( Math, values ),
             DESCR1 = this.vm.d(),
@@ -713,26 +852,31 @@ buster.testCase( 'Miscellaneous Macros', {
         }
 
         sil.LVALUE.call( this.vm, DESCR1, DESCR2 );
-        assert.equals( DESCR1.addr, least );
-    },
-    ORDVST: function () { // stub
+        assert.equal( DESCR1.addr, least );
+    } );
+
+    it( 'ORDVST', function () { // stub
         assert( sil.ORDVST ); 
-    },
-    RPLACE: function () { // stub
+    } );
+
+    it( 'RPLACE', function () { // stub
         assert( sil.RPLACE ); 
-    },
-    SPCINT: function () { // stub
+    } );
+
+    it( 'SPCINT', function () { // stub
         assert( sil.SPCINT ); 
-    },
-    TOP: function () { // stub
+    } );
+
+    it( 'TOP', function () { // stub
         assert( sil.TOP ); 
-    },
-    VARID: function () {
+    } );
+
+    it( 'VARID', function () {
         var d = this.vm.d(),
-            s = this.vm.puts( 'hello' );
+            s = this.vm.s( sil.STRING.call( this.vm, 'hello' ) );
 
         sil.VARID.call( this.vm, d, s );
-        assert.equals( d.addr, 226 );
-        assert.equals( d.value, 3679317 );
-    }
+        assert.equal( d.addr, 226 );
+        assert.equal( d.value, 3679317 );
+    } );
 } );

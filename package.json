@@ -5,14 +5,16 @@
   "version": "0.0.1",
   "engine": "node >= 0.8.0",
   "main": "./js/snobol.js",
-  "repository" : { "type":"git", "url":"http://github.com/atdt/snoflake" },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/atdt/snoflake"
+  },
   "devDependencies": {
-    "pegjs":      ">= 0.9",
-    "buster":     ">= 0.6",
-    "uglify-js":  "1.2.6",
-    "jshint":     "~ 2.5"
+    "mocha": "^9.2.0",
+    "pegjs": "0.9",
+    "uglify-js": "1.2.6"
   },
   "scripts": {
-    "test": "buster-test"
+    "test": "mocha"
   }
 }
