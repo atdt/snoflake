@@ -14,11 +14,12 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 
 function mkargs( vm ) {
     // Construct a deferred operands object
-    var args = [].slice.call( arguments, 1 ),
-        resolve = vm.resolve.bind( vm );
-        
-    return function () {
-        return args.map( resolve );
+    var args = [].slice.call( arguments, 1 );
+
+    return function () { // stub
+        return args.map( function ( arg ) {
+            return typeof arg === 'number' ? arg : vm.resolve( arg );
+        } );
     };
 }
 
@@ -85,22 +86,14 @@ describe( 'Typed Getters', function () {
     } );
 } );
 
-describe( 'Name definement and Resolution', function () {
+describe( 'Symbol Binding', function () {
     beforeEach( function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'single', function () {
+    it( 'simple', function () {
         this.vm.define( 'answer', 42 );
         assert.equal( this.vm.resolve('answer'), 42 );
-    } );
-
-    it( 'multi', function () {
-        var len = Object.keys( this.vm.symbols ).length;
-        this.vm.define( { e: Math.E, pi: Math.PI } );
-        assert.equal( Object.keys( this.vm.symbols ).length, len + 2 );
-        assert.equal( this.vm.resolve('e'), Math.E );
-        assert.equal( this.vm.resolve('pi'), Math.PI );
     } );
 
     it( 'missing', function () {
@@ -110,12 +103,6 @@ describe( 'Name definement and Resolution', function () {
         }, 'ReferenceError' );
     } );
 
-    it( 'reset', function () {
-        this.vm.define( { e: Math.E, pi: Math.PI } );
-        this.vm.reset();
-        // Resetting should clear all keys
-        assert.equal( Object.keys( this.vm.symbols ).length, 0 );
-    } );
 } );
 
 describe( 'Memory Management', function () {
@@ -128,15 +115,6 @@ describe( 'Memory Management', function () {
             ptr = vm.alloc( 3 );
         assert.deepEqual( vm.mem.length, ptr + 3 );
         assert.deepEqual( vm.mem.slice(-3), [ 0, 0, 0 ] );
-    } );
-
-    it( 'sizlim', function () {
-        var SIZLIM = this.vm.$( 'SIZLIM' ),
-            DESCR = this.vm.d();
-
-        DESCR.value = SIZLIM;
-        assert.equal( DESCR.value, SIZLIM );
-        DESCR.value++;
     } );
 } );
 
@@ -359,7 +337,9 @@ describe( 'Execution Environment', function () {
     } );
 
     it( 'exec', function () {
-        this.vm.define( { a: 5, b: 8 } );
+        this.vm.define( 'a', 5 );
+        this.vm.define( 'b', 8 );
+        this.vm.define( 'result', 0 );
         this.vm.exec( 'result', 'SUM', mkargs( this.vm, 'a', 'b' ) );
         assert.equal( this.vm.resolve('result'), 13 );
     } );

@@ -311,8 +311,8 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         assert.equal( this.vm.CSTACK.addr, cur + s1.width + s2.width );
         sil.SPOP.call( this.vm, [ s3, s4 ] );
         assert.equal( this.vm.CSTACK.addr, cur );
-        assert.equal( s1.raw(), s4.raw() );
-        assert.equal( s2.raw(), s3.raw() );
+        assert.deepEqual( s1.raw(), s4.raw() );
+        assert.deepEqual( s2.raw(), s3.raw() );
     } );
 
     it( 'SPUSH', function () {
@@ -323,7 +323,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         sil.SPUSH.call( this.vm, s );
 
         s = this.vm.s( cur );
-        assert.equal( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
+        assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 5, 6 ] );
     } );
 } );
 
