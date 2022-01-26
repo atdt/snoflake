@@ -410,8 +410,13 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         assert.equal( d1.addr, len );
     } );
 
-    it( 'GETSIZ', function () { // stub
-        assert( sil.GETSIZ ); 
+    it( 'GETSIZ', function () {
+        var d_indirect = sil.DESCR.call( this.vm, 123, 456, 789 ),
+            d1 = sil.DESCR.call( this.vm, 0, 0, 0 ),
+            d2 = sil.DESCR.call( this.vm, d_indirect, 0, 0 );
+
+        sil.GETSIZ.call( this.vm, d1, d2 );
+        assert.equal( this.vm.d( d1 ).addr, this.vm.d( d_indirect ).value );
     } );
 
     it( 'INCRA', function () { // stub
