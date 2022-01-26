@@ -420,7 +420,9 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
     } );
 
     it( 'INCRA', function () { // stub
-        assert( sil.INCRA ); 
+        var d = sil.DESCR.call( this.vm, 123, 0, 0 );
+        sil.INCRA.call( this.vm, d, 10 );
+        assert.equal( this.vm.d( d ).addr, 133 );
     } );
 
     it( 'MOVA', function () { // stub
