@@ -81,9 +81,9 @@ VM.prototype.reset = function () {
     this.callbacks = [];
     this.units = {};
 
-    this.symbols.CSTACK = this.d().ptr;
-    this.symbols.OSTACK = this.d().ptr;
-    this.symbols.STACK  = this.alloc( 1000 );
+    this.define( 'CSTACK', this.d().ptr );
+    this.define( 'OSTACK', this.d().ptr );
+    this.define( 'STACK', this.alloc( 3 * 1000 ) );
 
     this.CSTACK = this.d( this.symbols.CSTACK );
     this.OSTACK = this.d( this.symbols.OSTACK );
