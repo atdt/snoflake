@@ -48,11 +48,15 @@ VM.prototype.setInt  = typedSetter( i32 );
 VM.prototype.getReal = typedGetter( f32 );
 VM.prototype.setReal = typedSetter( f32 );
 
-VM.prototype.alloc = function ( size ) {
+VM.prototype.alloc = function ( size, value ) {
     var i, ptr = this.mem.length;
 
+    if ( typeof value === 'undefined' ) {
+        value = 0;
+    }
+
     for ( i = 0; i < size; i++ ) {
-        this.mem.push( 0 );
+        this.mem.push( value );
     }
 
     return ptr;
