@@ -399,7 +399,7 @@ sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
         DESCR_indirect = this.d( A1 + N1 ),
         A2 = DESCR_indirect.addr;
 
-    // assert( N1 === 0 );
+    assert( N1 === 0 );
     assert( N2 >= 0 );
     if ( A2 === N2 ) {
         this.jmp( EQLOC );
@@ -604,6 +604,10 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 
         SPEC = this.s( $SPEC ),
         L = SPEC.length;
+
+    assert( I1 > 0 );
+    assert( I2 > 0 );
+    assert( L > 0 );
 
     if ( L + I2 > I1 ) {
         this.jmp( GTLOC );
@@ -3347,13 +3351,13 @@ sil.SELBRA = function ( $DESCR, LOCI ) {
         I = DESCR.addr,
         N;
 
-    if ( !Array.isArray( LOCI ) ) {
-        LOCI = [ LOCI ];
-    }
+    assert( Array.isArray( LOCI ) );
 
     N = LOCI.length;
     assert( I >= 1 && I <= N + 1 )
-    this.jmp( LOCI[ I - 1 ] );
+    if ( I !== N + 1 ) {
+        this.jmp( LOCI[ I - 1 ] );
+    }
 };
 
 //     SETAC is used to set the address field of a  descriptor
