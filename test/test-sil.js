@@ -697,8 +697,16 @@ describe( 'Macros that Move Specifiers', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'GETSPC', function () { // stub
-        assert( sil.GETSPC ); 
+    it( 'GETSPC', function () {
+        const N = 10;
+        var d = this.vm.d();
+        this.vm.alloc( 32 );
+        var s = this.vm.s();
+        s.update( 11, 22, 33, 44, 55 );
+        this.vm.alloc( 32 );
+        sil.GETSPC.call( this.vm, s, d, N );
+        var s_indirect = this.vm.s( s.addr + N );
+        assert.deepEqual( s.raw(), s_indirect.raw() );
     } );
 
     it( 'PUTSPC', function () { // stub
