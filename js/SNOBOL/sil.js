@@ -3396,7 +3396,9 @@ sil.SETAV = function ( $DESCR1, $DESCR2 ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    DESCR1.addr = DESCR2.val;
+    DESCR1.addr = DESCR2.value;
+    DESCR1.flags = 0;
+    DESCR1.value = 0;
 };
 
 //     SETF is used to set (add) a flag in the flag  field  of

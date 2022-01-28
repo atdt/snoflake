@@ -469,8 +469,12 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         assert( sil.GETAC ); 
     } );
 
-    it( 'GETLG', function () { // stub
-        assert( sil.GETLG ); 
+    it( 'GETLG', function () {
+        var s = this.vm.s(),
+            d = this.vm.d();
+        s.length = 1212;
+        sil.GETLG.call( this.vm, d, s );
+        assert.deepEqual( d.raw(), [ s.length, 0, 0 ] );
     } );
 
     it( 'GETLTH', function () {
@@ -492,26 +496,47 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         assert.equal( this.vm.d( d1 ).addr, this.vm.d( d_indirect ).value );
     } );
 
-    it( 'INCRA', function () { // stub
+    it( 'INCRA', function () {
         var d = sil.DESCR.call( this.vm, 123, 0, 0 );
         sil.INCRA.call( this.vm, d, 10 );
         assert.equal( this.vm.d( d ).addr, 133 );
     } );
 
-    it( 'MOVA', function () { // stub
-        assert( sil.MOVA ); 
+    it( 'MOVA', function () {
+        var d1 = this.vm.d(),
+            d2 = this.vm.d();
+        d2.addr = 999;
+        sil.MOVA.call( this.vm, d1, d2 );
+        assert.equal( d1.addr, d2.addr );
     } );
 
-    it( 'PUTAC', function () { // stub
-        assert( sil.PUTAC ); 
+    it( 'PUTAC', function () {
+        var d1 = this.vm.d(),
+            d2 = this.vm.d();
+        this.vm.alloc( 100 );
+        d1.addr = 15;
+        var d3 = this.vm.d(),
+            N = d3.ptr - d1.addr;
+        d2.addr = 789;
+        sil.PUTAC.call( this.vm, d1, N, d2 );
+        assert.equal( d3.addr, d2.addr );
     } );
 
-    it( 'SETAC', function () { // stub
-        assert( sil.SETAC ); 
+    it( 'SETAC', function () {
+        var d = this.vm.d(),
+            N = 123;
+        d.update( 5, 6, 7 );
+        sil.SETAC.call( this.vm, d, N );
+        assert.equal( d.addr, N );
     } );
 
-    it( 'SETAV', function () { // stub
-        assert( sil.SETAV ); 
+    it( 'SETAV', function () {
+        var d1 = this.vm.d(),
+            d2 = this.vm.d();
+        d1.update( 1, 2, 3 );
+        d2.update( 5, 6, 7 );
+        sil.SETAV.call( this.vm, d1, d2 );
+        assert.deepEqual( d1.raw(), [ d2.value, 0, 0 ] );
     } );
 } );
 
