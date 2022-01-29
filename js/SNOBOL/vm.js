@@ -53,25 +53,12 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
     }
 
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
-        var value = this.symbols[ variable ];
-        var ref = ' ';
-        if ( value !== undefined ) {
-            if ( /PTR$/.test( variable ) ) {
-                value = this.d( value ).addr;
-                ref = '*';
-            }
-            if ( /SP/.test( variable ) ) {
-                value = ref + this.s( value ).toString()
-            } else {
-                value = ref + this.d( value ).toString()
-            }
-
-            console.log(
-                '→ %s: %s',
-                SNOBOL.str.pad( variable, 6, 'left' ),
-                value
-            );
-        }
+        var value = this.symbols.hasOwnProperty ( variable ) ? this.symbols[ variable ] : 'UNDEF';
+        console.log(
+            '→ %s: %s',
+            SNOBOL.str.pad( variable, 6, 'left' ),
+            value
+        );
     }, this );
 
     if ( typeof returnValue === 'boolean' ) {
