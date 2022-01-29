@@ -18,6 +18,7 @@ SNOBOL.programSymbols = {
     AMPST   : '&',
     COLSTR  : ': ',
     QTSTR   : "'",
+    MDATA   : 0,
 
     // PARMS
     ALPHSZ  : ALPHA.length,
@@ -286,6 +287,8 @@ SNOBOL.syntaxTables = {
     ]
 };
 
+/*
 Object.keys( SNOBOL.syntaxTables ).forEach( function ( tableName ) {
     SNOBOL.programSymbols[ tableName ] = SNOBOL.syntaxTables[ tableName ];
 } );
+*/

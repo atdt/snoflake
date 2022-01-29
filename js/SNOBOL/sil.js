@@ -941,9 +941,9 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 1.  Any or all of A, F, and V may be omitted.  A zero  field
 // must   be  assembled  when  the  corresponding  argument  is
 // omitted.
-sil.DESCR = function ( A, F, V ) {
+sil.DESCR = function ( label, A, F, V ) {
     // assemble descriptor
-    var DESCR = this.d();
+    var DESCR = this.d( label );
 
     DESCR.addr  = A || 0;
     DESCR.flags = F || 0;
@@ -1762,6 +1762,7 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
 // is equivalent to
 //      LOC  OP
 sil.LHERE = function () {
+    return this.instructionPointer + 1;
     // define location here
 };
 
@@ -2402,7 +2403,11 @@ sil.MSTIME = function ( $DESCR ) {
     var DESCR = this.d( $DESCR ),
         timeCurrent = new Date();
 
-    DESCR.addr = timeCurrent - this.timeStart;
+    // DESCR.addr = this.timeStart - timeCurrent;
+    // XXX: For now, just set to 0.
+    DESCR.addr = 0;
+    DESCR.flags = 0;
+    DESCR.value = 0;
 };
 
 //     MULT is used to multiply two integers.  In the event of
@@ -3622,9 +3627,9 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +-------+-------+-------+-------+-------+
 //      LOC      |   A       F       V       O       L   |
 //               +---------------------------------------+
-sil.SPEC = function ( A, F, V, O, L ) {
+sil.SPEC = function ( label, A, F, V, O, L ) {
     // assemble specifier
-    var SPEC = this.s(), ptr;
+    var SPEC = this.s( label ), ptr;
 
     if ( typeof A === 'string' ) {
         ptr = this.mem.length;
@@ -3838,6 +3843,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 // 2.  See also STPRNT.
 sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     // string read
+    throw new Error('STREAD');
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
         I = DESCR.addr,
@@ -4158,18 +4164,16 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // sum addresses
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        A = DESCR2.addr, F = DESCR2.addr, V = DESCR2.addr,
+        DESCR3 = this.d( $DESCR3 );
 
-        DESCR3 = this.d( $DESCR3 ),
-        I = DESCR3.addr;
-
-    if ( !SNOBOL.isInt32( A + I ) ) {
+    // XXX: Should F and V be set regardless of A+I overflows?
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
+    if ( !SNOBOL.isInt32( DESCR2.addr + DESCR3.addr ) ) {
         return this.jmp( FLOC );
     }
-
-    DESCR1.addr  = A + I;
-    DESCR1.flags = F;
-    DESCR1.value = V;
+    DESCR1.addr = DESCR2.addr + DESCR3.addr;
+    return this.jmp( SLOC );
 };
 
 //     TESTF is used to test a flag field for the presence  of
@@ -4345,6 +4349,29 @@ sil.UNLOAD = function ( $SPEC ) {
 //               +-------+-------+-------+-------+-------+
 //      SPEC     |   A                       O       L   |
 //               +---------------------------------------+
+//               +-------+-------+-------+
+//      A+O      |  C1      ...     CL   |
+//               +-----------------------+
+//
+//      Data Altered by VARID:
+//               +-------+-------+-------+
+//      DESCR    |   K               M   |
+//               +-----------------------+
+//
+// Programming Notes:
+// 1.  K is used to select one of a number of chains in variable
+// storage. The K are address offsets that must fall on
+// descriptor boundaries.
+// 2.  M is used to order variables (string structures) within a
+// chain. See ORDVST.
+// 3.  The values of K and M should have as little correlation
+// as possible with the characters C1...CL, since the
+// "randomness" of the results determines the efficiency of
+// variable access.
+// 4.  One simple algorithm consists of multiplying the first
+// part of C1...CL by the last part, and separating the central
+// portion of the result into K and M.
+// 5. L is always greater than zero.
 sil.VARID = function ( $DESCR, $SPEC ) {
     // compute variable identification numbers
     var DESCR = this.d( $DESCR ),
@@ -4463,11 +4490,11 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     // zero block
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        idx;
+        ptr = DESCR1.addr,
+        last = DESCR1.addr + DESCR2.addr;
 
-    assert( DESCR2.addr >= 0 );
-    for ( idx = 0; idx < DESCR2.addr; idx++ ) {
-        this.mem[ DESCR1.addr + idx ] = 0;
+    for ( var ptr = DESCR1.addr; ptr <= DESCR1.addr + DESCR2.addr; ptr += D ) {
+        this.d( ptr ).update( 0, 0, 0 );
     }
 };
 

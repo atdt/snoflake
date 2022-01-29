@@ -4,14 +4,10 @@ var SNOBOL = require( './base' ),
     assert = require( 'assert' );
 
 var DATA_ASSEMBLY_MACROS = [
-    'ARRAY', 'BUFFER', 'DESCR',
+    'ARRAY', 'BUFFER', /* 'DESCR', */
     'EQU',   'FORMAT', 'LHERE',
-    'REAL',  'SPEC',   'STRING'
+    'REAL',  /* 'SPEC',  */ 'STRING', 'PROC'
 ];
-
-function isDataAssemblyMacro( macro ) {
-    return DATA_ASSEMBLY_MACROS.indexOf( macro ) !== -1;
-}
 
 function getArgs( f ) {
     return f
@@ -35,7 +31,14 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
 
     var currentInstruction = this.instructionPointer,
         args = argsCallback.call( this ),
-        returnValue = SNOBOL.sil[ macro ].apply( this, args );
+        returnValue;
+
+    if ( macro === 'DESCR' || macro === 'SPEC' ) {
+        // Because some DESCR and SPEC are recursively defined, we have to
+        // treat them specially and provide them with their label.
+        args.unshift( label );
+    }
+    returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
     // XXX: Added to fix SNOBOL.options.watch undefined issue below
     if ( !SNOBOL.options ) {
@@ -69,12 +72,11 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
     }
 
     if ( label !== null ) {
-        assert( this.symbols[ label ] !== undefined );
+        // assert( typeof this.symbols[ label ] !== 'undefined', `${label} already defined as ${this.symbols[label]}` );
         if ( returnValue === undefined ) {
             returnValue = currentInstruction;
         }
-        var ptr = this.symbols[ label ];
-        this.mem[ ptr ] = returnValue;
+        this.symbols[ label ] = returnValue;
     }
 };
 
@@ -89,7 +91,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label;
+    var args, status, loc, stmt, label, rv;
 
     var sym;
     var i;
@@ -98,10 +100,18 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.define( sym, SNOBOL.programSymbols[sym] );
     }
 
-    for ( i = 0; i < program.length; i++ ) {
-        sym = program[ i ][ 0 ];
-        if ( sym !== null ) {
-            this.define( sym, i );
+    for (
+        this.instructionPointer = 0;
+        this.instructionPointer < program.length;
+        this.instructionPointer++
+    ) {
+        stmt = program[ this.instructionPointer ];
+        if ( stmt[ 1 ] === 'DESCR' ) {
+            this.define( stmt[0], this.d().ptr );
+        } else if ( stmt[ 1 ] === 'SPEC' ) {
+            this.define( stmt[0], this.s().ptr );
+        } else if ( DATA_ASSEMBLY_MACROS.indexOf( stmt[ 1 ] ) === -1 && stmt[ 0 ] !== null ) {
+            this.define( stmt[0], this.instructionPointer );
         }
     }
 
@@ -121,7 +131,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         loc = this.instructionPointer;
         args = program[ loc ];
-        status = this.exec.apply( this, args );
+        if ( args[1] === 'DESCR' || args[1] === 'SPEC' ) {
+        } else {
+            status = this.exec.apply( this, args );
+        }
 
         // If the procedure did not update the instruction pointer,
         // fall through to the next instruction.
