@@ -2967,17 +2967,6 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // 9.  See also SELBRA.
 sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
-    //     RCALL  is  used  to perform a recursive call.  DESCR is
-    // the descriptor that receives the value upon return from  the
-    // call. PROC is the procedure being called.  DESCR1,...,DESCRN
-    // are  descriptors  whose   values   are   passed   to   PROC.
-    // LOC1,...,LOCM  are  locations  to  transfer  to  upon return
-    // according to  the  return  exit  signaled.   The  old  stack
-    // pointer  (A0)  is  saved  on  the  stack,  the current stack
-    // pointer becomes the old stack pointer,  and  a  new  current
-    // stack  pointer  is generated as indicated.  The return loca-
-    // tion LOC is saved on the stack so that  the  return  can  be
-    // properly    made.     The    values    of    the   arguments
     var retLoc = this.instructionPointer,
         DESCR;
 
