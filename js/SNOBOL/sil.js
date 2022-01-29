@@ -9,6 +9,8 @@ var D = 3,
 
 var TIMER, sil = {};
 
+var titles = [];  // Seen titles. Used to prevent infinite loops.
+
 function stackPopper( dataType ) {
     return function ( ARGs ) {
         var src, dst, arg;
@@ -4253,6 +4255,10 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
 // perform no operation.
 sil.TITLE = function ( MSG ) {
     // title assembly listing
+    if ( titles.includes( MSG ) ) {
+        throw new Error( "Program loop detected." );
+    }
+    titles.push( MSG );
     if ( SNOBOL.DEBUG ) console.log( MSG );
 };
 
