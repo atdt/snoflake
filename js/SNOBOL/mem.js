@@ -64,13 +64,22 @@ VM.prototype.alloc = function ( size, value ) {
 
 SNOBOL.VM.prototype.define = function ( symbol, value ) {
     this.symbols[ symbol ] = this.mem.length;
-    this.mem.push( value );
+    if ( typeof value === 'number' ) {
+        this.mem.push( value );
+    } else if ( typeof value === 'string' ) {
+        for ( var i = 0; i < value.length; i++ ) {
+            this.mem.push( value.charCodeAt( i ) );
+        }
+    } else {
+        debugger;
+        throw new Error( 'Invalid type' );
+    }
 }
 
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
-    var ptr = this.symbols[ key ], val = this.mem[ ptr ];
+    var val = this.symbols[ key ];
 
-    if ( ptr === undefined || val === undefined ) {
+    if ( val === undefined ) {
         throw new ReferenceError( key );
     }
 
