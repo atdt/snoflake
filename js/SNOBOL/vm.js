@@ -103,9 +103,6 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.instructionPointer++
     ) {
         stmt = program[ this.instructionPointer ];
-        if ( !stmt[ 0 ] ) {
-            continue;
-        }
         if ( stmt[ 1 ] === 'DESCR' ) {
             this.define( stmt[0], this.d().ptr );
         } else if ( stmt[ 1 ] === 'SPEC' ) {
