@@ -2943,7 +2943,7 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // 3.  DESCR  sometimes  is  omitted.   In this case, any value
 // returned by RRTURN is  ignored  and  OP  should  perform  no
 // operation.
-// 4.  ( DESCR1,...,DESCRN)  sometimes  is entirely omitted.  In
+// 4.  (DESCR1,...,DESCRN)  sometimes  is entirely omitted.  In
 // this case N should be taken to be zero in  interpreting  the
 // figures.
 // 5.  Any  of  the locations LOC1,...,LOCM may be omitted.  As
@@ -3271,6 +3271,36 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 //               +-------+-------+-------+
 //      A+D      |  A0                   |
 //               +-----------------------+
+//               +-------+-------+-------+
+//      A+2D     |  LOC                  |
+//               +-----------------------+
+//               +-------+-------+-------+
+//      DESCR    |  A1      F1      V1   |
+//               +-----------------------+
+//      Data Altered by RRTURN:
+//               +-------+-------+-------+
+//      CSTACK   |   A                   |
+//               +-----------------------+
+//               +-------+-------+-------+
+//      OSTACK   |  A0                   |
+//               +-----------------------+
+//               +-------+-------+-------+
+//      DESCR1   |  A1      F1      V1   |
+//               +-----------------------+
+//      Return Code at LOC:
+//      LOC      OP         DESCR1
+//               BRANCH     LOC1
+//                 .
+//                 .
+//                 .
+//               BRANCH     LOCM
+//      LOC
+// Programming Notes:
+// 1.  RCALL and RRTURN are  used  in  combination,  and  their
+// relation  to  each  other  must  be thoroughly understood in
+// order to implement them correctly.
+// 2. DESCR may be omitted.  In  this  case, OP  should  not be
+// executed.
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
     var callback = this.callbacks.pop();
