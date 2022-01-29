@@ -18,7 +18,6 @@ SNOBOL.programSymbols = {
     AMPST   : '&',
     COLSTR  : ': ',
     QTSTR   : "'",
-    MDATA   : 0,
 
     // PARMS
     ALPHSZ  : ALPHA.length,
@@ -39,6 +38,7 @@ SNOBOL.programSymbols = {
 
     MLINK   : -1,
     PARMS   : -1,
+    MDATA   : -1,
 
     // Misc
     // OSTACK  : 2000 * D,
