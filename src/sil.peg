@@ -45,17 +45,17 @@ statement "statement"
     blank
     operands:operands
     blank?
-    comment1?
+    comment:comment1?
     '\n'
 {
-    return [ 'array', [ label, oper, operands ] ];
+    return [ 'array', [ label, oper, operands, comment ] ];
 }
 
 
 comment1 "trailing comment"
   = comment:[^\n]*
 {
-    return [ 'comment1', comment.join( '' ) ];
+    return [ 'string', comment.join( '' ).replace(/^[,\s]+/, '' ) ];
 }
 
 comment2 "multi-line comment"

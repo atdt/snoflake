@@ -4,9 +4,9 @@ var SNOBOL = require( './base' ),
     assert = require( 'assert' );
 
 var DATA_ASSEMBLY_MACROS = [
-    'ARRAY', 'BUFFER', /* 'DESCR', */
-    'EQU',   'FORMAT', 'LHERE',
-    'REAL',  /* 'SPEC',  */ 'STRING', 'PROC'
+    'ARRAY', 'BUFFER', 'DESCR',
+    'EQU', 'FORMAT', 'LHERE',
+    'REAL',  'SPEC',  'STRING', 'PROC'
 ];
 
 function getArgs( f ) {
@@ -18,14 +18,20 @@ function getArgs( f ) {
 
 SNOBOL.D = 3;
 
-SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
+SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
 
     if ( SNOBOL.DEBUG ) {
-        console.log( '[%s] [%s] %s(%s)',
+        if ( comment ) {
+            comment = '// ' + comment;
+        } else {
+            comment = '';
+        }
+        var code = ( macro + '(' + getArgs( argsCallback ) + ')' ).padEnd( 70, ' ' );
+        console.log( '[%s] [%s] %s %s',
             SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
             SNOBOL.str.pad( label || '', 6 ),
-            macro,
-            getArgs( argsCallback )
+            code,
+            comment
         );
     }
 
@@ -33,10 +39,11 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
         args = argsCallback.call( this ),
         returnValue;
 
+    this.currentLabel = label;
     if ( macro === 'DESCR' || macro === 'SPEC' ) {
         // Because some DESCR and SPEC are recursively defined, we have to
         // treat them specially and provide them with their label.
-        args.unshift( label );
+        // args.unshift( label );
     }
     returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
@@ -71,13 +78,16 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback ) {
         process.exit( returnValue );
     }
 
+    /*
     if ( label !== null ) {
-        // assert( typeof this.symbols[ label ] !== 'undefined', `${label} already defined as ${this.symbols[label]}` );
+        assert( !this.symbols.hasOwnProperty( label ), `${label} already defined as ${this.symbols[label]}; DESCR = ` + this.symbols['DESCR'] );
         if ( returnValue === undefined ) {
             returnValue = currentInstruction;
         }
-        this.symbols[ label ] = returnValue;
+        // this.symbols[ label ] = returnValue;
     }
+    */
+    return returnValue;
 };
 
 
@@ -91,7 +101,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label, rv;
+    var args, status, loc, stmt, label;
 
     var sym;
     var i;
@@ -106,23 +116,22 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.instructionPointer++
     ) {
         stmt = program[ this.instructionPointer ];
+        if ( !stmt[ 0 ] ) {
+            continue;
+        }
         if ( stmt[ 1 ] === 'DESCR' ) {
             this.define( stmt[0], this.d().ptr );
         } else if ( stmt[ 1 ] === 'SPEC' ) {
             this.define( stmt[0], this.s().ptr );
-        } else if ( DATA_ASSEMBLY_MACROS.indexOf( stmt[ 1 ] ) === -1 && stmt[ 0 ] !== null ) {
-            this.define( stmt[0], this.instructionPointer );
-        }
-    }
-
-    for (
-        this.instructionPointer = 0;
-        this.instructionPointer < program.length;
-        this.instructionPointer++
-    ) {
-        stmt = program[ this.instructionPointer ];
-        if ( DATA_ASSEMBLY_MACROS.indexOf( stmt[ 1 ] ) !== -1 ) {
+        } else if ( stmt[ 1 ] === 'LHERE' || stmt[ 1 ] === 'PROC' ) {
+            this.define( stmt[0], this.instructionPointer + 1 );
+        } else if ( stmt[ 1 ] === 'STRING' || stmt[ 1 ] === 'FORMAT' || stmt[ 1 ] === 'BUFFER' || stmt[ 1 ] === 'ARRAY' ) {
+            this.define( stmt[0], this.mem.length );
             this.exec.apply( this, stmt );
+        } else if ( stmt[ 1 ] === 'EQU' ) {
+            this.define( stmt[0], this.exec.apply( this, stmt ) );
+        } else {
+            this.define( stmt[0], this.instructionPointer );
         }
     }
 
@@ -131,8 +140,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         loc = this.instructionPointer;
         args = program[ loc ];
-        if ( args[1] === 'DESCR' || args[1] === 'SPEC' ) {
-        } else {
+        if ( DATA_ASSEMBLY_MACROS.indexOf( args[ 1 ] ) === -1 ) {
             status = this.exec.apply( this, args );
         }
 
