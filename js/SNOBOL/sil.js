@@ -941,9 +941,9 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 1.  Any or all of A, F, and V may be omitted.  A zero  field
 // must   be  assembled  when  the  corresponding  argument  is
 // omitted.
-sil.DESCR = function ( label, A, F, V ) {
+sil.DESCR = function ( A, F, V ) {
     // assemble descriptor
-    var DESCR = this.d( label );
+    var DESCR = this.d( this.currentLabel );
 
     DESCR.addr  = A || 0;
     DESCR.flags = F || 0;
@@ -3627,11 +3627,12 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +-------+-------+-------+-------+-------+
 //      LOC      |   A       F       V       O       L   |
 //               +---------------------------------------+
-sil.SPEC = function ( label, A, F, V, O, L ) {
+sil.SPEC = function ( A, F, V, O, L ) {
     // assemble specifier
-    var SPEC = this.s( label ), ptr;
+    var SPEC = this.s( this.currentLabel ), ptr;
 
     if ( typeof A === 'string' ) {
+        throw new Error('dead code');
         ptr = this.mem.length;
         this.mem = this.mem.concat( SNOBOL.str.encode( A ) );
         A = ptr;
@@ -4268,8 +4269,15 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         N;
 
     for ( N = 0; ; N++ ) {
+        console.log( 'TTL = ' + TTL + ' ; Searching for top of block at ' + ( A - ( N * D ) ) );
+        if ( ( A - ( N * D ) ) < 0 ) {
+            throw new RangeError();
+        }
         DESCR_indirect = this.d( A - ( N * D ) );
+        console.log( '!!!!!!!!!!!!!!!!!!!!!!!!!!' );
+        console.log( `TTL = ${TTL} ; flags = ${DESCR_indirect.flags}` );
         if ( DESCR_indirect.flags & TTL ) {
+            throw new Error('WF');
             break;
         }
     }

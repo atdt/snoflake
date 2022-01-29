@@ -63,16 +63,16 @@ VM.prototype.alloc = function ( size, value ) {
 };
 
 SNOBOL.VM.prototype.define = function ( symbol, value ) {
-    this.symbols[ symbol ] = this.mem.length;
-    if ( typeof value === 'number' ) {
-        this.mem.push( value );
-    } else if ( typeof value === 'string' ) {
+    if ( symbol === 'DESCR' && value !== 3 ) {
+        throw new Error(`symbol=${symbol}, value=${value}`);
+    }
+    if ( typeof value === 'string' ) {
+        this.symbols[ symbol ] = this.mem.length;
         for ( var i = 0; i < value.length; i++ ) {
             this.mem.push( value.charCodeAt( i ) );
         }
     } else {
-        debugger;
-        throw new Error( 'Invalid type' );
+        this.symbols[ symbol ] = value;
     }
 }
 
