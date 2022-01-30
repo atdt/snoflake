@@ -83,7 +83,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // location argument which the caller ommitted. In such cases
     // execution should fall through to the next instruction.
     if ( typeof loc === 'number' ) {
-        this.instructionPointer = loc;
+        this.instructionPointer = this.mem[loc];
     }
 };
 
@@ -108,14 +108,26 @@ SNOBOL.VM.prototype.run = function ( program ) {
         } else if ( stmt[ 1 ] === 'SPEC' ) {
             this.define( stmt[0], this.s().ptr );
         } else if ( stmt[ 1 ] === 'LHERE' || stmt[ 1 ] === 'PROC' ) {
-            this.define( stmt[0], this.instructionPointer + 1 );
+            // XXX: Program locations are set indirectly, to be resolved by
+            // this.jmp. This is probably incorrect, because the program might
+            // also jump to program locations of normal (but labelled)
+            // instructions, i.e. instructions that aren't LHERE or PROC.
+            // But if we set location directly (i.e., just define the label to
+            // be the current instruction pointer + 1) then some LHEREs which
+            // aren't used as goto points but instead as markers of ends of
+            // blocks end up being incorrect. Ugh.
+            this.define( stmt[0], this.mem.length );
+            this.mem.push( this.instructionPointer + 1 );
+            assert.equal( this.mem[this.symbols[stmt[0]]], this.instructionPointer + 1 );
         } else if ( stmt[ 1 ] === 'STRING' || stmt[ 1 ] === 'FORMAT' || stmt[ 1 ] === 'BUFFER' || stmt[ 1 ] === 'ARRAY' ) {
             this.define( stmt[0], this.mem.length );
             this.exec.apply( this, stmt );
         } else if ( stmt[ 1 ] === 'EQU' ) {
             this.define( stmt[0], this.exec.apply( this, stmt ) );
         } else {
-            this.define( stmt[0], this.instructionPointer );
+            this.define( stmt[0], this.mem.length );
+            this.mem.push( this.instructionPointer );
+            assert.equal( this.mem[this.symbols[stmt[0]]], this.instructionPointer );
         }
     }
     for (

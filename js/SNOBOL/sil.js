@@ -3014,9 +3014,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         this.CSTACK.addr = curStackPtr;
 
         if ( N !== undefined && $LOCs[ N ] !== undefined ) {
-            this.jmp( $LOCs[ N - 1 ] );
+            this.instructionPointer = $LOCs[ N - 1 ];
         } else {
-            this.jmp( retLoc + 1 );
+            this.instructionPointer = retLoc + 1;
         }
     } );
 
