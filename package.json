@@ -3,16 +3,15 @@
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
   "version": "0.0.1",
-  "engine": "node >= 0.8.0",
   "main": "./js/snobol.js",
   "repository": {
     "type": "git",
     "url": "http://github.com/atdt/snoflake"
   },
   "devDependencies": {
+    "astring": "^1.8.1",
     "mocha": "^9.2.0",
-    "pegjs": "^0.10.0",
-    "escodegen": "^2.0.0"
+    "pegjs": "^0.10.0"
   },
   "scripts": {
     "test": "mocha"
