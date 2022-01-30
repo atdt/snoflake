@@ -3865,7 +3865,6 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 // 2.  See also STPRNT.
 sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     // string read
-    throw new Error('STREAD');
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
         I = DESCR.addr,
