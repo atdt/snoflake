@@ -97,6 +97,11 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.define( sym, SNOBOL.programSymbols[sym] );
     }
 
+    var that = this;
+    SNOBOL.tableNames.forEach( function ( table, idx ) {
+        that.define( table, idx );
+    } );
+
     for (
         this.instructionPointer = 0;
         this.instructionPointer < program.length;

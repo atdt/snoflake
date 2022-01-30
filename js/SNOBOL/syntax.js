@@ -287,8 +287,4 @@ SNOBOL.syntaxTables = {
     ]
 };
 
-/*
-Object.keys( SNOBOL.syntaxTables ).forEach( function ( tableName ) {
-    SNOBOL.programSymbols[ tableName ] = SNOBOL.syntaxTables[ tableName ];
-} );
-*/
+SNOBOL.tableNames = Object.keys( SNOBOL.syntaxTables ).sort();

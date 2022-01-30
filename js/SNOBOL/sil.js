@@ -3991,27 +3991,23 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         L = SPEC2.length;
 
 
-        /*
-    var tableName;
-    for ( var k in SNOBOL.SymbolTable.prototype ) {
-        if ( SNOBOL.SymbolTable.prototype[k] === TABLE ) {
-            tableName = k;
-        }
+    function getTableById( id ) {
+        return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
     }
-    console.log( 'STREAM: %s using %s', JSON.stringify( str ), tableName );
-    */
+
+    var table = getTableById( TABLE );
 
     for ( I = 1; I <= str.length; I++ ) {
         J = I;
         ch = str.charAt( I - 1 );
         TI = 'RUNOUT';
         for ( t = 0; t < TABLE.length; t++ ) {
-            if ( SNOBOL.match( TABLE[t][0], ch ) ) {
+            if ( SNOBOL.match( table[t][0], ch ) ) {
                 // if table specifies a value to PUT(), assign it to P
-                if ( TABLE[t][1] !== null ) {
-                    P = this.$( TABLE[t][1] );
+                if ( table[t][1] !== null ) {
+                    P = this.$( table[t][1] );
                 }
-                TI = TABLE[t][2];
+                TI = table[t][2];
                 break;
             }
         }
@@ -4050,7 +4046,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         default:
             // GOTO
             assert( TI in SNOBOL.syntaxTables );
-            TABLE = SNOBOL.syntaxTables[ TI ];
+            table = SNOBOL.syntaxTables[ TI ];
         }
     }
 };
