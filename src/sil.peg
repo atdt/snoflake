@@ -1,4 +1,5 @@
 // PEG.js Grammar for SIL (SNOBOL Implementation Language)
+// Translates SIL to an ESTree-compatible AST.
 // (C) Copyright 2012 by Ori Livneh
 // Licensed under GPLv2
 
