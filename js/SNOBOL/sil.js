@@ -394,6 +394,8 @@ sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 // 1.  A2 may be a relocatable address.
 // 2.  N2 is never negative.
 // 3.  N1 is always zero.
+//     XXX: This is patently false! I think the documentation mixed up
+//     N1 and N2. N2 is indeed always zero. --OL
 // 4.  See also AEQL, AEQLC, LEQLC, ACOMP, and ACOMPC.
 sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
     var DESCR = this.d( $DESCR ),
@@ -401,8 +403,8 @@ sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
         DESCR_indirect = this.d( A1 + N1 ),
         A2 = DESCR_indirect.addr;
 
-    assert( N1 === 0 );
-    assert( N2 >= 0 );
+    assert( N2 === 0 );
+    assert( N1 >= 0 );
     if ( A2 === N2 ) {
         this.jmp( EQLOC );
     } else {
