@@ -12,7 +12,7 @@
   "devDependencies": {
     "mocha": "^9.2.0",
     "pegjs": "^0.10.0",
-    "uglify-js": "1.2.6"
+    "escodegen": "^2.0.0"
   },
   "scripts": {
     "test": "mocha"
