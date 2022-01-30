@@ -3997,13 +3997,14 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
     }
 
+    console.log( `table = ${TABLE} (${SNOBOL.tableNames[TABLE]})` );
     var table = getTableById( TABLE );
 
     for ( I = 1; I <= str.length; I++ ) {
         J = I;
         ch = str.charAt( I - 1 );
         TI = 'RUNOUT';
-        for ( t = 0; t < TABLE.length; t++ ) {
+        for ( t = 0; t < table.length; t++ ) {
             if ( SNOBOL.match( table[t][0], ch ) ) {
                 // if table specifies a value to PUT(), assign it to P
                 if ( table[t][1] !== null ) {
@@ -4014,6 +4015,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
+        console.log( `TI = ${TI}` );
         switch ( TI ) {
         case 'CONTIN':
             continue;

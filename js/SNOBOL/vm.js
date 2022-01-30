@@ -65,15 +65,6 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         process.exit( returnValue );
     }
 
-    /*
-    if ( label !== null ) {
-        assert( !this.symbols.hasOwnProperty( label ), `${label} already defined as ${this.symbols[label]}; DESCR = ` + this.symbols['DESCR'] );
-        if ( returnValue === undefined ) {
-            returnValue = currentInstruction;
-        }
-        // this.symbols[ label ] = returnValue;
-    }
-    */
     return returnValue;
 };
 
