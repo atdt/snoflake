@@ -2407,9 +2407,7 @@ sil.MSTIME = function ( $DESCR ) {
     var DESCR = this.d( $DESCR ),
         timeCurrent = new Date();
 
-    // DESCR.addr = this.timeStart - timeCurrent;
-    // XXX: For now, just set to 0.
-    DESCR.addr = 0;
+    DESCR.addr = timeCurrent - this.timeStart;
     DESCR.flags = 0;
     DESCR.value = 0;
 };
