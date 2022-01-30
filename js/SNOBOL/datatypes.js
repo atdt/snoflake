@@ -150,11 +150,11 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
         set: function ( s ) {
             var start = this.addr + this.offset,
                 raw = SNOBOL.str.encode( s ),
-                args = [ start, raw.length ].concat( raw );
+                length = Math.min( raw.length, this.length ),
+                args = [ start, length ].concat( raw );
 
-            assert( raw.length <= this.length );
             this.vm.mem.splice.apply( this.vm.mem, args );
-            this.length = raw.length;
+            this.length = length;
         }
     }
 } );
