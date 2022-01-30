@@ -25,7 +25,6 @@ SNOBOL.File.prototype.seek = function ( pos ) {
 };
 
 SNOBOL.File.prototype.read = function ( length ) { 
-    throw new Error("read called");
     var slice = buf.slice( this.pos, this.pos + length );
     this.pos += length;
 
