@@ -191,7 +191,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INITB"), 2 * vm.$("DESCR")];
   }, "Decrement to next pair"], [null, "ACOMP", function () {
     return [vm.$("INITB"), vm.$("INITE"), null, null, vm.$("INITD1")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Compare with end"], [null, "PUTDC", function () {
     return [vm.$("ABRTKY"), vm.$("DESCR"), vm.$("ABOPAT")];
   }, "Initial value of ABORT"], [null, "PUTDC", function () {
     return [vm.$("ARBKY"), vm.$("DESCR"), vm.$("ARBPAT")];
@@ -235,11 +235,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TEXTSP"), vm.$("NEXTSP")];
   }, "Read card and set up line"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("CARDTB"), vm.$("COMP3"), vm.$("COMP3")];
-  }, ""], [null, "RCALL", function () {
+  }, "Determine type of card"], [null, "RCALL", function () {
     return [null, vm.$("NEWCRD"), null];
   }, "(XLATRD,,) Process card type"], ["XLATNX", "RCALL", function () {
     return [null, vm.$("CMPILE"), null, [vm.$("COMP3"), null, vm.$("XLATNX")]];
-  }, ""], [null, "INCRA", function () {
+  }, "Compile statement"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("ENDCL")];
@@ -249,25 +249,25 @@ SNOBOL.interp = function (vm) {
     return [vm.$("IOKEY"), vm.$("OUTBLK"), vm.$("LNBFSP")];
   }, "Print last line image"], ["XLATP", "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("EOSTYP"), null, vm.$("XLAEND")];
-  }, ""], [null, "STREAM", function () {
+  }, "Finish on end of statement"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("IBLKTB"), vm.$("COMP3"), vm.$("XLAEND")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Analyze END card"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("EOSTYP"), null, vm.$("XLAEND")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Finish on end of statement"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("NBTYP"), vm.$("COMP7")];
   }, "Error if break character"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("LBLTB"), vm.$("COMP7"), vm.$("COMP7")];
-  }, ""], [null, "RCALL", function () {
+  }, "Analyze END label"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("XSPPTR")]];
-  }, ""], [null, "GETDC", function () {
+  }, "Generate variable for label"], [null, "GETDC", function () {
     return [vm.$("OCBSCL"), vm.$("XPTR"), vm.$("ATTRIB")];
   }, "Get start for interpreter"], [null, "AEQLC", function () {
     return [vm.$("OCBSCL"), 0, null, vm.$("COMP7")];
   }, "Error if not attribute"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("EOSTYP"), null, vm.$("XLAEND")];
-  }, ""], [null, "STREAM", function () {
+  }, "Finish on end of statement"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("IBLKTB"), vm.$("COMP7"), null, vm.$("COMP7")];
-  }, ""], ["XLAEND", "AEQLC", function () {
+  }, "Analyze remainder of card"], ["XLAEND", "AEQLC", function () {
     return [vm.$("ESAICL"), 0, null, vm.$("XLATSC")];
   }, "Were there any compilation errors?"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("ERRCF")];
@@ -297,7 +297,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CNSLCL"), 1];
   }, "Permit label redefinition"], [null, "RCALL", function () {
     return [null, vm.$("INTERP"), null, [vm.$("MAIN1"), vm.$("MAIN1"), vm.$("MAIN1")]];
-  }, ""], [null, "TITLE", function () {
+  }, "Call interpreter"], [null, "TITLE", function () {
     return ["Support Procedures"];
   }, ""], ["AUGATL", "PROC", function () {
     return [null];
@@ -305,7 +305,7 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("A1PTR"), vm.$("A2PTR"), vm.$("A3PTR")]];
   }, "List, type and value"], [null, "LOCAPT", function () {
     return [vm.$("A4PTR"), vm.$("A1PTR"), vm.$("ZEROCL"), vm.$("AUG1")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Look for hole in list"], [null, "PUTDC", function () {
     return [vm.$("A4PTR"), vm.$("DESCR"), vm.$("A2PTR")];
   }, "Insert type descriptor"], [null, "PUTDC", function () {
     return [vm.$("A4PTR"), 2 * vm.$("DESCR"), vm.$("A3PTR")];
@@ -347,7 +347,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YCL"), 1];
   }, "Count down"], [null, "ACOMPC", function () {
     return [vm.$("YCL"), 0, vm.$("CODCNT"), vm.$("RTN1"), vm.$("INTR10")];
-  }, ""], ["CODFNC", "PUSH", function () {
+  }, "Check for end"], ["CODFNC", "PUSH", function () {
     return [vm.$("YCL")];
   }, "Save number to skip"], [null, "SETAV", function () {
     return [vm.$("YCL"), vm.$("XCL")];
@@ -445,7 +445,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DT1CL"), vm.$("A2PTR")];
   }, "Insert data type"], [null, "LOCAPT", function () {
     return [vm.$("A3PTR"), vm.$("DTATL"), vm.$("DT1CL"), vm.$("DTREPE")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for data type name"], [null, "GETDC", function () {
     return [vm.$("A3PTR"), vm.$("A3PTR"), 2 * vm.$("DESCR")];
   }, "Get data type name"], [null, "LOCSP", function () {
     return [vm.$("DPSP"), vm.$("A3PTR")];
@@ -461,7 +461,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("F1PTR")];
   }, "Restore name"], [null, "LOCAPV", function () {
     return [vm.$("F2PTR"), vm.$("FNCPL"), vm.$("F1PTR"), vm.$("FATNF")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for function pair"], [null, "GETDC", function () {
     return [vm.$("F2PTR"), vm.$("F2PTR"), vm.$("DESCR")];
   }, "Get function descriptor"], ["FATBAK", "RRTURN", function () {
     return [vm.$("F2PTR"), 1];
@@ -469,11 +469,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("NEXFCL"), 2 * vm.$("DESCR")];
   }, "Increment function block offset"], [null, "ACOMPC", function () {
     return [vm.$("NEXFCL"), vm.$("FBLKSZ"), vm.$("FATBLK")];
-  }, ""], ["FATNXT", "SUM", function () {
+  }, "Check for end"], ["FATNXT", "SUM", function () {
     return [vm.$("F2PTR"), vm.$("FBLOCK"), vm.$("NEXFCL")];
   }, "Compute position"], [null, "RCALL", function () {
     return [vm.$("FNCPL"), vm.$("AUGATL"), [vm.$("FNCPL"), vm.$("F2PTR"), vm.$("F1PTR")]];
-  }, ""], [null, "PUTDC", function () {
+  }, "Augment function pair list"], [null, "PUTDC", function () {
     return [vm.$("F2PTR"), 0, vm.$("UNDFCL")];
   }, "Insert undefined function"], [null, "PUTDC", function () {
     return [vm.$("F2PTR"), vm.$("DESCR"), vm.$("F1PTR")];
@@ -497,7 +497,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ARG1CL")];
   }, "Restore size to allocate"], [null, "ACOMP", function () {
     return [vm.$("ARG1CL"), vm.$("SIZLMT"), vm.$("SIZERR"), vm.$("SIZERR")];
-  }, ""], ["BLOCK1", "MOVD", function () {
+  }, "Check against size limit"], ["BLOCK1", "MOVD", function () {
     return [vm.$("BLOCL"), vm.$("FRSGPT")];
   }, "Position pointer to title"], [null, "MOVV", function () {
     return [vm.$("BLOCL"), vm.$("ARG1CL")];
@@ -505,9 +505,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FRSGPT"), vm.$("DESCR")];
   }, "Leave room for title"], [null, "SUM", function () {
     return [vm.$("FRSGPT"), vm.$("FRSGPT"), vm.$("ARG1CL")];
-  }, ""], [null, "ACOMP", function () {
+  }, "Move position pointer past end"], [null, "ACOMP", function () {
     return [vm.$("TLSGP1"), vm.$("FRSGPT"), null, null, vm.$("BLOGC")];
-  }, ""], [null, "ZERBLK", function () {
+  }, "Check for end of region"], [null, "ZERBLK", function () {
     return [vm.$("BLOCL"), vm.$("ARG1CL")];
   }, "Clear block"], [null, "PUTAC", function () {
     return [vm.$("BLOCL"), 0, vm.$("BLOCL")];
@@ -521,7 +521,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FRSGPT"), vm.$("BLOCL")];
   }, "Restore position pointer"], [null, "RCALL", function () {
     return [null, vm.$("GC"), [vm.$("ARG1CL")], [vm.$("ALOC2"), vm.$("BLOCK1")]];
-  }, ""], ["GENVAR", "PROC", function () {
+  }, "Regenerate storage"], ["GENVAR", "PROC", function () {
     return [null];
   }, "Procedure to generate variable"], [null, "SETAC", function () {
     return [vm.$("CONVSW"), 0];
@@ -539,15 +539,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("LSTPTR"), vm.$("BUKPTR")];
   }, "Save working copy"], [null, "GETAC", function () {
     return [vm.$("BUKPTR"), vm.$("BUKPTR"), vm.$("LNKFLD")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Get link descriptor"], [null, "AEQLC", function () {
     return [vm.$("BUKPTR"), 0, null, vm.$("LOCA5")];
   }, "Check for end of chain"], [null, "VCMPIC", function () {
     return [vm.$("BUKPTR"), vm.$("LNKFLD"), vm.$("EQUVCL"), vm.$("LOCA5"), null, vm.$("LOCA2")];
-  }, ""], [null, "LOCSP", function () {
+  }, "Compare ascension numbers"], [null, "LOCSP", function () {
     return [vm.$("SPECR2"), vm.$("BUKPTR")];
   }, "Get specifier to string in storage"], [null, "LEXCMP", function () {
     return [vm.$("SPECR1"), vm.$("SPECR2"), vm.$("LOCA2"), null, vm.$("LOCA2")];
-  }, ""], [null, "MOVD", function () {
+  }, "Compare strings"], [null, "MOVD", function () {
     return [vm.$("LCPTR"), vm.$("BUKPTR")];
   }, "Return string in storage"], [null, "BRANCH", function () {
     return [vm.$("LOCRET")];
@@ -557,7 +557,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BKLTCL"), vm.$("AXPTR")];
   }, "Compute space required"], [null, "ACOMP", function () {
     return [vm.$("BKLTCL"), vm.$("SIZLMT"), vm.$("SIZERR")];
-  }, ""], ["LOCA7", "MOVD", function () {
+  }, "Check against size limit"], ["LOCA7", "MOVD", function () {
     return [vm.$("LCPTR"), vm.$("FRSGPT")];
   }, "Point to position in storage"], [null, "SETVC", function () {
     return [vm.$("LCPTR"), vm.$("S")];
@@ -565,9 +565,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FRSGPT"), vm.$("DESCR")];
   }, "Leave space for title"], [null, "SUM", function () {
     return [vm.$("FRSGPT"), vm.$("FRSGPT"), vm.$("BKLTCL")];
-  }, ""], [null, "ACOMP", function () {
+  }, "Skip required space"], [null, "ACOMP", function () {
     return [vm.$("TLSGP1"), vm.$("FRSGPT"), null, null, vm.$("LOCA4")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for end of region"], [null, "PUTDC", function () {
     return [vm.$("LCPTR"), 0, vm.$("ZEROCL")];
   }, "Clear title"], [null, "PUTAC", function () {
     return [vm.$("LCPTR"), 0, vm.$("LCPTR")];
@@ -601,7 +601,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FRSGPT"), vm.$("LCPTR")];
   }, "Restore position pointer"], [null, "RCALL", function () {
     return [null, vm.$("GC"), [vm.$("BKLTCL")], [vm.$("ALOC2"), vm.$("LOCA7")]];
-  }, ""], ["GNVARI", "PROC", function () {
+  }, "Regenerate storage"], ["GNVARI", "PROC", function () {
     return [vm.$("GENVAR")];
   }, "Procedure to generate string"], [null, "SETAC", function () {
     return [vm.$("CONVSW"), 0];
@@ -623,13 +623,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BKLTCL"), vm.$("AXPTR")];
   }, "Get space required"], [null, "ACOMP", function () {
     return [vm.$("BKLTCL"), vm.$("SIZLMT"), vm.$("SIZERR")];
-  }, ""], [null, "SUM", function () {
+  }, "Check against size limit"], [null, "SUM", function () {
     return [vm.$("TEMPCL"), vm.$("FRSGPT"), vm.$("BKLTCL")];
-  }, ""], [null, "INCRA", function () {
+  }, "Skip required space"], [null, "INCRA", function () {
     return [vm.$("TEMPCL"), vm.$("DESCR")];
   }, "Save space for title"], [null, "ACOMP", function () {
     return [vm.$("TLSGP1"), vm.$("TEMPCL"), null, null, vm.$("CONVR4")];
-  }, ""], ["CONVR5", "PUTDC", function () {
+  }, "Check for end of region"], ["CONVR5", "PUTDC", function () {
     return [vm.$("FRSGPT"), 0, vm.$("ZEROCL")];
   }, "Clear title"], [null, "PUTAC", function () {
     return [vm.$("FRSGPT"), 0, vm.$("FRSGPT")];
@@ -641,13 +641,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FRSGPT"), vm.$("DESCR"), vm.$("NULVCL")];
   }, "Insert null string as value"], [null, "PUTDC", function () {
     return [vm.$("FRSGPT"), vm.$("ATTRIB"), vm.$("ZEROCL")];
-  }, ""], [null, "MOVA", function () {
+  }, "Set label to zero"], [null, "MOVA", function () {
     return [vm.$("BKLTCL"), vm.$("FRSGPT")];
   }, "E3.3.2"], [null, "RRTURN", function () {
     return [vm.$("BKLTCL"), 1];
   }, "E3.3.2"], ["CONVR4", "RCALL", function () {
     return [null, vm.$("GC"), vm.$("BKLTCL"), [vm.$("ALOC2"), vm.$("CONVR5")]];
-  }, ""], ["GNVARS", "PROC", function () {
+  }, "Regenerate storage"], ["GNVARS", "PROC", function () {
     return [vm.$("GENVAR")];
   }, "Procedure to entry string"], [null, "POP", function () {
     return [vm.$("AXPTR")];
@@ -693,7 +693,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ST1PTR"), vm.$("BKPTR")];
   }, "Get working copy"], ["GCBA2", "GETAC", function () {
     return [vm.$("ST1PTR"), vm.$("ST1PTR"), vm.$("LNKFLD")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Get link pointer"], [null, "AEQLC", function () {
     return [vm.$("ST1PTR"), 0, null, vm.$("GCBA1")];
   }, "Test for end of chain"], [null, "TESTFI", function () {
     return [vm.$("ST1PTR"), vm.$("MARK"), null, vm.$("GCBA2")];
@@ -703,7 +703,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ST2PTR"), vm.$("NULVCL"), vm.$("GCBA4")];
   }, "Mark if nonnull"], [null, "AEQLIC", function () {
     return [vm.$("ST1PTR"), vm.$("ATTRIB"), 0, null, vm.$("GCBA2")];
-  }, ""], ["GCBA4", "PUTDC", function () {
+  }, "Test attribute also"], ["GCBA4", "PUTDC", function () {
     return [vm.$("GCBLK"), vm.$("DESCR"), vm.$("ST1PTR")];
   }, "Set up pseudoblock"], [null, "RCALL", function () {
     return [null, vm.$("GCM"), [vm.$("GCBLK")], vm.$("GCBA2")];
@@ -721,7 +721,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TTLCL"), vm.$("TTLCL"), vm.$("BKDX")];
   }, "Update block pointer"], [null, "AEQL", function () {
     return [vm.$("TTLCL"), vm.$("FRSGPT"), vm.$("GCLAD0"), vm.$("GCBB1")];
-  }, ""], ["GCLAD7", "MOVD", function () {
+  }, "Check for end of region"], ["GCLAD7", "MOVD", function () {
     return [vm.$("MVSGPT"), vm.$("TTLCL")];
   }, "Update compression barrier"], ["GCLAD4", "SUM", function () {
     return [vm.$("TTLCL"), vm.$("TTLCL"), vm.$("BKDX")];
@@ -751,7 +751,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ST2PTR"), vm.$("ST1PTR")];
   }, "Save pointer to be linked"], ["GCBB4", "GETAC", function () {
     return [vm.$("ST1PTR"), vm.$("ST1PTR"), vm.$("LNKFLD")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Get link pointer"], [null, "AEQLC", function () {
     return [vm.$("ST1PTR"), 0, null, vm.$("GCBB5")];
   }, "Check for end of chain"], [null, "TESTFI", function () {
     return [vm.$("ST1PTR"), vm.$("MARK"), vm.$("GCBB4")];
@@ -763,7 +763,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("GCBB3")];
   }, "Continue"], ["GCBB5", "PUTAC", function () {
     return [vm.$("ST2PTR"), vm.$("LNKFLD"), vm.$("ZEROCL")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Set last link to zero"], [null, "BRANCH", function () {
     return [vm.$("GCBB2")];
   }, "Continue"], ["GCLAP", "MOVD", function () {
     return [vm.$("TTLCL"), vm.$("HDSGPT")];
@@ -787,7 +787,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DESCL"), vm.$("PTR"), vm.$("GCLAP4")];
   }, "Is it a pointer?"], [null, "ACOMP", function () {
     return [vm.$("DESCL"), vm.$("MVSGPT"), null, null, vm.$("GCLAP4")];
-  }, ""], [null, "TOP", function () {
+  }, "Is it above compression barrier?"], [null, "TOP", function () {
     return [vm.$("TOPCL"), vm.$("OFSET"), vm.$("DESCL")];
   }, "Compute offset to target"], [null, "ADJUST", function () {
     return [vm.$("DESCL"), vm.$("TOPCL"), vm.$("OFSET")];
@@ -815,7 +815,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DESCL"), vm.$("PTR"), vm.$("GCLAT3")];
   }, "Is it a pointer?"], [null, "ACOMP", function () {
     return [vm.$("DESCL"), vm.$("MVSGPT"), null, null, vm.$("GCLAT3")];
-  }, ""], [null, "TOP", function () {
+  }, "Is it above compression barrier?"], [null, "TOP", function () {
     return [vm.$("TOPCL"), vm.$("OFSET"), vm.$("DESCL")];
   }, "Compute offset to target"], [null, "ADJUST", function () {
     return [vm.$("DESCL"), vm.$("TOPCL"), vm.$("OFSET")];
@@ -835,7 +835,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BKDXU"), vm.$("TTLCL")];
   }, "Get size of block"], [null, "ACOMP", function () {
     return [vm.$("TTLCL"), vm.$("MVSGPT"), vm.$("GCLAM5"), vm.$("GCLAM5")];
-  }, ""], [null, "GETAC", function () {
+  }, "Has compression barrier been reached"], [null, "GETAC", function () {
     return [vm.$("TOPCL"), vm.$("TTLCL"), 0];
   }, "Get target position"], [null, "MOVDIC", function () {
     return [vm.$("TOPCL"), 0, vm.$("TTLCL"), 0];
@@ -999,17 +999,17 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CSTNCL"), 1];
   }, "Increment statement number"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("LBLTB"), vm.$("CERR1")];
-  }, ""], [null, "LEQLC", function () {
+  }, "Break out label"], [null, "LEQLC", function () {
     return [vm.$("XSP"), 0, null, vm.$("CMPILA")];
   }, "Check for no label"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("BASECL")];
-  }, ""], [null, "SUM", function () {
+  }, "Insert BASE function"], [null, "SUM", function () {
     return [vm.$("CMBSCL"), vm.$("CMBSCL"), vm.$("CMOFCL")];
-  }, ""], [null, "ACOMP", function () {
+  }, "Add offset to base"], [null, "ACOMP", function () {
     return [vm.$("CMBSCL"), vm.$("OCLIM"), null, null, vm.$("CMPILO")];
-  }, ""], [null, "RCALL", function () {
+  }, "Check for end of object code"], [null, "RCALL", function () {
     return [vm.$("XCL"), vm.$("BLOCK"), vm.$("CODELT")];
   }, "Get block for more"], [null, "PUTDC", function () {
     return [vm.$("CMBSCL"), 0, vm.$("GOTGCL")];
@@ -1035,7 +1035,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("LPTR"), vm.$("GENVAR"), vm.$("XSPPTR")];
   }, "Get variable for label"], [null, "AEQLIC", function () {
     return [vm.$("LPTR"), vm.$("ATTRIB"), 0, null, vm.$("CMPILC")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for previous definition"], [null, "AEQLC", function () {
     return [vm.$("CNSLCL"), 0, null, vm.$("CERR2")];
   }, "Check for label redefinition"], ["CMPILC", "PUTDC", function () {
     return [vm.$("LPTR"), vm.$("ATTRIB"), vm.$("CMBSCL")];
@@ -1049,51 +1049,51 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("INITCL")];
-  }, ""], [null, "INCRA", function () {
+  }, "Insert INIT function"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "MOVD", function () {
     return [vm.$("FRNCL"), vm.$("CMOFCL")];
   }, "Save offset for failure position"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("NBTYP"), null, vm.$("CMPSUB")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for nonbreak"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("CLNTYP"), vm.$("CERR3"), vm.$("CMPGO")];
-  }, ""], ["CMPSUB", "RCALL", function () {
+  }, "Check for goto field"], ["CMPSUB", "RCALL", function () {
     return [vm.$("SUBJND"), vm.$("ELEMNT"), null, [vm.$("CDIAG"), vm.$("COMP3")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Compiler subject"], [null, "RCALL", function () {
     return [null, vm.$("FORBLK"), null, vm.$("CERR5")];
   }, "Get to next character"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("NBTYP"), null, vm.$("CMPATN")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for nonbreak"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EQTYP"), null, vm.$("CMPFRM")];
-  }, ""], [null, "RCALL", function () {
+  }, "Check for assignment"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("SUBJND")]];
   }, "Copy subject into object code"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("CLNTYP"), null, vm.$("CMPGO")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for goto"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), vm.$("CERR5"), vm.$("CMPNGO")];
-  }, ""], ["CMPATN", "RCALL", function () {
+  }, "Check for end of statement"], ["CMPATN", "RCALL", function () {
     return [vm.$("PATND"), vm.$("EXPR"), null, vm.$("CDIAG")];
   }, "Compile pattern"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EQTYP"), null, vm.$("CMPASP")];
-  }, ""], [null, "INCRA", function () {
+  }, "Check for replacement"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("SCANCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert SCAN function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("SUBJND")]];
   }, "Copy subject into object code"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("PATND")]];
   }, "Copy pattern into object code"], ["CMPTGO", "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), null, vm.$("CMPNGO")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for end of statement"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("CLNTYP"), vm.$("CERR5"), vm.$("CMPGO")];
-  }, ""], ["CMPFRM", "RCALL", function () {
+  }, "Check for end of statement"], ["CMPFRM", "RCALL", function () {
     return [vm.$("FORMND"), vm.$("EXPR"), null, vm.$("CDIAG")];
   }, "Compile object"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("ASGNCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert ASGN function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("SUBJND")]];
   }, "Copy subject into object code"], [null, "BRANCH", function () {
     return [vm.$("CMPFT")];
@@ -1103,13 +1103,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("SJSRCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert SJSR function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("SUBJND")]];
   }, "Copy subject into object code"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("PATND")]];
   }, "Copy pattern into object code"], ["CMPFT", "RCALL", function () {
     return [null, vm.$("TREPUB"), vm.$("FORMND"), vm.$("CMPTGO")];
-  }, ""], ["CMPNGO", "SETVA", function () {
+  }, "Copy object into object code"], ["CMPNGO", "SETVA", function () {
     return [vm.$("CSTNCL"), vm.$("CMOFCL")];
   }, "Set up offset for failure"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("FRNCL"), vm.$("CSTNCL")];
@@ -1119,23 +1119,23 @@ SNOBOL.interp = function (vm) {
     return [null, vm.$("FORWRD"), null, vm.$("COMP3")];
   }, "Check for end of statement"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), null, vm.$("CMPNGO")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for nonbreak"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("NBTYP"), vm.$("CERR11")];
   }, ""], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("GOTOTB"), vm.$("CERR11"), vm.$("CERR12")];
-  }, ""], [null, "MOVD", function () {
+  }, "Analyze goto field"], [null, "MOVD", function () {
     return [vm.$("GOGOCL"), vm.$("GOTLCL")];
   }, "Predict GOTL"], [null, "SETAC", function () {
     return [vm.$("GOBRCL"), vm.$("RPTYP")];
   }, "Set up predicted closing break"], [null, "ACOMP", function () {
     return [vm.$("STYPE"), vm.$("GTOCL"), null, vm.$("CMPGG"), vm.$("CMPGG")];
-  }, ""], [null, "MOVD", function () {
+  }, "Check for direct goto"], [null, "MOVD", function () {
     return [vm.$("GOGOCL"), vm.$("GOTGCL")];
   }, "Set up direct goto"], [null, "SETAC", function () {
     return [vm.$("GOBRCL"), vm.$("RBTYP")];
   }, "Set up closing break"], ["CMPGG", "SELBRA", function () {
     return [vm.$("STYPE"), [null, vm.$("CMPSGO"), vm.$("CMPFGO"), null, vm.$("CMPSGO"), vm.$("CMPFGO")]];
-  }, ""], ["CMPUGO", "SETVA", function () {
+  }, "Branch on type"], ["CMPUGO", "SETVA", function () {
     return [vm.$("CSTNCL"), vm.$("CMOFCL")];
   }, "Set up offset for failure"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("FRNCL"), vm.$("CSTNCL")];
@@ -1143,31 +1143,31 @@ SNOBOL.interp = function (vm) {
     return [vm.$("GOTOND"), vm.$("EXPR"), null, vm.$("CDIAG")];
   }, "Compile goto"], [null, "AEQL", function () {
     return [vm.$("BRTYPE"), vm.$("GOBRCL"), vm.$("CERR11")];
-  }, ""], [null, "INCRA", function () {
+  }, "Verify closing break"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("GOGOCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert goto function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("GOTOND")]];
   }, "Copy goto into object code"], [null, "RCALL", function () {
     return [null, vm.$("FORWRD"), null, vm.$("COMP3")];
   }, "Get to next character"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), vm.$("CERR11"), vm.$("RTN3")];
-  }, ""], ["CMPSGO", "RCALL", function () {
+  }, "Check for end of statement"], ["CMPSGO", "RCALL", function () {
     return [vm.$("SGOND"), vm.$("EXPR"), null, vm.$("CDIAG")];
   }, "Compile success goto"], [null, "AEQL", function () {
     return [vm.$("BRTYPE"), vm.$("GOBRCL"), vm.$("CERR11")];
-  }, ""], [null, "INCRA", function () {
+  }, "Verify break character"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("GOGOCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert goto function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("SGOND")]];
   }, "Copy goto into object code"], [null, "RCALL", function () {
     return [null, vm.$("FORWRD"), null, vm.$("COMP3")];
   }, "Get to next character"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), vm.$("CMPILL")];
-  }, ""], [null, "SETVA", function () {
+  }, "Check for end of statement"], [null, "SETVA", function () {
     return [vm.$("CSTNCL"), vm.$("CMOFCL")];
   }, "Set up offset for failure"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("FRNCL"), vm.$("CSTNCL")];
@@ -1177,7 +1177,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BRTYPE"), vm.$("NBTYP"), vm.$("CERR11")];
   }, "Check for nonbreak"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("GOTOTB"), vm.$("CERR11"), vm.$("CERR12")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Analyze goto field"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("FGOTYP"), vm.$("CMPFTC")];
   }, "Check for failure goto"], [null, "MOVD", function () {
     return [vm.$("GOGOCL"), vm.$("GOTLCL")];
@@ -1197,15 +1197,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FGOND"), vm.$("EXPR"), null, vm.$("CDIAG")];
   }, "Compile failure goto"], [null, "AEQL", function () {
     return [vm.$("BRTYPE"), vm.$("GOBRCL"), vm.$("CERR11")];
-  }, ""], [null, "RCALL", function () {
+  }, "Verify failure goto"], [null, "RCALL", function () {
     return [null, vm.$("FORWRD"), null, vm.$("COMP3")];
   }, "Get to next character"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), vm.$("CMPILM")];
-  }, ""], [null, "INCRA", function () {
+  }, "Check for end of statement"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("GOTOCL")];
-  }, ""], [null, "INCRA", function () {
+  }, "Insert goto function"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "MOVD", function () {
     return [vm.$("SRNCL"), vm.$("CMOFCL")];
@@ -1217,7 +1217,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("GOGOCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert goto function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("FGOND")]];
   }, "Copy goto into object code"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("SRNCL"), vm.$("CMOFCL")];
@@ -1227,7 +1227,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BRTYPE"), vm.$("NBTYP"), vm.$("CERR11")];
   }, "Verify nonbreak"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("GOTOTB"), vm.$("CERR11"), vm.$("CERR12")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Analyze goto field"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("SGOTYP"), vm.$("CMPSTC")];
   }, "Check for success goto"], [null, "PUSH", function () {
     return [vm.$("GOTLCL")];
@@ -1245,11 +1245,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SGOND"), vm.$("EXPR"), null, vm.$("CDIAG")];
   }, "Compile success goto"], [null, "AEQL", function () {
     return [vm.$("BRTYPE"), vm.$("GOBRCL"), vm.$("CERR11")];
-  }, ""], [null, "RCALL", function () {
+  }, "Verify closing break"], [null, "RCALL", function () {
     return [null, vm.$("FORWRD"), null, vm.$("COMP3")];
   }, "Get to next character"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), vm.$("CERR11")];
-  }, ""], [null, "INCRA", function () {
+  }, "Verify end of statement"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "POP", function () {
     return [vm.$("WCL")];
@@ -1265,9 +1265,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUTD", function () {
     return [vm.$("CMBSCL"), vm.$("CMOFCL"), vm.$("GOGOCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Insert goto function"], [null, "RCALL", function () {
     return [null, vm.$("TREPUB"), [vm.$("FGOND")], vm.$("RTN3")];
-  }, ""], ["CERR1", "SETAC", function () {
+  }, "Copy goto into object code"], ["CERR1", "SETAC", function () {
     return [vm.$("EMSGCL"), vm.$("EMSG1")];
   }, "Erroneous label"], [null, "BRANCH", function () {
     return [vm.$("CDIAG")];
@@ -1309,7 +1309,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YCL"), vm.$("ERRBAS")];
   }, "Set up length of error vector"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), null, vm.$("CDIAG3")];
-  }, ""], [null, "GETLG", function () {
+  }, "Check for end of statement"], [null, "GETLG", function () {
     return [vm.$("XCL"), vm.$("TEXTSP")];
   }, "Get length remaining"], [null, "SUBTRT", function () {
     return [vm.$("YCL"), vm.$("YCL"), vm.$("XCL")];
@@ -1319,7 +1319,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ERRSP"), vm.$("QTSP")];
   }, "Set in marker"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), null, vm.$("CDIAG2")];
-  }, ""], [null, "STPRNT", function () {
+  }, "Check for end of statement"], [null, "STPRNT", function () {
     return [vm.$("IOKEY"), vm.$("OUTBLK"), vm.$("LNBFSP")];
   }, "Print statement"], ["CDIAG2", "STPRNT", function () {
     return [vm.$("IOKEY"), vm.$("OUTBLK"), vm.$("ERRSP")];
@@ -1345,13 +1345,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BRTYPE"), vm.$("EOSTYP"), null, vm.$("RTN3")];
   }, "E3.0.1"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("EOSTB"), vm.$("COMP3"), null, vm.$("RTN3")];
-  }, ""], ["DIAGRN", "STREAD", function () {
+  }, "Get to end of statement"], ["DIAGRN", "STREAD", function () {
     return [vm.$("INBFSP"), vm.$("UNIT"), vm.$("DIAGRN"), vm.$("COMP5")];
-  }, ""], [null, "SETSP", function () {
+  }, "Read card image"], [null, "SETSP", function () {
     return [vm.$("TEXTSP"), vm.$("NEXTSP")];
   }, "Set up new line"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("CARDTB"), vm.$("COMP3"), vm.$("COMP3")];
-  }, ""], [null, "RCALL", function () {
+  }, "Analyze card type"], [null, "RCALL", function () {
     return [null, vm.$("NEWCRD"), null, [null, null, vm.$("RTN3")]];
   }, "Process card image"], [null, "AEQLC", function () {
     return [vm.$("LISTCL"), 0, null, vm.$("DIAGRN")];
@@ -1365,15 +1365,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ELEMND"), vm.$("UNOP"), null, vm.$("RTN2")];
   }, "Get tree of unary operators"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("ELEMTB"), vm.$("ELEICH"), vm.$("ELEILI")];
-  }, ""], ["ELEMN9", "SELBRA", function () {
+  }, "Break out element"], ["ELEMN9", "SELBRA", function () {
     return [vm.$("STYPE"), [null, vm.$("ELEILT"), vm.$("ELEVBL"), vm.$("ELENST"), vm.$("ELEFNC"), vm.$("ELEFLT"), vm.$("ELEARY")]];
-  }, ""], [null, "FSHRTN", function () {
+  }, "Branch on element type"], [null, "FSHRTN", function () {
     return [vm.$("XSP"), 1];
   }, "Delete initial quote"], [null, "SHORTN", function () {
     return [vm.$("XSP"), 1];
   }, "Remove terminal quote"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("XSPPTR")]];
-  }, ""], ["ELEMN5", "RCALL", function () {
+  }, "Generate variable for literal"], ["ELEMN5", "RCALL", function () {
     return [vm.$("ELEXND"), vm.$("BLOCK"), vm.$("CNDSIZ")];
   }, "Allocate block for tree node"], [null, "PUTDC", function () {
     return [vm.$("ELEXND"), vm.$("CODE"), vm.$("LITCL")];
@@ -1395,17 +1395,17 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), vm.$("ELEMND")];
   }, "Move tree to return"], ["ELEMRR", "AEQLIC", function () {
     return [vm.$("ZPTR"), vm.$("FATHER"), 0, null, vm.$("RTZPTR")];
-  }, ""], [null, "GETDC", function () {
+  }, "Is pointer at top of tree?"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("FATHER")];
   }, "Move back to father"], [null, "BRANCH", function () {
     return [vm.$("ELEMRR")];
   }, "Continue up tree"], ["ELEILT", "SPCINT", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("ELEINT"), vm.$("ELEMN5")];
-  }, ""], ["ELEFLT", "SPREAL", function () {
+  }, "Convert string to integer"], ["ELEFLT", "SPREAL", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("ELEDEC"), vm.$("ELEMN5")];
-  }, ""], ["ELEVBL", "RCALL", function () {
+  }, "Convert string to real"], ["ELEVBL", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("XSPPTR")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Generate variable"], [null, "RCALL", function () {
     return [vm.$("ELEXND"), vm.$("BLOCK"), vm.$("CNDSIZ")];
   }, "Allocate block for tree node"], [null, "PUTDC", function () {
     return [vm.$("ELEXND"), vm.$("CODE"), vm.$("XPTR")];
@@ -1419,11 +1419,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ELEMND")];
   }, "Restore tree"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("RPTYP"), vm.$("ELECMA"), vm.$("ELEMN1")];
-  }, ""], ["ELEFNC", "SHORTN", function () {
+  }, "Verify right parenthesis"], ["ELEFNC", "SHORTN", function () {
     return [vm.$("XSP"), 1];
   }, "Delete open parenthesis"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("XSPPTR")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Generate variable for function name"], [null, "RCALL", function () {
     return [vm.$("XCL"), vm.$("FINDEX"), [vm.$("XPTR")]];
   }, "Find function descriptor"], [null, "RCALL", function () {
     return [vm.$("ELEXND"), vm.$("BLOCK"), vm.$("CNDSIZ")];
@@ -1445,9 +1445,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ELEMND"), vm.$("ELEXND")];
   }, "Move to new node"], ["ELEMN2", "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("RPTYP"), null, vm.$("ELEMN3")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for left parenthesis"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("CMATYP"), vm.$("ELECMA")];
-  }, ""], [null, "PUSH", function () {
+  }, "Verify comma"], [null, "PUSH", function () {
     return [vm.$("ELEMND")];
   }, "Save current node"], [null, "RCALL", function () {
     return [vm.$("ELEXND"), vm.$("EXPR"), null, vm.$("RTN1")];
@@ -1461,7 +1461,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ELEMN2")];
   }, "Continue"], ["ELEMN3", "GETDC", function () {
     return [vm.$("ELEXND"), vm.$("ELEMND"), vm.$("FATHER")];
-  }, ""], [null, "GETDC", function () {
+  }, "Get father of current node"], [null, "GETDC", function () {
     return [vm.$("XCL"), vm.$("ELEXND"), vm.$("CODE")];
   }, "Get function descriptor"], [null, "GETDC", function () {
     return [vm.$("YCL"), vm.$("XCL"), 0];
@@ -1473,7 +1473,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YCL"), vm.$("YCL")];
   }, "Get number of arguments expected"], ["ELEMN4", "ACOMP", function () {
     return [vm.$("XCL"), vm.$("YCL"), vm.$("ELEMNR"), vm.$("ELEMNR")];
-  }, ""], [null, "RCALL", function () {
+  }, "Compare given and expected"], [null, "RCALL", function () {
     return [vm.$("ELEYND"), vm.$("BLOCK"), vm.$("CNDSIZ")];
   }, "Allocate block for tree node"], [null, "PUTDC", function () {
     return [vm.$("ELEYND"), vm.$("CODE"), vm.$("LITCL")];
@@ -1495,7 +1495,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), 1];
   }, "Remove left bracket"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("XSPPTR")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Generate variable for array or table"], [null, "RCALL", function () {
     return [vm.$("ELEXND"), vm.$("BLOCK"), vm.$("CNDSIZ")];
   }, "Allocate block for tree node"], [null, "PUTDC", function () {
     return [vm.$("ELEXND"), vm.$("CODE"), vm.$("ITEMCL")];
@@ -1525,9 +1525,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ELEMND"), vm.$("ELEXND")];
   }, "Move to new node"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("RBTYP"), null, vm.$("ELEMNR")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Check for right bracket"], [null, "AEQLC", function () {
     return [vm.$("BRTYPE"), vm.$("CMATYP"), vm.$("ELECMA"), vm.$("ELEAR1")];
-  }, ""], ["ELEICH", "SETAC", function () {
+  }, "Verify comma"], ["ELEICH", "SETAC", function () {
     return [vm.$("EMSGCL"), vm.$("ILCHAR")];
   }, "'ILLEGAL CHARACTER IN ELEMENT'"], [null, "BRANCH", function () {
     return [vm.$("RTN1")];
@@ -1553,7 +1553,7 @@ SNOBOL.interp = function (vm) {
     return [null];
   }, "Procedure to compile expression"], [null, "RCALL", function () {
     return [vm.$("EXELND"), vm.$("ELEMNT"), null, [vm.$("RTN1"), vm.$("EXPNUL")]];
-  }, ""], [null, "SETAC", function () {
+  }, "Compile element"], [null, "SETAC", function () {
     return [vm.$("EXPRND"), 0];
   }, "Zero expression tree"], [null, "BRANCH", function () {
     return [vm.$("EXPR2")];
@@ -1561,11 +1561,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("EXPRND")];
   }, "Save expression tree"], [null, "RCALL", function () {
     return [vm.$("EXELND"), vm.$("ELEMNT"), null, [vm.$("RTN1"), vm.$("EXPERR")]];
-  }, ""], [null, "POP", function () {
+  }, "Compile element"], [null, "POP", function () {
     return [vm.$("EXPRND")];
   }, "Restore expression tree"], ["EXPR2", "RCALL", function () {
     return [vm.$("EXOPCL"), vm.$("BINOP"), null, [vm.$("RTN1"), vm.$("EXPR7")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Get binary operator"], [null, "RCALL", function () {
     return [vm.$("EXOPND"), vm.$("BLOCK"), vm.$("CNDSIZ")];
   }, "Allocate block for tree node"], [null, "PUTDC", function () {
     return [vm.$("EXOPND"), vm.$("CODE"), vm.$("EXOPCL")];
@@ -1579,11 +1579,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("EXPR1")];
   }, "Continue processing"], ["EXPR3", "GETDC", function () {
     return [vm.$("EXOPCL"), vm.$("EXOPCL"), 2 * vm.$("DESCR")];
-  }, ""], [null, "SETAV", function () {
+  }, "Get precedence descriptor"], [null, "SETAV", function () {
     return [vm.$("EXOPCL"), vm.$("EXOPCL")];
   }, "Get left precedence"], [null, "GETDC", function () {
     return [vm.$("EXEXND"), vm.$("EXPRND"), vm.$("FATHER")];
-  }, ""], [null, "GETDC", function () {
+  }, "Get father of node"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("EXEXND"), vm.$("CODE")];
   }, "Get function descriptor"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), 2 * vm.$("DESCR")];
@@ -1603,13 +1603,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("EXPRND"), vm.$("EXELND")];
   }, "Add current node as sibling"], ["EXPR5", "AEQLIC", function () {
     return [vm.$("EXPRND"), vm.$("FATHER"), 0, null, vm.$("EXPR11")];
-  }, ""], [null, "GETDC", function () {
+  }, "Check for root node"], [null, "GETDC", function () {
     return [vm.$("EXPRND"), vm.$("EXPRND"), vm.$("FATHER")];
-  }, ""], [null, "AEQLIC", function () {
+  }, "Get father node"], [null, "AEQLIC", function () {
     return [vm.$("EXPRND"), vm.$("FATHER"), 0, null, vm.$("EXPR11")];
-  }, ""], [null, "GETDC", function () {
+  }, "Check for root node"], [null, "GETDC", function () {
     return [vm.$("EXEXND"), vm.$("EXPRND"), vm.$("FATHER")];
-  }, ""], [null, "GETDC", function () {
+  }, "Get father node"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("EXEXND"), vm.$("CODE")];
   }, "Get function descriptor"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), 2 * vm.$("DESCR")];
@@ -1631,7 +1631,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("EXPRND")];
   }, "Set up for return"], ["EXPR9", "AEQLIC", function () {
     return [vm.$("XPTR"), vm.$("FATHER"), 0, null, vm.$("RTXNAM")];
-  }, ""], [null, "GETDC", function () {
+  }, "Check for root node"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("FATHER")];
   }, "Go back to father"], [null, "BRANCH", function () {
     return [vm.$("EXPR9")];
@@ -1661,7 +1661,7 @@ SNOBOL.interp = function (vm) {
     return [null];
   }, "Procedure to get to next character"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("FRWDTB"), vm.$("COMP3"), vm.$("FORRUN")];
-  }, ""], ["FORJRN", "MOVD", function () {
+  }, "Break for next nonblank"], ["FORJRN", "MOVD", function () {
     return [vm.$("BRTYPE"), vm.$("STYPE")];
   }, "Set up break type"], [null, "BRANCH", function () {
     return [vm.$("RTN2")];
@@ -1673,13 +1673,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("IOKEY"), vm.$("OUTBLK"), vm.$("LNBFSP")];
   }, "Print card image"], ["FORRUR", "STREAD", function () {
     return [vm.$("INBFSP"), vm.$("UNIT"), vm.$("FORRUR"), vm.$("COMP5")];
-  }, ""], [null, "SETSP", function () {
+  }, "Read new card iamge"], [null, "SETSP", function () {
     return [vm.$("TEXTSP"), vm.$("NEXTSP")];
   }, "Set up new line"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("CARDTB"), vm.$("COMP3"), vm.$("COMP3")];
-  }, ""], [null, "RCALL", function () {
+  }, "Determine card type"], [null, "RCALL", function () {
     return [null, vm.$("NEWCRD"), null, [vm.$("FORRUN"), vm.$("FORWRD")]];
-  }, ""], ["FOREOS", "MOVD", function () {
+  }, "Process new card"], ["FOREOS", "MOVD", function () {
     return [vm.$("BRTYPE"), vm.$("EOSCL")];
   }, "Set up end-of-card"], [null, "BRANCH", function () {
     return [vm.$("RTN2")];
@@ -1687,11 +1687,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FORWRD")];
   }, "Procedure to get to nonblank"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("IBLKTB"), vm.$("RTN1"), vm.$("FORRUN"), vm.$("FORJRN")];
-  }, ""], ["NEWCRD", "PROC", function () {
+  }, "Break out nonblank from blank"], ["NEWCRD", "PROC", function () {
     return [null];
   }, "Process new card image"], [null, "SELBRA", function () {
     return [vm.$("STYPE"), [null, vm.$("CMTCRD"), vm.$("CTLCRD"), vm.$("CNTCRD")]];
-  }, ""], [null, "AEQLC", function () {
+  }, "Branch on card type"], [null, "AEQLC", function () {
     return [vm.$("LISTCL"), 0, null, vm.$("RTN3")];
   }, "Return if listing is off"], [null, "MOVD", function () {
     return [vm.$("XCL"), vm.$("CSTNCL")];
@@ -1749,29 +1749,29 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TEXTSP"), 1];
   }, "Delete control character"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("FRWDTB"), vm.$("COMP3"), vm.$("CMTCRD")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Get to next nonblank character"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("NBTYP"), vm.$("CMTCRD")];
   }, "Verify nonbreak"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("LBLXTB"), vm.$("CMTCLR"), vm.$("CMTCLR")];
-  }, ""], [null, "LEXCMP", function () {
+  }, "Break out command"], [null, "LEXCMP", function () {
     return [vm.$("XSP"), vm.$("UNLSP"), vm.$("CTLCR1"), null, vm.$("CTLCR1")];
-  }, ""], [null, "SETAC", function () {
+  }, "Is it UNLIST?"], [null, "SETAC", function () {
     return [vm.$("LISTCL"), 0];
   }, "Zero listing switch"], [null, "BRANCH", function () {
     return [vm.$("RTN1")];
   }, "Return"], ["CTLCR1", "LEXCMP", function () {
     return [vm.$("XSP"), vm.$("LISTSP"), vm.$("CTLCR3"), null, vm.$("CTLCR3")];
-  }, ""], [null, "SETAC", function () {
+  }, "Is it LIST?"], [null, "SETAC", function () {
     return [vm.$("LISTCL"), 1];
   }, "Turn on listing"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("FRWDTB"), vm.$("COMP3"), vm.$("CMTCLR")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Get to next nonblank character"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("NBTYP"), vm.$("CMTCLR")];
   }, "Verify nonbreak"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("LBLXTB"), vm.$("CMTCLR"), vm.$("CMTCLR")];
-  }, ""], [null, "LEXCMP", function () {
+  }, "Get type of listing"], [null, "LEXCMP", function () {
     return [vm.$("XSP"), vm.$("LEFTSP"), vm.$("CTLCR2"), null, vm.$("CTLCR2")];
-  }, ""], [null, "SETAC", function () {
+  }, "Is it LEFT?"], [null, "SETAC", function () {
     return [vm.$("LLIST"), 1];
   }, "Set left listing switch"], [null, "BRANCH", function () {
     return [vm.$("CMTCLR")];
@@ -1781,7 +1781,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CMTCLR")];
   }, "Join terminal processing"], ["CTLCR3", "LEXCMP", function () {
     return [vm.$("XSP"), vm.$("EJCTSP"), vm.$("CMTCLR"), null, vm.$("CMTCLR")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Is it EJECT?"], [null, "AEQLC", function () {
     return [vm.$("LISTCL"), 0, null, vm.$("CMTCLR")];
   }, "Skip eject if not listing"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("EJECTF")];
@@ -1835,7 +1835,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CMBSCL"), vm.$("DESCR"), vm.$("GOTGCL")];
   }, "Insert direct goto"], [null, "PUTDC", function () {
     return [vm.$("CMBSCL"), 2 * vm.$("DESCR"), vm.$("LIT1CL")];
-  }, "E3.7.1"], [null, "PUTDC", function () {
+  }, "E3.7.1 Insert literal function"], [null, "PUTDC", function () {
     return [vm.$("CMBSCL"), 3 * vm.$("DESCR"), vm.$("XCL")];
   }, "Insert pointer to new code"], [null, "INCRA", function () {
     return [vm.$("CMBSCL"), 3 * vm.$("DESCR")];
@@ -1859,7 +1859,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("BRTYPE"), vm.$("NBTYP"), vm.$("RTN1")];
   }, "Verify nonbreak"], ["UNOPA", "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("UNOPTB"), vm.$("RTXNAM"), vm.$("RTN1")];
-  }, "E3.4.3"], [null, "RCALL", function () {
+  }, "E3.4.3 Break out unary operator"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("BLOCK"), vm.$("CNDSIZ")];
   }, "Allocate block for tree node"], [null, "PUTDC", function () {
     return [vm.$("YPTR"), vm.$("CODE"), vm.$("STYPE")];
@@ -1885,7 +1885,7 @@ SNOBOL.interp = function (vm) {
     return [null];
   }, ":<X>"], [null, "RCALL", function () {
     return [vm.$("OCBSCL"), vm.$("ARGVAL"), null, vm.$("INTR5")];
-  }, ""], [null, "VEQLC", function () {
+  }, "Get code pointer"], [null, "VEQLC", function () {
     return [vm.$("OCBSCL"), vm.$("C"), vm.$("INTR4")];
   }, "Must have CODE data type"], [null, "SETAC", function () {
     return [vm.$("OCICL"), 0];
@@ -1901,13 +1901,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("FNC"), null, vm.$("GOTLC")];
   }, "Test for function"], ["GOTLV", "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("GOTLV1"), vm.$("GOTLV1")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TLABL"), vm.$("XPTR"), vm.$("GOTLV1")];
-  }, ""], [null, "PUSH", function () {
+  }, "Look for LABEL trace"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
   }, "Save variable"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "POP", function () {
+  }, "E3.3.1 Perform trace"], [null, "POP", function () {
     return [vm.$("XPTR")];
   }, "Restore variable"], ["GOTLV1", "DEQL", function () {
     return [vm.$("XPTR"), vm.$("RETCL"), vm.$("GOTL1")];
@@ -1931,7 +1931,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("RTNUL3")];
   }, "Return"], ["GOTLC", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), vm.$("XPTR"), [vm.$("INTR5"), null, vm.$("INTR4")]];
-  }, "E3.10.3"], [null, "VEQLC", function () {
+  }, "E3.10.3 Evaluate goto"], [null, "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("S"), vm.$("INTR4"), vm.$("GOTLV")];
   }, "Variable must be STRING"], ["GOTO", "PROC", function () {
     return [null];
@@ -1955,15 +1955,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FRTNCL"), vm.$("XCL")];
   }, "Set up failure offset"], [null, "ACOMP", function () {
     return [vm.$("EXNOCL"), vm.$("EXLMCL"), vm.$("EXEX"), vm.$("EXEX")];
-  }, ""], [null, "INCRA", function () {
+  }, "Check &STLIMIT"], [null, "INCRA", function () {
     return [vm.$("EXNOCL"), 1];
   }, "Increment &STCOUNT"], [null, "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("RTNUL3"), vm.$("RTNUL3")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TKEYL"), vm.$("STCTKY"), vm.$("RTNUL3")];
   }, ""], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "BRANCH", function () {
+  }, "E3.3.1 Perform trace"], [null, "BRANCH", function () {
     return [vm.$("RTNUL3")];
   }, ""], ["INTERP", "PROC", function () {
     return [null];
@@ -1981,11 +1981,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("FALCL"), 1];
   }, "Increment &STFCOUNT"], [null, "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("INTERP"), vm.$("INTERP")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TKEYL"), vm.$("FALKY"), vm.$("INTERP")];
   }, ""], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "BRANCH", function () {
+  }, "E3.3.1 Perform trace"], [null, "BRANCH", function () {
     return [vm.$("INTERP")];
   }, ""], ["INVOKE", "PROC", function () {
     return [null];
@@ -1999,7 +1999,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INCL"), 0];
   }, "If equal, branch indirect"], ["INVK2", "TESTF", function () {
     return [vm.$("XPTR"), vm.$("FNC"), vm.$("ARGNER"), vm.$("INVK1")];
-  }, ""], [null, "TITLE", function () {
+  }, "Check for variable argument number"], [null, "TITLE", function () {
     return ["Argument Evaluation Procedures"];
   }, ""], ["ARGVAL", "PROC", function () {
     return [null];
@@ -2013,7 +2013,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("ARGV2")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("ARGV2")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get input descriptor"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("XPTR")], [vm.$("FAIL"), vm.$("RTXNAM")]];
@@ -2033,9 +2033,9 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("OCBSCL"), vm.$("OCICL"), vm.$("PATBCL"), vm.$("PATICL"), vm.$("WPTR"), vm.$("XCL"), vm.$("YCL"), vm.$("TCL")]];
   }, ""], [null, "PUSH", function () {
     return [[vm.$("MAXLEN"), vm.$("LENFCL"), vm.$("PDLPTR"), vm.$("PDLHED"), vm.$("NAMICL"), vm.$("NHEDCL")]];
-  }, ""], [null, "SPUSH", function () {
+  }, "Save system state descriptors"], [null, "SPUSH", function () {
     return [[vm.$("HEADSP"), vm.$("TSP"), vm.$("TXSP"), vm.$("XSP")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Save system state specifiers"], [null, "MOVD", function () {
     return [vm.$("OCBSCL"), vm.$("XPTR")];
   }, "Set up new code base"], [null, "SETAC", function () {
     return [vm.$("OCICL"), vm.$("DESCR")];
@@ -2053,11 +2053,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("EXPV4")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("EXPV4")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get input association"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("XPTR")], [vm.$("EXPV1"), vm.$("EXPV6")]];
-  }, ""], ["EXPV4", "GETDC", function () {
+  }, "Perform input"], ["EXPV4", "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get value"], ["EXPV6", "SETAC", function () {
     return [vm.$("SCL"), 2];
@@ -2069,17 +2069,17 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SCL"), 1];
   }, "Set new exit switch"], ["EXPV7", "SPOP", function () {
     return [[vm.$("XSP"), vm.$("TXSP"), vm.$("TSP"), vm.$("HEADSP")]];
-  }, ""], [null, "POP", function () {
+  }, "Restore system specifiers"], [null, "POP", function () {
     return [[vm.$("NHEDCL"), vm.$("NAMICL"), vm.$("PDLHED"), vm.$("PDLPTR"), vm.$("LENFCL"), vm.$("MAXLEN")]];
   }, ""], [null, "POP", function () {
     return [[vm.$("TCL"), vm.$("YCL"), vm.$("XCL"), vm.$("WPTR"), vm.$("PATICL"), vm.$("PATBCL"), vm.$("OCICL"), vm.$("OCBSCL")]];
-  }, ""], [null, "SELBRA", function () {
+  }, "Restore system descriptors"], [null, "SELBRA", function () {
     return [vm.$("SCL"), [vm.$("FAIL"), vm.$("RTXNAM"), vm.$("RTZPTR")]];
-  }, ""], ["EXPVC", "PUSH", function () {
+  }, "Select exit"], ["EXPVC", "PUSH", function () {
     return [vm.$("SCL")];
   }, "Save entrance indicator"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), vm.$("XPTR")];
-  }, "(EXPV9,EXPV5,)"], [null, "POP", function () {
+  }, "(EXPV9,EXPV5,) Evaluate function"], [null, "POP", function () {
     return [vm.$("SCL")];
   }, "Restore entrance indicator"], [null, "AEQLC", function () {
     return [vm.$("SCL"), 0, vm.$("EXPV6")];
@@ -2123,7 +2123,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), vm.$("XPTR")];
   }, "Set up to convert to EXPRESSION"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("CONVE"), null, [vm.$("FAIL"), vm.$("INTR10")]];
-  }, ""], ["EVAL1", "SETAC", function () {
+  }, "Convert to EXPRESSION"], ["EVAL1", "SETAC", function () {
     return [vm.$("SCL"), 0];
   }, "Set up entry indicator"], [null, "BRANCH", function () {
     return [vm.$("EXPVJ2")];
@@ -2139,15 +2139,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("INTV3")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("INTV3")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("XPTR")], vm.$("FAIL")];
-  }, ""], ["INTV", "LOCSP", function () {
+  }, "Perform input"], ["INTV", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier for string"], [null, "SPCINT", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("INTR1"), vm.$("RTXNAM")];
-  }, ""], ["INTV3", "GETDC", function () {
+  }, "Convert to integer"], ["INTV3", "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get value"], ["INTV2", "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("I"), null, vm.$("RTXNAM")];
@@ -2167,13 +2167,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("PATV2")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("PATV2")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("XPTR")], [vm.$("FAIL"), vm.$("RTXNAM")]];
-  }, ""], ["PATVC", "RCALL", function () {
+  }, "Perform input"], ["PATVC", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), [vm.$("XPTR")], [vm.$("FAIL"), vm.$("PATV1"), vm.$("PATV3")]];
-  }, ""], ["PATV2", "GETDC", function () {
+  }, "Evaluate argument"], ["PATV2", "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get value"], ["PATV3", "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("P"), null, vm.$("RTXNAM")];
@@ -2199,7 +2199,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Convert REAL to STRING"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR"), vm.$("RTXNAM")];
-  }, ""], ["VARVAL", "PROC", function () {
+  }, "Generate variable"], ["VARVAL", "PROC", function () {
     return [null];
   }, "Evaluate argument as string"], [null, "INCRA", function () {
     return [vm.$("OCICL"), vm.$("DESCR")];
@@ -2211,11 +2211,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("VARV4")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("VARV4")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get input association"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("XPTR")], [vm.$("FAIL"), vm.$("RTXNAM")]];
-  }, ""], ["VARV4", "GETDC", function () {
+  }, "Perform input"], ["VARV4", "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get value"], ["VARV2", "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("S"), null, vm.$("RTXNAM")];
@@ -2223,7 +2223,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("I"), vm.$("INTR1"), vm.$("GENVIX")];
   }, "Convert INTEGER to STRING"], ["VARVC", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), [vm.$("XPTR")], [vm.$("FAIL"), vm.$("VARV1"), vm.$("VARV2")]];
-  }, ""], ["XYARGS", "PROC", function () {
+  }, "Evaluate function"], ["XYARGS", "PROC", function () {
     return [null];
   }, "Procedure to evaluate argument pair"], [null, "SETAC", function () {
     return [vm.$("SCL"), 0];
@@ -2241,7 +2241,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get input association"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("YPTR")], vm.$("FAIL")];
-  }, ""], ["XY3", "AEQLC", function () {
+  }, "Perform input"], ["XY3", "AEQLC", function () {
     return [vm.$("SCL"), 0, vm.$("RTN2")];
   }, "Check for completion"], [null, "SETAC", function () {
     return [vm.$("SCL"), 1];
@@ -2257,7 +2257,7 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("SCL"), vm.$("XPTR")]];
   }, "Save indicator and argument"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("INVOKE"), [vm.$("YPTR")], [vm.$("FAIL"), vm.$("XY4")]];
-  }, ""], [null, "POP", function () {
+  }, "Evaluate function"], [null, "POP", function () {
     return [[vm.$("XPTR"), vm.$("SCL")]];
   }, "Restore indicator and argument"], [null, "BRANCH", function () {
     return [vm.$("XY3")];
@@ -2367,7 +2367,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DTCL"), vm.$("VRDTP"), null, vm.$("ARTHVR")];
   }, "STRING-REAL"], [null, "DEQL", function () {
     return [vm.$("DTCL"), vm.$("RVDTP"), vm.$("INTR1"), vm.$("ARTHRV")];
-  }, ""], ["ARTHII", "SELBRA", function () {
+  }, "REAL-STRING"], ["ARTHII", "SELBRA", function () {
     return [vm.$("SCL"), [vm.$("AD"), vm.$("DV"), vm.$("EX"), vm.$("MP"), vm.$("SB"), vm.$("CEQ"), vm.$("CGE"), vm.$("CGT"), vm.$("CLE"), vm.$("CLT"), vm.$("CNE"), vm.$("RM")]];
   }, ""], ["ARTHVI", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
@@ -2375,19 +2375,19 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("XSP"), null, vm.$("ARTHII")];
   }, "Convert string to integer"], [null, "SPREAL", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("INTR1"), vm.$("ARTHRI")];
-  }, ""], ["ARTHIV", "LOCSP", function () {
+  }, "Convert to real if possible"], ["ARTHIV", "LOCSP", function () {
     return [vm.$("YSP"), vm.$("YPTR")];
   }, "Get specifier"], [null, "SPCINT", function () {
     return [vm.$("YPTR"), vm.$("YSP"), null, vm.$("ARTHII")];
   }, "Convert string to integer"], [null, "SPREAL", function () {
     return [vm.$("YPTR"), vm.$("YSP"), vm.$("INTR1"), vm.$("ARTHIR")];
-  }, ""], ["ARTHVV", "LOCSP", function () {
+  }, "Convert to real if possible"], ["ARTHVV", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier"], [null, "SPCINT", function () {
     return [vm.$("XPTR"), vm.$("XSP"), null, vm.$("ARTHIV")];
   }, "Convert string to integer"], [null, "SPREAL", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("INTR1"), vm.$("ARTHRV")];
-  }, ""], ["ARTHRR", "SELBRA", function () {
+  }, "Convert to real if possible"], ["ARTHRR", "SELBRA", function () {
     return [vm.$("SCL"), [vm.$("AR"), vm.$("DR"), vm.$("EXR"), vm.$("MR"), vm.$("SR"), vm.$("REQ"), vm.$("RGE"), vm.$("RGT"), vm.$("RLE"), vm.$("RLT"), vm.$("RNE"), vm.$("INTR1")]];
   }, ""], ["ARTHIR", "INTRL", function () {
     return [vm.$("XPTR"), vm.$("XPTR")];
@@ -2403,13 +2403,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("XSP"), null, vm.$("ARTHIR")];
   }, "Convert string to integer"], [null, "SPREAL", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("INTR1"), vm.$("ARTHRR")];
-  }, ""], ["ARTHRV", "LOCSP", function () {
+  }, "Convert to real if possible"], ["ARTHRV", "LOCSP", function () {
     return [vm.$("YSP"), vm.$("YPTR")];
   }, ""], [null, "SPCINT", function () {
     return [vm.$("YPTR"), vm.$("YSP"), null, vm.$("ARTHRI")];
   }, "Convert string to integer"], [null, "SPREAL", function () {
     return [vm.$("YPTR"), vm.$("YSP"), vm.$("INTR1"), vm.$("ARTHRR")];
-  }, ""], ["AD", "SUM", function () {
+  }, "Convert to real if possible"], ["AD", "SUM", function () {
     return [vm.$("ZPTR"), vm.$("XPTR"), vm.$("YPTR"), vm.$("AERROR"), vm.$("ARTN")];
   }, ""], ["DV", "DIVIDE", function () {
     return [vm.$("ZPTR"), vm.$("XPTR"), vm.$("YPTR"), vm.$("AERROR"), vm.$("ARTN")];
@@ -2455,7 +2455,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("YPTR"), vm.$("RETNUL"), vm.$("FAIL"), vm.$("RETNUL")];
   }, ""], ["RM", "DIVIDE", function () {
     return [vm.$("ZPTR"), vm.$("XPTR"), vm.$("YPTR"), vm.$("AERROR")];
-  }, ""], [null, "MULT", function () {
+  }, "First divide"], [null, "MULT", function () {
     return [vm.$("WPTR"), vm.$("ZPTR"), vm.$("YPTR")];
   }, "Multiply truncated part"], [null, "SUBTRT", function () {
     return [vm.$("ZPTR"), vm.$("XPTR"), vm.$("WPTR")];
@@ -2473,7 +2473,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier"], [null, "SPCINT", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("FAIL"), vm.$("RETNUL")];
-  }, ""], ["MNS", "PROC", function () {
+  }, "Try conversion to INTEGER"], ["MNS", "PROC", function () {
     return [null];
   }, "-X"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("ARGVAL"), null, vm.$("FAIL")];
@@ -2485,7 +2485,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("R"), vm.$("INTR1"), vm.$("MNSR")];
   }, "REAL is acceptable"], ["MNSM", "MNSINT", function () {
     return [vm.$("ZPTR"), vm.$("XPTR"), vm.$("AERROR"), vm.$("ARTN")];
-  }, ""], ["MNSV", "LOCSP", function () {
+  }, "Form negative of integer"], ["MNSV", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier for string"], [null, "SPCINT", function () {
     return [vm.$("XPTR"), vm.$("XSP"), null, vm.$("MNSM")];
@@ -2557,7 +2557,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "E3.5.4"], [null, "MAKNOD", function () {
     return [vm.$("ZPTR"), vm.$("TPTR"), vm.$("ZCL"), vm.$("ZEROCL"), vm.$("YCL"), vm.$("XPTR")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Construct the pattern"], [null, "BRANCH", function () {
     return [vm.$("RTZPTR")];
   }, ""], ["LEN", "PROC", function () {
     return [vm.$("ANY")];
@@ -2699,7 +2699,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR")];
   }, "Save first argument"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("INVOKE"), vm.$("YPTR")];
-  }, "(FAIL,NAM4,)"], [null, "VEQLC", function () {
+  }, "(FAIL,NAM4,) Evaluate second argument"], [null, "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("E"), vm.$("NEMO")];
   }, "Verify EXPRESSION"], ["NAM4", "POP", function () {
     return [vm.$("XPTR")];
@@ -2713,17 +2713,17 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Allocate block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("XPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("XPTR")];
-  }, ""], ["NAMP", "RCALL", function () {
+  }, "Make pattern node"], ["NAMP", "RCALL", function () {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("SNODSZ")];
   }, "Allocate block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("WPTR"), vm.$("TPTR"), vm.$("ZEROCL"), vm.$("ZEROCL"), vm.$("NMECL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Make node for naming"], [null, "RCALL", function () {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Allocate block for  pattern"], [null, "POP", function () {
     return [vm.$("TVAL")];
   }, "Restore function descriptor"], [null, "MAKNOD", function () {
     return [vm.$("YPTR"), vm.$("TPTR"), vm.$("ZEROCL"), vm.$("ZEROCL"), vm.$("TVAL"), vm.$("YPTR")];
-  }, ""], [null, "GETSIZ", function () {
+  }, "Make pattern for backup"], [null, "GETSIZ", function () {
     return [vm.$("XSIZ"), vm.$("XPTR")];
   }, "Get size of first pattern"], [null, "SUM", function () {
     return [vm.$("YSIZ"), vm.$("XSIZ"), vm.$("NODSIZ")];
@@ -2741,7 +2741,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("XPTR")];
   }, "Get least value"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("WPTR"), vm.$("TVAL"), vm.$("ZEROCL"), vm.$("NODSIZ"), vm.$("NODSIZ")];
-  }, ""], [null, "CPYPAT", function () {
+  }, "Copy three patterns"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("XPTR"), vm.$("ZEROCL"), vm.$("NODSIZ"), vm.$("YSIZ"), vm.$("XSIZ")];
   }, ""], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("YPTR"), vm.$("ZEROCL"), vm.$("YSIZ"), vm.$("ZEROCL"), vm.$("TSIZ")];
@@ -2769,7 +2769,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DTCL"), vm.$("PVDTP"), null, vm.$("ORPV")];
   }, "Is it PATTERN-STRING?"], [null, "DEQL", function () {
     return [vm.$("DTCL"), vm.$("PPDTP"), vm.$("INTR1"), vm.$("ORPP")];
-  }, ""], ["ORVV", "LOCSP", function () {
+  }, "Is it PATTERN_PATTERN?"], ["ORVV", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("XSP")];
@@ -2777,7 +2777,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Get block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("XPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("XPTR")];
-  }, ""], ["ORPV", "LOCSP", function () {
+  }, "Construct pattern"], ["ORPV", "LOCSP", function () {
     return [vm.$("YSP"), vm.$("YPTR")];
   }, "Get specifier"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("YSP")];
@@ -2785,7 +2785,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Get block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("YPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("YPTR")];
-  }, ""], ["ORPP", "GETSIZ", function () {
+  }, "Construct pattern"], ["ORPP", "GETSIZ", function () {
     return [vm.$("XSIZ"), vm.$("XPTR")];
   }, "Get size of first pattern"], [null, "GETSIZ", function () {
     return [vm.$("YSIZ"), vm.$("YPTR")];
@@ -2799,9 +2799,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), vm.$("TPTR")];
   }, "Save copy"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("XPTR"), vm.$("ZEROCL"), vm.$("ZEROCL"), vm.$("ZEROCL"), vm.$("XSIZ")];
-  }, ""], [null, "CPYPAT", function () {
+  }, "Copy first pattern"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("YPTR"), vm.$("ZEROCL"), vm.$("XSIZ"), vm.$("ZEROCL"), vm.$("YSIZ")];
-  }, ""], [null, "LINKOR", function () {
+  }, "Copy second pattern"], [null, "LINKOR", function () {
     return [vm.$("ZPTR"), vm.$("XSIZ")];
   }, "Link alternatives"], [null, "BRANCH", function () {
     return [vm.$("RTZPTR")];
@@ -2813,7 +2813,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Get block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("XPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("XPTR")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Construct pattern"], [null, "BRANCH", function () {
     return [vm.$("ORPP")];
   }, "Join processing"], [null, "TITLE", function () {
     return ["Pattern Matching Procedures"];
@@ -2845,7 +2845,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DTCL"), vm.$("RPDTP"), null, vm.$("SCANRP")];
   }, "Is it REAL-PATTERN?"], [null, "DEQL", function () {
     return [vm.$("DTCL"), vm.$("IPDTP"), vm.$("INTR1"), vm.$("SCANIP")];
-  }, ""], ["SCANVV", "LOCSP", function () {
+  }, "Is it INTEGER-PATTERN?"], ["SCANVV", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier for subject"], [null, "LOCSP", function () {
     return [vm.$("YSP"), vm.$("YPTR")];
@@ -2881,7 +2881,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Convert REAL to STRING"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR"), vm.$("SCANVP")];
-  }, ""], ["SJSR", "PROC", function () {
+  }, "Generate variable"], ["SJSR", "PROC", function () {
     return [null];
   }, "Pattern matching with replacement"], [null, "INCRA", function () {
     return [vm.$("OCICL"), vm.$("DESCR")];
@@ -2893,11 +2893,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("SJSR1A")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("WPTR"), vm.$("SJSR1A")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look of input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("WPTR")], [vm.$("FAIL"), vm.$("SJSR1B")]];
-  }, ""], ["SJSR1A", "GETDC", function () {
+  }, "Perform input"], ["SJSR1A", "GETDC", function () {
     return [vm.$("XPTR"), vm.$("WPTR"), vm.$("DESCR")];
   }, "Get value"], ["SJSR1B", "PUSH", function () {
     return [[vm.$("WPTR"), vm.$("XPTR")]];
@@ -2925,7 +2925,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DTCL"), vm.$("IPDTP"), vm.$("INTR1"), vm.$("SJSSIP")];
   }, ""], ["SJSRC1", "RCALL", function () {
     return [vm.$("WPTR"), vm.$("INVOKE"), [vm.$("WPTR")], [vm.$("FAIL"), vm.$("SJSR1"), vm.$("NEMO")]];
-  }, ""], ["SJSSVP", "LOCSP", function () {
+  }, "Evaluate subject"], ["SJSSVP", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier"], [null, "RCALL", function () {
     return [null, vm.$("SCNR"), null, [vm.$("FAIL"), null, vm.$("FAIL")]];
@@ -2947,11 +2947,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Convert REAL to STRING"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR"), vm.$("SJSSVV")];
-  }, ""], ["SJSSRP", "REALST", function () {
+  }, "Generate variable"], ["SJSSRP", "REALST", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Convert REAL to STRING"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR"), vm.$("SJSSVP")];
-  }, ""], ["SJVVON", "AEQLC", function () {
+  }, "Generate variable"], ["SJVVON", "AEQLC", function () {
     return [vm.$("ANCCL"), 0, vm.$("FAIL")];
   }, "Check &ANCHOR"], [null, "ADDLG", function () {
     return [vm.$("HEADSP"), vm.$("ONECL")];
@@ -2971,7 +2971,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TSP"), vm.$("YSP"), vm.$("XSP"), vm.$("FAIL")];
   }, "Get common length"], [null, "LEXCMP", function () {
     return [vm.$("TSP"), vm.$("YSP"), vm.$("SJVVON"), null, vm.$("SJVVON")];
-  }, ""], [null, "SETAC", function () {
+  }, "Compare strings"], [null, "SETAC", function () {
     return [vm.$("NAMGCL"), 0];
   }, "Clear naming switch"], [null, "REMSP", function () {
     return [vm.$("TAILSP"), vm.$("XSP"), vm.$("TSP")];
@@ -3013,23 +3013,23 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("HEADSP")];
   }, "Copy specifier"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("XSPPTR")]];
-  }, ""], [null, "GETLG", function () {
+  }, "Generate variable for head"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("HEADSP")];
   }, "Get length of head"], [null, "RCALL", function () {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Allocate block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("XPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("XPTR")];
-  }, ""], [null, "SETSP", function () {
+  }, "Make pattern node"], [null, "SETSP", function () {
     return [vm.$("YSP"), vm.$("TAILSP")];
   }, "Set up tail specifier"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("GENVAR"), [vm.$("YSPPTR")]];
-  }, ""], [null, "GETLG", function () {
+  }, "Generate variable for tail"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TAILSP")];
   }, "Get length of tail"], [null, "RCALL", function () {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Allocate block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("YPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("YPTR")];
-  }, ""], [null, "GETSIZ", function () {
+  }, "Make pattern node"], [null, "GETSIZ", function () {
     return [vm.$("XSIZ"), vm.$("XPTR")];
   }, "Get size of head node"], [null, "GETSIZ", function () {
     return [vm.$("YSIZ"), vm.$("YPTR")];
@@ -3049,15 +3049,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("ZPTR")];
   }, "Get least value of replacement"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("XPTR"), vm.$("TVAL"), vm.$("ZEROCL"), vm.$("XSIZ"), vm.$("XSIZ")];
-  }, ""], [null, "LVALUE", function () {
+  }, "Copy in head"], [null, "LVALUE", function () {
     return [vm.$("TVAL"), vm.$("YPTR")];
   }, "Get least value of tail"], [null, "SUM", function () {
     return [vm.$("TSIZ"), vm.$("XSIZ"), vm.$("ZSIZ")];
   }, "Get size of first two"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("ZPTR"), vm.$("TVAL"), vm.$("XSIZ"), vm.$("TSIZ"), vm.$("ZSIZ")];
-  }, ""], [null, "CPYPAT", function () {
+  }, "Copy in object"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("YPTR"), vm.$("ZEROCL"), vm.$("TSIZ"), vm.$("ZEROCL"), vm.$("YSIZ")];
-  }, ""], [null, "MOVD", function () {
+  }, "Copy in tail"], [null, "MOVD", function () {
     return [vm.$("ZPTR"), vm.$("VVAL")];
   }, "Set up return value"], [null, "BRANCH", function () {
     return [vm.$("SJSRV1")];
@@ -3095,7 +3095,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OUTSW"), 0, null, vm.$("SJSRV2")];
   }, "Check &OUTPUT"], [null, "LOCAPV", function () {
     return [vm.$("YPTR"), vm.$("OUTATL"), vm.$("WPTR"), vm.$("SJSRV2")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for output association"], [null, "GETDC", function () {
     return [vm.$("YPTR"), vm.$("YPTR"), vm.$("DESCR")];
   }, "Get output association"], [null, "RCALL", function () {
     return [null, vm.$("PUTOUT"), [vm.$("YPTR"), vm.$("ZPTR")]];
@@ -3103,9 +3103,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TRAPCL"), 0, null, vm.$("RTN3"), vm.$("RTN3")];
   }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TVALL"), vm.$("WPTR"), vm.$("RTN3")];
-  }, ""], [null, "RCALL", function () {
+  }, "Look for VALUE trace"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR"), vm.$("RTN3")];
-  }, "E3.3.1"], ["SJSRI", "INTSPC", function () {
+  }, "E3.3.1 Perform trace"], ["SJSRI", "INTSPC", function () {
     return [vm.$("ZSP"), vm.$("ZPTR")];
   }, "Convert INTEGER"], [null, "BRANCH", function () {
     return [vm.$("SJSRS")];
@@ -3151,7 +3151,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room for history entry"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "SETAC", function () {
+  }, "Check for overflow"], [null, "SETAC", function () {
     return [vm.$("LENFCL"), 1];
   }, "Set length failure"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("SCONCL")];
@@ -3159,15 +3159,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get cursor position"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Insert on history list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Insert length failure"], [null, "BRANCH", function () {
     return [vm.$("SCIN1")];
   }, "Join common scanning"], ["SCNR3", "INCRA", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room for history entry"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "SETLC", function () {
+  }, "Check for overflow"], [null, "SETLC", function () {
     return [vm.$("HEADSP"), 0];
   }, "Zero length of head"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("SCFLCL")];
@@ -3175,9 +3175,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get cursor position"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Insert on history list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Insert length failure"], [null, "BRANCH", function () {
     return [vm.$("SCIN1")];
   }, "Join common scanning"], ["SCIN", "PROC", function () {
     return [vm.$("SCNR")];
@@ -3203,7 +3203,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room for history entry"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for overflow"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("XCL")];
   }, "Insert then-or descriptor"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
@@ -3211,13 +3211,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TMVAL"), vm.$("YCL")];
   }, "Insert residual"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Insert on history list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Insert length failure"], [null, "AEQLC", function () {
     return [vm.$("FULLCL"), 0, vm.$("SCIN4")];
   }, "Check &FULLSCAN"], [null, "CHKVAL", function () {
     return [vm.$("MAXLEN"), vm.$("YCL"), vm.$("TXSP"), vm.$("SALT1")];
-  }, ""], ["SCIN4", "BRANIC", function () {
+  }, "Check values"], ["SCIN4", "BRANIC", function () {
     return [vm.$("ZCL"), 0];
   }, "Branch to procedure"], ["SALF", "PROC", function () {
     return [vm.$("SCNR")];
@@ -3229,7 +3229,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SCNR")];
   }, "Length failure procedure"], ["SALT1", "GETDC", function () {
     return [vm.$("LENFCL"), vm.$("PDLPTR"), 3 * vm.$("DESCR")];
-  }, ""], ["SALT2", "GETDC", function () {
+  }, "Get length failure from history"], ["SALT2", "GETDC", function () {
     return [vm.$("XCL"), vm.$("PDLPTR"), vm.$("DESCR")];
   }, "Get then-or descriptor"], [null, "GETDC", function () {
     return [vm.$("YCL"), vm.$("PDLPTR"), 2 * vm.$("DESCR")];
@@ -3311,11 +3311,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), 0, null, vm.$("SCNAME")];
   }, "E3.5.5"], [null, "SELBRA", function () {
     return [vm.$("SCL"), [null, vm.$("BRKV"), vm.$("NNYV"), vm.$("SPNV")]];
-  }, ""], ["ANYV", "DEQL", function () {
+  }, "Select processor"], ["ANYV", "DEQL", function () {
     return [vm.$("XPTR"), vm.$("TBLCS"), vm.$("ANYC2")];
   }, "Was last argument the same?"], [null, "AEQL", function () {
     return [vm.$("TBLFNC"), vm.$("ANYCCL"), null, vm.$("ANYC3")];
-  }, ""], ["ANYC2", "CLERTB", function () {
+  }, "If so, was last procedure for ANY(S)"], ["ANYC2", "CLERTB", function () {
     return [vm.$("SNABTB"), vm.$("ERROR")];
   }, "If not, clear stream table"], [null, "LOCSP", function () {
     return [vm.$("YSP"), vm.$("XPTR")];
@@ -3357,7 +3357,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("TBLCS"), vm.$("BRKC2")];
   }, "Was last argument the same?"], [null, "AEQL", function () {
     return [vm.$("TBLFNC"), vm.$("BRKCCL"), null, vm.$("ANYC3")];
-  }, ""], ["BRKC2", "CLERTB", function () {
+  }, "Was the last procedure for BREAK"], ["BRKC2", "CLERTB", function () {
     return [vm.$("SNABTB"), vm.$("CONTIN")];
   }, "If not, clear stream table"], [null, "LOCSP", function () {
     return [vm.$("YSP"), vm.$("XPTR")];
@@ -3379,7 +3379,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("TBLCS"), vm.$("NNYC2")];
   }, "Was last argument the same?"], [null, "AEQL", function () {
     return [vm.$("TBLFNC"), vm.$("NNYCCL"), null, vm.$("ANYC3")];
-  }, ""], ["NNYC2", "CLERTB", function () {
+  }, "Was the last procedure for NOTANY?"], ["NNYC2", "CLERTB", function () {
     return [vm.$("SNABTB"), vm.$("STOP")];
   }, "If not, clear stream table"], [null, "LOCSP", function () {
     return [vm.$("YSP"), vm.$("XPTR")];
@@ -3401,7 +3401,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("TBLCS"), vm.$("SPNC2")];
   }, "Was last argument the same?"], [null, "AEQL", function () {
     return [vm.$("TBLFNC"), vm.$("SPNCCL"), null, vm.$("SPNC3")];
-  }, ""], ["SPNC2", "CLERTB", function () {
+  }, "Was the last procedure for SPAN?"], ["SPNC2", "CLERTB", function () {
     return [vm.$("SNABTB"), vm.$("STOPSH")];
   }, "If not, clear stream table"], [null, "LOCSP", function () {
     return [vm.$("YSP"), vm.$("XPTR")];
@@ -3413,7 +3413,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TBLFNC"), vm.$("SPNCCL")];
   }, "Save procedure to check next time"], ["SPNC3", "LCOMP", function () {
     return [vm.$("XSP"), vm.$("TXSP"), null, vm.$("TSALT"), vm.$("TSALT")];
-  }, ""], [null, "REMSP", function () {
+  }, "Length failure if too short"], [null, "REMSP", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("TXSP")];
   }, "Get specifier to unscanned portion"], [null, "STREAM", function () {
     return [vm.$("ZSP"), vm.$("YSP"), vm.$("SNABTB"), vm.$("TSALF")];
@@ -3449,7 +3449,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SCL")];
   }, "E3.5.6"], [null, "BRANCH", function () {
     return [vm.$("SCDTER")];
-  }, "E3.5.6"], ["LPRRTE", "RCALL", function () {
+  }, "E3.5.6 Is it STRING?"], ["LPRRTE", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("EXPVAL"), vm.$("XPTR"), [null, vm.$("LPRRT1")]];
   }, "E3.2.1"], [null, "POP", function () {
     return [vm.$("SCL")];
@@ -3463,11 +3463,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SCL")];
   }, "Restore entry indicator"], [null, "SELBRA", function () {
     return [vm.$("SCL"), [null, vm.$("POSII"), vm.$("RPSII"), vm.$("RTBI"), vm.$("TBI")]];
-  }, ""], [null, "ACOMPC", function () {
+  }, "Select matching procedure"], [null, "ACOMPC", function () {
     return [vm.$("XPTR"), 0, null, null, vm.$("SCLENR")];
   }, "Check for negative length"], [null, "CHKVAL", function () {
     return [vm.$("MAXLEN"), vm.$("XPTR"), vm.$("TXSP"), vm.$("TSALT")];
-  }, ""], [null, "ADDLG", function () {
+  }, "Compare with maximum length"], [null, "ADDLG", function () {
     return [vm.$("TXSP"), vm.$("XPTR")];
   }, "Add to length matched"], [null, "BRANCH", function () {
     return [vm.$("SCOK"), vm.$("SCNR")];
@@ -3479,7 +3479,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("MAXLEN"), vm.$("TSALT")];
   }, "Check desired against maximum"], [null, "ACOMP", function () {
     return [vm.$("XPTR"), vm.$("NVAL"), vm.$("TSALF"), vm.$("TSCOK")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Ceck against cursor position"], [null, "BRANCH", function () {
     return [vm.$("SALT"), vm.$("SCNR")];
   }, ""], ["RPSII", "ACOMPC", function () {
     return [vm.$("XPTR"), 0, null, null, vm.$("SCLENR")];
@@ -3491,7 +3491,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("NVAL"), vm.$("TXSP")];
   }, "Get cursor position"], [null, "ACOMP", function () {
     return [vm.$("NVAL"), vm.$("TVAL"), vm.$("TSALT"), vm.$("TSCOK"), vm.$("TSALF")];
-  }, ""], ["RTBI", "ACOMPC", function () {
+  }, "Compare two positions"], ["RTBI", "ACOMPC", function () {
     return [vm.$("XPTR"), 0, null, null, vm.$("SCLENR")];
   }, "Check for negative length"], [null, "GETLG", function () {
     return [vm.$("NVAL"), vm.$("XSP")];
@@ -3585,11 +3585,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("ZEROCL")];
   }, ""], [null, "GETAC", function () {
     return [vm.$("TVAL"), vm.$("PDLPTR")];
-  }, "-2*DESCR"], [null, "GETLG", function () {
+  }, "-2*DESCR Get old cursor position"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get current cursor position"], [null, "ACOMP", function () {
     return [vm.$("TVAL"), vm.$("TMVAL"), vm.$("TSCOK"), null, vm.$("TSCOK")];
-  }, ""], ["ONAR1", "PUSH", function () {
+  }, "Compare positions"], ["ONAR1", "PUSH", function () {
     return [vm.$("TVAL")];
   }, "Save cursor position"], [null, "DECRA", function () {
     return [vm.$("PDLPTR"), 6 * vm.$("DESCR")];
@@ -3603,7 +3603,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("ZEROCL")];
   }, ""], [null, "GETAC", function () {
     return [vm.$("TVAL"), vm.$("PDLPTR")];
-  }, "-2*DESCR"], [null, "BRANCH", function () {
+  }, "-2*DESCR Get old cursor position"], [null, "BRANCH", function () {
     return [vm.$("ONAR1")];
   }, "Join processing"], ["FARB", "PROC", function () {
     return [null];
@@ -3623,7 +3623,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("TVAL"), vm.$("NVAL")];
   }, "Add them"], [null, "ACOMP", function () {
     return [vm.$("TVAL"), vm.$("MAXLEN"), vm.$("FARB1"), vm.$("FARB1")];
-  }, ""], [null, "ADDLG", function () {
+  }, "Check against maximum"], [null, "ADDLG", function () {
     return [vm.$("TXSP"), vm.$("ONECL")];
   }, "Add one for ARB"], [null, "GETLG", function () {
     return [vm.$("TVAL"), vm.$("TXSP")];
@@ -3653,7 +3653,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OUTSW"), 0, null, vm.$("ATP2")];
   }, "Check &OUTPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("OUTATL"), vm.$("XPTR"), vm.$("ATP2")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for output association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get output association descriptor"], [null, "RCALL", function () {
     return [null, vm.$("PUTOUT"), [vm.$("ZPTR"), vm.$("NVAL")]];
@@ -3661,7 +3661,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TRAPCL"), 0, null, vm.$("TSCOK")];
   }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TVALL"), vm.$("XPTR"), vm.$("TSCOK")];
-  }, ""], [null, "PUSH", function () {
+  }, "Look for trace association"], [null, "PUSH", function () {
     return [[vm.$("PATBCL"), vm.$("PATICL"), vm.$("WPTR"), vm.$("XCL"), vm.$("YCL")]];
   }, ""], [null, "PUSH", function () {
     return [[vm.$("MAXLEN"), vm.$("LENFCL"), vm.$("PDLPTR"), vm.$("PDLHED"), vm.$("NAMICL"), vm.$("NHEDCL")]];
@@ -3673,7 +3673,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("NHEDCL"), vm.$("NAMICL")];
   }, "Set new name list heading"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "SPOP", function () {
+  }, "E3.3.1 Perform tracing"], [null, "SPOP", function () {
     return [[vm.$("XSP"), vm.$("TXSP"), vm.$("TSP"), vm.$("HEADSP")]];
   }, ""], [null, "POP", function () {
     return [[vm.$("NHEDCL"), vm.$("NAMICL"), vm.$("PDLHED"), vm.$("PDLPTR"), vm.$("LENFCL"), vm.$("MAXLEN")]];
@@ -3699,7 +3699,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("TVAL"), vm.$("NVAL")];
   }, "Add remainder possible"], [null, "ACOMP", function () {
     return [vm.$("TVAL"), vm.$("MAXLEN"), vm.$("BAL1"), vm.$("BAL1")];
-  }, ""], [null, "SUBTRT", function () {
+  }, "Compare to maximum"], [null, "SUBTRT", function () {
     return [vm.$("TVAL"), vm.$("MAXLEN"), vm.$("TVAL")];
   }, "Get maximum length for BAL"], [null, "GETBAL", function () {
     return [vm.$("TXSP"), vm.$("TVAL"), vm.$("BAL1")];
@@ -3737,7 +3737,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("VSP"), vm.$("TSP"), vm.$("VSP"), vm.$("TSALT")];
   }, "Get part to match"], [null, "LEXCMP", function () {
     return [vm.$("VSP"), vm.$("TSP"), vm.$("TSALF"), null, vm.$("TSALF")];
-  }, ""], [null, "GETLG", function () {
+  }, "Compare strings"], [null, "GETLG", function () {
     return [vm.$("YPTR"), vm.$("TSP")];
   }, "Get length"], [null, "ADDLG", function () {
     return [vm.$("TXSP"), vm.$("YPTR")];
@@ -3751,7 +3751,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("PATBCL"), vm.$("PATICL")];
   }, "Get argument expression"], ["STAR2", "RCALL", function () {
     return [vm.$("YPTR"), vm.$("EXPVAL"), vm.$("YPTR"), vm.$("TSALF")];
-  }, ""], [null, "VEQLC", function () {
+  }, "Evaluate argument"], [null, "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("E"), null, vm.$("STAR2")];
   }, "Is is EXPRESSION?"], [null, "SUM", function () {
     return [vm.$("XPTR"), vm.$("PATBCL"), vm.$("PATICL")];
@@ -3789,27 +3789,27 @@ SNOBOL.interp = function (vm) {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room for history"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for overflow"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("SCFLCL")];
   }, "Insert failure function"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get cursor position"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Insert on history list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "PUSH", function () {
+  }, "Insert length failure"], [null, "PUSH", function () {
     return [[vm.$("MAXLEN"), vm.$("PATBCL"), vm.$("PATICL"), vm.$("XCL"), vm.$("YCL")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Save scanner state"], [null, "MOVD", function () {
     return [vm.$("MAXLEN"), vm.$("NVAL")];
   }, "Set up new maximum"], [null, "RCALL", function () {
     return [null, vm.$("SCIN"), null, [vm.$("STARP5"), null, vm.$("RTNUL3")]];
-  }, ""], ["STARP2", "POP", function () {
+  }, "Call the scanner"], ["STARP2", "POP", function () {
     return [[vm.$("YCL"), vm.$("XCL"), vm.$("PATICL"), vm.$("PATBCL"), vm.$("MAXLEN")]];
-  }, ""], [null, "BRANCH", function () {
+  }, "Restore scanner state"], [null, "BRANCH", function () {
     return [vm.$("SCOK"), vm.$("SCNR")];
   }, "Return matching successfully"], ["STARP5", "POP", function () {
     return [[vm.$("YCL"), vm.$("XCL"), vm.$("PATICL"), vm.$("PATBCL"), vm.$("MAXLEN")]];
-  }, ""], ["STARP3", "AEQLC", function () {
+  }, "Restore scanner state"], ["STARP3", "AEQLC", function () {
     return [vm.$("LENFCL"), 0, vm.$("TSALT")];
   }, "Check length failure"], [null, "BRANCH", function () {
     return [vm.$("SALF"), vm.$("SCNR")];
@@ -3825,7 +3825,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("P"), null, vm.$("DSARP")];
   }, "Is it PATTERN?"], [null, "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("I"), vm.$("SCDTER"), vm.$("STARP3")];
-  }, ""], ["DSARP", "AEQLC", function () {
+  }, "Is it INTEGER?"], ["DSARP", "AEQLC", function () {
     return [vm.$("FULLCL"), 0, null, vm.$("DSARP1")];
   }, "Check &FULLSCAN"], [null, "SETAC", function () {
     return [vm.$("NVAL"), 0];
@@ -3837,25 +3837,25 @@ SNOBOL.interp = function (vm) {
     return [vm.$("NVAL"), vm.$("MAXLEN"), vm.$("NVAL")];
   }, "Compute residual"], [null, "PUSH", function () {
     return [[vm.$("MAXLEN"), vm.$("PATBCL"), vm.$("PATICL"), vm.$("XCL"), vm.$("YCL")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Save scanner state"], [null, "MOVD", function () {
     return [vm.$("MAXLEN"), vm.$("NVAL")];
   }, "Set up new maximum"], [null, "RCALL", function () {
     return [null, vm.$("UNSC"), null, [vm.$("STARP5"), vm.$("STARP2"), vm.$("RTNUL3")]];
-  }, ""], ["FNCE", "PROC", function () {
+  }, "Call unscanning procedure"], ["FNCE", "PROC", function () {
     return [null];
   }, "Procedure for matching FENCE"], [null, "INCRA", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Create new history entry"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for overflow"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("FNCFCL")];
   }, "Insert FENCE failure function"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get length"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Save length"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "SETAC", function () {
+  }, "Save length failure switch"], [null, "SETAC", function () {
     return [vm.$("LENFCL"), 1];
   }, "Set length failure switch"], [null, "BRANIC", function () {
     return [vm.$("SCOKCL"), 0];
@@ -3865,15 +3865,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room for history entry"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for end of list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("FNMECL")];
   }, "Insert backup function"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get cursor position"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Put on history list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "PUSH", function () {
+  }, "Put length failure indicator"], [null, "PUSH", function () {
     return [[vm.$("TMVAL")]];
   }, "Save cursor"], [null, "SETAC", function () {
     return [vm.$("LENFCL"), 1];
@@ -3885,7 +3885,7 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("TVAL")]];
   }, "Restore cursor"], ["FNME1", "AEQLC", function () {
     return [vm.$("LENFCL"), 0, vm.$("TSALT"), vm.$("TSALF")];
-  }, ""], ["ENME", "PROC", function () {
+  }, "Check length failure indicator"], ["ENME", "PROC", function () {
     return [vm.$("NME")];
   }, "Naming process for X . Y"], [null, "INCRA", function () {
     return [vm.$("PATICL"), vm.$("DESCR")];
@@ -3907,15 +3907,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("DESCR"), vm.$("TSP")];
   }, "Insert specifier"], [null, "PUTDC", function () {
     return [vm.$("TPTR"), vm.$("DESCR") + vm.$("SPEC"), vm.$("YPTR")];
-  }, ""], [null, "INCRA", function () {
+  }, "Insert argument"], [null, "INCRA", function () {
     return [vm.$("NAMICL"), vm.$("DESCR") + vm.$("SPEC")];
   }, "Increment list offset"], [null, "ACOMP", function () {
     return [vm.$("NAMICL"), vm.$("NMOVER"), vm.$("INTR13"), vm.$("ENME1")];
-  }, ""], ["ENME2", "INCRA", function () {
+  }, "Check for overflow"], ["ENME2", "INCRA", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR") + vm.$("SPEC")];
   }, "Make room on history list"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for overflow"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("DNMECL")];
   }, "Insert unravelling function"], ["ENME3", "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
@@ -3923,9 +3923,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TMVAL"), vm.$("YCL")];
   }, ""], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Insert on list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "SETAC", function () {
+  }, "Insert length failure"], [null, "SETAC", function () {
     return [vm.$("LENFCL"), 1];
   }, "Set length failure"], [null, "BRANCH", function () {
     return [vm.$("SCOK"), vm.$("SCNR")];
@@ -3981,49 +3981,49 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("K"), null, vm.$("ENMIC")];
   }, "Check for KEYWORD data type"], [null, "RCALL", function () {
     return [vm.$("VVAL"), vm.$("GENVAR"), [vm.$("TSPPTR")]];
-  }, ""], ["ENMI3", "PUTDC", function () {
+  }, "Generate variable"], ["ENMI3", "PUTDC", function () {
     return [vm.$("YPTR"), vm.$("DESCR"), vm.$("VVAL")];
   }, "Perform assignment"], [null, "AEQLC", function () {
     return [vm.$("OUTSW"), 0, null, vm.$("ENMI4")];
   }, "Check &OUTPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("OUTATL"), vm.$("YPTR"), vm.$("ENMI4")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for output association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "RCALL", function () {
     return [null, vm.$("PUTOUT"), [vm.$("ZPTR"), vm.$("VVAL")]];
   }, "Perform output"], ["ENMI4", "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("ENMI2"), vm.$("ENMI2")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TVALL"), vm.$("YPTR"), vm.$("ENMI2")];
-  }, ""], [null, "PUSH", function () {
+  }, "Look for VALUE trace"], [null, "PUSH", function () {
     return [[vm.$("PATBCL"), vm.$("PATICL"), vm.$("WPTR"), vm.$("XCL"), vm.$("YCL")]];
-  }, ""], [null, "PUSH", function () {
+  }, "Save relevant descriptors"], [null, "PUSH", function () {
     return [[vm.$("MAXLEN"), vm.$("LENFCL"), vm.$("PDLPTR"), vm.$("PDLHED"), vm.$("NAMICL"), vm.$("NHEDCL")]];
   }, ""], [null, "SPUSH", function () {
     return [[vm.$("HEADSP"), vm.$("TSP"), vm.$("TXSP"), vm.$("XSP")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Save relevant specifiers"], [null, "MOVD", function () {
     return [vm.$("PDLHED"), vm.$("PDLPTR")];
   }, "Set up new history list head"], [null, "MOVD", function () {
     return [vm.$("NHEDCL"), vm.$("NAMICL")];
   }, "Set up new name list head"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "SPOP", function () {
+  }, "E3.3.1 Perform trace"], [null, "SPOP", function () {
     return [[vm.$("XSP"), vm.$("TXSP"), vm.$("TSP"), vm.$("HEADSP")]];
-  }, ""], [null, "POP", function () {
+  }, "Restore specifiers"], [null, "POP", function () {
     return [[vm.$("NHEDCL"), vm.$("NAMICL"), vm.$("PDLHED"), vm.$("PDLPTR"), vm.$("LENFCL"), vm.$("MAXLEN")]];
-  }, ""], [null, "POP", function () {
+  }, "Restore descriptors"], [null, "POP", function () {
     return [[vm.$("YCL"), vm.$("XCL"), vm.$("WPTR"), vm.$("PATICL"), vm.$("PATBCL")]];
   }, ""], ["ENMI2", "INCRA", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room on history list"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for overflow"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("DNMICL")];
   }, "Insert unravelling function"], [null, "BRANCH", function () {
     return [vm.$("ENME3")];
   }, "Join common processing"], ["ENMIC", "SPCINT", function () {
     return [vm.$("VVAL"), vm.$("TSP"), vm.$("SCDTER"), vm.$("ENMI3")];
-  }, ""], ["ENMEXN", "PUSH", function () {
+  }, "Convert STRING to INTEGER"], ["ENMEXN", "PUSH", function () {
     return [vm.$("ZEROCL")];
   }, "E3.4.4 & E3.5.8"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("EXPEVL"), vm.$("YPTR"), [vm.$("TSALF"), null, vm.$("SCNEMO")]];
@@ -4037,15 +4037,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR")];
   }, "Make room for history entry"], [null, "ACOMP", function () {
     return [vm.$("PDLPTR"), vm.$("PDLEND"), vm.$("INTR31")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Check for overflow"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), vm.$("DESCR"), vm.$("SUCFCL")];
   }, "Insert SUCCESS backup function"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get length matched"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 2 * vm.$("DESCR"), vm.$("TMVAL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Save on history list"], [null, "PUTDC", function () {
     return [vm.$("PDLPTR"), 3 * vm.$("DESCR"), vm.$("LENFCL")];
-  }, ""], [null, "SETAC", function () {
+  }, "Save current length failure"], [null, "SETAC", function () {
     return [vm.$("LENFCL"), 1];
   }, "Set length failure"], [null, "BRANIC", function () {
     return [vm.$("SCOKCL"), 0];
@@ -4073,11 +4073,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Specifier for prototype"], [null, "STREAM", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("PROTER"), vm.$("PROTER")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Break out function name"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("LPTYP"), vm.$("PROTER")];
   }, "Verify open parenthesis"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("YSPPTR")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Get variable for function name"], [null, "RCALL", function () {
     return [vm.$("ZCL"), vm.$("FINDEX"), [vm.$("XPTR")]];
   }, "Get function descriptor for function"], [null, "DEQL", function () {
     return [vm.$("YPTR"), vm.$("NULVCL"), vm.$("DEFIN3")];
@@ -4093,13 +4093,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), 1];
   }, "Remove break character"], [null, "STREAM", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("PROTER"), vm.$("PROTER")];
-  }, ""], [null, "SELBRA", function () {
+  }, "Break out argument"], [null, "SELBRA", function () {
     return [vm.$("STYPE"), [vm.$("PROTER"), null, vm.$("DEFIN6")]];
-  }, ""], [null, "LEQLC", function () {
+  }, "Check for end"], [null, "LEQLC", function () {
     return [vm.$("YSP"), 0, null, vm.$("DEFIN4")];
   }, "Check for null argument"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("YSPPTR")]];
-  }, ""], [null, "PUSH", function () {
+  }, "Generate variable for argument"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
   }, "Save argument"], [null, "INCRA", function () {
     return [vm.$("YCL"), 1];
@@ -4111,7 +4111,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YCL"), 1];
   }, "Increment argument count"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("YSPPTR")]];
-  }, ""], [null, "PUSH", function () {
+  }, "Generate variable for argument"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
   }, "Save argument"], ["DEFIN9", "SETVA", function () {
     return [vm.$("DEFCL"), vm.$("YCL")];
@@ -4119,13 +4119,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), 1];
   }, ""], [null, "STREAM", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("PROTER"), vm.$("DEF10")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Break out local arguments"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("CMATYP"), vm.$("PROTER")];
   }, "Verify comma"], [null, "LEQLC", function () {
     return [vm.$("YSP"), 0, null, vm.$("DEFIN8")];
   }, "Check for null argument"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("YSPPTR")]];
-  }, ""], [null, "PUSH", function () {
+  }, "Generate variable"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
   }, "Save local argument"], [null, "INCRA", function () {
     return [vm.$("YCL"), 1];
@@ -4185,13 +4185,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("DEFF14")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("DEFF14")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "PUSH", function () {
     return [[vm.$("XCL"), vm.$("WCL"), vm.$("YCL"), vm.$("YPTR")]];
   }, "Save relevant descriptors"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("XPTR")], vm.$("FAIL")];
-  }, ""], [null, "POP", function () {
+  }, "Perform input"], [null, "POP", function () {
     return [[vm.$("YPTR"), vm.$("YCL"), vm.$("WCL"), vm.$("XCL")]];
   }, "Restore descriptors"], [null, "BRANCH", function () {
     return [vm.$("DEFF3")];
@@ -4265,7 +4265,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DEFF10")];
   }, "Continue"], ["DEFFGO", "PUSH", function () {
     return [[vm.$("FRTNCL"), vm.$("STNOCL"), vm.$("OCICL"), vm.$("OCBSCL"), vm.$("ZCL"), vm.$("ZCL")]];
-  }, ""], [null, "GETDC", function () {
+  }, "Save system state"], [null, "GETDC", function () {
     return [vm.$("XCL"), vm.$("ZCL"), vm.$("DESCR")];
   }, "Get entry label"], [null, "AEQLIC", function () {
     return [vm.$("XCL"), vm.$("ATTRIB"), 0, null, vm.$("UNDFFE")];
@@ -4273,7 +4273,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OCBSCL"), vm.$("XCL"), vm.$("ATTRIB")];
   }, "E3.0.2"], [null, "ACOMPC", function () {
     return [vm.$("TRACL"), 0, null, vm.$("DEFF18"), vm.$("DEFF18")];
-  }, ""], [null, "DECRA", function () {
+  }, "Check &FTRACE"], [null, "DECRA", function () {
     return [vm.$("TRACL"), 1];
   }, "Decrement &FTRACE"], [null, "GETDC", function () {
     return [vm.$("ATPTR"), vm.$("ZCL"), 2 * vm.$("DESCR")];
@@ -4281,39 +4281,39 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZCL")];
   }, "Save definition block"], [null, "RCALL", function () {
     return [null, vm.$("FENTR2"), [vm.$("ATPTR")], [vm.$("INTR10"), vm.$("INTR10")]];
-  }, ""], [null, "POP", function () {
+  }, "Perform function trace"], [null, "POP", function () {
     return [vm.$("ZCL")];
   }, "Restore definition block"], ["DEFF18", "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("DEFF19"), vm.$("DEFF19")];
-  }, ""], [null, "GETDC", function () {
+  }, "Check &TRACE"], [null, "GETDC", function () {
     return [vm.$("ATPTR"), vm.$("ZCL"), 2 * vm.$("DESCR")];
   }, "Get function name"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TFENTL"), vm.$("ATPTR"), vm.$("DEFF19")];
-  }, ""], [null, "PUSH", function () {
+  }, "Check for CALL trace"], [null, "PUSH", function () {
     return [[vm.$("OCBSCL"), vm.$("ZCL")]];
   }, "Save object code base and block"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "POP", function () {
+  }, "E3.3.1 Perform trace"], [null, "POP", function () {
     return [[vm.$("ZCL"), vm.$("OCBSCL")]];
   }, "Restore base and block"], ["DEFF19", "INCRA", function () {
     return [vm.$("LVLCL"), 1];
   }, "Increment &FNCLEVEL"], [null, "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("DEFF15"), vm.$("DEFF15")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TKEYL"), vm.$("FNCLKY"), vm.$("DEFF15")];
-  }, ""], [null, "RCALL", function () {
+  }, "Look for KEYWORD trace"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], ["DEFF15", "SETAC", function () {
+  }, "E3.3.1 Perform trace"], ["DEFF15", "SETAC", function () {
     return [vm.$("OCICL"), 0];
   }, "Zero offset"], [null, "RCALL", function () {
     return [null, vm.$("INTERP"), null, [vm.$("DEFFF"), vm.$("DEFFNR")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Call interpreter"], [null, "MOVD", function () {
     return [vm.$("RETPCL"), vm.$("RETCL")];
   }, "Set &RTNTYPE to RETURN"], ["DEFFS1", "POP", function () {
     return [vm.$("ZCL")];
   }, "Restore definition block"], [null, "ACOMPC", function () {
     return [vm.$("TRACL"), 0, null, vm.$("DEFF20"), vm.$("DEFF20")];
-  }, ""], [null, "DECRA", function () {
+  }, "Check &FTRACE"], [null, "DECRA", function () {
     return [vm.$("TRACL"), 1];
   }, "Decrement &FTRACE"], [null, "GETDC", function () {
     return [vm.$("ATPTR"), vm.$("ZCL"), 2 * vm.$("DESCR")];
@@ -4321,41 +4321,41 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZCL")];
   }, "Save definition block"], [null, "RCALL", function () {
     return [null, vm.$("FNEXT2"), [vm.$("ATPTR")], [vm.$("INTR10"), vm.$("INTR10")]];
-  }, ""], [null, "POP", function () {
+  }, "Perform function trace"], [null, "POP", function () {
     return [vm.$("ZCL")];
   }, "Restore definition block"], ["DEFF20", "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("DEFFS2"), vm.$("DEFFS2")];
-  }, ""], [null, "GETDC", function () {
+  }, "Check &TRACE"], [null, "GETDC", function () {
     return [vm.$("ATPTR"), vm.$("ZCL"), 2 * vm.$("DESCR")];
   }, "Get function name"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TFEXTL"), vm.$("ATPTR"), vm.$("DEFFS2")];
-  }, ""], [null, "PUSH", function () {
+  }, "Check for RETURN trace"], [null, "PUSH", function () {
     return [[vm.$("RETPCL"), vm.$("ZCL")]];
   }, "Save return and block"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "POP", function () {
+  }, "E3.3.1 Perform trace"], [null, "POP", function () {
     return [[vm.$("ZCL"), vm.$("RETPCL")]];
   }, "Restore block and return"], ["DEFFS2", "DECRA", function () {
     return [vm.$("LVLCL"), 1];
   }, "Decrement &FNCLEVEL"], [null, "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("DEFF17"), vm.$("DEFF17")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TKEYL"), vm.$("FNCLKY"), vm.$("DEFF17")];
-  }, ""], [null, "PUSH", function () {
+  }, "Check for KEYWORD trace"], [null, "PUSH", function () {
     return [[vm.$("RETPCL"), vm.$("ZCL")]];
   }, "Save return and block"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "POP", function () {
+  }, "E3.3.1 Perform trace"], [null, "POP", function () {
     return [[vm.$("ZCL"), vm.$("RETPCL")]];
   }, "Restore block and return"], ["DEFF17", "POP", function () {
     return [[vm.$("ZCL"), vm.$("OCBSCL"), vm.$("OCICL"), vm.$("STNOCL"), vm.$("FRTNCL")]];
-  }, ""], [null, "GETSIZ", function () {
+  }, "Restore system state"], [null, "GETSIZ", function () {
     return [vm.$("WCL"), vm.$("ZCL")];
   }, "Get size of definition block"], [null, "DECRA", function () {
     return [vm.$("WCL"), vm.$("DESCR")];
   }, "Decrement pointer"], [null, "ACOMPC", function () {
     return [vm.$("WCL"), 0, null, vm.$("INTR10"), vm.$("INTR10")];
-  }, ""], [null, "SUM", function () {
+  }, "Check for end"], [null, "SUM", function () {
     return [vm.$("WPTR"), vm.$("ZCL"), vm.$("WCL")];
   }, "Compute pointer to last descriptor"], [null, "MOVD", function () {
     return [vm.$("YPTR"), vm.$("ZCL")];
@@ -4379,7 +4379,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("RETPCL"), vm.$("FRETCL"), null, vm.$("FAIL")];
   }, "Check for FRETURN"], [null, "DEQL", function () {
     return [vm.$("RETPCL"), vm.$("NRETCL"), vm.$("RTZPTR")];
-  }, ""], [null, "MOVD", function () {
+  }, "Check for NRETURN"], [null, "MOVD", function () {
     return [vm.$("XPTR"), vm.$("ZPTR")];
   }, "Move name to correct descriptor"], [null, "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("S"), null, vm.$("DEFFVX")];
@@ -4389,9 +4389,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("N"), null, vm.$("RTXNAM")];
   }, "Check for created variable"], [null, "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("K"), vm.$("NONAME"), vm.$("RTXNAM")];
-  }, ""], ["DEFFVX", "AEQLC", function () {
+  }, "Check for keyword variable"], ["DEFFVX", "AEQLC", function () {
     return [vm.$("XPTR"), 0, vm.$("RTXNAM"), vm.$("NONAME")];
-  }, ""], ["DEFFF", "MOVD", function () {
+  }, "Check for null string"], ["DEFFF", "MOVD", function () {
     return [vm.$("RETPCL"), vm.$("FRETCL")];
   }, "Set up FRETURN"], [null, "BRANCH", function () {
     return [vm.$("DEFFS1")];
@@ -4399,7 +4399,7 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("XCL"), vm.$("WCL"), vm.$("YCL"), vm.$("YPTR")]];
   }, "Save relevant descriptors"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), [vm.$("XPTR")], [vm.$("FAIL"), vm.$("DEFFN")]];
-  }, ""], [null, "POP", function () {
+  }, "Evaluate argument"], [null, "POP", function () {
     return [[vm.$("YPTR"), vm.$("YCL"), vm.$("WCL"), vm.$("XCL")]];
   }, "Restore relevant variables"], [null, "BRANCH", function () {
     return [vm.$("DEFF3")];
@@ -4429,7 +4429,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier for prototype"], [null, "STREAM", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("PROTER"), vm.$("PROTER")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Get function name from prototype"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("LPTYP"), vm.$("PROTER")];
   }, "Verify left parenthesis"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("YSPPTR")];
@@ -4441,13 +4441,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), 1];
   }, "Remove break character"], [null, "STREAM", function () {
     return [vm.$("ZSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("LOAD1"), vm.$("PROTER")];
-  }, ""], [null, "SELBRA", function () {
+  }, "Break out argument"], [null, "SELBRA", function () {
     return [vm.$("STYPE"), [vm.$("PROTER"), null, vm.$("LOAD6")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Branch on break type"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("ZSPPTR")];
   }, "Generate variable for data type"], [null, "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("DTATL"), vm.$("XPTR"), vm.$("LOAD9")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look up data type"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Extract data type code"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
@@ -4461,7 +4461,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("ZSPPTR")];
   }, "Generate variable for data type"], [null, "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("DTATL"), vm.$("XPTR"), vm.$("LOAD11")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look up data type"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get data type code"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
@@ -4471,7 +4471,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR")];
   }, "Generate variable for target"], [null, "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("DTATL"), vm.$("XPTR"), vm.$("LOAD7")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look up data type"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get data type code"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
@@ -4561,11 +4561,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), 2 * vm.$("DESCR")];
   }, "Set offset for first argument"], ["LNKF1", "PUSH", function () {
     return [[vm.$("XCL"), vm.$("ZCL"), vm.$("TCL"), vm.$("YPTR"), vm.$("WCL"), vm.$("YCL")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Save working descriptors"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("ARGVAL"), null, vm.$("FAIL")];
   }, "Evaluate argument"], [null, "POP", function () {
     return [[vm.$("YCL"), vm.$("WCL"), vm.$("YPTR"), vm.$("TCL"), vm.$("ZCL"), vm.$("XCL")]];
-  }, ""], [null, "DECRA", function () {
+  }, "Restore working descriptors"], [null, "DECRA", function () {
     return [vm.$("WCL"), 1];
   }, "E3.9.1"], [null, "ACOMPC", function () {
     return [vm.$("WCL"), 0, null, null, vm.$("LNKF8")];
@@ -4591,11 +4591,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DTCL"), vm.$("RVDTP"), null, vm.$("LNKRV")];
   }, "REAL-STRING"], [null, "DEQL", function () {
     return [vm.$("DTCL"), vm.$("VRDTP"), vm.$("INTR1"), vm.$("LNKVR")];
-  }, ""], ["LNKIV", "RCALL", function () {
+  }, "STRING-REAL"], ["LNKIV", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GNVARI"), vm.$("XPTR"), vm.$("LNKF6")];
-  }, ""], ["LNKRI", "RLINT", function () {
+  }, "Convert INTEGER to STRING"], ["LNKRI", "RLINT", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("INTR1"), vm.$("LNKF6")];
-  }, ""], ["LNKIR", "INTRL", function () {
+  }, "Convert REAL to INTEGER"], ["LNKIR", "INTRL", function () {
     return [vm.$("XPTR"), vm.$("XPTR")];
   }, "Convert INTEGER to REAL"], [null, "BRANCH", function () {
     return [vm.$("LNKF6")];
@@ -4605,7 +4605,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("XSP"), null, vm.$("LNKIR")];
   }, "Convert STRING to INTEGER"], [null, "SPREAL", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("INTR1"), vm.$("LNKF6")];
-  }, ""], ["LNKRV", "REALST", function () {
+  }, "Convert STRING to REAL"], ["LNKRV", "REALST", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, ""], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR"), vm.$("LNKF6")];
@@ -4615,7 +4615,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("XSP"), null, vm.$("LNKF6")];
   }, "Convert to INTEGER"], [null, "SPREAL", function () {
     return [vm.$("XPTR"), vm.$("XSP"), vm.$("INTR1"), vm.$("LNKRI")];
-  }, ""], ["LNKF6", "INCRA", function () {
+  }, "Convert STRING to REAL"], ["LNKF6", "INCRA", function () {
     return [vm.$("TCL"), vm.$("DESCR")];
   }, "Increment offset"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
@@ -4647,7 +4647,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), 2 * vm.$("DESCR")];
   }, "Get pointer to argument list"], [null, "LINK", function () {
     return [vm.$("ZPTR"), vm.$("YPTR"), vm.$("WPTR"), vm.$("ZCL"), vm.$("FAIL")];
-  }, ""], [null, "VEQLC", function () {
+  }, "Link to external function"], [null, "VEQLC", function () {
     return [vm.$("ZPTR"), vm.$("L"), vm.$("RTZPTR")];
   }, "Check for linked string"], [null, "GETSPC", function () {
     return [vm.$("ZSP"), vm.$("ZPTR"), 0];
@@ -4689,9 +4689,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZCL"), vm.$("ZSP"), vm.$("PROTER")];
   }, "Convert upper bound to integer"], [null, "SELBRA", function () {
     return [vm.$("STYPE"), [vm.$("PROTER"), vm.$("ARRAY5")]];
-  }, ""], ["ARRAY3", "ACOMPC", function () {
+  }, "Verify break character"], ["ARRAY3", "ACOMPC", function () {
     return [vm.$("YCL"), 0, null, vm.$("PROTER"), vm.$("PROTER")];
-  }, ""], [null, "MOVD", function () {
+  }, "Single number must be positive"], [null, "MOVD", function () {
     return [vm.$("ZCL"), vm.$("YCL")];
   }, "Move to copy"], [null, "SETAC", function () {
     return [vm.$("YCL"), 1];
@@ -4721,11 +4721,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ARRMRK"), 1];
   }, "On run out, mark end of prototype"], [null, "SPCINT", function () {
     return [vm.$("YCL"), vm.$("YSP"), vm.$("PROTER"), vm.$("ARRAY3")];
-  }, ""], ["ARROT2", "SETAC", function () {
+  }, "Convert string to integer"], ["ARROT2", "SETAC", function () {
     return [vm.$("ARRMRK"), 1];
   }, "On run out, mark end of prototype"], [null, "SPCINT", function () {
     return [vm.$("ZCL"), vm.$("ZSP"), vm.$("PROTER"), vm.$("ARRAY5")];
-  }, ""], ["ARRAY7", "SUM", function () {
+  }, "Convert string to integer"], ["ARRAY7", "SUM", function () {
     return [vm.$("ZCL"), vm.$("XCL"), vm.$("WCL")];
   }, "Add dimensionality to array size"], [null, "INCRA", function () {
     return [vm.$("ZCL"), 2];
@@ -4759,7 +4759,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("DESCR")];
   }, "Update working pointer"], [null, "ACOMP", function () {
     return [vm.$("XPTR"), vm.$("WPTR"), vm.$("INTR10"), null, vm.$("ARRAY9")];
-  }, ""], [null, "POP", function () {
+  }, "Check for end"], [null, "POP", function () {
     return [vm.$("WPTR")];
   }, "RESTORE PROTOTYPE\t\tE3.10.1"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), vm.$("DESCR"), vm.$("WPTR")];
@@ -4825,21 +4825,21 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier"], [null, "STREAM", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("PROTER"), vm.$("PROTER")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Break out data type name"], [null, "AEQLC", function () {
     return [vm.$("STYPE"), vm.$("LPTYP"), vm.$("PROTER")];
   }, "Verify left parenthesis"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("YSPPTR")]];
-  }, ""], [null, "RCALL", function () {
+  }, "Generate variable for name"], [null, "RCALL", function () {
     return [vm.$("ZCL"), vm.$("FINDEX"), [vm.$("XPTR")]];
   }, "Find function descriptor"], [null, "INCRV", function () {
     return [vm.$("DATSEG"), 1];
   }, "Increment data type code"], [null, "VEQLC", function () {
     return [vm.$("DATSEG"), vm.$("DATSIZ"), null, vm.$("INTR27")];
-  }, ""], [null, "MOVD", function () {
+  }, "Check against limit"], [null, "MOVD", function () {
     return [vm.$("YCL"), vm.$("ZEROCL")];
   }, "Initialize count of fields"], [null, "RCALL", function () {
     return [vm.$("DTATL"), vm.$("AUGATL"), [vm.$("DTATL"), vm.$("DATSEG"), vm.$("XPTR")]];
-  }, ""], [null, "PSTACK", function () {
+  }, "Augment data type pair list"], [null, "PSTACK", function () {
     return [vm.$("WPTR")];
   }, "Post stack position"], [null, "PUSH", function () {
     return [[vm.$("DATSEG"), vm.$("XPTR")]];
@@ -4849,7 +4849,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DATACL"), 0, vm.$("DAT5")];
   }, "Check for prototype end"], [null, "STREAM", function () {
     return [vm.$("YSP"), vm.$("XSP"), vm.$("VARATB"), vm.$("PROTER"), vm.$("PROTER")];
-  }, ""], [null, "SELBRA", function () {
+  }, "Break out field"], [null, "SELBRA", function () {
     return [vm.$("STYPE"), [vm.$("PROTER"), null, vm.$("DATA6")]];
   }, ""], ["DATA4", "LEQLC", function () {
     return [vm.$("YSP"), 0, null, vm.$("DATA3")];
@@ -4945,7 +4945,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("WCL"), vm.$("XCL")];
   }, "Save copy of argument count"], ["ARYAD1", "ACOMPC", function () {
     return [vm.$("XCL"), 0, null, vm.$("ARYAD2"), vm.$("ARYAD2")];
-  }, ""], [null, "PUSH", function () {
+  }, "Count down on arguments"], [null, "PUSH", function () {
     return [[vm.$("XCL"), vm.$("WCL"), vm.$("YCL")]];
   }, "Save"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INTVAL"), null, vm.$("FAIL")];
@@ -4969,7 +4969,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), 2 * vm.$("DESCR")];
   }, "Add two for heading"], ["ARYAD7", "ACOMP", function () {
     return [vm.$("WCL"), vm.$("ZCL"), vm.$("ARGNER"), vm.$("ARYAD9")];
-  }, ""], [null, "PUSH", function () {
+  }, "Compare given and required number"], [null, "PUSH", function () {
     return [vm.$("ZEROCL")];
   }, "If too few, supply a zero"], [null, "INCRA", function () {
     return [vm.$("WCL"), 1];
@@ -5025,7 +5025,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("WPTR"), vm.$("XPTR"), vm.$("YPTR"), null, vm.$("ASSCR4")];
   }, "E3.2.3"], [null, "LOCAPV", function () {
     return [vm.$("WPTR"), vm.$("XPTR"), vm.$("ZEROCL"), vm.$("ASSCR2")];
-  }, ""], ["ASSCR4", "MOVA", function () {
+  }, "Look for item with null value"], ["ASSCR4", "MOVA", function () {
     return [vm.$("XPTR"), vm.$("WPTR")];
   }, ""], [null, "PUTDC", function () {
     return [vm.$("XPTR"), 2 * vm.$("DESCR"), vm.$("YPTR")];
@@ -5085,7 +5085,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("DEFD8")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("DEFD8")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "PUSH", function () {
     return [[vm.$("XCL"), vm.$("WCL"), vm.$("YCL"), vm.$("YPTR")]];
@@ -5161,7 +5161,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("YCL"), vm.$("DESCR")];
   }, "Get definition block"], [null, "LOCAPT", function () {
     return [vm.$("ZCL"), vm.$("YPTR"), vm.$("DT1CL"), vm.$("INTR1")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for data type offset"], [null, "GETDC", function () {
     return [vm.$("ZCL"), vm.$("ZCL"), 2 * vm.$("DESCR")];
   }, "Get offset"], [null, "SUM", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("ZCL")];
@@ -5187,13 +5187,13 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("YPTR"), vm.$("XPTR")]];
   }, "Restore unit and variable"], [null, "ACOMPC", function () {
     return [vm.$("YPTR"), 0, null, vm.$("READ5"), vm.$("UNTERR")];
-  }, ""], ["READ6", "ACOMPC", function () {
+  }, "Check for defaulted unit"], ["READ6", "ACOMPC", function () {
     return [vm.$("ZPTR"), 0, vm.$("READ2"), null, vm.$("LENERR")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check for defaulted length"], [null, "LOCAPT", function () {
     return [vm.$("TPTR"), vm.$("INSATL"), vm.$("YPTR"), vm.$("READ4")];
-  }, ""], ["READ3", "LOCAPV", function () {
+  }, "Look for default length"], ["READ3", "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("READ1")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Look for existing association"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), vm.$("DESCR"), vm.$("TPTR")];
   }, "Inset input block"], [null, "BRANCH", function () {
     return [vm.$("RETNUL")];
@@ -5233,15 +5233,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), 0, vm.$("PRINT2")];
   }, "Check for defaulted format"], [null, "LOCAPT", function () {
     return [vm.$("TPTR"), vm.$("OTSATL"), vm.$("YPTR"), vm.$("PRINT4")];
-  }, ""], ["PRINT3", "LOCAPV", function () {
+  }, "Insert length"], ["PRINT3", "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("OUTATL"), vm.$("XPTR"), vm.$("PRINT1")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Look for output association"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), vm.$("DESCR"), vm.$("TPTR")];
   }, "Insert output block"], [null, "BRANCH", function () {
     return [vm.$("RETNUL")];
   }, "Return"], ["PRINT1", "RCALL", function () {
     return [vm.$("OUTATL"), vm.$("AUGATL"), [vm.$("OUTATL"), vm.$("TPTR"), vm.$("XPTR")], vm.$("RETNUL")];
-  }, ""], ["PRINT4", "MOVD", function () {
+  }, "Add new association pair"], ["PRINT4", "MOVD", function () {
     return [vm.$("ZPTR"), vm.$("DFLFST")];
   }, "Set up standard default"], ["PRINT2", "RCALL", function () {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("IOBLSZ")];
@@ -5277,7 +5277,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XCL"), vm.$("INTVAL"), null, vm.$("FAIL")];
   }, "Evaluate integer argument"], [null, "ACOMPC", function () {
     return [vm.$("XCL"), 0, null, vm.$("UNTERR"), vm.$("UNTERR")];
-  }, ""], [null, "POP", function () {
+  }, "Reject negative or zero"], [null, "POP", function () {
     return [vm.$("SCL")];
   }, "Restore indicator"], [null, "SELBRA", function () {
     return [vm.$("SCL"), [null, vm.$("EOP"), vm.$("ROP")]];
@@ -5299,13 +5299,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("IND"), null, vm.$("FAIL")];
   }, "Get name of variable"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("XPTR"), vm.$("DTCH1")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Look for input association"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), vm.$("DESCR"), vm.$("ZEROCL")];
   }, "Delete association if there is one"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), 2 * vm.$("DESCR"), vm.$("ZEROCL")];
   }, "Clear association pointer also"], ["DTCH1", "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("OUTATL"), vm.$("XPTR"), vm.$("RETNUL")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Look for output association"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), vm.$("DESCR"), vm.$("ZEROCL")];
   }, "Delete association is there is one"], [null, "PUTDC", function () {
     return [vm.$("ZPTR"), 2 * vm.$("DESCR"), vm.$("ZEROCL")];
@@ -5319,15 +5319,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("IO3PTR"), vm.$("IO1PTR"), vm.$("DESCR")];
   }, "Get unit"], [null, "GETDC", function () {
     return [vm.$("IO1PTR"), vm.$("IO1PTR"), 2 * vm.$("DESCR")];
-  }, ""], [null, "RCALL", function () {
+  }, "Get length"], [null, "RCALL", function () {
     return [vm.$("IO4PTR"), vm.$("CONVAR"), [vm.$("IO1PTR")]];
-  }, ""], [null, "LOCSP", function () {
+  }, "Get space for string"], [null, "LOCSP", function () {
     return [vm.$("IOSP"), vm.$("IO4PTR")];
   }, "Get specifier"], [null, "INCRA", function () {
     return [vm.$("RSTAT"), 1];
   }, "Increment count of reads"], [null, "STREAD", function () {
     return [vm.$("IOSP"), vm.$("IO3PTR"), vm.$("FAIL"), vm.$("COMP5")];
-  }, ""], [null, "AEQLC", function () {
+  }, "Perform read"], [null, "AEQLC", function () {
     return [vm.$("TRIMCL"), 0, null, vm.$("PUTIN1")];
   }, "Check &INPUT"], [null, "TRIMSP", function () {
     return [vm.$("IOSP"), vm.$("IOSP")];
@@ -5339,7 +5339,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("IO2PTR"), vm.$("K"), null, vm.$("PUTIN3")];
   }, "CHECK FOR KEYWORD\t\tE3.10.2"], [null, "RCALL", function () {
     return [vm.$("IO1PTR"), vm.$("GNVARS"), vm.$("IO1PTR")];
-  }, "E3.9.2"], ["PUTIN2", "PUTDC", function () {
+  }, "E3.9.2 Form variable for string"], ["PUTIN2", "PUTDC", function () {
     return [vm.$("IO2PTR"), vm.$("DESCR"), vm.$("IO1PTR")];
   }, "E3.10.2"], [null, "RRTURN", function () {
     return [vm.$("IO1PTR"), 2];
@@ -5399,7 +5399,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("VALTRS")];
   }, "Set up VALUE default"], ["TRAC5", "LOCAPV", function () {
     return [vm.$("YPTR"), vm.$("TRATL"), vm.$("YPTR"), vm.$("TRAC1")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for trace type"], [null, "GETDC", function () {
     return [vm.$("YPTR"), vm.$("YPTR"), vm.$("DESCR")];
   }, "Get sub pair list"], ["TRACEP", "PROC", function () {
     return [vm.$("TRACE")];
@@ -5431,13 +5431,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), 0, null, vm.$("TRAC4")];
   }, ""], [null, "LOCAPT", function () {
     return [vm.$("TPTR"), vm.$("TPTR"), vm.$("XPTR"), vm.$("TRAC3")];
-  }, ""], [null, "PUTDC", function () {
+  }, "Locate trace"], [null, "PUTDC", function () {
     return [vm.$("TPTR"), 2 * vm.$("DESCR"), vm.$("XCL")];
   }, "Insert new code block"], [null, "BRANCH", function () {
     return [vm.$("RETNUL")];
   }, "Return"], ["TRAC3", "RCALL", function () {
     return [vm.$("TPTR"), vm.$("AUGATL"), [vm.$("TPTR"), vm.$("XPTR"), vm.$("XCL")]];
-  }, ""], ["TRAC6", "PUTDC", function () {
+  }, "Augment pair list for new entry"], ["TRAC6", "PUTDC", function () {
     return [vm.$("YPTR"), 0, vm.$("TPTR")];
   }, "Link in new pair list"], [null, "BRANCH", function () {
     return [vm.$("RETNUL")];
@@ -5447,7 +5447,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("TFNCLP")];
   }, "Set up CALL trace"], [null, "RCALL", function () {
     return [null, vm.$("TRACEP"), null, [vm.$("INTR10"), vm.$("INTR10")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Call subentry to do it"], [null, "MOVD", function () {
     return [vm.$("YPTR"), vm.$("TFNRLP")];
   }, "Set up RETURN trace"], [null, "BRANCH", function () {
     return [vm.$("TRACEP")];
@@ -5475,7 +5475,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("VALTRS")];
   }, "Set up VALUE as default"], ["STOPT2", "LOCAPV", function () {
     return [vm.$("YPTR"), vm.$("TRATL"), vm.$("YPTR"), vm.$("STOPT1")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for trace respect"], [null, "GETDC", function () {
     return [vm.$("YPTR"), vm.$("YPTR"), vm.$("DESCR")];
   }, "Get pointer to trace list"], ["STOPTP", "PROC", function () {
     return [vm.$("STOPTR")];
@@ -5495,7 +5495,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YPTR"), vm.$("TFNCLP")];
   }, "Set up CALL"], [null, "RCALL", function () {
     return [null, vm.$("STOPTP"), null, [vm.$("FAIL"), vm.$("INTR10")]];
-  }, ""], [null, "MOVD", function () {
+  }, "Call subprocedure"], [null, "MOVD", function () {
     return [vm.$("YPTR"), vm.$("TFNRLP")];
   }, "Set up RETURN"], [null, "BRANCH", function () {
     return [vm.$("STOPTP")];
@@ -5527,7 +5527,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), vm.$("XSP")];
   }, "Get length"], [null, "ACOMPC", function () {
     return [vm.$("TCL"), vm.$("BUFLEN"), vm.$("FXOVR"), vm.$("FXOVR")];
-  }, ""], [null, "APDSP", function () {
+  }, "Check for excessively long string"], [null, "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("XSP")];
   }, "Append function name"], [null, "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("LPRNSP")];
@@ -5537,7 +5537,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("WCL"), 1];
   }, "Increment argument count"], [null, "RCALL", function () {
     return [vm.$("ZPTR"), vm.$("ARGINT"), [vm.$("WPTR"), vm.$("WCL")], [vm.$("FENTR4"), vm.$("INTR10")]];
-  }, ""], [null, "GETDC", function () {
+  }, "Get argument"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get value"], [null, "VEQLC", function () {
     return [vm.$("ZPTR"), vm.$("S"), null, vm.$("DEFTV")];
@@ -5553,7 +5553,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), vm.$("TCL"), vm.$("SCL")];
   }, "Total length"], [null, "ACOMPC", function () {
     return [vm.$("TCL"), vm.$("BUFLEN"), vm.$("FXOVR"), vm.$("FXOVR")];
-  }, ""], ["DEFTIA", "APDSP", function () {
+  }, "Check for excessively long string"], ["DEFTIA", "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("XSP")];
   }, "Append value"], [null, "BRANCH", function () {
     return [vm.$("DEFDTT")];
@@ -5569,7 +5569,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), vm.$("TCL"), vm.$("SCL")];
   }, "Get total length"], [null, "ACOMPC", function () {
     return [vm.$("TCL"), vm.$("BUFLEN"), vm.$("FXOVR"), vm.$("FXOVR")];
-  }, ""], [null, "APDSP", function () {
+  }, "Check for excessively long string"], [null, "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("QTSP")];
   }, "Append quote"], [null, "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("XSP")];
@@ -5619,7 +5619,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("WPTR")];
   }, "Get specifier"], [null, "RCALL", function () {
     return [vm.$("YCL"), vm.$("KEYT"), [vm.$("WPTR")]];
-  }, "(INTR10,)"], ["KEYTR3", "SETLC", function () {
+  }, "(INTR10,) Get value of keyword"], ["KEYTR3", "SETLC", function () {
     return [vm.$("PROTSP"), 0];
   }, "Clear specifier"], [null, "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("TRSTSP")];
@@ -5679,9 +5679,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TRAPCL"), 1];
   }, "Decrement &TRACE"], [null, "PUSH", function () {
     return [[vm.$("LSTNCL"), vm.$("STNOCL"), vm.$("FRTNCL"), vm.$("OCBSCL"), vm.$("OCICL"), vm.$("TRAPCL"), vm.$("TRACL")]];
-  }, ""], [null, "GETDC", function () {
+  }, "Save system descriptors"], [null, "GETDC", function () {
     return [vm.$("OCBSCL"), vm.$("ATPTR"), 2 * vm.$("DESCR")];
-  }, "NEW CODE BASE"], [null, "SETAC", function () {
+  }, "NEW CODE BASE Get new code base"], [null, "SETAC", function () {
     return [vm.$("OCICL"), vm.$("DESCR")];
   }, "Set up offset"], [null, "GETD", function () {
     return [vm.$("XPTR"), vm.$("OCBSCL"), vm.$("OCICL")];
@@ -5691,9 +5691,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TRACL"), 0];
   }, "Set &FTRACE to 0"], [null, "RCALL", function () {
     return [null, vm.$("INVOKE"), vm.$("XPTR")];
-  }, "(,) \t\t\t\tE3.3.1"], [null, "POP", function () {
+  }, "(,) \t\t\t\tE3.3.1 Evaluate function"], [null, "POP", function () {
     return [[vm.$("TRACL"), vm.$("TRAPCL"), vm.$("OCICL"), vm.$("OCBSCL"), vm.$("FRTNCL"), vm.$("STNOCL"), vm.$("LSTNCL")]];
-  }, ""], [null, "BRANCH", function () {
+  }, "Restore system descriptors"], [null, "BRANCH", function () {
     return [vm.$("RTN1")];
   }, "E3.3.1"], ["VALTR", "PROC", function () {
     return [null];
@@ -5727,7 +5727,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), vm.$("XSP")];
   }, "Get length"], [null, "ACOMPC", function () {
     return [vm.$("TCL"), vm.$("BUFLEN"), vm.$("VXOVR"), vm.$("VXOVR")];
-  }, ""], ["VALTR1", "APDSP", function () {
+  }, "Check for excessively long name"], ["VALTR1", "APDSP", function () {
     return [vm.$("TRACSP"), vm.$("XSP")];
   }, "Append name of variable"], [null, "APDSP", function () {
     return [vm.$("TRACSP"), vm.$("BLEQSP")];
@@ -5753,7 +5753,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), vm.$("TCL"), vm.$("SCL")];
   }, "Compute total length"], [null, "ACOMPC", function () {
     return [vm.$("TCL"), vm.$("BUFLEN"), vm.$("VXOVR"), vm.$("VXOVR")];
-  }, ""], [null, "APDSP", function () {
+  }, "Check for excessively long message"], [null, "APDSP", function () {
     return [vm.$("TRACSP"), vm.$("QTSP")];
   }, "Append quote"], [null, "APDSP", function () {
     return [vm.$("TRACSP"), vm.$("XSP")];
@@ -5807,13 +5807,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TRACSP"), vm.$("OFSP")];
   }, "Append ' OF '"], [null, "DEQL", function () {
     return [vm.$("RETPCL"), vm.$("FRETCL"), vm.$("VALTR3")];
-  }, ""], [null, "LOCSP", function () {
+  }, "Check for FRETURN"], [null, "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Get specifier for function name"], [null, "GETLG", function () {
     return [vm.$("TCL"), vm.$("XSP")];
   }, "Get length"], [null, "ACOMPC", function () {
     return [vm.$("TCL"), vm.$("BUFLEN"), vm.$("VXOVR"), vm.$("VXOVR")];
-  }, ""], [null, "APDSP", function () {
+  }, "Check for excessively long string"], [null, "APDSP", function () {
     return [vm.$("TRACSP"), vm.$("XSP")];
   }, "Append name of function"], [null, "BRANCH", function () {
     return [vm.$("TRPRT")];
@@ -5851,7 +5851,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("INSW"), 0, null, vm.$("ASGNV1")];
   }, "Check &INPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("INATL"), vm.$("YPTR"), vm.$("ASGNV1")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for input association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get input association descriptor"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("PUTIN"), [vm.$("ZPTR"), vm.$("YPTR")], [vm.$("FAIL"), vm.$("ASGNVV")]];
@@ -5863,15 +5863,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OUTSW"), 0, null, vm.$("ASGN1")];
   }, "Check &OUTPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("OUTATL"), vm.$("XPTR"), vm.$("ASGN1")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for output association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get output association descriptor"], [null, "RCALL", function () {
     return [null, vm.$("PUTOUT"), [vm.$("ZPTR"), vm.$("YPTR")]];
   }, "Perform output"], ["ASGN1", "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("RTNUL3"), vm.$("RTNUL3")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TVALL"), vm.$("XPTR"), vm.$("RTNUL3")];
-  }, ""], [null, "RCALL", function () {
+  }, "Look for VALUE trace"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR"), vm.$("RTNUL3")];
   }, "E3.3.1"], ["ASGNC", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), [vm.$("XPTR")], [vm.$("FAIL"), vm.$("ASGNV"), vm.$("NEMO")]];
@@ -5891,7 +5891,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR")];
   }, "Save subject of assignment"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("INTVAL"), null, [vm.$("FAIL"), vm.$("ASGNCJ")]];
-  }, ""], ["CON", "PROC", function () {
+  }, "Get integer value for keyword"], ["CON", "PROC", function () {
     return [null];
   }, "X Y (concatenation)"], [null, "RCALL", function () {
     return [null, vm.$("XYARGS"), null, vm.$("FAIL")];
@@ -5925,11 +5925,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("REALSP")];
   }, "Set up specifier"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), vm.$("XSPPTR"), vm.$("CON5")];
-  }, ""], ["CON4I", "INTSPC", function () {
+  }, "Generate variable"], ["CON4I", "INTSPC", function () {
     return [vm.$("ZSP"), vm.$("XPTR")];
   }, "Convert INTEGER to STRING"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GENVAR"), [vm.$("ZSPPTR")]];
-  }, ""], ["CON5", "VEQLC", function () {
+  }, "Generate variable"], ["CON5", "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("S"), null, vm.$("CON7")];
   }, "Is second STRING?"], [null, "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("P"), null, vm.$("CON7")];
@@ -5955,11 +5955,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YSP"), vm.$("REALSP")];
   }, "Set up sepcifier"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("GENVAR"), vm.$("YSPPTR"), vm.$("CON7")];
-  }, ""], ["CON5I", "INTSPC", function () {
+  }, "Generate variable"], ["CON5I", "INTSPC", function () {
     return [vm.$("ZSP"), vm.$("YPTR")];
   }, "Convert INTEGER to STRING"], [null, "RCALL", function () {
     return [vm.$("YPTR"), vm.$("GENVAR"), [vm.$("ZSPPTR")]];
-  }, ""], ["CON7", "SETAV", function () {
+  }, "Generate variable"], ["CON7", "SETAV", function () {
     return [vm.$("DTCL"), vm.$("XPTR")];
   }, "Get data type of first"], [null, "MOVV", function () {
     return [vm.$("DTCL"), vm.$("YPTR")];
@@ -5971,7 +5971,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DTCL"), vm.$("PVDTP"), null, vm.$("CONPV")];
   }, "Check for PATTERN-STRING"], [null, "DEQL", function () {
     return [vm.$("DTCL"), vm.$("PPDTP"), vm.$("INTR1"), vm.$("CONPP")];
-  }, ""], ["CONVV", "LOCSP", function () {
+  }, "Check for PATTERN-PATTERN"], ["CONVV", "LOCSP", function () {
     return [vm.$("XSP"), vm.$("XPTR")];
   }, "Specifier for first string"], [null, "LOCSP", function () {
     return [vm.$("YSP"), vm.$("YPTR")];
@@ -6003,7 +6003,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Allocate block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("XPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("XPTR")];
-  }, ""], ["CONPP", "GETSIZ", function () {
+  }, "Construct pattern"], ["CONPP", "GETSIZ", function () {
     return [vm.$("XSIZ"), vm.$("XPTR")];
   }, "Get size of first pattern"], [null, "GETSIZ", function () {
     return [vm.$("YSIZ"), vm.$("YPTR")];
@@ -6019,9 +6019,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("YPTR")];
   }, "Get least value for second pattern"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("XPTR"), vm.$("TVAL"), vm.$("ZEROCL"), vm.$("XSIZ"), vm.$("XSIZ")];
-  }, ""], [null, "CPYPAT", function () {
+  }, "Copy in first pattern"], [null, "CPYPAT", function () {
     return [vm.$("TPTR"), vm.$("YPTR"), vm.$("ZEROCL"), vm.$("XSIZ"), vm.$("ZEROCL"), vm.$("YSIZ")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Copy in second pattern"], [null, "BRANCH", function () {
     return [vm.$("RTZPTR")];
   }, "Return pattern as value"], ["CONPV", "LOCSP", function () {
     return [vm.$("TSP"), vm.$("YPTR")];
@@ -6031,7 +6031,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
   }, "Allocate block for pattern"], [null, "MAKNOD", function () {
     return [vm.$("YPTR"), vm.$("TPTR"), vm.$("TMVAL"), vm.$("ZEROCL"), vm.$("CHRCL"), vm.$("YPTR")];
-  }, ""], [null, "BRANCH", function () {
+  }, "Construct pattern for string"], [null, "BRANCH", function () {
     return [vm.$("CONPP")];
   }, "Join common processing"], ["IND", "PROC", function () {
     return [null];
@@ -6047,7 +6047,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("K"), vm.$("INTR1"), vm.$("RTXNAM")];
   }, "KEYWORD is like NAME"], ["INDV", "AEQLC", function () {
     return [vm.$("XPTR"), 0, vm.$("RTXNAM"), vm.$("NONAME")];
-  }, ""], ["KEYWRD", "PROC", function () {
+  }, "Be sure string is not null"], ["KEYWRD", "PROC", function () {
     return [null];
   }, "&X"], [null, "INCRA", function () {
     return [vm.$("OCICL"), vm.$("DESCR")];
@@ -6057,19 +6057,19 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("FNC"), null, vm.$("KEYC")];
   }, "Check for function"], ["KEYN", "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("KNATL"), vm.$("XPTR"), vm.$("KEYV")];
-  }, ""], [null, "SETVC", function () {
+  }, "Look up X on unprotected list"], [null, "SETVC", function () {
     return [vm.$("XPTR"), vm.$("K")];
   }, "Set KEYWORD (NAME) data type"], [null, "BRANCH", function () {
     return [vm.$("RTXNAM")];
   }, "Return by name"], ["KEYV", "LOCAPV", function () {
     return [vm.$("ATPTR"), vm.$("KVATL"), vm.$("XPTR"), vm.$("UNKNKW")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look up X on protected list"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ATPTR"), vm.$("DESCR")];
   }, "Get value"], [null, "BRANCH", function () {
     return [vm.$("RTZPTR")];
   }, "Return by value"], ["KEYC", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("INVOKE"), [vm.$("XPTR")], [vm.$("FAIL"), vm.$("KEYN"), vm.$("NEMO")]];
-  }, ""], ["KEYT", "PROC", function () {
+  }, "Evaluate computed keyword"], ["KEYT", "PROC", function () {
     return [vm.$("KEYWRD")];
   }, "Procedure to get keyword for trace"], [null, "POP", function () {
     return [vm.$("XPTR")];
@@ -6099,13 +6099,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TCL"), vm.$("NHEDCL")];
   }, ""], ["NMD1", "ACOMP", function () {
     return [vm.$("TCL"), vm.$("NAMICL"), vm.$("INTR13"), vm.$("RTN2")];
-  }, ""], [null, "SUM", function () {
+  }, "Check for end"], [null, "SUM", function () {
     return [vm.$("TPTR"), vm.$("NBSPTR"), vm.$("TCL")];
   }, "Compute address"], [null, "GETSPC", function () {
     return [vm.$("TSP"), vm.$("TPTR"), vm.$("DESCR")];
   }, "Get specifier"], [null, "GETDC", function () {
     return [vm.$("TVAL"), vm.$("TPTR"), vm.$("DESCR") + vm.$("SPEC")];
-  }, ""], [null, "GETLG", function () {
+  }, "get variable"], [null, "GETLG", function () {
     return [vm.$("XCL"), vm.$("TSP")];
   }, "Get length"], [null, "ACOMP", function () {
     return [vm.$("XCL"), vm.$("MLENCL"), vm.$("INTR8")];
@@ -6115,13 +6115,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TVAL"), vm.$("K"), null, vm.$("NMDIC")];
   }, "Is variable KEYWORD?"], [null, "RCALL", function () {
     return [vm.$("VVAL"), vm.$("GENVAR"), [vm.$("TSPPTR")]];
-  }, ""], ["NMD4", "PUTDC", function () {
+  }, "Generate string"], ["NMD4", "PUTDC", function () {
     return [vm.$("TVAL"), vm.$("DESCR"), vm.$("VVAL")];
   }, "Assign value"], [null, "AEQLC", function () {
     return [vm.$("OUTSW"), 0, null, vm.$("NMD3")];
   }, "Check &OUTPUT"], [null, "LOCAPV", function () {
     return [vm.$("ZPTR"), vm.$("OUTATL"), vm.$("TVAL"), vm.$("NMD3")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for output association"], [null, "GETDC", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("DESCR")];
   }, "Get association"], [null, "RCALL", function () {
     return [null, vm.$("PUTOUT"), [vm.$("ZPTR"), vm.$("VVAL")]];
@@ -6129,13 +6129,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TRAPCL"), 0, null, vm.$("NMD2"), vm.$("NMD2")];
   }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TVALL"), vm.$("TVAL"), vm.$("NMD2")];
-  }, ""], [null, "PUSH", function () {
+  }, "Look for VALUE trace"], [null, "PUSH", function () {
     return [[vm.$("TCL"), vm.$("NAMICL"), vm.$("NHEDCL")]];
   }, "Save state"], [null, "MOVD", function () {
     return [vm.$("NHEDCL"), vm.$("NAMICL")];
   }, "Set up new name list"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "POP", function () {
+  }, "E3.3.1 Perform trace"], [null, "POP", function () {
     return [[vm.$("NHEDCL"), vm.$("NAMICL"), vm.$("TCL")]];
   }, "Restore state"], ["NMD2", "INCRA", function () {
     return [vm.$("TCL"), vm.$("DESCR") + vm.$("SPEC")];
@@ -6145,7 +6145,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("VVAL"), vm.$("TSP"), vm.$("INTR1"), vm.$("NMD4")];
   }, "Convert to INTEGER"], ["NAMEXN", "RCALL", function () {
     return [vm.$("TVAL"), vm.$("EXPEVL"), vm.$("TVAL"), [vm.$("FAIL"), vm.$("NMD5"), vm.$("NEMO")]];
-  }, "E3.10.5"], ["STR", "PROC", function () {
+  }, "E3.10.5 Evaluate expression"], ["STR", "PROC", function () {
     return [null];
   }, "*X"], [null, "SUM", function () {
     return [vm.$("ZPTR"), vm.$("OCBSCL"), vm.$("OCICL")];
@@ -6163,13 +6163,13 @@ SNOBOL.interp = function (vm) {
     return [null, vm.$("XYARGS"), null, vm.$("FAIL")];
   }, "Evaluate arguments"], [null, "DEQL", function () {
     return [vm.$("XPTR"), vm.$("YPTR"), vm.$("RETNUL"), vm.$("FAIL")];
-  }, ""], ["IDENT", "PROC", function () {
+  }, "Compare them"], ["IDENT", "PROC", function () {
     return [null];
   }, "IDENT(X,Y)"], [null, "RCALL", function () {
     return [null, vm.$("XYARGS"), null, vm.$("FAIL")];
   }, "Evaluate arguments"], [null, "DEQL", function () {
     return [vm.$("XPTR"), vm.$("YPTR"), vm.$("FAIL"), vm.$("RETNUL")];
-  }, ""], ["LGT", "PROC", function () {
+  }, "Compare arguments"], ["LGT", "PROC", function () {
     return [null];
   }, "LGT(X,Y)"], [null, "RCALL", function () {
     return [vm.$("XPTR"), vm.$("VARVAL"), null, vm.$("FAIL")];
@@ -6189,7 +6189,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YSP"), vm.$("YPTR")];
   }, "Get specifier to second argument"], [null, "LEXCMP", function () {
     return [vm.$("XSP"), vm.$("YSP"), vm.$("RETNUL"), vm.$("FAIL"), vm.$("FAIL")];
-  }, ""], ["NEG", "PROC", function () {
+  }, "Compare lexically"], ["NEG", "PROC", function () {
     return [null];
   }, "\\X"], [null, "PUSH", function () {
     return [[vm.$("OCBSCL"), vm.$("OCICL")]];
@@ -6199,11 +6199,11 @@ SNOBOL.interp = function (vm) {
     return [[vm.$("OCICL"), vm.$("OCBSCL")]];
   }, "Restore object code position"], [null, "RCALL", function () {
     return [null, vm.$("CODSKP"), [vm.$("ONECL")], vm.$("RETNUL")];
-  }, ""], ["QUES", "PROC", function () {
+  }, "Skip argument and return"], ["QUES", "PROC", function () {
     return [null];
   }, "?X"], [null, "RCALL", function () {
     return [null, vm.$("ARGVAL"), null, [vm.$("FAIL"), vm.$("RETNUL")]];
-  }, ""], [null, "TITLE", function () {
+  }, "Evaluate argument"], [null, "TITLE", function () {
     return ["Other Functions"];
   }, ""], ["APPLY", "PROC", function () {
     return [null];
@@ -6221,7 +6221,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XCL")];
   }, "Restore argument count"], [null, "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("FNCPL"), vm.$("XPTR"), vm.$("UNDF")];
-  }, ""], [null, "GETDC", function () {
+  }, "Locate function"], [null, "GETDC", function () {
     return [vm.$("INCL"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get function descriptor"], [null, "SETVA", function () {
     return [vm.$("INCL"), vm.$("XCL")];
@@ -6249,13 +6249,13 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ARG")];
   }, "LOCAL(F,N)"], [null, "PUSH", function () {
     return [[vm.$("ONECL"), vm.$("ZEROCL"), vm.$("DEFCL")]];
-  }, ""], [null, "BRANCH", function () {
+  }, "Save LOCAL indicators"], [null, "BRANCH", function () {
     return [vm.$("ARG1")];
   }, "Join main processing"], ["FIELDS", "PROC", function () {
     return [vm.$("ARG")];
   }, "FIELD(F,N)"], [null, "PUSH", function () {
     return [[vm.$("ZEROCL"), vm.$("ZEROCL"), vm.$("DATCL")]];
-  }, ""], ["ARG1", "RCALL", function () {
+  }, "Save FIELD indicators"], ["ARG1", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("VARVAL"), null, vm.$("FAIL")];
   }, "Get function name"], [null, "PUSH", function () {
     return [vm.$("XPTR")];
@@ -6263,11 +6263,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XCL"), vm.$("INTVAL"), null, vm.$("FAIL")];
   }, "Get number"], [null, "ACOMP", function () {
     return [vm.$("ZEROCL"), vm.$("XCL"), vm.$("FAIL"), vm.$("FAIL")];
-  }, ""], [null, "POP", function () {
+  }, "Verify positive number"], [null, "POP", function () {
     return [vm.$("XPTR")];
   }, "Restore function name"], ["ARG2", "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("FNCPL"), vm.$("XPTR"), vm.$("INTR30")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for function descriptor"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get function descriptor"], [null, "GETDC", function () {
     return [vm.$("YCL"), vm.$("XPTR"), 0];
@@ -6379,7 +6379,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR")];
   }, "Restore object"], [null, "LOCAPV", function () {
     return [vm.$("XPTR"), vm.$("DTATL"), vm.$("YPTR"), vm.$("INTR1")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for data type code"], [null, "GETDC", function () {
     return [vm.$("XPTR"), vm.$("XPTR"), vm.$("DESCR")];
   }, "Get code"], [null, "SETAV", function () {
     return [vm.$("DTCL"), vm.$("ZPTR")];
@@ -6407,7 +6407,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), vm.$("XPTR"), null, vm.$("RTZPTR")];
   }, "E3.0.4"], [null, "VEQLC", function () {
     return [vm.$("XPTR"), vm.$("S"), vm.$("FAIL"), vm.$("CNVRTS")];
-  }, "E3.0.4"], ["RECOMP", "SETAC", function () {
+  }, "E3.0.4 Check for idem-conversion"], ["RECOMP", "SETAC", function () {
     return [vm.$("SCL"), 1];
   }, "Note STRING-CODE conversion"], ["RECOMJ", "LOCSP", function () {
     return [vm.$("TEXTSP"), vm.$("ZPTR")];
@@ -6439,7 +6439,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("TEXTSP"), 0, null, vm.$("RECOM2")];
   }, "Is string exhausted?"], [null, "RCALL", function () {
     return [null, vm.$("CMPILE"), null, [vm.$("RECOMF"), null, vm.$("RECOM1")]];
-  }, ""], ["RECOM2", "SETAC", function () {
+  }, "Compile statement"], ["RECOM2", "SETAC", function () {
     return [vm.$("SCL"), 3];
   }, "Set return switch"], ["RECOMQ", "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
@@ -6449,7 +6449,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR")];
   }, "Restore pointer to code block"], ["RECOMZ", "SUM", function () {
     return [vm.$("CMBSCL"), vm.$("CMBSCL"), vm.$("CMOFCL")];
-  }, ""], [null, "RCALL", function () {
+  }, "Compute used portion of block"], [null, "RCALL", function () {
     return [null, vm.$("SPLIT"), [vm.$("CMBSCL")]];
   }, "Split off remainder"], [null, "SETAC", function () {
     return [vm.$("OCLIM"), 0];
@@ -6459,7 +6459,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("COMREG"), vm.$("COMDCT")];
   }, "Zero compiler descriptors"], [null, "SELBRA", function () {
     return [vm.$("SCL"), [vm.$("FAIL"), vm.$("INTR10"), vm.$("RTZPTR")]];
-  }, ""], ["RECOMF", "SETAC", function () {
+  }, "Select return"], ["RECOMF", "SETAC", function () {
     return [vm.$("SCL"), 1];
   }, "Set failure return"], [null, "BRANCH", function () {
     return [vm.$("RECOMQ")];
@@ -6471,7 +6471,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("CNVRT")];
   }, "CODE(S)"], [null, "RCALL", function () {
     return [vm.$("ZPTR"), vm.$("VARVAL"), null, [vm.$("FAIL"), vm.$("RECOMP")]];
-  }, ""], ["CONVE", "PROC", function () {
+  }, "Get argument"], ["CONVE", "PROC", function () {
     return [vm.$("CNVRT")];
   }, "Convert to EXPRESSION"], [null, "SETAC", function () {
     return [vm.$("SCL"), 2];
@@ -6497,15 +6497,15 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ZPTR"), vm.$("ZSP"), null, vm.$("CONIR")];
   }, "Try conversion to INTEGER first"], [null, "SPREAL", function () {
     return [vm.$("ZPTR"), vm.$("ZSP"), vm.$("FAIL"), vm.$("RTZPTR")];
-  }, ""], ["CONIR", "INTRL", function () {
+  }, "Convert to REAL"], ["CONIR", "INTRL", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR")];
   }, "Convert INTEGER to REAL"], [null, "BRANCH", function () {
     return [vm.$("RTZPTR")];
   }, "Return value"], ["CONRI", "RLINT", function () {
     return [vm.$("ZPTR"), vm.$("ZPTR"), vm.$("FAIL"), vm.$("RTZPTR")];
-  }, ""], ["CNVIV", "RCALL", function () {
+  }, "Convert REAL to INTEGER"], ["CNVIV", "RCALL", function () {
     return [vm.$("ZPTR"), vm.$("GNVARI"), vm.$("ZPTR"), vm.$("RTZPTR")];
-  }, ""], ["CNVVI", "LOCSP", function () {
+  }, "Convert INTEGER to STRING"], ["CNVVI", "LOCSP", function () {
     return [vm.$("ZSP"), vm.$("ZPTR")];
   }, "Get specifier"], [null, "SPCINT", function () {
     return [vm.$("ZPTR"), vm.$("ZSP"), null, vm.$("RTZPTR")];
@@ -6571,7 +6571,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XSP"), vm.$("PROTSP")];
   }, "Move specifier"], [null, "RCALL", function () {
     return [vm.$("TPTR"), vm.$("GENVAR"), vm.$("XSPPTR")];
-  }, "E3.5.2"], [null, "MOVD", function () {
+  }, "E3.5.2 Generate variable for prototype"], [null, "MOVD", function () {
     return [vm.$("ZCL"), vm.$("XCL")];
   }, "Save size"], [null, "INCRA", function () {
     return [vm.$("XCL"), 4 * vm.$("DESCR")];
@@ -6695,7 +6695,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("DT1CL"), vm.$("A2PTR")];
   }, "Insert data type"], [null, "LOCAPT", function () {
     return [vm.$("A3PTR"), vm.$("DTATL"), vm.$("DT1CL"), vm.$("DTEXTN")];
-  }, ""], [null, "GETDC", function () {
+  }, "Look for data type"], [null, "GETDC", function () {
     return [vm.$("A3PTR"), vm.$("A3PTR"), 2 * vm.$("DESCR")];
   }, "Get data type name"], ["DTRTN", "RRTURN", function () {
     return [vm.$("A3PTR"), 3];
@@ -6735,7 +6735,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("YCL"), vm.$("YSP")];
   }, "Get length"], [null, "ACOMPC", function () {
     return [vm.$("YCL"), vm.$("BUFLEN"), vm.$("DMPOVR"), vm.$("DMPOVR")];
-  }, ""], [null, "APDSP", function () {
+  }, "Check for excessive length"], [null, "APDSP", function () {
     return [vm.$("DMPSP"), vm.$("YSP")];
   }, "Append variable"], [null, "APDSP", function () {
     return [vm.$("DMPSP"), vm.$("BLEQSP")];
@@ -7083,17 +7083,17 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SCOK"), vm.$("SCNR")];
   }, "Branch to SCOK in scanner"], ["GENVSZ", "RCALL", function () {
     return [vm.$("ZPTR"), vm.$("GNVARS"), vm.$("XCL"), vm.$("RTZPTR")];
-  }, ""], ["GENVRZ", "RCALL", function () {
+  }, "Generate variable from storage"], ["GENVRZ", "RCALL", function () {
     return [vm.$("ZPTR"), vm.$("GENVAR"), vm.$("ZSPPTR"), vm.$("RTZPTR")];
-  }, ""], ["GENVIX", "RCALL", function () {
+  }, "Generate variable"], ["GENVIX", "RCALL", function () {
     return [vm.$("XPTR"), vm.$("GNVARI"), vm.$("XPTR"), vm.$("RTXNAM")];
-  }, ""], [null, "TITLE", function () {
+  }, "Generate variable from integer"], [null, "TITLE", function () {
     return ["Termination"];
   }, ""], ["END", "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("NRMEND"), [vm.$("LVLCL")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "End procedure"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("LASTSF"), [vm.$("STNOCL")]];
-  }, ""], [null, "BRANCH", function () {
+  }, "Print status"], [null, "BRANCH", function () {
     return [vm.$("FTLEN2")];
   }, "Join termination procedure"], ["FTLEND", "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("FTLCF"), [vm.$("ERRTYP"), vm.$("STNOCL"), vm.$("LVLCL")]];
@@ -7139,7 +7139,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OUTPUT"), vm.$("NVARF")];
   }, "Print subtitle"], [null, "RCALL", function () {
     return [null, vm.$("DUMP"), null, [vm.$("INTR10"), vm.$("INTR10"), vm.$("DMPK")]];
-  }, ""], ["DMPNO", "OUTPUT", function () {
+  }, "Dump natural variables"], ["DMPNO", "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("INCGCF")];
   }, "Print disclaimer"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("NODMPF")];
@@ -7151,21 +7151,21 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OUTPUT"), vm.$("STATHD")];
   }, "Print statistics title"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("CMTIME"), [vm.$("TIMECL")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print compilation time"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("INTIME"), [vm.$("ETMCL")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print interpretation time"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("EXNO"), [vm.$("EXNOCL"), vm.$("FALCL")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print execution stats"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("ARTHNO"), [vm.$("ARTHCL")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print arithmetic stats"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("SCANNO"), [vm.$("SCNCL")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print scanner stats"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("STGENO"), [vm.$("GCNO")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print regeneration stats"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("READNO"), [vm.$("RSTAT")]];
-  }, ""], [null, "OUTPUT", function () {
+  }, "Print read stats"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("WRITNO"), [vm.$("WSTAT")]];
-  }, ""], [null, "AEQLC", function () {
+  }, "Print write stats"], [null, "AEQLC", function () {
     return [vm.$("EXNOCL"), 0, vm.$("END2")];
   }, "Check for no interpretation"], [null, "INTRL", function () {
     return [vm.$("FCL"), vm.$("ZEROCL")];
@@ -7183,7 +7183,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ABNDCL")];
   }, "E3.2.2"], ["SYSCUT", "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("SYSCMT"), [vm.$("STNOCL"), vm.$("LVLCL")]];
-  }, ""], [null, "AEQLC", function () {
+  }, "System cut exit"], [null, "AEQLC", function () {
     return [vm.$("CUTNO"), 0, vm.$("ENDALL")];
   }, "E3.2.2"], [null, "SETAC", function () {
     return [vm.$("CUTNO"), 1];
@@ -7343,17 +7343,17 @@ SNOBOL.interp = function (vm) {
     return [vm.$("SCERCL"), 2];
   }, "Note failure out of pattern matching"], ["FTERST", "ACOMPC", function () {
     return [vm.$("ERRLCL"), 0, null, vm.$("FTLEND"), vm.$("FTLEND")];
-  }, ""], [null, "DECRA", function () {
+  }, "Check &ERRLIMIT"], [null, "DECRA", function () {
     return [vm.$("ERRLCL"), 1];
   }, "Decrement &ERRLIMIT"], [null, "ACOMPC", function () {
     return [vm.$("TRAPCL"), 0, null, vm.$("FTERBR"), vm.$("FTERBR")];
-  }, ""], [null, "LOCAPT", function () {
+  }, "Check &TRACE"], [null, "LOCAPT", function () {
     return [vm.$("ATPTR"), vm.$("TKEYL"), vm.$("ERRTKY"), vm.$("FTERBR")];
-  }, ""], [null, "PUSH", function () {
+  }, "Look for KEYWORD trace"], [null, "PUSH", function () {
     return [vm.$("SCERCL")];
   }, "E3.1.3"], [null, "RCALL", function () {
     return [null, vm.$("TRPHND"), vm.$("ATPTR")];
-  }, "E3.3.1"], [null, "POP", function () {
+  }, "E3.3.1 Perform trace"], [null, "POP", function () {
     return [vm.$("SCERCL")];
   }, "E3.1.3"], ["FTERBR", "SELBRA", function () {
     return [vm.$("SCERCL"), [vm.$("TSALF"), vm.$("FAIL"), vm.$("RTNUL3")]];
@@ -7703,7 +7703,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("NODESZ"), 0, vm.$("P")];
   }, "Size of short pattern node"], ["OBEND", "DESCR", function () {
     return [vm.$("OBLIST") + vm.$("DESCR") * vm.$("OBOFF"), 0, 0];
-  }, ""], ["OCALIM", "DESCR", function () {
+  }, "End on bin list"], ["OCALIM", "DESCR", function () {
     return [vm.$("OCASIZ") * vm.$("DESCR"), 0, vm.$("C")];
   }, "Size of object code block"], ["ONECL", "DESCR", function () {
     return [1, 0, 0];
@@ -7863,7 +7863,7 @@ SNOBOL.interp = function (vm) {
     return [0, 0, 0];
   }, "Pattern code offset"], ["PDLEND", "DESCR", function () {
     return [vm.$("PDLBLK") + (vm.$("SPDLDR") - vm.$("NODESZ")), 0, 0];
-  }, ""], ["PDLPTR", "DESCR", function () {
+  }, "Pattern history list end"], ["PDLPTR", "DESCR", function () {
     return [vm.$("PDLBLK"), 0, 0];
   }, "Pattern history list beginning"], ["SCL", "DESCR", function () {
     return [0, 0, 0];
@@ -7931,7 +7931,7 @@ SNOBOL.interp = function (vm) {
     return [vm.$("ANYSP"), 0, 0, 0, 0];
   }, "Buffer specifier"], ["DTARSP", "SPEC", function () {
     return [vm.$("DTARBF"), 0, 0, 0, vm.$("ARRLEN") + 9];
-  }, ""], ["PROTSP", "SPEC", function () {
+  }, "Array representation specifier"], ["PROTSP", "SPEC", function () {
     return [vm.$("ANYSP"), 0, 0, 0, 0];
   }, "Buffer specifier"], ["QTSP", "SPEC", function () {
     return [vm.$("QTSTR"), 0, 0, 0, 1];
@@ -8245,7 +8245,7 @@ SNOBOL.interp = function (vm) {
     return [0, vm.$("PTR"), 0];
   }, "End of allocated data region"], ["GCXTTL", "DESCR", function () {
     return [vm.$("GCXTTL"), vm.$("TTL") + vm.$("MARK"), vm.$("DESCR")];
-  }, ""], [null, "DESCR", function () {
+  }, "Block to prime marking procedure"], [null, "DESCR", function () {
     return [0, 0, 0];
   }, "Pointer to block to mark"], [null, "COPY", function () {
     return [vm.$("MDATA")];

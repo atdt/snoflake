@@ -109,11 +109,17 @@ statement "statement"
 
 
 comment1 "trailing comment"
-  = comment:[^\n]*
+  = head:[^\n]*
+    tail:( '\n*\t\t\t\t' tail:[^\t\n]+ { return tail.join( '' ).trim(); } )?
 {
+    head = head.join( '' ).replace(/^[,\s]+/, '' );
+    tail = ( tail || '' ).replace(/^[,\s]+/, '' );
+    if ( tail ) {
+        head = head + ' ' + tail;
+    }
     return {
         type: 'Literal',
-        value: comment.join( '' ).replace(/^[,\s]+/, '' )
+        value: head.trim()
     };
 }
 
