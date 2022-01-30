@@ -11,18 +11,33 @@
      * and returns `value`. Used to make identifiers bind late.
      */
     function enclose( value ) {
-        return [ 'function', null, [], [ 
-            [ 'return', value ]
-        ] ];
+        return {
+            type: 'FunctionExpression',
+            params: [],
+            body: {
+                type: 'BlockStatement',
+                body: [{
+                    type: 'ReturnStatement',
+                    argument: value,
+                }]
+            }
+        };
     }
-    
+
     /**
      * Wrap `identifier` with an invocation of `vm.resolve`.
      * e.g. 'SOMENAME' -> vm.$( 'SOMENAME' )
      */
     function resolve( identifier ) {
-        var node = [ 'string', identifier ]; 
-        return [ 'call', [ 'dot', [ 'name', 'vm' ], '$' ], [ node ] ];
+        return {
+            type: 'CallExpression',
+            callee: {
+                type: 'MemberExpression',
+                object: { type: 'Identifier', name: 'vm' },
+                property: { type: 'Identifier', name: '$' },
+            },
+            arguments: [ { type: 'Literal', value: identifier } ],
+        };
     }
 }
 
@@ -33,7 +48,44 @@ program
         body   = [ [ 'return', [ 'array', statements ] ] ],
         func   = [ 'defun', null, params, body ];
 
-    return [ 'toplevel', [ func ] ];
+    return {
+        type: 'Program',
+        body: [
+            {
+                type: 'ExpressionStatement',
+                expression: {
+                    type: 'AssignmentExpression',
+                    operator: '=',
+                    left: {
+                        type: 'MemberExpression',
+                        computed: false,
+                        object: {
+                            type: 'Identifier',
+                            name: 'SNOBOL'
+                        },
+                        property: {
+                           type: 'Identifier',
+                           name: 'interp'
+                        }
+                    },
+                    right: {
+                        type: 'FunctionExpression',
+                        params: [{ type: 'Identifier', name: 'vm' }],
+                        body: {
+                            type: 'BlockStatement',
+                            body: [ {
+                                type: 'ReturnStatement',
+                                argument: {
+                                type: 'ArrayExpression',
+                                elements: statements
+                                }
+                            } ]
+                        },
+                    }
+                }
+            }
+        ],
+    };
 }
 
 
@@ -48,20 +100,29 @@ statement "statement"
     comment:comment1?
     '\n'
 {
-    return [ 'array', [ label, oper, operands, comment ] ];
+    return {
+        type: 'ArrayExpression',
+        elements: [ label, oper, operands, comment ]
+    };
 }
 
 
 comment1 "trailing comment"
   = comment:[^\n]*
 {
-    return [ 'string', comment.join( '' ).replace(/^[,\s]+/, '' ) ];
+    return {
+        type: 'Literal',
+        value: comment.join( '' ).replace(/^[,\s]+/, '' )
+    };
 }
 
 comment2 "multi-line comment"
   = lines:( '*' comment:[^\n]* '\n' { return comment.join( '' ); } )+
 {
-    return [ 'comment2', lines.join( '\n' ) ];
+    return {
+        type: 'Literal',
+        value: lines.join( '\n' )
+    };
 }
 
 operands "operands"
@@ -71,7 +132,7 @@ operands "operands"
     for ( var i = 0, max = tail.length; i < max; i++ ) {
         result.push( tail[i][1] );
     }
-    return enclose( [ 'array', result ] );
+    return enclose( { type: 'ArrayExpression', elements: result } );
 }
 
 variable
@@ -80,27 +141,32 @@ variable
   / expr
   / name
   / integer
-  / &( ',' ) { return [ 'name', 'null' ]; }
+  / &( ',' ) { return { type: 'Literal', value: null }; }
 
 
 expr "expression"
   = left:( integer / name ) operator:[*+-] right:( expr / integer / name )
 {
-    return [ 'binary', operator, left, right ];
+    return {
+        type: 'BinaryExpression',
+        operator: operator,
+        left: left,
+        right: right
+    };
 }
 
 literal "literal"
   = "'" literal:[^']* "'"
 {
     literal = literal.join( '' );
-    return [ 'string', literal ];
+    return { type: 'Literal', value: literal };
 }
 
 integer "integer"
   = digits:[0-9]+
 {
     var num = parseInt( digits.join( '' ), 10 );
-    return [ 'num', num ];
+    return { type: 'Literal', value: num };
 }
 
 list "list operand"
@@ -113,7 +179,7 @@ list "list operand"
         result = tail;
     }
 
-    return [ 'array', result ];
+    return { type: 'ArrayExpression', elements: result };
 }
 
 blank
@@ -125,10 +191,10 @@ label "label"
 {
     if ( label !== null ) {
         labels[ label ] = line++;
-        return [ 'string', label ];
+        return { type: 'Literal', value: label };
     } else {
         line++;
-        return [ 'name', 'null' ];
+        return { type: 'Literal', value: null };
     }
 }
 
@@ -143,7 +209,7 @@ macro "macro"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var macro = head + tail.join( '' );
-    return [ 'string', macro ];
+    return { type: 'Literal', value: macro };
 }
 
 end
