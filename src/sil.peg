@@ -177,7 +177,7 @@ integer "integer"
 }
 
 list "list operand"
-  = '(' head:variable tail:( ',' v:variable { return v; } )* ')'
+  = '(' head:variable tail:( ',' v:variable? { return v === null ? { type: 'Literal', value: null } : v;  } )* ')'
 {
     var result = [];
 

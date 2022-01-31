@@ -236,8 +236,8 @@ SNOBOL.interp = function (vm) {
   }, "Read card and set up line"], [null, "STREAM", function () {
     return [vm.$("XSP"), vm.$("TEXTSP"), vm.$("CARDTB"), vm.$("COMP3"), vm.$("COMP3")];
   }, "Determine type of card"], [null, "RCALL", function () {
-    return [null, vm.$("NEWCRD"), null];
-  }, "(XLATRD,,) Process card type"], ["XLATNX", "RCALL", function () {
+    return [null, vm.$("NEWCRD"), null, [vm.$("XLATRD"), null, null]];
+  }, "Process card type"], ["XLATNX", "RCALL", function () {
     return [null, vm.$("CMPILE"), null, [vm.$("COMP3"), null, vm.$("XLATNX")]];
   }, "Compile statement"], [null, "INCRA", function () {
     return [vm.$("CMOFCL"), vm.$("DESCR")];
@@ -2078,8 +2078,8 @@ SNOBOL.interp = function (vm) {
   }, "Select exit"], ["EXPVC", "PUSH", function () {
     return [vm.$("SCL")];
   }, "Save entrance indicator"], [null, "RCALL", function () {
-    return [vm.$("XPTR"), vm.$("INVOKE"), vm.$("XPTR")];
-  }, "(EXPV9,EXPV5,) Evaluate function"], [null, "POP", function () {
+    return [vm.$("XPTR"), vm.$("INVOKE"), vm.$("XPTR"), [vm.$("EXPV9"), vm.$("EXPV5"), null]];
+  }, "Evaluate function"], [null, "POP", function () {
     return [vm.$("SCL")];
   }, "Restore entrance indicator"], [null, "AEQLC", function () {
     return [vm.$("SCL"), 0, vm.$("EXPV6")];
@@ -2664,8 +2664,8 @@ SNOBOL.interp = function (vm) {
   }, "Get object code descriptor"], [null, "TESTF", function () {
     return [vm.$("YPTR"), vm.$("FNC"), vm.$("ATOP1")];
   }, "Test for function descriptor"], [null, "RCALL", function () {
-    return [vm.$("YPTR"), vm.$("INVOKE"), vm.$("YPTR")];
-  }, "(FAIL,ATOP1,)"], [null, "VEQLC", function () {
+    return [vm.$("YPTR"), vm.$("INVOKE"), vm.$("YPTR"), [vm.$("FAIL"), vm.$("ATOP1"), null]];
+  }, ""], [null, "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("E"), vm.$("NEMO")];
   }, "Only EXPRESSION can be value"], ["ATOP1", "RCALL", function () {
     return [vm.$("TPTR"), vm.$("BLOCK"), vm.$("LNODSZ")];
@@ -2698,8 +2698,8 @@ SNOBOL.interp = function (vm) {
   }, "Is it PATTERN?"], ["NAMC2", "PUSH", function () {
     return [vm.$("XPTR")];
   }, "Save first argument"], [null, "RCALL", function () {
-    return [vm.$("YPTR"), vm.$("INVOKE"), vm.$("YPTR")];
-  }, "(FAIL,NAM4,) Evaluate second argument"], [null, "VEQLC", function () {
+    return [vm.$("YPTR"), vm.$("INVOKE"), vm.$("YPTR"), [vm.$("FAIL"), vm.$("NAM4"), null]];
+  }, "Evaluate second argument"], [null, "VEQLC", function () {
     return [vm.$("YPTR"), vm.$("E"), vm.$("NEMO")];
   }, "Verify EXPRESSION"], ["NAM4", "POP", function () {
     return [vm.$("XPTR")];
@@ -5618,8 +5618,8 @@ SNOBOL.interp = function (vm) {
   }, "Get keyword"], [null, "LOCSP", function () {
     return [vm.$("XSP"), vm.$("WPTR")];
   }, "Get specifier"], [null, "RCALL", function () {
-    return [vm.$("YCL"), vm.$("KEYT"), [vm.$("WPTR")]];
-  }, "(INTR10,) Get value of keyword"], ["KEYTR3", "SETLC", function () {
+    return [vm.$("YCL"), vm.$("KEYT"), [vm.$("WPTR")], [vm.$("INTR10"), null]];
+  }, "Get value of keyword"], ["KEYTR3", "SETLC", function () {
     return [vm.$("PROTSP"), 0];
   }, "Clear specifier"], [null, "APDSP", function () {
     return [vm.$("PROTSP"), vm.$("TRSTSP")];
@@ -5690,8 +5690,8 @@ SNOBOL.interp = function (vm) {
   }, "Set &TRACE to 0"], [null, "SETAC", function () {
     return [vm.$("TRACL"), 0];
   }, "Set &FTRACE to 0"], [null, "RCALL", function () {
-    return [null, vm.$("INVOKE"), vm.$("XPTR")];
-  }, "(,) \t\t\t\tE3.3.1 Evaluate function"], [null, "POP", function () {
+    return [null, vm.$("INVOKE"), vm.$("XPTR"), [null, null]];
+  }, "E3.3.1 Evaluate function"], [null, "POP", function () {
     return [[vm.$("TRACL"), vm.$("TRAPCL"), vm.$("OCICL"), vm.$("OCBSCL"), vm.$("FRTNCL"), vm.$("STNOCL"), vm.$("LSTNCL")]];
   }, "Restore system descriptors"], [null, "BRANCH", function () {
     return [vm.$("RTN1")];
