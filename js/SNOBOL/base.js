@@ -1,13 +1,19 @@
 "use strict";
 
 var SNOBOL = {
-    config: { debug: false },
+    options: {
+        debug: false,
+        watch: []
+    },
     log: function () {
-        if ( SNOBOL.config.debug ) {
+        if ( SNOBOL.options.debug ) {
             console.log.apply( console, arguments );
         }
     },
-    VM: function () {
+    VM: function ( options ) {
+        // XXX: Make this local to the VM instance.
+        SNOBOL.options = { ...SNOBOL.options, ...options };
+        SNOBOL.DEBUG = !!SNOBOL.options.debug;
         this.reset();
     },
 };
