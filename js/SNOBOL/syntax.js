@@ -52,7 +52,7 @@ SNOBOL.programSymbols = {
 var characterClasses = {
     ALPHANUMERIC : /[a-z0-9]/i,
     AT           : /@/,
-    BLANK        : /\s/,
+    BLANK        : /[ \t]/,
     BREAK        : /[._]/,
     CMT          : /\*/,
     CNT          : /[+.]/,
@@ -84,7 +84,7 @@ var characterClasses = {
     SLASH        : /\//,
     SQUOTE       : /'/,
     STAR         : /\*/,
-    TERMINATOR   : /[;)>,\]\s]/,
+    TERMINATOR   : /[;)>,\] \t]/,
     ELSE         : /.*/,
 };
 
