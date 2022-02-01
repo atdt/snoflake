@@ -62,6 +62,11 @@ VM.prototype.alloc = function ( size, value ) {
     return ptr;
 };
 
+// Convenience function for allocating a pointer, pointing to addr.
+VM.prototype.ptr = function ( addr ) {
+    return this.alloc( 1, addr );
+}
+
 SNOBOL.VM.prototype.define = function ( symbol, value ) {
     if ( symbol === 'DESCR' && value !== 3 ) {
         throw new Error(`symbol=${symbol}, value=${value}`);
