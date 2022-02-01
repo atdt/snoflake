@@ -1033,7 +1033,6 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // bly.
 sil.END = function () {
     // end assembly
-    console.log( 'END' );
 };
 
 //     ENDEX is used to terminate execution of a SNOBOL4  run.
@@ -3996,7 +3995,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
     }
 
-    console.log( `table = ${TABLE} (${SNOBOL.tableNames[TABLE]})` );
     var table = getTableById( TABLE );
 
     for ( I = 1; I <= str.length; I++ ) {
