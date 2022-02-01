@@ -316,40 +316,25 @@ describe( 'Miscellaneous Shortcuts', function () {
 } );
 
 
-describe( 'Execution Environment', function () {
+describe( 'Program Execution', function () {
     beforeEach( function () {
         this.vm = new SNOBOL.VM();
-        SNOBOL._sil = SNOBOL.sil;
-        SNOBOL.sil = {
-            SUM: function ( a, b ) { return a + b; },
-            MUL: function ( a, b ) { return a * b; },
-            EQU: function ( v )    { return v; },
-        };
-    } );
-
-    afterEach( function () {
-        SNOBOL.sil = SNOBOL._sil;
     } );
 
     it( 'jmp', function () {
-        this.vm.jmp( 4 );
+        var ptr = this.vm.alloc( 1 );
+        this.vm.mem[ ptr ] = 4;
+        this.vm.jmp( ptr );
         assert.equal( this.vm.instructionPointer, 4 );
-    } );
-
-    it( 'exec', function () {
-        this.vm.define( 'a', 5 );
-        this.vm.define( 'b', 8 );
-        this.vm.define( 'result', 0 );
-        this.vm.exec( 'result', 'SUM', mkargs( this.vm, 'a', 'b' ) );
-        assert.equal( this.vm.resolve('result'), 13 );
     } );
 
     it( 'run', function () {
         this.vm.run( [
-            [ 'a', 'EQU', mkargs( this.vm, 11 ) ],
-            [ 'b', 'EQU', mkargs( this.vm, 17 ) ],
-            [ 'c', 'MUL', mkargs( this.vm, 'a', 'b' ) ]
+            [ 'A',  'EQU', mkargs( this.vm, 11 ) ],
+            [ 'B',  'EQU', mkargs( this.vm, 17 ) ],
+            [ null, 'END', mkargs( this.vm ) ],
         ] );
-        assert.equal( this.vm.resolve('c'), 187 );
+        assert.equal( this.vm.resolve( 'A' ), 11 );
+        assert.equal( this.vm.resolve( 'B' ), 17 );
     } );
 } );

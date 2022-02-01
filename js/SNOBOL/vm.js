@@ -79,7 +79,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label;
+    var args, status, loc, stmt, label, macro;
 
     var sym;
     var i;
@@ -88,10 +88,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.define( sym, SNOBOL.programSymbols[sym] );
     }
 
-    var that = this;
-    SNOBOL.tableNames.forEach( function ( table, idx ) {
-        that.define( table, idx );
-    } );
+    SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
 
     for (
         this.instructionPointer = 0;
@@ -99,43 +96,51 @@ SNOBOL.VM.prototype.run = function ( program ) {
         this.instructionPointer++
     ) {
         stmt = program[ this.instructionPointer ];
-        if ( stmt[ 1 ] === 'DESCR' ) {
-            this.define( stmt[0], this.d().ptr );
-        } else if ( stmt[ 1 ] === 'SPEC' ) {
-            this.define( stmt[0], this.s().ptr );
-        } else if ( stmt[ 1 ] === 'LHERE' || stmt[ 1 ] === 'PROC' ) {
-            // XXX: Program locations are set indirectly, to be resolved by
-            // this.jmp. This is probably incorrect, because the program might
-            // also jump to program locations of normal (but labelled)
-            // instructions, i.e. instructions that aren't LHERE or PROC.
-            // But if we set location directly (i.e., just define the label to
-            // be the current instruction pointer + 1) then some LHEREs which
-            // aren't used as goto points but instead as markers of ends of
-            // blocks end up being incorrect. Ugh.
-            this.define( stmt[0], this.mem.length );
-            this.mem.push( this.instructionPointer + 1 );
-            assert.equal( this.mem[this.symbols[stmt[0]]], this.instructionPointer + 1 );
-        } else if ( stmt[ 1 ] === 'STRING' || stmt[ 1 ] === 'FORMAT' || stmt[ 1 ] === 'BUFFER' || stmt[ 1 ] === 'ARRAY' ) {
-            this.define( stmt[0], this.mem.length );
-            this.exec.apply( this, stmt );
-        } else if ( stmt[ 1 ] === 'EQU' ) {
-            this.define( stmt[0], this.exec.apply( this, stmt ) );
-        } else {
-            this.define( stmt[0], this.mem.length );
-            this.mem.push( this.instructionPointer );
-            assert.equal( this.mem[this.symbols[stmt[0]]], this.instructionPointer );
+        [ label, macro ] = stmt;
+        switch ( macro ) {
+            // We pre-allocate data for DESCR and SPEC instructions, but we
+            // don't execute them yet, because their arguments may refer to
+            // program symbols that are not yet bound.
+            case 'DESCR':
+                this.define( label, this.d().ptr );
+                break;
+            case 'SPEC':
+                this.define( label, this.s().ptr );
+                break;
+            case 'LHERE':
+            case 'PROC':
+                this.define( label, this.mem.length );
+                this.mem.push( this.instructionPointer + 1 );
+                assert.equal( this.mem[ this.symbols[ label ] ], this.instructionPointer + 1 );
+                break;
+            case 'STRING':
+            case 'FORMAT':
+            case 'BUFFER':
+            case 'ARRAY':
+                this.define( label, this.mem.length );
+                this.exec.apply( this, stmt );
+                break;
+            case 'EQU':
+                this.define( label, this.exec.apply( this, stmt ) );
+                break;
+            default:
+                if ( label ) {
+                    this.define( label, this.mem.length );
+                    this.mem.push( this.instructionPointer );
+                    assert.equal( this.mem[ this.symbols[ label ] ], this.instructionPointer );
+                }
+                break;
         }
     }
+
     for (
         this.instructionPointer = 0;
         this.instructionPointer < program.length;
         this.instructionPointer++
     ) {
         stmt = program[ this.instructionPointer ];
-        if ( !stmt[ 0 ] ) {
-            continue;
-        }
-        if ( stmt[ 1 ] === 'DESCR' || stmt[ 1 ] === 'SPEC' ) {
+        [ label, macro ] = stmt;
+        if ( macro === 'DESCR' || macro === 'SPEC' ) {
             this.exec.apply( this, stmt );
         }
     }
@@ -144,9 +149,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         loc = this.instructionPointer;
-        args = program[ loc ];
-        if ( DATA_ASSEMBLY_MACROS.indexOf( args[ 1 ] ) === -1 ) {
-            status = this.exec.apply( this, args );
+        stmt = program[ loc ];
+        [ label, macro ] = stmt;
+        if ( !DATA_ASSEMBLY_MACROS.includes( macro ) ) {
+            status = this.exec.apply( this, stmt );
         }
 
         // If the procedure did not update the instruction pointer,

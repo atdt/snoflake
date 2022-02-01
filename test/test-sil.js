@@ -42,19 +42,19 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'EQU', function () {
-        assert( sil.EQU );
         this.vm.run( [ [ 'A', 'EQU', mkargs( this.vm, 12 ) ] ] );
         assert.equal( this.vm.resolve('A'), 12 );
     } );
 
     it( 'LHERE', function () {
-        assert( sil.LHERE );
         this.vm.run( [
-            [ 'A', 'LHERE', mkargs( this.vm ) ],
-            [ 'B', 'LHERE', mkargs( this.vm ) ]
+            [ 'A',  'LHERE', mkargs( this.vm ) ],
+            [ null, 'DESCR', mkargs( this.vm ) ],
+            [ 'B',  'LHERE', mkargs( this.vm ) ],
+            [ null, 'DESCR', mkargs( this.vm ) ]
         ] );
-        assert.equal( this.vm.resolve('A'), 0 );
-        assert.equal( this.vm.resolve('B'), 1 );
+        assert.equal( this.vm.mem[ this.vm.resolve('A') ], 1 );
+        assert.equal( this.vm.mem[ this.vm.resolve('B') ], 3 );
     } );
 
     it( 'TITLE', function () {
@@ -107,21 +107,21 @@ describe( 'Branch Macros', function () {
 
     it( 'BRANCH', function () {
         this.vm.run( [
-            [ null, 'BRANCH', mkargs( this.vm, 'A' ) ] ,
-            [ 'A',  'LHERE',  mkargs( this.vm  ) ] ,
-            [ 'X',  'EQU',    mkargs( this.vm, 22) ] ,
-            [ null, 'BRANCH', mkargs( this.vm, 5) ] ,
-            [ 'X',  'EQU',    mkargs( this.vm, 33) ] ,
+            [ 'DS', 'DESCR',  mkargs( this.vm  ) ] ,
+            [ null,  'SETAC',  mkargs( this.vm, 'DS', 22 ) ] ,
+            [ null, 'BRANCH', mkargs( this.vm, 'LBL' ) ],
+            [ null, 'SETAC',  mkargs( this.vm, 'DS', 33 ) ],
+            [ 'LBL',  'LHERE',  mkargs( this.vm ) ],
             [ null, 'END',    mkargs( this.vm  ) ]
         ] );
-        assert.equal( this.vm.resolve('X'), 22 );
+        assert.equal( this.vm.d( 'DS' ).addr, 22 );
     } );
 
     it( 'BRANIC', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d();
         d1.addr = d2.ptr;
-        d2.addr = 1234;
+        d2.addr = this.vm.ptr( 1234 );
         sil.BRANIC.call( this.vm, d1, 0 );
         assert.equal( this.vm.instructionPointer, 1234 );
     } );
@@ -129,7 +129,7 @@ describe( 'Branch Macros', function () {
     it( 'SELBRA', function () {
         var d = this.vm.d();
         d.addr = 2;
-        sil.SELBRA.call( this.vm, d.ptr, [ null, 222, 333, null, 555 ] );
+        sil.SELBRA.call( this.vm, d.ptr, [ null, this.vm.ptr( 222 ), this.vm.ptr( 333 ), null, this.vm.ptr( 555 ) ] );
         assert.equal( this.vm.instructionPointer, 222 );
         // TODO: Test I = N + 1 (see SELBRA spec).
     } );
@@ -142,120 +142,123 @@ describe( 'Comparison Macros', function () {
     } );
 
     it( 'ACOMP', function () {
-        var a = this.vm.d(), b = this.vm.d();
-        a.addr = 123;
-        b.addr = 456;
-        this.vm.run( [
-            [ null,  'ACOMP',   mkargs( this.vm, a.ptr, b.ptr ) ],
-            [ 'EQ',  'LHERE',   mkargs( this.vm ) ],
-            [ 'A',   'EQU',     mkargs( this.vm, 111 ) ],
-            [ null,  'BRANCH',  mkargs( this.vm, 6 ) ],
-            [ 'NE',  'LHERE',   mkargs( this.vm ) ],
-            [ 'A',   'EQU',     mkargs( this.vm, 222 ) ],
-            [ null,  'END',     mkargs( this.vm ) ]
-        ] );
-        assert.equal( this.vm.resolve('A'), 111 );
+        var d1 = this.vm.d(),
+            d2 = this.vm.d(),
+            GTLOC = this.vm.ptr( 1 ),
+            EQLOC = this.vm.ptr( 2 ),
+            LTLOC = this.vm.ptr( 3 );
+        d1.addr = 456;
+        d2.addr = 123;
+        sil.ACOMP.call( this.vm, d1, d2, GTLOC, EQLOC, LTLOC );
+        assert.equal( this.vm.instructionPointer, 1 );
+        d1.addr = d2.addr;
+        sil.ACOMP.call( this.vm, d1, d2, GTLOC, EQLOC, LTLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
+        d1.addr = d2.addr - 100;
+        sil.ACOMP.call( this.vm, d1, d2, GTLOC, EQLOC, LTLOC );
+        assert.equal( this.vm.instructionPointer, 3 );
     } );
 
     it( 'ACOMPC', function () {
         var DESCR = this.vm.d(),
             N = 4,
-            NELOC = 1,
-            EQLOC = 2;
+            NELOC = this.vm.ptr( 1 ),
+            EQLOC = this.vm.ptr( 2 );
 
         this.vm.run( [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
         ] );
-        assert.equal( this.vm.instructionPointer, NELOC );
+        assert.equal( this.vm.instructionPointer, 1 );
 
         DESCR.addr = N;
         this.vm.run( [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
         ] );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
     } );
 
     it( 'AEQL', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
-            NELOC = 1,
-            EQLOC = 2;
+            NELOC = this.vm.ptr( 1 ),
+            EQLOC = this.vm.ptr( 2 );
 
         d1.addr = 123;
         d2.addr = 456;
         sil.AEQL.call( this.vm, d1, d2, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, NELOC );
+        assert.equal( this.vm.instructionPointer, 1 );
         d2.addr = d1.addr;
         sil.AEQL.call( this.vm, d1, d2, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
     } );
 
     it( 'AEQLC', function () {
         var d = this.vm.d(),
             N = 1000,
-            NELOC = 1,
-            EQLOC = 2;
+            NELOC = this.vm.ptr( 1 ),
+            EQLOC = this.vm.ptr( 2 );
         d.addr = -1000;
         sil.AEQLC.call( this.vm, d, N, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, NELOC );
+        assert.equal( this.vm.instructionPointer, 1 );
         d.addr = N;
         sil.AEQLC.call( this.vm, d, N, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
     } );
 
     it( 'AEQLIC', function () {
-        var EQLOC = 1,
-            NELOC = 2,
-            N2 = 500;
-        this.vm.alloc( 77 );
+        var NELOC = this.vm.ptr( 1 ),
+            EQLOC = this.vm.ptr( 2 ),
+            N1 = 50,
+            N2 = 0;
         var d1 = this.vm.d();
-        this.vm.alloc( 88 );
+        this.vm.alloc( 77 );
         var d2 = this.vm.d();
-        d1.addr = d2.ptr;
-        d2.addr = -500;
-        sil.AEQLIC.call( this.vm, d1, 0, N2, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, NELOC );
+
+        d1.addr = d2.ptr - N1;
+        d2.addr = N2 - 500;
+        sil.AEQLIC.call( this.vm, d1, N1, N2, NELOC, EQLOC );
+        assert.equal( this.vm.instructionPointer, 1 );
         d2.addr = N2;
-        sil.AEQLIC.call( this.vm, d1, 0, N2, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        sil.AEQLIC.call( this.vm, d1, N1, N2, NELOC, EQLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
     } );
 
     it( 'CHKVAL', function () {
         var s = this.vm.s(),
             d1 = this.vm.d(),
             d2 = this.vm.d(),
-            GTLOC = 1,
-            EQLOC = 2,
-            LTLOC = 3;
+            GTLOC = this.vm.ptr( 1 ),
+            LTLOC = this.vm.ptr( 2 ),
+            EQLOC = this.vm.ptr( 3 );
 
         s.length = 50;
         d1.addr = 20;
         d2.addr = 100;
         sil.CHKVAL.call( this.vm, d1, d2, s, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, GTLOC );
+        assert.equal( this.vm.instructionPointer, 1 );
 
         d1.addr = 500;
         sil.CHKVAL.call( this.vm, d1, d2, s, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, LTLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
 
         d1.addr = d2.addr + s.length;
         sil.CHKVAL.call( this.vm, d1, d2, s, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 3 );
     } );
 
     it( 'DEQL', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
-            EQLOC = 1,
-            NELOC = 2;
+            EQLOC = this.vm.ptr( 1 ),
+            NELOC = this.vm.ptr( 2 );
 
         d1.update( 123, 456, 789 );
         d2.read( d1 );
         sil.DEQL.call( this.vm, d1, d2, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 1 );
         d1.addr = 555;
         sil.DEQL.call( this.vm, d1, d2, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, NELOC );
+        assert.equal( this.vm.instructionPointer, 2 );
     } );
 
     it( 'LCOMP', function () { // stub
@@ -264,35 +267,35 @@ describe( 'Comparison Macros', function () {
 
     it( 'LEQLC', function () {
         var s = this.vm.s(),
-            NELOC = 20,
-            EQLOC = 30,
+            NELOC = this.vm.ptr( 20 ),
+            EQLOC = this.vm.ptr( 30 ),
             N = 333;
         s.length = N;
         sil.LEQLC.call( this.vm, s, N, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 30 );
         sil.LEQLC.call( this.vm, s, N + 5, NELOC, EQLOC );
-        assert.equal( this.vm.instructionPointer, NELOC );
+        assert.equal( this.vm.instructionPointer, 20 );
     } );
 
     it( 'LEXCMP', function () {
         var SPEC1 = this.vm.s( sil.STRING.call( this.vm, 'abd' ) ),
             SPEC2 = this.vm.s( sil.STRING.call( this.vm, 'abc' ) ),
-            GTLOC = 1,
-            EQLOC = 2,
-            LTLOC = 3;
+            GTLOC = this.vm.ptr( 1 ),
+            EQLOC = this.vm.ptr( 2 ),
+            LTLOC = this.vm.ptr( 3 );
 
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, GTLOC );
+        assert.equal( this.vm.instructionPointer, 1 );
 
         SPEC1.specified = 'abc';
         SPEC2.specified = 'abc';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
 
         SPEC1.specified = 'abc';
         SPEC2.specified = 'abd';
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, LTLOC );
+        assert.equal( this.vm.instructionPointer, 3 );
     } );
 
     it( 'TESTF', function () { // stub
@@ -307,9 +310,9 @@ describe( 'Comparison Macros', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
             N = 5,
-            GTLOC = 10,
-            EQLOC = 20,
-            LTLOC = 30;
+            GTLOC = this.vm.ptr( 10 ),
+            EQLOC = this.vm.ptr( 20 ),
+            LTLOC = this.vm.ptr( 30 );
         this.vm.alloc( 30 );
         var src = this.vm.d();
         d1.addr = src.ptr - N;
@@ -318,17 +321,17 @@ describe( 'Comparison Macros', function () {
         d2.value = 200;
         src.value = 300;
         sil.VCMPIC.call( this.vm, d1, N, d2, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, GTLOC );
+        assert.equal( this.vm.instructionPointer, 10 );
 
         // V1 == V2
         src.value = d2.value;
         sil.VCMPIC.call( this.vm, d1, N, d2, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, EQLOC );
+        assert.equal( this.vm.instructionPointer, 20 );
 
         // V1 < V2
         src.value = 100;
         sil.VCMPIC.call( this.vm, d1, N, d2, GTLOC, EQLOC, LTLOC );
-        assert.equal( this.vm.instructionPointer, LTLOC );
+        assert.equal( this.vm.instructionPointer, 30 );
     } );
 
     it( 'VEQL', function () { // stub
@@ -745,20 +748,20 @@ describe( 'Macros that Perform Integer Arithmetic on Address Fields', function (
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
             d3 = this.vm.d(),
-            FLOC = 7,
-            SLOC = 9;
+            FLOC = this.vm.ptr( 7 ),
+            SLOC = this.vm.ptr( 9 );
         d2.update( 555, 666, 777 );
 
         // A+I in range:
         d3.addr = 999;
         sil.SUM.call( this.vm, d1, d2, d3, FLOC, SLOC );
         assert.deepEqual( d1.raw(), [ d2.addr + d3.addr, d2.flags, d2.value ] );
-        assert.equal( this.vm.instructionPointer, SLOC );
+        assert.equal( this.vm.instructionPointer, 9 );
 
         // A+I overflow:
         d3.addr = INT32_MAX;
         sil.SUM.call( this.vm, d1, d2, d3, FLOC, SLOC );
-        assert.equal( this.vm.instructionPointer, FLOC );
+        assert.equal( this.vm.instructionPointer, 7 );
     } );
 } );
 
@@ -925,13 +928,13 @@ describe( 'Macros that Operate on Specifiers', function () {
 
     it( 'STREAM', function () {
         var s1 = this.vm.s(),
-            s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) ),
-            stype = this.vm.d();
+            s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) );
 
-        this.vm.define( 'STYPE', stype );
-        this.vm.define( 'FLITYP', 6 );
-
-        sil.STREAM.call( this.vm, s1, s2, SNOBOL.syntaxTables.INTGTB, -1, -2, -3 );
+        this.vm.run( [
+            [ 'STYPE',  'DESCR',  mkargs( this.vm ) ],
+            [ 'FLITYP', 'EQU',    mkargs( this.vm, 6 ) ],
+            [ null,     'STREAM', mkargs( this.vm, s1.ptr, s2.ptr, 'INTGTB', -1, -2, -3 ) ]
+        ] );
 
         assert.equal( s1.specified, '43.2' );
     } );

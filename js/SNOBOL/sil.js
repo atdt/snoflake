@@ -538,6 +538,7 @@ sil.BKSPCE = function ( $DESCR ) {
 // procedure.
 // Programming Notes:
 // 1.  See also PROC.
+// XXX: How are LOCs local?!
 sil.BRANCH = function ( LOC, PROC ) {
     // branch to program location
     this.jmp( LOC );
@@ -2407,7 +2408,7 @@ sil.MSTIME = function ( $DESCR ) {
     var DESCR = this.d( $DESCR ),
         timeCurrent = new Date();
 
-    DESCR.addr = timeCurrent - this.timeStart;
+    DESCR.addr = this.timeStart ? timeCurrent - this.timeStart : 0;
     DESCR.flags = 0;
     DESCR.value = 0;
 };
