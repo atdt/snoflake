@@ -2,7 +2,7 @@
 
 var SNOBOL = require( './base' ),
     fs = require( 'fs' ),
-    buf = fs.readFileSync( '/Users/ori/git/snoflake/tmp/hello.sno' );
+    buf = null;
 
 SNOBOL.File = function ( vm, unitNum ) {
     if ( vm.units[unitNum] !== undefined ) {
@@ -25,6 +25,9 @@ SNOBOL.File.prototype.seek = function ( pos ) {
 };
 
 SNOBOL.File.prototype.read = function ( length ) { 
+    if ( buf === null ) {
+        buf = fs.readFileSync( SNOBOL.options.file );
+    }
     var slice = buf.slice( this.pos, this.pos + length );
     this.pos += length;
 
