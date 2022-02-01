@@ -1154,6 +1154,12 @@ sil.EXREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 //      SPEC     |                           O       L   |
 //               +---------------------------------------+
 //      Data Altered by FSHRTN:
+//               +-------+-------+-------+-------+-------+
+//      SPEC     |                          O+N     L-N  |
+//               +---------------------------------------+
+// Programming Notes:
+// 1. L-N is never negative.
+// 2. See also REMSP.
 sil.FSHRTN = function ( $SPEC, N ) {
     // foreshorten specifier
     var SPEC = this.s( $SPEC );
@@ -1399,7 +1405,7 @@ sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
 //               +-------+-------+-------+-------+-------+
 //      A1+N     |   A       F       V       O       L   |
 //               +---------------------------------------+
-//      Data Altered by this.s:
+//      Data Altered by GETSPC:
 //               +-------+-------+-------+-------+-------+
 //      SPEC     |   A       F       V       O       L   |
 //               +---------------------------------------+
@@ -3112,15 +3118,16 @@ sil.REMSP = function ( $SPEC1, $SPEC2, $SPEC3 ) {
     // specify remaining string
     var SPEC1 = this.s( $SPEC1 ),
         SPEC2 = this.s( $SPEC2 ),
-        SPEC3 = this.s( $SPEC3 );
+        SPEC3 = this.s( $SPEC3 ),
+        L3 = SPEC3.length;
 
     assert( SPEC2.length - SPEC3.length >= 0 );
 
     SPEC1.addr   = SPEC2.addr;
     SPEC1.flags  = SPEC2.flags;
     SPEC1.value  = SPEC2.value;
-    SPEC1.offset = SPEC2.offset + SPEC3.length;
-    SPEC1.length = SPEC2.length - SPEC3.length;
+    SPEC1.offset = SPEC2.offset + L3;
+    SPEC1.length = SPEC2.length - L3;
 };
 
 //     RESETF is used to reset (delete) a flag from a descrip-
@@ -3319,7 +3326,7 @@ sil.RRTURN = function ( $DESCR, N ) {
 sil.RSETFI = function ( $DESCR, FLAG ) {
     // reset flag indirect
     var DESCR = this.d( $DESCR );
-    sil.RSETF.call( this, DESCR.addr, FLAG );
+    sil.RESETF.call( this, DESCR.addr, FLAG );
 };
 
 //     SBREAL  is  used  to  subtract  one  real  number  from
@@ -4109,7 +4116,7 @@ sil.SUBSP = function ( $SPEC1, $SPEC2, $SPEC3, FLOC, SLOC ) {
         SPEC3 = this.s( $SPEC3 );
 
     if ( SPEC3.length >= SPEC2.length ) {
-        SPEC3.read( SPEC1 );
+        SPEC1.read( SPEC3 );
         SPEC1.length = SPEC2.length;
         this.jmp( SLOC );
     } else {

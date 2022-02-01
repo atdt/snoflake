@@ -690,8 +690,20 @@ describe( 'Macros that Modify Flag Fields of Descriptors', function () {
         assert.equal( d.flags, 0x8 );
     } );
 
-    it( 'RSETFI', function () { // stub
-        assert( sil.RSETFI ); 
+    it( 'RSETFI', function () {
+        var d = this.vm.d(),
+            FLAG = 4;
+
+        this.vm.alloc( 50 );
+        var a = this.vm.d();
+        d.addr = a.ptr;
+        a.flags |= 5;
+        sil.RSETFI.call( this.vm, d, 4 );
+        assert.equal( a.flags, 1 );
+        sil.RSETFI.call( this.vm, d, 4 );
+        assert.equal( a.flags, 1 );
+        sil.RSETFI.call( this.vm, d, 1 );
+        assert.equal( a.flags, 0 );
     } );
 
     it( 'SETF', function () {
@@ -865,8 +877,13 @@ describe( 'Macros that Operate on Specifiers', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'ADDLG', function () { // stub
-        assert( sil.ADDLG ); 
+    it( 'ADDLG', function () {
+        var s = this.vm.s(),
+            d = this.vm.d();
+        s.length = 123;
+        d.addr = 5;
+        sil.ADDLG.call( this.vm, s, d );
+        assert.equal( s.length, 123 + 5 );
     } );
 
     it( 'APDSP', function () {
@@ -876,16 +893,25 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s1.specified, 'supercalifragilisticexpialidocious' );
     } );
 
-    it( 'FSHRTN', function () { // stub
-        assert( sil.FSHRTN ); 
+    it( 'FSHRTN', function () {
+        var s = this.vm.s(),
+            N = 4;
+        s.update( 4, 5, 6, 7, 8 );
+        sil.FSHRTN.call( this.vm, s, N );
+        assert.equal( s.offset, 11 );
+        assert.equal( s.length, 4 );
     } );
 
     it( 'GETBAL', function () { // stub
         assert( sil.GETBAL ); 
     } );
 
-    it( 'INTSPC', function () { // stub
-        assert( sil.INTSPC ); 
+    it( 'INTSPC', function () {
+        var d = this.vm.d(),
+            s = this.vm.s();
+        d.addr = -58;
+        sil.INTSPC.call( this.vm, s, d );
+        assert.equal( s.specified, '-58' );
     } );
 
     it( 'LOCSP', function () {
@@ -908,12 +934,29 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.deepEqual( s.raw(), [ d.addr, d.flags, d.value, 4*CPD, di.value, 0 ] );
     } );
 
-    it( 'PUTLG', function () { // stub
-        assert( sil.PUTLG ); 
+    it( 'PUTLG', function () {
+        var s = this.vm.s(),
+            d = this.vm.d();
+        d.addr = 123;
+        sil.PUTLG.call( this.vm, s, d );
+        assert.equal( s.length, d.addr );
     } );
 
-    it( 'REMSP', function () { // stub
-        assert( sil.REMSP ); 
+    it( 'REMSP', function () {
+        var s1 = this.vm.s(),
+            s2 = this.vm.s(),
+            s3 = this.vm.s();
+        s2.update( 1, 2, 3, 9, 5 );
+        s3.update( 1, 2, 3, 4, 2 );
+        sil.REMSP.call( this.vm, s1, s2, s3 );
+        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + s3.length, s2.length - s3.length, 0 ] );
+
+        // If SPEC1 and SPEC3 are the same:
+        s1.update( 0 );
+        s2.update( 1, 2, 3, 9, 5 );
+        var L3 = s1.length;
+        sil.REMSP.call( this.vm, s1, s2, s1 );
+        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + L3, s2.length - L3, 0 ] );
     } );
 
     it( 'SETLC', function () {
@@ -922,8 +965,12 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s.length, 555 );
     } );
 
-    it( 'SHORTN', function () { // stub
-        assert( sil.SHORTN ); 
+    it( 'SHORTN', function () {
+        var s = this.vm.s(),
+            N = 4;
+        s.length = 9;
+        sil.SHORTN.call( this.vm, s, N );
+        assert.equal( s.length, 5 );
     } );
 
     it( 'STREAM', function () {
@@ -939,7 +986,33 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s1.specified, '43.2' );
     } );
 
-    it( 'SUBSP', function () { // stub
+    it( 'SUBSP', function () {
+        var s1 = this.vm.s(),
+            s2 = this.vm.s(),
+            s3 = this.vm.s(),
+            FLOC = this.vm.ptr( 1 ),
+            SLOC = this.vm.ptr( 2 );
+        // L3 > L2
+        s2.update( 5, 2, 3, 4, 5 );
+        s3.update( 6, 7, 8, 9, 8 );
+        sil.SUBSP.call( this.vm, s1, s2, s3, FLOC, SLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
+        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 5, 0 ] );
+
+        // L3 == L2
+        s3.length = 5;
+        s1.update( 0 );
+        sil.SUBSP.call( this.vm, s1, s2, s3, FLOC, SLOC );
+        assert.equal( this.vm.instructionPointer, 2 );
+        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 5, 0 ] );
+
+        // L3 < L2
+        s3.length = 2;
+        s1.update( 0 );
+        sil.SUBSP.call( this.vm, s1, s2, s3, FLOC, SLOC );
+        assert.equal( this.vm.instructionPointer, 1 );
+        assert.deepEqual( s1.raw(), [ 0, 0, 0, 0, 0, 0 ] );
+
         assert( sil.SUBSP ); 
     } );
 
