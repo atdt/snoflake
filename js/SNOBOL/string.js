@@ -1,6 +1,7 @@
 "use strict";
 
 var SNOBOL = require( './base' );
+var assert = require( 'assert' );
 
 var FORMAT_RE = /(\d*)([HI])(\d*)([^,\/]*)([,\/]\s*)?/g;
 
@@ -71,6 +72,8 @@ SNOBOL.str = {
         var item, match, count, code, width, control, formatted = '';
 
         var orig = template;
+        assert.equal( template[0], '(' );
+        assert.equal( template[template.length - 1], ')' );
         template = template.slice( 1, -1 );  // trim parentheses
 
         var fraction, whole;
