@@ -60,6 +60,7 @@ SNOBOL.Descriptor.prototype = Object.create( null, {
     name        : { value: 'Descriptor' },
     constructor : { value : SNOBOL.Descriptor },
     width       : { value : 3 },
+    slots       : { value: Object.freeze( [ 'addr', 'flags', 'value' ] ) },
     addr        : new MemorySlot( 'int',  0 ),
     raddr       : new MemorySlot( 'real', 0 ),
     flags       : new MemorySlot( 'uint', 1 ),
@@ -68,12 +69,9 @@ SNOBOL.Descriptor.prototype = Object.create( null, {
 } );
 
 defineValues( SNOBOL.Descriptor.prototype, {
-    update: function () {
-        if ( arguments.length > this.width ) {
-            throw new TypeError( 'Too many parameters' );
-        }
-        for ( var i = 0; i < this.width; i++ ) {
-            this.vm.setUint( this.ptr + i, arguments[ i ] || 0 );
+    update: function (...args) {
+        for ( var slot of this.slots ) {
+            this[slot] = args.length ? args.shift() : 0;
         }
         return this;
     },
@@ -109,7 +107,7 @@ defineValues( SNOBOL.Descriptor.prototype, {
     },
 
     raw: function () {
-        return this.vm.mem.slice( this.ptr, this.ptr + this.width );
+        return this.vm.mem.slice( this.ptr, this.ptr + this.slots.length );
     },
 
     toString: function () {
@@ -137,6 +135,7 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
     name        : { value: 'Specifier' },
     constructor : { value: SNOBOL.Specifier },
     width       : { value: 6 },
+    slots       : { value: Object.freeze( [ 'addr', 'flags', 'value', 'offset', 'length' ] ) },
     offset      : new MemorySlot( 'uint', 3 ),
     length      : new MemorySlot( 'uint', 4 ),
     specified   : {

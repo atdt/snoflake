@@ -3635,19 +3635,19 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     // convert specifier to integer
     var DESCR = this.d( $DESCR ),
         SPEC = this.s( $SPEC ),
-        i = SPEC.length ? parseInt( SPEC.specified, 10 ) : 0;
+        I = this.$( 'I' ),
+        val = parseInt( SPEC.specified, 10 );
 
-    if ( isNaN(i) ) {
-        this.jmp( FLOC );
-    } else {
-        try {
-            DESCR.addr = i;
-            this.jmp( SLOC );
-        } catch ( e ) {
-            if ( e instanceof RangeError ) {
-                this.jmp( FLOC );
-            }
+    DESCR.update( 0, 0, I );
+    try {
+        DESCR.addr = val;
+        this.jmp( SLOC );
+    } catch ( e ) {
+        if ( e instanceof RangeError ) {
+            DESCR.addr = 0;
+            return this.jmp( FLOC );
         }
+        throw( e );
     }
 };
 
