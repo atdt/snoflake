@@ -4292,15 +4292,11 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         N;
 
     for ( N = 0; ; N++ ) {
-        console.log( 'TTL = ' + TTL + ' ; Searching for top of block at ' + ( A - ( N * D ) ) );
         if ( ( A - ( N * D ) ) < 0 ) {
             throw new RangeError();
         }
         DESCR_indirect = this.d( A - ( N * D ) );
-        console.log( '!!!!!!!!!!!!!!!!!!!!!!!!!!' );
-        console.log( `TTL = ${TTL} ; flags = ${DESCR_indirect.flags}` );
         if ( DESCR_indirect.flags & TTL ) {
-            throw new Error('WF');
             break;
         }
     }
