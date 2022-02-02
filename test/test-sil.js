@@ -304,13 +304,13 @@ describe( 'Comparison Macros', function () {
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
         assert.equal( this.vm.instructionPointer, 1 );
 
-        SPEC1.specified = 'abc';
-        SPEC2.specified = 'abc';
+        this.vm.specify( 'abc', SPEC1 );
+        this.vm.specify( 'abc', SPEC2 );
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
         assert.equal( this.vm.instructionPointer, 2 );
 
-        SPEC1.specified = 'abc';
-        SPEC2.specified = 'abd';
+        this.vm.specify( 'abc', SPEC1 );
+        this.vm.specify( 'abd', SPEC2 );
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
         assert.equal( this.vm.instructionPointer, 3 );
     } );
@@ -1010,8 +1010,9 @@ describe( 'Macros that Operate on Specifiers', function () {
     } );
 
     it( 'APDSP', function () {
-        var s1 = this.vm.s( sil.STRING.call( this.vm, 'supercalifragilistic' ) ),
-            s2 = this.vm.s( sil.STRING.call( this.vm, 'expialidocious' ) );
+        var s1 = this.vm.s( sil.STRING.call( this.vm, 'supercalifragilistic' ) );
+        this.vm.alloc( 50 );
+        var s2 = this.vm.s( sil.STRING.call( this.vm, 'expialidocious' ) );
         sil.APDSP.call( this.vm, s1, s2 );
         assert.equal( s1.specified, 'supercalifragilisticexpialidocious' );
     } );
@@ -1141,13 +1142,13 @@ describe( 'Macros that Operate on Specifiers', function () {
 
     it( 'TRIMSP', function () {
         var s1 = this.vm.s(),
-            s2 = this.vm.s( sil.STRING.call( this.vm, 'abcd   ' ) );
+            s2 = this.vm.s( this.vm.specify( 'abcd   ' ) );
 
         sil.TRIMSP.call( this.vm, s1, s2 );
         assert.equal( s2.specified, 'abcd   ' );
         assert.equal( s1.specified, 'abcd' );
 
-        s2.specified = 'efgh';
+        this.vm.specify( 'efgh', s2 );
         sil.TRIMSP.call( this.vm, s1, s2 );
         assert.equal( s1.specified, 'efgh' );
     } );
@@ -1243,8 +1244,11 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'DATE', function () { // stub
-        assert( sil.DATE ); 
+    it( 'DATE', function () {
+        var s = this.vm.s(),
+            year = new Date().getFullYear();
+        sil.DATE.call( this.vm, s );
+        assert( s.specified.includes( year ) );
     } );
 
     it( 'ENDEX', function () { // stub
