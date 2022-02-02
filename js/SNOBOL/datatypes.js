@@ -146,15 +146,6 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
                 end = start + this.length;
 
             return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
-        },
-        set: function ( s ) {
-            var start = this.addr + this.offset,
-                raw = SNOBOL.str.encode( s ),
-                length = Math.min( raw.length, this.length ),
-                args = [ start, length ].concat( raw );
-
-            this.vm.mem.splice.apply( this.vm.mem, args );
-            this.length = length;
         }
     }
 } );

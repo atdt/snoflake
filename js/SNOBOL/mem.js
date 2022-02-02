@@ -62,6 +62,13 @@ VM.prototype.alloc = function ( size, value ) {
     return ptr;
 };
 
+VM.prototype.specify = function ( str, $SPEC ) {
+    var SPEC = this.s( $SPEC ), encodedString = SNOBOL.str.encode( str );
+    SPEC.update( this.mem.length, 0, 0, 0, encodedString.length );
+    this.mem.push.apply( this.mem, encodedString );
+    return SPEC.ptr;
+}
+
 // Convenience function for allocating a pointer, pointing to addr.
 VM.prototype.ptr = function ( addr ) {
     return this.alloc( 1, addr );

@@ -442,10 +442,18 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
     // append specifier
     var SPEC1 = this.s( $SPEC1 ),
         SPEC2 = this.s( $SPEC2 ),
-        newStr = SPEC1.specified + SPEC2.specified;
+        A1 = SPEC1.addr,
+        O1 = SPEC1.offset,
+        L1 = SPEC1.length,
+        A2 = SPEC2.addr,
+        O2 = SPEC2.offset,
+        L2 = SPEC2.length;
 
-    SPEC1.length = SNOBOL.str.encode( newStr ).length;
-    SPEC1.specified = newStr;
+    for ( var i = 0; i < SPEC2.length; i++ ) {
+        // XXX: is '-1' really correct?!
+        this.mem[ A1 + O1 + L1 + i - 1 ] = this.mem[ A2 + O2 + i ];
+    }
+    SPEC1.length = SPEC1.length + SPEC2.length;
 };
 
 //     ARRAY is used to assemble an array of descriptors.
@@ -882,9 +890,7 @@ sil.CPYPAT = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, $DESCR5, $DESCR6 ) {
 // nothing else.
 sil.DATE = function ( $SPEC ) {
     // get date
-    var SPEC = this.s( $SPEC );
-
-    SPEC.specified = ( new Date() ).toString();
+    this.specify( new Date().toString(), $SPEC );
 };
 
 //     DECRA  is  used  to  decrement  the  address field of a
@@ -3088,13 +3094,8 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( $SPEC, $DESCR ) {
     // convert real number to string
-    var SPEC = this.s( $SPEC ),
-        DESCR = this.d( $DESCR );
-
-    SPEC.update( 0, 0, 0, 0, 0, 0 );
-    SPEC.specified = DESCR.raddr;
-
-    return SPEC.ptr;
+    var DESCR = this.d( $DESCR );
+    return this.specify( DESCR.raddr, $SPEC );
 };
 
 //     REMSP is used to obtain a remainder specifier resulting
@@ -3888,7 +3889,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    SPEC.specified = words;
+    this.specify( words, SPEC );
 
     return this.jmp( SLOC );
 };
@@ -4075,13 +4076,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 //
 sil.STRING = function ( STR ) {
     // assemble specified string
-    var SPEC = this.s(), encodedString = SNOBOL.str.encode( STR );
-
-    SPEC.addr = this.mem.length,
-    SPEC.length = encodedString.length;
-    this.mem.push.apply( this.mem, encodedString );
-
-    return SPEC.ptr;
+    return this.specify( STR );
 };
 
 //     FORMAT  is used to assemble the characters of a format.
