@@ -614,12 +614,37 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'ADJUST', function () { // stub
-        assert( sil.ADJUST ); 
+    it( 'ADJUST', function () {
+        var d1 = this.vm.d(),
+            d2 = this.vm.d(),
+            d3 = this.vm.d(),
+            di = this.vm.d();
+        di.addr = 5;
+        d2.addr = di.ptr;
+        d3.addr = 7;
+        sil.ADJUST.call( this.vm, d1, d2, d3 );
+        assert.equal( d1.addr, d3.addr + di.addr );
     } );
 
-    it( 'BKSIZE', function () { // stub
-        assert( sil.BKSIZE ); 
+    it( 'BKSIZE', function () {
+        var d1 = this.vm.d(),
+            d2 = this.vm.d(),
+            di = this.vm.d(),
+            FV;
+        this.vm.define( 'STTL', 1 << 4 );
+        d2.addr = di.ptr;
+
+        // F contains STTL
+        di.update( 3, 1 << 4, 5 );
+        sil.BKSIZE.call( this.vm, d1, d2 );
+        FV = 3 * (4 + Math.floor((di.value - 1) / 3 + 1));
+        assert.deepEqual( d1.raw(), [ FV, 0, 0 ] );
+
+        // F does not contain STTL
+        di.update( 3, 0, 5 );
+        sil.BKSIZE.call( this.vm, d1, d2 );
+        FV = di.value + 3;
+        assert.deepEqual( d1.raw(), [ FV, 0, 0 ] );
     } );
 
     it( 'DECRA', function () {
@@ -720,8 +745,12 @@ describe( 'Macros that Modify Value Fields of Descriptors', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'INCRV', function () { // stub
-        assert( sil.INCRV ); 
+    it( 'INCRV', function () {
+        var d = this.vm.d(),
+            N = 55;
+        d.value = 44;
+        sil.INCRV.call( this.vm, d, N );
+        assert.equal( d.value, 55 + 44 );
     } );
 
     it( 'MOVV', function () {
@@ -754,8 +783,12 @@ describe( 'Macros that Modify Value Fields of Descriptors', function () {
         assert.equal( dst.value, 12345 );
     } );
 
-    it( 'SETVA', function () { // stub
-        assert( sil.SETVA ); 
+    it( 'SETVA', function () {
+        var d1 = this.vm.d(),
+            d2 = this.vm.d();
+        d2.addr = 999;
+        sil.SETVA.call( this.vm, d1, d2 );
+        assert.equal( d1.value, 999 );
     } );
 
     it( 'SETVC', function () {
