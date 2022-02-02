@@ -262,7 +262,7 @@ describe( 'Specifier Datatype', function () {
         s.value = 8;
         s.offset = 9;
         s.length = 10;
-        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10, 0 ] );
+        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
     } );
 
     it( 'read', function () {
@@ -276,7 +276,7 @@ describe( 'Specifier Datatype', function () {
     it( 'update', function () {
         var s = new SNOBOL.Specifier( this.vm );
         s.update( 6, 7, 8, 9, 10 );
-        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10, 0 ] );
+        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
     } );
 
     it( 'eq', function () {
