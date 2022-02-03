@@ -67,8 +67,10 @@ describe( 'Macros that Assemble Data', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'ARRAY', function () { // stub
-        assert( sil.ARRAY );
+    it( 'ARRAY', function () {
+        var allocated = this.vm.mem.length;
+        sil.ARRAY.call( this.vm, 18 );
+        assert.equal( this.vm.mem.length, allocated + ( 18 * 3 ) );
     } );
 
     it( 'BUFFER', function () {
@@ -408,8 +410,10 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         sil.ISTACK.call( this.vm );
     } );
 
-    it( 'ISTACK', function () { // stub
-        assert( sil.ISTACK ); 
+    it( 'ISTACK', function () {
+        sil.ISTACK.call( this.vm );
+        assert.equal( this.vm.d( 'OSTACK' ).addr, 0 );
+        assert.equal( this.vm.d( 'CSTACK' ).addr, this.vm.$( 'STACK' ) );
     } );
 
     it( 'POP', function () {
@@ -436,8 +440,11 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         assert.equal (sil.PROC, sil.LHERE );
     } );
 
-    it( 'PSTACK', function () { // stub
-        assert( sil.PSTACK ); 
+    it( 'PSTACK', function () {
+        var d = this.vm.d();
+        this.vm.d( 'CSTACK' ).addr = 123;
+        sil.PSTACK.call( this.vm, d );
+        assert.deepEqual( d.raw(), [ 120, 0, 0 ] );
     } );
 
     it( 'PUSH', function () {
