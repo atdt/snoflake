@@ -105,13 +105,6 @@ VM.prototype.reset = function () {
     this.mem = [];
     this.callbacks = [];
     this.units = {};
-
-    this.define( 'CSTACK', this.d().ptr );
-    this.define( 'OSTACK', this.d().ptr );
-    this.define( 'STACK', this.alloc( 3 * 1000 ) );
-
-    this.CSTACK = this.d( this.symbols.CSTACK );
-    this.OSTACK = this.d( this.symbols.OSTACK );
-
-    SNOBOL.sil.ISTACK.call( this );
+    this.CSTACK = this.d();
+    this.OSTACK = this.d();
 };

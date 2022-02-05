@@ -3899,7 +3899,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     }
 
     for ( var p = 0; p < SPEC.length; p++ ) {
-        this.mem[ SPEC.addr + p ] = words.codePointAt( p ) || 0;
+        this.mem[ SPEC.addr + SPEC.offset + p ] = words.codePointAt( p ) || 0;
     }
 
     return this.jmp( SLOC );
