@@ -18,16 +18,18 @@ function stackPopper( dataType ) {
         if ( !Array.isArray( ARGs ) ) {
             ARGs = [ ARGs ];
         }
+        var A = this.CSTACK.addr;
 
         for ( var i = 0; i < ARGs.length; i++ ) {
             dst = this[ dataType ]( ARGs[i] );
             if ( this.CSTACK.addr - dst.width < this.STACK ) {
                 throw new RangeError( 'Stack underflow' );
             }
-            this.CSTACK.addr -= dst.width;
             src = this[ dataType ]( this.CSTACK.addr );
+            this.CSTACK.addr -= dst.width;
             dst.read( src );
         }
+        assert.equal( this.CSTACK.addr, A - ( ARGs.length * dst.width ) );
     }
 }
 
@@ -42,12 +44,14 @@ function stackPusher( dataType ) {
         // Are we iterating in the right direction here?
         for ( var i = 0; i < ARGs.length; i++ ) {
             src = this[ dataType ]( ARGs[i] );
+            // XXX: Should `D` below be 'src.width`?
             if ( this.CSTACK.addr + src.width > this.STACK + ( D * this.STSIZE ) ) {
                 throw new RangeError( 'Stack overflow' );
             }
+            // XXX: Should `D` below be 'src.width`?
+            this.CSTACK.addr += src.width;
             dst = this[ dataType ]( this.CSTACK.addr );
             dst.read( src );
-            this.CSTACK.addr += dst.width;
         }
     };
 }
@@ -583,11 +587,11 @@ sil.BRANIC = function ( $DESCR, N ) {
 // blank (not zero) when program execution begins.
 sil.BUFFER = function ( N ) {
     // assemble buffer of blank characters
-    var blanks = SNOBOL.str.repeat( ' ', N ),
-        encodedBlanks = SNOBOL.str.encode( blanks ),
-        ptr = this.mem.length;
-
-    this.mem.push.apply( this.mem, encodedBlanks );
+    var ptr = this.mem.length;
+    const BLANK = ' '.charCodeAt( 0 );
+    for ( var i = 0; i < N; i++ ) {
+        this.mem.push( BLANK );
+    }
     return ptr;
 };
 
@@ -2994,18 +2998,22 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         $LOCs = [ $LOCs ];
     }
 
-    var oldStackPtr = this.OSTACK.addr,
-        curStackPtr = this.CSTACK.addr;
-
+    this.mem[ this.CSTACK.addr ] = this.OSTACK.addr;
 
     // The old stack pointer (A0) is saved on the stack.
     // sil.PUSH
-    this.d( this.CSTACK.addr ).read( this.OSTACK );
+    this.d( this.CSTACK.addr + D ).read( this.OSTACK );
 
     // The current stack pointer becomes the old stack pointer.
     this.OSTACK.read( this.CSTACK );
 
     // A new current stack pointer is generated.
+    this.CSTACK.addr += D;
+
+    // XXX: We don't store LOC on the stack, but maybe sil expects it.
+    // The specs say the new CSTACK is A+(2+N)*D. The 2 is 1 for the old stack
+    // pointer and one for LOC.
+    this.d( this.CSTACK.addr + D ).update( 0 );
     this.CSTACK.addr += D;
 
 
@@ -3022,8 +3030,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
             DESCR.read( DESCR_SRC );
         }
 
-        this.OSTACK.addr = oldStackPtr;
-        this.CSTACK.addr = curStackPtr;
+        var A = this.OSTACK.addr;
+        this.CSTACK.read( this.OSTACK );
+        this.OSTACK.read( this.d( A + D ) );
 
         if ( N !== undefined && $LOCs[ N ] !== undefined ) {
             this.instructionPointer = $LOCs[ N - 1 ];
@@ -3889,7 +3898,9 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    this.specify( words, SPEC );
+    for ( var p = 0; p < SPEC.length; p++ ) {
+        this.mem[ SPEC.addr + p ] = words.codePointAt( p ) || 0;
+    }
 
     return this.jmp( SLOC );
 };
