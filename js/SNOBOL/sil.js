@@ -553,7 +553,6 @@ sil.BKSPCE = function ( $DESCR ) {
 // procedure.
 // Programming Notes:
 // 1.  See also PROC.
-// XXX: How are LOCs local?!
 sil.BRANCH = function ( LOC, PROC ) {
     // branch to program location
     this.jmp( LOC );
@@ -2984,6 +2983,8 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
     var retLoc = this.instructionPointer,
+        A = this.CSTACK.addr,
+        A0 = this.OSTACK.addr,
         DESCR;
 
     if ( $DESCR !== undefined && $DESCR !== null ) {
@@ -2996,19 +2997,20 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
 
     // The old stack pointer (A0) is saved on the stack.
     // sil.PUSH
-    this.d( this.CSTACK.addr + D ).read( this.OSTACK );
+    var saved = this.d( this.CSTACK.addr + D );
+    saved.update( A0, 0, 0 );
 
     // The current stack pointer becomes the old stack pointer.
     this.OSTACK.read( this.CSTACK );
 
     // A new current stack pointer is generated.
-    this.CSTACK.addr += D;
 
     // XXX: We don't store LOC on the stack, but maybe sil expects it.
     // The specs say the new CSTACK is A+(2+N)*D. The 2 is 1 for the old stack
     // pointer and one for LOC.
-    this.d( this.CSTACK.addr + D ).update( 0 );
-    this.CSTACK.addr += D;
+    var loc = this.d( this.CSTACK.addr + ( 2 * D ) );
+    loc.update( 9999, 0, 0 );
+    // this.d( this.CSTACK.addr + D ).update( 0 );
 
 
     // The return location LOC is saved on the stack so that the return can be
@@ -3035,7 +3037,15 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
     } );
 
-    sil.PUSH.call( this, $DESCRs.reverse() );
+    var N = $DESCRs.length;
+    for ( var i = 1; i <= N; i++ ) {
+        var src = this.d( $DESCRs.pop() );
+        var dst = this.d( A + (2+i) * D );
+        dst.read( src );
+    }
+    this.CSTACK.addr = A + (2+N) * D;
+
+    assert.equal( this.CSTACK.addr, A + (2+N) * D );
 
     this.jmp( $PROC );
 };

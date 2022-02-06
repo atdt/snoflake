@@ -4,9 +4,7 @@ var SNOBOL = require( './base' ),
     assert = require( 'assert' );
 
 var DATA_ASSEMBLY_MACROS = [
-    'ARRAY', 'BUFFER', 'DESCR',
-    'EQU', 'FORMAT', 'LHERE',
-    'REAL',  'SPEC',  'STRING', 'PROC'
+    'DESCR', 'SPEC', 'LHERE', 'PROC', 'STRING', 'FORMAT', 'BUFFER', 'ARRAY', 'EQU'
 ];
 
 function getArgs( f ) {
@@ -68,12 +66,16 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // location argument which the caller ommitted. In such cases
     // execution should fall through to the next instruction.
     if ( typeof loc === 'number' ) {
+        if ( loc === 9999 || this.mem[loc] === 9999 ) {
+            debugger;
+            throw new Error('');
+        }
         this.instructionPointer = this.mem[loc];
     }
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label, macro;
+    var args, loc, stmt, label, macro;
 
     var sym;
     var i;
@@ -146,6 +148,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
         }
     }
 
+    var saddr = this.d( 'STACK' ).addr;
     this.instructionPointer = 0;
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
@@ -153,7 +156,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
         stmt = program[ loc ];
         [ label, macro ] = stmt;
         if ( !DATA_ASSEMBLY_MACROS.includes( macro ) ) {
-            status = this.exec.apply( this, stmt );
+            this.exec.apply( this, stmt );
+        }
+        if ( this.d('STACK').addr !== saddr ) {
+            throw new Error('STACK clobbered! New value: ' + this.d('STACK').addr);
         }
 
         // If the procedure did not update the instruction pointer,
