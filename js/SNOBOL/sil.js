@@ -458,8 +458,7 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
         L2 = SPEC2.length;
 
     for ( var i = 0; i < SPEC2.length; i++ ) {
-        // XXX: is '-1' really correct?!
-        this.mem[ A1 + O1 + L1 + i - 1 ] = this.mem[ A2 + O2 + i ];
+        this.mem[ A1 + O1 + L1 + i ] = this.mem[ A2 + O2 + i ];
     }
     SPEC1.length = SPEC1.length + SPEC2.length;
 };
