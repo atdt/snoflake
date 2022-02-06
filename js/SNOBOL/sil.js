@@ -954,7 +954,7 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // omitted.
 sil.DESCR = function ( A, F, V ) {
     // assemble descriptor
-    var DESCR = this.d( this.currentLabel );
+    var DESCR = this.d( this.loc );
 
     DESCR.addr  = A || 0;
     DESCR.flags = F || 0;
@@ -3658,15 +3658,8 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +---------------------------------------+
 sil.SPEC = function ( A, F, V, O, L ) {
     // assemble specifier
-    var SPEC = this.s( this.currentLabel ), ptr;
+    var SPEC = this.s( this.loc );
 
-    if ( typeof A === 'string' ) {
-        throw new Error('dead code');
-        ptr = this.mem.length;
-        this.mem = this.mem.concat( SNOBOL.str.encode( A ) );
-        A = ptr;
-    }
-    
     SPEC.addr   = A || 0;
     SPEC.flags  = F || 0;
     SPEC.value  = V || 0;

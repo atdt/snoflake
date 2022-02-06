@@ -89,6 +89,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
     }
 
     SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
+    var locs = {};
 
     for (
         this.instructionPointer = 0;
@@ -102,10 +103,14 @@ SNOBOL.VM.prototype.run = function ( program ) {
             // don't execute them yet, because their arguments may refer to
             // program symbols that are not yet bound.
             case 'DESCR':
-                this.define( label, this.d().ptr );
+                var ptr = this.d().ptr;
+                locs[this.instructionPointer] = ptr;
+                this.define( label, ptr );
                 break;
             case 'SPEC':
-                this.define( label, this.s().ptr );
+                var ptr = this.s().ptr;
+                locs[this.instructionPointer] = ptr;
+                this.define( label, ptr );
                 break;
             case 'LHERE':
             case 'PROC':
@@ -141,6 +146,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
         stmt = program[ this.instructionPointer ];
         [ label, macro ] = stmt;
         if ( macro === 'DESCR' || macro === 'SPEC' ) {
+            this.loc = locs[this.instructionPointer];
+            assert.ok( typeof this.loc !== undefined )
             this.exec.apply( this, stmt );
         }
     }
