@@ -11,13 +11,20 @@ var TIMER, sil = {};
 
 var titles = [];  // Seen titles. Used to prevent infinite loops.
 
+function argArray( arr ) {
+    if ( typeof arr === 'undefined' || arr === null ) {
+        arr = [];
+    } else if ( !Array.isArray( arr ) ) {
+        arr = [ arr ];
+    }
+    return arr;
+}
+
 function stackPopper( dataType ) {
     return function ( ARGs ) {
         var src, dst, arg;
 
-        if ( !Array.isArray( ARGs ) ) {
-            ARGs = [ ARGs ];
-        }
+        ARGs = argArray( ARGs );
         var A = this.CSTACK.addr;
 
         for ( var i = 0; i < ARGs.length; i++ ) {
@@ -37,10 +44,7 @@ function stackPusher( dataType ) {
     return function ( ARGs ) {
         var src, dst;
 
-        if ( !Array.isArray( ARGs ) ) {
-            ARGs = [ ARGs ];
-        }
-
+        ARGs = argArray( ARGs );
         // Are we iterating in the right direction here?
         for ( var i = 0; i < ARGs.length; i++ ) {
             src = this[ dataType ]( ARGs[i] );
@@ -2582,11 +2586,8 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     var DESCR = this.d( $DESCR ),
         fmt = this.s( FORMAT ).specified;
 
-    if ( !Array.isArray( ARGs ) ) {
-        ARGs = [ ARGs ];
-    }
-
-    ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
+    ARGs = argArray( ARGs );
+    ARGs = ARGs.map( a => this.d(a) );
     console.log( SNOBOL.str.format( fmt, ARGs ) );
 };
 
@@ -2986,19 +2987,13 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     var retLoc = this.instructionPointer,
         DESCR;
 
-    if ( $DESCR !== undefined ) {
+    if ( $DESCR !== undefined && $DESCR !== null ) {
         DESCR = this.d( $DESCR );
     }
 
-    if ( !Array.isArray( $DESCRs ) ) {
-        $DESCRs = [ $DESCRs ];
-    }
+    $DESCRs = argArray( $DESCRs );
 
-    if ( !Array.isArray( $LOCs ) ) {
-        $LOCs = [ $LOCs ];
-    }
-
-    this.mem[ this.CSTACK.addr ] = this.OSTACK.addr;
+    $LOCs = argArray( $LOCs );
 
     // The old stack pointer (A0) is saved on the stack.
     // sil.PUSH
