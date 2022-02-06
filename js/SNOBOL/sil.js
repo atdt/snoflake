@@ -4081,7 +4081,13 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 //
 sil.STRING = function ( STR ) {
     // assemble specified string
-    return this.specify( STR );
+    var SPEC = this.s();
+    SPEC.addr = this.mem.length;
+    SPEC.length = STR.length;
+    SNOBOL.str.encode( STR ).forEach( c => this.mem.push(c) );
+    assert.equal( SPEC.addr, SPEC.ptr + SPEC.width );
+
+    return SPEC.ptr;
 };
 
 //     FORMAT  is used to assemble the characters of a format.
