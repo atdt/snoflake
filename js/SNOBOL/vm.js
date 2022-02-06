@@ -39,12 +39,6 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         args = argsCallback.call( this ),
         returnValue;
 
-    this.currentLabel = label;
-    if ( macro === 'DESCR' || macro === 'SPEC' ) {
-        // Because some DESCR and SPEC are recursively defined, we have to
-        // treat them specially and provide them with their label.
-        // args.unshift( label );
-    }
     returnValue = SNOBOL.sil[ macro ].apply( this, args );
 
     // XXX: Added to fix SNOBOL.options.watch undefined issue below
@@ -166,12 +160,18 @@ SNOBOL.VM.prototype.run = function ( program ) {
 };
 
 SNOBOL.VM.prototype.d = function ( ptr ) {
+    if ( ptr === null ) {
+        throw new Error();
+    }
     return ptr instanceof SNOBOL.Descriptor
         ? ptr
         : new SNOBOL.Descriptor( this, ptr );
 };
 
 SNOBOL.VM.prototype.s = function ( ptr ) {
+    if ( ptr === null ) {
+        throw new Error();
+    }
     return ptr instanceof SNOBOL.Specifier
         ? ptr
         : new SNOBOL.Specifier( this, ptr );
