@@ -1509,7 +1509,7 @@ sil.INIT = function () {
     this.timeStart = new Date().getTime();
     FRSGPT.addr = this.alloc( dynamicStorageSize );
     HDSGPT.addr = FRSGPT.addr;
-    TLSGP1.addr = this.alloc( dynamicStorageSize );
+    TLSGP1.addr = this.mem.length;
 };
 
 //     INSERT is used to insert  a  tree  node  above  another
@@ -1785,8 +1785,8 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
 // is equivalent to
 //      LOC  OP
 sil.LHERE = function () {
-    return this.instructionPointer + 1;
     // define location here
+    return this.instructionPointer + 1;
 };
 
 //     LINK is used to link to an external function.  A2 is  a
