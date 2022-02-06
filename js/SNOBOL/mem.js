@@ -75,8 +75,13 @@ VM.prototype.ptr = function ( addr ) {
 }
 
 SNOBOL.VM.prototype.define = function ( symbol, value ) {
-    if ( symbol === 'DESCR' && value !== 3 ) {
-        throw new Error(`symbol=${symbol}, value=${value}`);
+    if ( !symbol ) {
+        // XXX: Eliminate all calls to this function that don't provide a
+        // symbol.
+        return;
+    }
+    if ( this.symbols.hasOwnProperty( symbol ) ) {
+        throw new Error( `Attempting to rebind ${symbol}` );
     }
     if ( typeof value === 'string' ) {
         this.symbols[ symbol ] = this.mem.length;
