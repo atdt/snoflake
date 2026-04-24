@@ -452,7 +452,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
             d = this.vm.d();
         d.update( 4, 1, 6 );
         sil.PUSH.call( this.vm, d );
-        d = this.vm.d( cur );
+        d = this.vm.d( cur + d.width );
         assert.deepEqual( d.raw(), [ 4, 1, 6 ] );
     } );
 
@@ -489,7 +489,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         s.update( 1, 2, 3, 4, 5 );
         sil.SPUSH.call( this.vm, s );
 
-        s = this.vm.s( cur );
+        s = this.vm.s( cur + s.width );
         assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 5 ] );
     } );
 } );
