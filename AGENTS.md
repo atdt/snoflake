@@ -125,6 +125,17 @@ Recommended progression:
    ```
    This checks object-code sequencing and interpreter continuation while
    reusing the now-working literal-output path.
+   Start with:
+   ```sh
+   printf " OUTPUT = 'HELLO, WORLD'\n OUTPUT = 'SECOND LINE'\nEND\n" > tmp/two-output.sno
+   node run.js --file=tmp/two-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/two-output.log 2>&1
+   wc -l tmp/two-output.log
+   tail -n 80 tmp/two-output.log
+   ```
+   If this fails, focus first on compiled object-code sequencing and interpreter
+   continuation rather than I/O formatting. Dump object code around
+   `vm.d('OCBSCL').addr` and `vm.d('CMBSCL').addr`; look for the ordering of
+   `INITCL`, both literal/assignment blocks, `BASECL`/goto links, and `ENDCL`.
 2. Variable assignment followed by variable output:
    ```snobol
     X = 'HELLO, WORLD'
