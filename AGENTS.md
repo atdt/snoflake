@@ -80,40 +80,52 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 205 tests.
+- `npm test` passes: 206 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
-- A simple assignment such as `OUTPUT = 'HELLO, WORLD'` reaches object-code
-  generation for `ASGN`.
+- A correctly blank-prefixed minimal visible-output program now compiles,
+  executes, and prints `HELLO, WORLD` with the required guards:
+  ```sh
+  printf " OUTPUT = 'HELLO, WORLD'\nEND\n" > tmp/min-output.sno
+  node run.js --file=tmp/min-output.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
-  EOF handling in `STREAD`, `STREAM` STOP branching, and `LOCAPV` value-field
-  copying.
+  EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
+  copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
+  descriptor-aligned `VARID`/`ENDPTR` bucket offsets, and `LOCAPV` relative
+  list-size bounds.
 - Confirmed during tracing:
-  - For a correctly blank-prefixed card, the interpreter can reach `ASGN`,
-    `PUTOUT`, and `STPRNT` for `OUTPUT = 'HELLO, WORLD'`.
-  - `LOCAPV` should treat the attribute-list size as relative to the list base
-    (`A + size`), not as an absolute memory address. The current/old behavior can
-    scan past `INLIST` or `OTLIST` into unrelated storage.
-  - I/O association keys are tricky: static `STRING` declarations such as
-    `OUTSP` assemble as specifiers, while compiled variable references to
-    `OUTPUT` are dynamic string structures produced by `GENVAR`. Do not assume
-    raw descriptor equality will match them without verifying the memory layout.
-  - `STPRNT` normally expects its output block to contain a unit descriptor and a
-    format descriptor. Static `FORMAT`/`STRING` data may be represented as a
-    specifier rather than a book-style string structure, so inspect both the
-    descriptor and the pointed-to memory before changing formatting behavior.
+  - Static adjacent descriptor lists such as `OTLIST` depend on unlabeled
+    `DESCR` entries being initialized in place. Allocating fresh descriptors
+    during the second assembly pass leaves holes and breaks association lookup.
+  - `VARID` bucket offsets must fall on descriptor boundaries. Computing `K`
+    over all character addresses can create unaligned chain links and cycles
+    through unrelated memory.
+  - `ENDPTR` must be interned with the same bucket rule as `GENVAR`; otherwise
+    the physical `END` card can be treated as a normal label and later fail as a
+    duplicate definition.
+  - `LOCAPV` treats the attribute-list size as relative to the list base
+    (`A + size`), not as an absolute memory address.
+  - Static `STRING` declarations such as `OUTSP` are converted to dynamic string
+    structures during initialization, so association lookup currently succeeds
+    by descriptor equality after that conversion.
 
 ### Active Target
-Focus on making a minimal program visibly do work, not on preserving
-`tmp/hello.sno` behavior at all costs.
+The previous active target is complete: the minimal blank-prefixed
+`OUTPUT = 'HELLO, WORLD'` program visibly prints. Future work should move to the
+next smallest user-visible SNOBOL behavior and keep adding focused integration
+tests around each newly working construct.
 
 Known areas still worth checking:
-- End-card/start-location handling is still suspicious. The physical `END` card
-  can be processed as a label by `CMPILE`, creating a later END-only code block;
-  `BASE` may then move `OCBSCL` from the assignment block to that later block.
-- I/O output depends on both association lookup (`OUTATL`/`LOCAPV`) and output
-  block format setup (`OUTPUT`, `OUTPSP`, `STPRNT`). Fix these with targeted
-  tests rather than broad translator changes unless the broader invariant is
-  proven.
+- Runtime statistics still report zero statements and zero writes for the
+  minimal output program even though visible output occurs.
+- `STPRNT` and `OUTPUT` are still minimal JavaScript implementations of
+  FORTRAN-like formatting. Exercise more formats before broadening behavior.
+- More complex start-location and `END` card forms remain under-tested. Keep
+  verifying object-code bases (`OCBSCL`, `CMBSCL`, `OCICL`) with descriptor
+  probes before changing compiler control flow.
+- I/O association behavior now works for `OUTPUT`, but other `INPUT`/`OUTPUT`
+  forms should be checked with targeted tests before assuming the representation
+  issues are fully solved.
 
 ### Debugging Tips
 - SNOBOL source statement cards normally need a leading blank. Without it,
