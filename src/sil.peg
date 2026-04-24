@@ -152,14 +152,16 @@ variable
 
 
 expr "expression"
-  = left:( integer / name ) operator:[*+-] right:( expr / integer / name )
+  = head:( integer / name ) tail:( operator:[*+-] term:( integer / name ) { return { operator: operator, term: term }; } )*
 {
-    return {
-        type: 'BinaryExpression',
-        operator: operator,
-        left: left,
-        right: right
-    };
+    return tail.reduce( function ( left, node ) {
+        return {
+            type: 'BinaryExpression',
+            operator: node.operator,
+            left: left,
+            right: node.term
+        };
+    }, head );
 }
 
 literal "literal"
