@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 209 tests.
+- `npm test` passes: 210 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -128,6 +128,12 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 'HELLO'\n OUTPUT = X ' WORLD'\nEND\n" > tmp/concat-output.sno
   node run.js --file=tmp/concat-output.sno --maxSteps=100000 --maxMillis=1000
   ```
+- Minimal pattern replacement compiles, executes, and can be observed by
+  printing the replaced subject. Covered by commit `baa8cf4`:
+  ```sh
+  printf " X = 'HELLO'\n X 'H' OUTPUT = 'MATCHED'\n OUTPUT = X\nEND\n" > tmp/pattern-replace-output.sno
+  node run.js --file=tmp/pattern-replace-output.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
@@ -151,10 +157,11 @@ them accurate, but do not let them override the core working rules above.
 
 ### Active Target
 The previous active targets are complete: multiple literal `OUTPUT` statements,
-variable assignment followed by variable output, and variable/literal
-concatenation all visibly print. The next goal is a minimal pattern-match-driven
-output, adding one new semantic feature at a time and keeping each success
-covered by a focused integration test.
+variable assignment followed by variable output, variable/literal
+concatenation, and minimal pattern replacement all visibly print. The next goal
+is success/failure goto behavior after pattern matching, adding one new semantic
+feature at a time and keeping each success covered by a focused integration
+test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -176,19 +183,36 @@ Recommended progression:
     OUTPUT = X ' WORLD'
    END
    ```
-4. A minimal pattern-match-driven output:
+4. Minimal pattern replacement: complete, covered by `baa8cf4`.
    ```snobol
     X = 'HELLO'
     X 'H' OUTPUT = 'MATCHED'
+    OUTPUT = X
    END
    ```
-   This enters SNOBOL-specific pattern behavior. Start with:
-   ```sh
-   printf " X = 'HELLO'\n X 'H' OUTPUT = 'MATCHED'\nEND\n" > tmp/pattern-output.sno
-   node run.js --file=tmp/pattern-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/pattern-output.log 2>&1
-   wc -l tmp/pattern-output.log
-   tail -n 80 tmp/pattern-output.log
+   This enters SNOBOL-specific pattern behavior. The second statement is
+   replacement syntax: `OUTPUT` is part of the pattern, not the output
+   association target. With a matching leading `H`, the subject becomes
+   `MATCHEDELLO`; with a non-matching literal such as `Z`, the subject remains
+   `HELLO`.
+5. Pattern success/failure goto behavior:
+   ```snobol
+    X = 'HELLO'
+    X 'H' :S(MATCH)F(END)
+   MATCH OUTPUT = 'MATCHED'
+   END
    ```
+   Initial probes show that the success case visibly prints `MATCHED`, but a
+   failure case using `X 'Z' :S(MATCH)F(END)` also falls through and prints
+   `MATCHED`. Pattern replacement failure itself does work:
+   ```sh
+   printf " X = 'HELLO'\n X 'Z' OUTPUT = 'MATCHED'\n OUTPUT = X\nEND\n" > tmp/pattern-replace-fail.sno
+   node run.js --file=tmp/pattern-replace-fail.sno --maxSteps=100000 --maxMillis=1000
+   ```
+   This points at goto/failure continuation rather than string/string pattern
+   comparison or replacement. Good next probes are `CMPGO`, `CMPNGO`, `FORWRD`,
+   `GOTGCL`/`GOTLCL` object code, `INTERP` return exits, and how `FAIL` from
+   `SCAN`/`SJSR` is reflected into statement control flow.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the
