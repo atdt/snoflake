@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 211 tests.
+- `npm test` passes: 212 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -140,6 +140,14 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 'HELLO'\n X 'Z' :F(SKIP)\n OUTPUT = 'BAD'\nSKIP OUTPUT = 'GOOD'\nEND\n" > tmp/pattern-failure-goto.sno
   node run.js --file=tmp/pattern-failure-goto.sno --maxSteps=100000 --maxMillis=1000
   ```
+- Combined pattern success/failure gotos now branch correctly for both matching
+  and non-matching literals. Covered by commit `2de3bd7`:
+  ```sh
+  printf " X = 'HELLO'\n X 'H' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-success.sno
+  node run.js --file=tmp/pattern-branch-success.sno --maxSteps=100000 --maxMillis=1000
+  printf " X = 'HELLO'\n X 'Z' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-failure.sno
+  node run.js --file=tmp/pattern-branch-failure.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
@@ -168,9 +176,10 @@ them accurate, but do not let them override the core working rules above.
 ### Active Target
 The previous active targets are complete: multiple literal `OUTPUT` statements,
 variable assignment followed by variable output, variable/literal
-concatenation, minimal pattern replacement, and pattern failure goto all visibly
-work. The next goal is to broaden pattern/goto behavior one small step at a
-time and keep each success covered by a focused integration test.
+concatenation, minimal pattern replacement, pattern failure goto, and combined
+pattern success/failure gotos all visibly work. The next goal is to broaden
+pattern behavior one small step at a time and keep each success covered by a
+focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -215,7 +224,7 @@ Recommended progression:
    This fixed `LEXCMP` omitted-branch fallthrough: a non-equal comparison with
    an omitted branch must fall through to the scanner retry/failure path, not
    later take the equality branch.
-6. Pattern success/failure combined goto:
+6. Pattern success/failure combined goto: complete, covered by `2de3bd7`.
    ```snobol
     X = 'HELLO'
     X 'H' :S(MATCH)F(DONE)
@@ -223,15 +232,23 @@ Recommended progression:
    DONE
    END
    ```
-   Start by checking both the success and failure forms:
+   Both the success and failure forms behave:
    ```sh
    printf " X = 'HELLO'\n X 'H' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-success.sno
    node run.js --file=tmp/pattern-branch-success.sno --maxSteps=100000 --maxMillis=1000
    printf " X = 'HELLO'\n X 'Z' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-failure.sno
    node run.js --file=tmp/pattern-branch-failure.sno --maxSteps=100000 --maxMillis=1000
    ```
-   If both behave, add a focused integration test for the combined
-   success/failure goto form.
+7. Suggested next target: pattern replacement with failure branch.
+   ```snobol
+    X = 'HELLO'
+    X 'Z' = 'MATCHED' :F(FAIL)
+    OUTPUT = 'BAD'
+   FAIL OUTPUT = X
+   END
+   ```
+   Expected output is `HELLO`, confirming that failed replacement can drive a
+   failure branch while preserving the subject value.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the
