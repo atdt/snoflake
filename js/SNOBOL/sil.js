@@ -2097,7 +2097,7 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         ptr = A + 6 + ( 6 * i );
 
         if ( this.d( ptr ).isEqualTo( DESCR3 ) ) {
-            DESCR1.update( ptr - 6, DESCR2.flags, DESCR2.values );
+            DESCR1.update( ptr - 6, DESCR2.flags, DESCR2.value );
             return this.jmp( SLOC );
         }
 
@@ -4227,7 +4227,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             STYPE.addr = P;
             SPEC1.update( A, F, V, O, J );
             SPEC2.update( A, F, V, O + J, L - J );
-            this.jmp( RUNOUT );
+            this.jmp( SLOC );
             return;
 
         case 'ERROR':

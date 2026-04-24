@@ -1141,12 +1141,31 @@ describe( 'Macros that Operate on Specifiers', function () {
             sloc = this.vm.ptr( 3 );
 
         this.vm.define( 'STYPE', stype.ptr );
+        this.vm.define( 'EQTYP', 4 );
         sil.STREAM.call( this.vm, s1, s2, SNOBOL.tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 2 );
         assert.equal( stype.addr, 0 );
         assert.equal( s1.specified, '   ' );
         assert.equal( s2.length, 0 );
+    } );
+
+    it( 'STREAM stop branches to success after consuming token', function () {
+        var s1 = this.vm.s(),
+            s2 = this.vm.s( sil.STRING.call( this.vm, ' = X' ) ),
+            stype = this.vm.d(),
+            error = this.vm.ptr( 1 ),
+            runout = this.vm.ptr( 2 ),
+            sloc = this.vm.ptr( 3 );
+
+        this.vm.define( 'STYPE', stype.ptr );
+        this.vm.define( 'EQTYP', 4 );
+        sil.STREAM.call( this.vm, s1, s2, SNOBOL.tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
+
+        assert.equal( this.vm.instructionPointer, 3 );
+        assert.equal( stype.addr, this.vm.$( 'EQTYP' ) );
+        assert.equal( s1.specified, ' =' );
+        assert.equal( s2.specified, ' X' );
     } );
 
     it( 'SUBSP', function () {
@@ -1395,6 +1414,7 @@ describe( 'Miscellaneous Macros', function () {
         this.vm = new SNOBOL.VM();
         // XXX: Needed for VARID test. Move to generic setup?
         this.vm.run( [ [ 'OBSIZ', 'EQU', mkargs( this.vm, 256 ) ] ] );
+        this.vm.define( 'EQTYP', 4 );
     } );
 
     it( 'LINKOR', function () { // stub
@@ -1406,7 +1426,23 @@ describe( 'Miscellaneous Macros', function () {
     } );
 
     it( 'LOCAPV', function () { // stub
-        assert( sil.LOCAPV ); 
+        var result = this.vm.d(),
+            list = this.vm.d(),
+            key = this.vm.d(),
+            found = this.vm.ptr( 123 ),
+            missing = this.vm.ptr( 456 ),
+            base = this.vm.alloc( 9 );
+
+        list.update( base, 7, 11 );
+        this.vm.d( base ).update( base + 6, 0, 0 );
+        this.vm.d( base + 3 ).update( 99, 0, 1 );
+        this.vm.d( base + 6 ).update( 42, 0, 2 );
+        key.update( 42, 0, 2 );
+
+        sil.LOCAPV.call( this.vm, result, list, key, missing, found );
+
+        assert.equal( this.vm.instructionPointer, 123 );
+        assert.deepEqual( result.raw(), [ base, 7, 11 ] );
     } );
 
     it( 'LVALUE', function () {
