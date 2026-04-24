@@ -290,6 +290,29 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !failureOutput.includes( '\nMATCHED\n' ) );
         assert( !failureOutput.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'branches on failed pattern replacement without changing subject', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-pattern-replace-failure-branch.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " X = 'HELLO'\n X 'Z' = 'MATCHED' :F(FAIL)\n OUTPUT = 'BAD'\nFAIL OUTPUT = X\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-pattern-replace-failure-branch.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nHELLO\n' ) );
+        assert( !output.includes( '\nBAD\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {
