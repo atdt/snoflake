@@ -231,6 +231,29 @@ describe( 'SNOBOL Program Execution', function () {
         assert( output.includes( '\nMATCHEDELLO\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'branches on pattern match failure', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-pattern-failure-goto.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " X = 'HELLO'\n X 'Z' :F(SKIP)\n OUTPUT = 'BAD'\nSKIP OUTPUT = 'GOOD'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-pattern-failure-goto.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nGOOD\n' ) );
+        assert( !output.includes( '\nBAD\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {

@@ -1826,7 +1826,8 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
         SPEC2 = this.s( $SPEC2 ),
         STR1 = SPEC1.specified,
         STR2 = SPEC2.specified,
-        branch;
+        branch,
+        compared = false;
 
     // Compare character-by-character so behaviour matches the macro spec.
     var len = Math.min( STR1.length, STR2.length );
@@ -1834,15 +1835,17 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
         var diff = STR1.charCodeAt( i ) - STR2.charCodeAt( i );
         if ( diff < 0 ) {
             branch = LTLOC;
+            compared = true;
             break;
         }
         if ( diff > 0 ) {
             branch = GTLOC;
+            compared = true;
             break;
         }
     }
 
-    if ( branch === undefined ) {
+    if ( !compared ) {
         if ( STR1.length < STR2.length ) {
             branch = LTLOC;
         } else if ( STR1.length > STR2.length ) {

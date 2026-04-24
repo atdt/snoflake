@@ -320,6 +320,10 @@ describe( 'Comparison Macros', function () {
         this.vm.specify( 'abd', SPEC2 );
         sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC, LTLOC );
         assert.equal( this.vm.instructionPointer, 3 );
+
+        this.vm.instructionPointer = 0;
+        sil.LEXCMP.call( this.vm, SPEC1, SPEC2, GTLOC, EQLOC );
+        assert.equal( this.vm.instructionPointer, 0 );
     } );
 
     it( 'TESTF', function () {
