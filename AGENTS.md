@@ -17,6 +17,13 @@ or altering the original SIL sources. When in doubt, preserve the documented
 SIL semantics and isolate JavaScript runtime fixes around representation or
 translation mismatches.
 
+`SIL-CHANGES.md` summarizes candidate bug fixes identified in Phil Budne's
+later CSNOBOL4 SIL source. Consult it only after checking the local macro
+comments, the JavaScript representation/translation layer, and targeted runtime
+probes. It is a guide for surgical, evidence-backed fixes; do not treat
+`external/snobol4-v311.sil` as a replacement baseline or port modern CSNOBOL4
+features wholesale.
+
 ## Core Working Rules
 These are the durable project rules. Treat them as more important than any
 temporary debugging notes below.
