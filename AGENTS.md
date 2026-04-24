@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 210 tests.
+- `npm test` passes: 211 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -134,11 +134,17 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 'HELLO'\n X 'H' OUTPUT = 'MATCHED'\n OUTPUT = X\nEND\n" > tmp/pattern-replace-output.sno
   node run.js --file=tmp/pattern-replace-output.sno --maxSteps=100000 --maxMillis=1000
   ```
+- Pattern-match failure goto now branches correctly when a string/string match
+  fails. Covered by commit `576d6a5`:
+  ```sh
+  printf " X = 'HELLO'\n X 'Z' :F(SKIP)\n OUTPUT = 'BAD'\nSKIP OUTPUT = 'GOOD'\nEND\n" > tmp/pattern-failure-goto.sno
+  node run.js --file=tmp/pattern-failure-goto.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
-  descriptor-aligned `VARID`/`ENDPTR` bucket offsets, and `LOCAPV` relative
-  list-size bounds.
+  descriptor-aligned `VARID`/`ENDPTR` bucket offsets, `LOCAPV` relative
+  list-size bounds, and omitted-branch fallthrough in `LEXCMP`.
 - Confirmed during tracing:
   - Static adjacent descriptor lists such as `OTLIST` depend on unlabeled
     `DESCR` entries being initialized in place. Allocating fresh descriptors
@@ -154,14 +160,17 @@ them accurate, but do not let them override the core working rules above.
   - Static `STRING` declarations such as `OUTSP` are converted to dynamic string
     structures during initialization, so association lookup currently succeeds
     by descriptor equality after that conversion.
+  - `LEXCMP` must distinguish "no difference found yet" from "a difference
+    selected an omitted branch." Otherwise `SCANVV` can treat a non-equal
+    string/string comparison such as `H` versus `Z` as equality and skip the
+    statement failure path.
 
 ### Active Target
 The previous active targets are complete: multiple literal `OUTPUT` statements,
 variable assignment followed by variable output, variable/literal
-concatenation, and minimal pattern replacement all visibly print. The next goal
-is success/failure goto behavior after pattern matching, adding one new semantic
-feature at a time and keeping each success covered by a focused integration
-test.
+concatenation, minimal pattern replacement, and pattern failure goto all visibly
+work. The next goal is to broaden pattern/goto behavior one small step at a
+time and keep each success covered by a focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -195,24 +204,34 @@ Recommended progression:
    association target. With a matching leading `H`, the subject becomes
    `MATCHEDELLO`; with a non-matching literal such as `Z`, the subject remains
    `HELLO`.
-5. Pattern success/failure goto behavior:
+5. Pattern failure goto behavior: complete, covered by `576d6a5`.
    ```snobol
     X = 'HELLO'
-    X 'H' :S(MATCH)F(END)
-   MATCH OUTPUT = 'MATCHED'
+    X 'Z' :F(SKIP)
+    OUTPUT = 'BAD'
+   SKIP OUTPUT = 'GOOD'
    END
    ```
-   Initial probes show that the success case visibly prints `MATCHED`, but a
-   failure case using `X 'Z' :S(MATCH)F(END)` also falls through and prints
-   `MATCHED`. Pattern replacement failure itself does work:
-   ```sh
-   printf " X = 'HELLO'\n X 'Z' OUTPUT = 'MATCHED'\n OUTPUT = X\nEND\n" > tmp/pattern-replace-fail.sno
-   node run.js --file=tmp/pattern-replace-fail.sno --maxSteps=100000 --maxMillis=1000
+   This fixed `LEXCMP` omitted-branch fallthrough: a non-equal comparison with
+   an omitted branch must fall through to the scanner retry/failure path, not
+   later take the equality branch.
+6. Pattern success/failure combined goto:
+   ```snobol
+    X = 'HELLO'
+    X 'H' :S(MATCH)F(DONE)
+   MATCH OUTPUT = 'MATCHED'
+   DONE
+   END
    ```
-   This points at goto/failure continuation rather than string/string pattern
-   comparison or replacement. Good next probes are `CMPGO`, `CMPNGO`, `FORWRD`,
-   `GOTGCL`/`GOTLCL` object code, `INTERP` return exits, and how `FAIL` from
-   `SCAN`/`SJSR` is reflected into statement control flow.
+   Start by checking both the success and failure forms:
+   ```sh
+   printf " X = 'HELLO'\n X 'H' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-success.sno
+   node run.js --file=tmp/pattern-branch-success.sno --maxSteps=100000 --maxMillis=1000
+   printf " X = 'HELLO'\n X 'Z' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-failure.sno
+   node run.js --file=tmp/pattern-branch-failure.sno --maxSteps=100000 --maxMillis=1000
+   ```
+   If both behave, add a focused integration test for the combined
+   success/failure goto form.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the
