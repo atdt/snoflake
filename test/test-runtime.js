@@ -187,6 +187,28 @@ describe( 'SNOBOL Program Execution', function () {
         assert( output.includes( '\nHELLO, WORLD\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'prints a concatenated variable and literal expression', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-concat-output.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " X = 'HELLO'\n OUTPUT = X ' WORLD'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-concat-output.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nHELLO WORLD\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {
