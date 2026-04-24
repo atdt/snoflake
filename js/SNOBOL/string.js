@@ -68,52 +68,92 @@ SNOBOL.str = {
         return new Array( count + 1 ).join( str );
     },
 
-    format: function ( template, items ) {
-        var item, match, count, code, width, control, formatted = '';
+    format: function ( template, data ) {
+        // Minimal FORTRAN-like formatter supporting: rAw, rIw, rFw.d, rX, nHtext, commas, '/'
+        // Accept a template that may have a leading carriage control and outer parentheses.
+        if (!template) return '';
 
-        var orig = template;
-        assert.equal( template[0], '(' );
-        assert.equal( template[template.length - 1], ')' );
-        template = template.slice( 1, -1 );  // trim parentheses
-
-        var fraction, whole;
-        while ( template.length ) {
-                match = /^(\d+)H/.exec( template );
-                if ( match ) {
-                        template = template.slice( match[0].length );
-                        count = parseInt( match[1], 10 );
-                        formatted += ' ' + template.slice( 0, count );
-                        template = template.slice( count + 1 );
-                        continue;
-                }
-
-                match = /^I(\d+)/.exec( template );
-                if ( match ) {
-                        template = template.slice( match[0].length + 1 );
-                        item = items.length ? items.shift().addr : '';
-                        formatted += ' ' + item;
-                        continue;
-                }
-
-                match = /^F(\d+)(\.(\d+))?/.exec( template );
-                if ( match ) {
-                        template = template.slice( match[0].length + 1 );
-                        item = items.length ? items.shift().raddr : '';
-
-                        formatted += ' ' + Number( item ).toFixed( 3 );
-
-                        continue;
-                }
-                if ( /^\//.test( template ) ) break;
-
-                throw new Error('FAIL: "' + template + '" (orig: "' + orig + '")');
+        // If first character is not '(', try to find parentheses.
+        var start = template.indexOf('(');
+        var end = template.lastIndexOf(')');
+        if (start !== -1 && end > start) {
+            template = template.slice(start + 1, end);
         }
 
-        control = formatted.charAt( 0 );
-        formatted = formatted.slice( 2 );
+        // Normalize data: allow string or array of descriptors/values.
+        var strData = '';
+        if (typeof data === 'string') {
+            strData = data;
+        } else if (Array.isArray(data)) {
+            // Join string-like items; for numeric formats, code below can be extended if needed.
+            strData = data.map(String).join('');
+        } else if (data && typeof data === 'object') {
+            // Descriptor-like
+            strData = String(data.specified || data.addr || '');
+        }
+        var pos = 0;
+        var out = '';
+        var i = 0;
+        function take(n) {
+            var s = strData.slice(pos, pos + n);
+            pos += n;
+            return s;
+        }
+        function skipSpaces() {
+            while (i < template.length && /[\s,]/.test(template[i])) i++;
+        }
+        while (i < template.length) {
+            skipSpaces();
+            if (i >= template.length) break;
+            if (template[i] === '/') { out += '\n'; i++; continue; }
 
-         // the first character of information in each line is used
-         // for carriage control of the printer.
-        return formatted;
+            // Parse repeat count (optional)
+            var m, rep = 1;
+            m = /^(\d+)/.exec(template.slice(i));
+            if (m) { rep = parseInt(m[1], 10); i += m[1].length; }
+
+            var code = template[i++];
+            if (code === 'H') {
+                // repHtext
+                var text = template.slice(i, i + rep);
+                out += text;
+                i += rep;
+                continue;
+            }
+            if (code === 'X') {
+                out += pad('', rep, 'left', ' ');
+                continue;
+            }
+            if (code === 'A') {
+                // width after A
+                m = /^(\d+)/.exec(template.slice(i));
+                var w = m ? (i += m[1].length, parseInt(m[1], 10)) : 0;
+                for (var r = 0; r < rep; r++) {
+                    var s = w ? take(w) : strData.slice(pos);
+                    out += s;
+                }
+                continue;
+            }
+            if (code === 'I') {
+                m = /^(\d+)/.exec(template.slice(i));
+                var iw = m ? (i += m[1].length, parseInt(m[1], 10)) : 0;
+                // Minimal: consume one integer from data (not robust). Pad left to width.
+                var val = parseInt(strData.slice(pos), 10) || 0;
+                var text = String(val);
+                out += iw ? pad(text, iw) : text;
+                continue;
+            }
+            if (code === 'F') {
+                m = /^(\d+)(?:\.(\d+))?/.exec(template.slice(i));
+                var fw = 0, fd = 0;
+                if (m) { i += m[0].length; fw = parseInt(m[1], 10); fd = m[2] ? parseInt(m[2], 10) : 0; }
+                var fval = parseFloat(strData.slice(pos)) || 0;
+                var ftxt = fd ? fval.toFixed(fd) : String(fval);
+                out += fw ? pad(ftxt, fw) : ftxt;
+                continue;
+            }
+            // Unknown code: skip one char to avoid infinite loop
+        }
+        return out;
     }
 };
