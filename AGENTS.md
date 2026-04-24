@@ -111,9 +111,48 @@ them accurate, but do not let them override the core working rules above.
 
 ### Active Target
 The previous active target is complete: the minimal blank-prefixed
-`OUTPUT = 'HELLO, WORLD'` program visibly prints. Future work should move to the
-next smallest user-visible SNOBOL behavior and keep adding focused integration
-tests around each newly working construct.
+`OUTPUT = 'HELLO, WORLD'` program visibly prints. The next goal is to get
+slightly more sophisticated SNOBOL scripts running, adding one new semantic
+feature at a time and keeping each success covered by a focused integration
+test.
+
+Recommended progression:
+1. Multiple literal output statements:
+   ```snobol
+    OUTPUT = 'HELLO, WORLD'
+    OUTPUT = 'SECOND LINE'
+   END
+   ```
+   This checks object-code sequencing and interpreter continuation while
+   reusing the now-working literal-output path.
+2. Variable assignment followed by variable output:
+   ```snobol
+    X = 'HELLO, WORLD'
+    OUTPUT = X
+   END
+   ```
+   This adds variable lookup after assignment. If it fails, inspect `GENVAR`,
+   `ARGVAL`, `ASGN`, `ASGNVV`, and object-code descriptors for `X`.
+3. String expression or concatenation:
+   ```snobol
+    X = 'HELLO'
+    OUTPUT = X ' WORLD'
+   END
+   ```
+   This starts exercising expression evaluation beyond a single literal or
+   variable.
+4. A minimal pattern-match-driven output:
+   ```snobol
+    X = 'HELLO'
+    X 'H' OUTPUT = 'MATCHED'
+   END
+   ```
+   This enters SNOBOL-specific pattern behavior and should come after statement
+   sequencing and variable lookup are understood.
+
+For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
+required guards, then add or extend a focused integration test only after the
+runtime behavior is understood.
 
 Known areas still worth checking:
 - Runtime statistics still report zero statements and zero writes for the
