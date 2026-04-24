@@ -254,6 +254,42 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( '\nBAD\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'branches on combined pattern match success and failure gotos', function () {
+        var root = path.join( __dirname, '..' ),
+            successFile = path.join( root, 'tmp', 'test-pattern-branch-success.sno' ),
+            failureFile = path.join( root, 'tmp', 'test-pattern-branch-failure.sno' ),
+            successOutput,
+            failureOutput;
+
+        fs.mkdirSync( path.dirname( successFile ), { recursive: true } );
+        fs.writeFileSync( successFile, " X = 'HELLO'\n X 'H' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" );
+        fs.writeFileSync( failureFile, " X = 'HELLO'\n X 'Z' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" );
+
+        successOutput = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-pattern-branch-success.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+        failureOutput = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-pattern-branch-failure.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( successOutput.includes( '\nMATCHED\n' ) );
+        assert( !successOutput.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+        assert( !failureOutput.includes( '\nMATCHED\n' ) );
+        assert( !failureOutput.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {
