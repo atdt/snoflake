@@ -17,6 +17,15 @@ or altering the original SIL sources. When in doubt, preserve the documented
 SIL semantics and isolate JavaScript runtime fixes around representation or
 translation mismatches.
 
+`external/v311.sil` is the historical reference source. `external/v311-snoflake.sil`
+is snoflake's working SIL input for translation; it began as a copy of
+`external/v311.sil` and is the place for any carefully justified local SIL
+fixes. Do not modify `external/v311.sil` for snoflake behavior changes. Any
+local SIL edit must be clearly annotated in `external/v311-snoflake.sil` with
+the reason, the preserved invariant, and source attribution. Fixes ported from
+Phil Budne's CSNOBOL4 SIL must explicitly say so and, when possible, include
+the relevant `PLB` marker or nearby CSNOBOL4 label/procedure context.
+
 `SIL-CHANGES.md` summarizes candidate bug fixes identified in Phil Budne's
 later CSNOBOL4 SIL source. Consult it only after checking the local macro
 comments, the JavaScript representation/translation layer, and targeted runtime
@@ -33,6 +42,9 @@ temporary debugging notes below.
   you have strong evidence.
 - Do not hand-edit `js/SNOBOL/snobol.sil.js`. Regenerate it with
   `make translate` when translator or SIL input changes.
+- `make translate` reads `external/v311-snoflake.sil`. Keep
+  `external/v311.sil` as the historical baseline and compare against it when
+  reviewing local SIL edits.
 - Always invoke `run.js` with both guards:
   `--maxSteps=100000 --maxMillis=1000`. Larger values are not permitted.
 - Avoid ingesting huge runtime output. Redirect probe output to `tmp/`, check
@@ -45,6 +57,9 @@ temporary debugging notes below.
 ## Layout
 - `src/`: SIL parser and translator (`sil.peg`, `translate.js`).
 - `external/`: upstream SIL and syntax-table sources.
+  - `external/v311.sil`: historical reference source.
+  - `external/v311-snoflake.sil`: snoflake's working SIL input for
+    translation; local SIL fixes belong here.
 - `js/`: runtime; entry point is `js/snobol.js`, core modules are under
   `js/SNOBOL/`.
 - `test/`: Mocha tests.

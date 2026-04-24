@@ -9,10 +9,15 @@ wholesale.
 ## Source Roles
 
 - `external/v311.sil`: historical SNOBOL4 3.11 SIL baseline.
+- `external/v311-snoflake.sil`: snoflake's working SIL input. It began as a
+  copy of `external/v311.sil` and is the only SIL source that should be changed
+  for local fixes used by `make translate`.
 - `external/snobol4-v311.sil`: Phil Budne's CSNOBOL4 version, with later bug
   fixes, portability work, extensions, and non-original behavior.
 - `js/SNOBOL/sil.js`: canonical local macro semantics for this JavaScript port.
   Its comment blocks remain the first local spec to check.
+- `js/SNOBOL/snobol.sil.js`: generated output from `external/v311-snoflake.sil`.
+  Do not hand-edit it.
 
 ## How To Use This Reference
 
@@ -24,7 +29,8 @@ Consult this file when:
 - a CSNOBOL4 change can explain the failure with a narrow, testable invariant.
 
 Do not use this file to:
-- replace `external/v311.sil` or `js/SNOBOL/snobol.sil.js` wholesale;
+- replace `external/v311.sil`, `external/v311-snoflake.sil`, or
+  `js/SNOBOL/snobol.sil.js` wholesale;
 - import CSNOBOL4 extensions such as SPITBOL/BLOCKS features as bug fixes;
 - override `js/SNOBOL/sil.js` comments without direct evidence.
 
@@ -34,9 +40,18 @@ Before porting any SIL fix:
 3. Compare `external/v311.sil`, `external/snobol4-v311.sil`, and
    `js/SNOBOL/sil.js` for the exact macro/procedure involved.
 4. Decide whether the fix belongs in JavaScript runtime representation,
-   translator behavior, local SIL input, or a macro implementation.
-5. Add a focused test that fails before the change and passes after it.
-6. Commit the fix separately from probe artifacts and unrelated cleanup.
+   translator behavior, `external/v311-snoflake.sil`, or a macro
+   implementation.
+5. If editing SIL, make the change in `external/v311-snoflake.sil`, not
+   `external/v311.sil`, and annotate the changed area with:
+   - why the change is needed;
+   - the original invariant or macro behavior it preserves;
+   - attribution for the source of the fix.
+6. If porting from Phil Budne's CSNOBOL4 SIL, explicitly attribute it to
+   CSNOBOL4/Phil Budne and include the `PLB` marker when one is known.
+7. Run `make translate` after any SIL input change.
+8. Add a focused test that fails before the change and passes after it.
+9. Commit the fix separately from probe artifacts and unrelated cleanup.
 
 ## Candidate Fixes
 
