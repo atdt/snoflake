@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 208 tests.
+- `npm test` passes: 209 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -121,6 +121,12 @@ them accurate, but do not let them override the core working rules above.
   ```sh
   printf " X = 'HELLO, WORLD'\n OUTPUT = X\nEND\n" > tmp/var-output.sno
   node run.js --file=tmp/var-output.sno --maxSteps=100000 --maxMillis=1000
+  ```
+- Variable/literal concatenation in an output expression compiles, executes,
+  and visibly prints the concatenated string. Covered by commit `95de0c8`:
+  ```sh
+  printf " X = 'HELLO'\n OUTPUT = X ' WORLD'\nEND\n" > tmp/concat-output.sno
+  node run.js --file=tmp/concat-output.sno --maxSteps=100000 --maxMillis=1000
   ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
@@ -144,10 +150,11 @@ them accurate, but do not let them override the core working rules above.
     by descriptor equality after that conversion.
 
 ### Active Target
-The previous active targets are complete: multiple literal `OUTPUT` statements
-and variable assignment followed by variable output both visibly print. The
-next goal is string expression/concatenation, adding one new semantic feature at
-a time and keeping each success covered by a focused integration test.
+The previous active targets are complete: multiple literal `OUTPUT` statements,
+variable assignment followed by variable output, and variable/literal
+concatenation all visibly print. The next goal is a minimal pattern-match-driven
+output, adding one new semantic feature at a time and keeping each success
+covered by a focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -163,19 +170,11 @@ Recommended progression:
     OUTPUT = X
    END
    ```
-3. String expression or concatenation:
+3. String expression or concatenation: complete, covered by `95de0c8`.
    ```snobol
     X = 'HELLO'
     OUTPUT = X ' WORLD'
    END
-   ```
-   This starts exercising expression evaluation beyond a single literal or
-   variable. Start with:
-   ```sh
-   printf " X = 'HELLO'\n OUTPUT = X ' WORLD'\nEND\n" > tmp/concat-output.sno
-   node run.js --file=tmp/concat-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/concat-output.log 2>&1
-   wc -l tmp/concat-output.log
-   tail -n 80 tmp/concat-output.log
    ```
 4. A minimal pattern-match-driven output:
    ```snobol
@@ -183,8 +182,13 @@ Recommended progression:
     X 'H' OUTPUT = 'MATCHED'
    END
    ```
-   This enters SNOBOL-specific pattern behavior and should come after statement
-   sequencing and variable lookup are understood.
+   This enters SNOBOL-specific pattern behavior. Start with:
+   ```sh
+   printf " X = 'HELLO'\n X 'H' OUTPUT = 'MATCHED'\nEND\n" > tmp/pattern-output.sno
+   node run.js --file=tmp/pattern-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/pattern-output.log 2>&1
+   wc -l tmp/pattern-output.log
+   tail -n 80 tmp/pattern-output.log
+   ```
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the
