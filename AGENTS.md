@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 212 tests.
+- `npm test` passes: 213 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -148,6 +148,12 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 'HELLO'\n X 'Z' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-failure.sno
   node run.js --file=tmp/pattern-branch-failure.sno --maxSteps=100000 --maxMillis=1000
   ```
+- Failed pattern replacement can branch on failure without changing the subject.
+  Covered by commit `93d0b9d`:
+  ```sh
+  printf " X = 'HELLO'\n X 'Z' = 'MATCHED' :F(FAIL)\n OUTPUT = 'BAD'\nFAIL OUTPUT = X\nEND\n" > tmp/pattern-replace-failure-branch.sno
+  node run.js --file=tmp/pattern-replace-failure-branch.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
@@ -176,10 +182,10 @@ them accurate, but do not let them override the core working rules above.
 ### Active Target
 The previous active targets are complete: multiple literal `OUTPUT` statements,
 variable assignment followed by variable output, variable/literal
-concatenation, minimal pattern replacement, pattern failure goto, and combined
-pattern success/failure gotos all visibly work. The next goal is to broaden
-pattern behavior one small step at a time and keep each success covered by a
-focused integration test.
+concatenation, minimal pattern replacement, pattern failure goto, combined
+pattern success/failure gotos, and failed replacement branching all visibly
+work. The next goal is to broaden pattern behavior one small step at a time and
+keep each success covered by a focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -239,7 +245,7 @@ Recommended progression:
    printf " X = 'HELLO'\n X 'Z' :S(MATCH)F(DONE)\nMATCH OUTPUT = 'MATCHED'\nDONE\nEND\n" > tmp/pattern-branch-failure.sno
    node run.js --file=tmp/pattern-branch-failure.sno --maxSteps=100000 --maxMillis=1000
    ```
-7. Suggested next target: pattern replacement with failure branch.
+7. Pattern replacement with failure branch: complete, covered by `93d0b9d`.
    ```snobol
     X = 'HELLO'
     X 'Z' = 'MATCHED' :F(FAIL)
@@ -249,6 +255,16 @@ Recommended progression:
    ```
    Expected output is `HELLO`, confirming that failed replacement can drive a
    failure branch while preserving the subject value.
+8. Suggested next target: successful pattern replacement with success branch.
+   ```snobol
+    X = 'HELLO'
+    X 'H' = 'MATCHED' :S(SUCCESS)F(FAIL)
+   FAIL OUTPUT = 'BAD'
+  SUCCESS OUTPUT = X
+   END
+   ```
+   Expected output is `MATCHEDELLO`, confirming successful replacement updates
+   the subject and drives the success branch.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the
