@@ -1431,18 +1431,25 @@ describe( 'Miscellaneous Macros', function () {
             key = this.vm.d(),
             found = this.vm.ptr( 123 ),
             missing = this.vm.ptr( 456 ),
-            base = this.vm.alloc( 9 );
+            base = this.vm.alloc( 15 );
 
         list.update( base, 7, 11 );
-        this.vm.d( base ).update( base + 6, 0, 0 );
+        this.vm.d( base ).update( 0, 0, 6 );
         this.vm.d( base + 3 ).update( 99, 0, 1 );
         this.vm.d( base + 6 ).update( 42, 0, 2 );
+        this.vm.d( base + 12 ).update( 42, 0, 2 );
         key.update( 42, 0, 2 );
 
         sil.LOCAPV.call( this.vm, result, list, key, missing, found );
 
         assert.equal( this.vm.instructionPointer, 123 );
         assert.deepEqual( result.raw(), [ base, 7, 11 ] );
+
+        key.update( 43, 0, 2 );
+        this.vm.instructionPointer = 0;
+        sil.LOCAPV.call( this.vm, result, list, key, missing, found );
+
+        assert.equal( this.vm.instructionPointer, 456 );
     } );
 
     it( 'LVALUE', function () {

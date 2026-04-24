@@ -1,5 +1,8 @@
 
 var assert = require( 'assert' ),
+    childProcess = require( 'child_process' ),
+    fs = require( 'fs' ),
+    path = require( 'path' ),
     SNOBOL = require( '../js/SNOBOL' );
 
 Object.keys( SNOBOL ).forEach( function ( k ) {
@@ -115,6 +118,30 @@ describe( 'Memory Management', function () {
             ptr = vm.alloc( 3 );
         assert.deepEqual( vm.mem.length, ptr + 3 );
         assert.deepEqual( vm.mem.slice(-3), [ 0, 0, 0 ] );
+    } );
+} );
+
+describe( 'SNOBOL Program Execution', function () {
+    it( 'prints assigned OUTPUT values', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-min-output.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " OUTPUT = 'HELLO, WORLD'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-min-output.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nHELLO, WORLD\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
 } );
 

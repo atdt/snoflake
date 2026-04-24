@@ -2089,7 +2089,7 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
         A = DESCR2.addr,
-        stop = this.d( A ).value,
+        stop = A + this.d( A ).value,
         ptr;
 
     for ( var i = 0; ; i++ ) {
