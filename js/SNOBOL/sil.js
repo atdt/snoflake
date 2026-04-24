@@ -16,8 +16,7 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
         SPEC = vm.s( $SPEC ),
         str = SPEC.specified,
         len = SPEC.length,
-        K_MAX = ( vm.$( 'OBSIZ' ) - 1 ) * D,
-        K = Math.abs( SNOBOL.str.hash( 'K' + str ) % ( K_MAX + 1 ) ),
+        K = Math.abs( SNOBOL.str.hash( 'K' + str ) % vm.$( 'OBSIZ' ) ) * D,
         M = Math.abs( SNOBOL.str.hash( 'M' + str ) % ( vm.$( 'SIZLIM' ) + 1 ) ),
         FRSGPT = vm.d( 'FRSGPT' ),
         bin = vm.d( vm.d( 'OBPTR' ).addr + K + vm.$( 'LNKFLD' ) ),
@@ -4624,9 +4623,8 @@ sil.VARID = function ( $DESCR, $SPEC ) {
         SPEC = this.s( $SPEC ),
         str = SPEC.specified,
 
-        K_MAX = ( this.$( 'OBSIZ' ) - 1 ) * D,
         K_HASH = SNOBOL.str.hash( 'K' + str ),
-        K = Math.abs( K_HASH % ( K_MAX + 1 ) ),
+        K = Math.abs( K_HASH % this.$( 'OBSIZ' ) ) * D,
 
         M_HASH = SNOBOL.str.hash( 'M' + str ),
         M = Math.abs( M_HASH % ( this.$( 'SIZLIM' ) + 1 ) );

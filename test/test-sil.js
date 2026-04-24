@@ -1521,7 +1521,8 @@ describe( 'Miscellaneous Macros', function () {
             s = this.vm.s( sil.STRING.call( this.vm, 'hello' ) );
 
         sil.VARID.call( this.vm, d, s );
-        assert.equal( d.addr, 226 );
+        assert.equal( d.addr, 744 );
+        assert.equal( d.addr % D, 0 );
         assert.equal( d.value, 3679317 );
     } );
 } );
