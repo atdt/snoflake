@@ -3,7 +3,12 @@
 var SNOBOL = {
     options: {
         debug: false,
-        watch: []
+        watch: [],
+        // Execution guards (configurable via CLI):
+        // Stop after this many macro steps (0/undefined to disable)
+        maxSteps: 0,
+        // Stop after this many milliseconds (0/undefined to disable)
+        maxMillis: 0,
     },
     log: function () {
         if ( SNOBOL.options.debug ) {

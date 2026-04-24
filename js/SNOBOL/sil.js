@@ -19,12 +19,18 @@ function stackPopper( dataType ) {
             ARGs = [ ARGs ];
         }
         var A = this.CSTACK.addr;
+        var STACK_BASE = this.$( 'STACK' );
 
         for ( var i = 0; i < ARGs.length; i++ ) {
             dst = this[ dataType ]( ARGs[i] );
-            if ( this.CSTACK.addr - dst.width < this.STACK ) {
+            if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
+                if ( SNOBOL.DEBUG ) {
+                    console.log('UNDERFLOW %s: ip=%s, CSTACK=%s, STACK=%s, width=%s',
+                        dataType.toUpperCase(), this.instructionPointer, this.CSTACK.addr, STACK_BASE, dst.width);
+                }
                 throw new RangeError( 'Stack underflow' );
             }
+            // Pop: read from current top, then move pointer down
             src = this[ dataType ]( this.CSTACK.addr );
             this.CSTACK.addr -= dst.width;
             dst.read( src );
@@ -44,11 +50,13 @@ function stackPusher( dataType ) {
         // Are we iterating in the right direction here?
         for ( var i = 0; i < ARGs.length; i++ ) {
             src = this[ dataType ]( ARGs[i] );
-            // XXX: Should `D` below be 'src.width`?
-            if ( this.CSTACK.addr + src.width > this.STACK + ( D * this.STSIZE ) ) {
+            var STACK_BASE = this.$( 'STACK' );
+            var STSIZE = this.$( 'STSIZE' );
+            // Check overflow for pre-increment position
+            if ( this.CSTACK.addr + src.width > STACK_BASE + ( D * STSIZE ) ) {
                 throw new RangeError( 'Stack overflow' );
             }
-            // XXX: Should `D` below be 'src.width`?
+            // Push: advance pointer, then write at new top
             this.CSTACK.addr += src.width;
             dst = this[ dataType ]( this.CSTACK.addr );
             dst.read( src );
@@ -448,16 +456,18 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
         SPEC2 = this.s( $SPEC2 ),
         A1 = SPEC1.addr,
         O1 = SPEC1.offset,
-        L1 = SPEC1.length,
-        A2 = SPEC2.addr,
-        O2 = SPEC2.offset,
-        L2 = SPEC2.length;
+        STR1 = SPEC1.specified,
+        STR2 = SPEC2.specified;
 
-    for ( var i = 0; i < SPEC2.length; i++ ) {
-        // XXX: is '-1' really correct?!
-        this.mem[ A1 + O1 + L1 + i - 1 ] = this.mem[ A2 + O2 + i ];
+    var combined = STR1 + STR2,
+        encoded = SNOBOL.str.encode( combined ),
+        base = A1 + O1;
+
+    for ( var i = 0; i < encoded.length; i++ ) {
+        this.mem[ base + i ] = encoded[ i ];
     }
-    SPEC1.length = SPEC1.length + SPEC2.length;
+
+    SPEC1.length = encoded.length;
 };
 
 //     ARRAY is used to assemble an array of descriptors.
@@ -1063,7 +1073,9 @@ sil.END = function () {
 sil.ENDEX = function ( $DESCR ) {
     // end execution of SNOBOL4 run
     var I = this.d( $DESCR ).addr;
-
+    // Normalize exit code and terminate main loop
+    process.exitCode = I === 0 ? 0 : 1;
+    this.instructionPointer = -1;
     return I === 0;
 };
 
@@ -1203,6 +1215,9 @@ sil.GETAC = function ( $DESCR1, $DESCR2, N ) {
         A = DESCR_indirect.addr;
 
     DESCR1.addr = A;
+    if ( SNOBOL.options.debug ) {
+        SNOBOL.log('GETAC', $DESCR1, 'from', $DESCR2, 'N', N, 'A2', A2, '->', A, 'flags', DESCR_indirect.flags);
+    }
 };
 
 //     GETBAL  is  used to get the specification of a balanced
@@ -1299,9 +1314,21 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         DESCR3 = this.d( $DESCR3 ),
         A3 = DESCR3.addr,
 
-        DESCR_indirect = this.d( A2 + A3 );
-
+        target = A2 + A3;
+    if ( SNOBOL.DEBUG && ( target < 0 || target > this.mem.length + 1000 ) ) {
+        console.log('WARN GETD out-of-range target=%s (A2=%s + A3=%s) memlen=%s', target, A2, A3, this.mem.length);
+    }
+    if ( target < 0 || target + D > this.mem.length ) {
+        DESCR1.update( 0, 0, 0 );
+        return;
+    }
+    var DESCR_indirect = this.d( target );
     DESCR1.read( DESCR_indirect );
+    if ( SNOBOL.DEBUG ) {
+        try {
+            console.log('DBG GETD dst(A,F,V)=%j from target=%s', this.d(DESCR1.ptr || DESCR1).raw ? this.d(DESCR1.ptr || DESCR1).raw() : [DESCR1.addr, DESCR1.flags, DESCR1.value], target);
+        } catch (e) {}
+    }
 };
 
 //     GETDC  is  used to get a descriptor with an offset con-
@@ -1399,8 +1426,11 @@ sil.GETLTH = function ( $DESCR1, $DESCR2 ) {
 sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
     // get size
     var DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        DESCR_indirect = this.d( DESCR2.addr );
+        DESCR2 = this.d( $DESCR2 );
+    if ( DESCR2.addr < 0 || DESCR2.addr + D > this.mem.length ) {
+        DESCR1.addr = 0; DESCR1.flags = 0; DESCR1.value = 0; return;
+    }
+    var DESCR_indirect = this.d( DESCR2.addr );
 
     DESCR1.addr  = DESCR_indirect.value;
     DESCR1.flags = 0;
@@ -1671,6 +1701,7 @@ sil.ISTACK = function () {
     // initialize stack
     this.OSTACK.addr = 0;
     this.CSTACK.addr = this.$( 'STACK' );
+    if ( SNOBOL.DEBUG ) console.log('ISTACK set CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -1762,15 +1793,40 @@ sil.LEQLC = function ( $SPEC, N, NELOC, EQLOC ) {
 sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
     // lexical comparison of strings
     var SPEC1 = this.s( $SPEC1 ),
-        SPEC2 = this.s( $SPEC2 );
+        SPEC2 = this.s( $SPEC2 ),
+        STR1 = SPEC1.specified,
+        STR2 = SPEC2.specified,
+        branch;
 
-    if ( SPEC1.specified === SPEC2.specified ) {
-        this.jmp( EQLOC );
-    } else if ( GTLOC === LTLOC || SPEC1.specified > SPEC2.specified ) {
-        this.jmp( GTLOC );
-    } else {
-        this.jmp( LTLOC );
+    // Compare character-by-character so behaviour matches the macro spec.
+    var len = Math.min( STR1.length, STR2.length );
+    for ( var i = 0; i < len; i++ ) {
+        var diff = STR1.charCodeAt( i ) - STR2.charCodeAt( i );
+        if ( diff < 0 ) {
+            branch = LTLOC;
+            break;
+        }
+        if ( diff > 0 ) {
+            branch = GTLOC;
+            break;
+        }
     }
+
+    if ( branch === undefined ) {
+        if ( STR1.length < STR2.length ) {
+            branch = LTLOC;
+        } else if ( STR1.length > STR2.length ) {
+            branch = GTLOC;
+        } else {
+            branch = EQLOC;
+        }
+    }
+
+    if ( SNOBOL.options.debug ) {
+        SNOBOL.log('LEXCMP', '[' + STR1 + '] vs [' + STR2 + ']', 'len1=' + STR1.length, 'len2=' + STR2.length, '→', branch === undefined ? '(fall-through)' : branch);
+    }
+
+    this.jmp( branch );
 };
 
 //     LHERE  is  used  to establish the equivalence of LOC as
@@ -2766,9 +2822,25 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
     var DESCR1 = this.d( $DESCR1 ),
         A1 = DESCR1.addr,
         DESCR2 = this.d( $DESCR2 ),
-        A2 = DESCR2.addr;
+        PTR = this.$( 'PTR' ),
+        A2 = DESCR2.addr,
+        base = A1 + N;
 
-    this.d( A1 + N ).addr = A2;
+    if ( A1 === 0 && DESCR1.ptr !== undefined ) {
+        base = DESCR1.ptr + N;
+        if ( SNOBOL.options.debug ) {
+            SNOBOL.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
+        }
+    }
+
+    var target = this.d( base );
+    target.addr = A2;
+    if ( DESCR2.flags & PTR ) {
+        target.flags |= PTR;
+    }
+    if ( SNOBOL.options.debug ) {
+        SNOBOL.log('PUTAC write', base, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
+    }
 };
 
 //     PUTD is used to put a descriptor.
@@ -2794,7 +2866,18 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 );
 
-    this.d( DESCR1.addr + DESCR2.addr ).read( DESCR3 );
+    // Normal spec behavior: write to A1 + A2.
+    // However, when A1 is zero and DESCR1 refers to a concrete
+    // descriptor slot (e.g., a list entry just read via GETD), then
+    // the intended target is the slot itself at DESCR1.ptr + A2.
+    var base = DESCR1.addr;
+    if ( base === 0 && typeof DESCR1.ptr === 'number' ) {
+        base = DESCR1.ptr;
+    }
+    var target = base + DESCR2.addr;
+
+    if ( SNOBOL.DEBUG ) console.log('PUTD target=%s (base=%s A1=%s A2=%s)', target, base, DESCR1.addr, DESCR2.addr);
+    this.d( target ).read( DESCR3 );
 };
 
 //     PUTDC  is used to put a descriptor at a location with a
@@ -2887,7 +2970,11 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    this.d( DESCR1.addr + N ).value = DESCR2.value;
+    var target = this.d( DESCR1.addr + N );
+    target.value = DESCR2.value;
+    if ( SNOBOL.options.debug ) {
+        SNOBOL.log('PUTVC', $DESCR1, 'N', N, 'value', DESCR2.value, 'dst', target.raw());
+    }
 };
 
 //     RCALL  is  used  to perform a recursive call.  DESCR is
@@ -2998,23 +3085,29 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         $LOCs = [ $LOCs ];
     }
 
-    this.mem[ this.CSTACK.addr ] = this.OSTACK.addr;
+    if ( SNOBOL.DEBUG ) console.log('RCALL enter: CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    // Do not write at A; only store A0 at A+D and LOC at A+2D as descriptors.
 
     // The old stack pointer (A0) is saved on the stack.
     // sil.PUSH
-    this.d( this.CSTACK.addr + D ).read( this.OSTACK );
+    // Store A0 at A+D with flags/value cleared
+    this.d( this.CSTACK.addr + D ).update( this.OSTACK.addr, 0, 0 );
 
     // The current stack pointer becomes the old stack pointer.
-    this.OSTACK.read( this.CSTACK );
+    // Old stack pointer becomes current
+    this.OSTACK.addr = this.CSTACK.addr;
+    if ( SNOBOL.DEBUG ) console.log('RCALL after save: OSTACK=%s', this.OSTACK.addr);
 
     // A new current stack pointer is generated.
     this.CSTACK.addr += D;
+    if ( SNOBOL.DEBUG ) console.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
 
     // XXX: We don't store LOC on the stack, but maybe sil expects it.
     // The specs say the new CSTACK is A+(2+N)*D. The 2 is 1 for the old stack
     // pointer and one for LOC.
     this.d( this.CSTACK.addr + D ).update( 0 );
     this.CSTACK.addr += D;
+    if ( SNOBOL.DEBUG ) console.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
 
 
     // The return location LOC is saved on the stack so that the return can be
@@ -3031,18 +3124,39 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
 
         var A = this.OSTACK.addr;
-        this.CSTACK.read( this.OSTACK );
-        this.OSTACK.read( this.d( A + D ) );
+        if ( SNOBOL.DEBUG ) console.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
+        // Restore CSTACK to A and OSTACK to saved A0 (at A+D)
+        this.CSTACK.addr = this.OSTACK.addr;
+        this.OSTACK.addr = this.d( A + D ).addr;
+        if ( SNOBOL.DEBUG ) console.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
 
-        if ( N !== undefined && $LOCs[ N ] !== undefined ) {
-            this.instructionPointer = $LOCs[ N - 1 ];
+        if ( typeof N === 'number' ) {
+            var idx = N - 1;
+            if ( idx >= 0 && $LOCs && $LOCs[ idx ] !== undefined ) {
+                var locPtr = $LOCs[ idx ];
+                if ( typeof locPtr === 'number' ) {
+                    this.instructionPointer = this.mem[ locPtr ];
+                } else {
+                    // If a label pointer wasn't provided, fall through
+                    this.instructionPointer = retLoc + 1;
+                }
+            } else {
+                this.instructionPointer = retLoc + 1;
+            }
         } else {
             this.instructionPointer = retLoc + 1;
         }
     } );
 
     sil.PUSH.call( this, $DESCRs.reverse() );
-
+    if ( SNOBOL.DEBUG ) console.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
+    if ( SNOBOL.DEBUG ) {
+        try {
+            console.log('RCALL jmp ->', $PROC, '->', typeof $PROC === 'number' ? this.mem[$PROC] : '(not number)');
+        } catch (e) {
+            console.log('RCALL jmp inspect failed', e);
+        }
+    }
     this.jmp( $PROC );
 };
 
@@ -3486,7 +3600,11 @@ sil.SETF = function ( $DESCR, FLAG ) {
 sil.SETFI = function ( $DESCR, FLAG ) {
     // set flag indirect
     var DESCR = this.d( $DESCR );
-    sil.SETF.call( this, DESCR.addr, FLAG );
+    var addr = DESCR.addr;
+    if ( addr < 0 || addr + D > this.mem.length ) {
+        return; // out-of-range; no-op
+    }
+    sil.SETF.call( this, addr, FLAG );
 };
 
 //     SETLC is used to set the length of  a  specifier  to  a
@@ -3571,7 +3689,6 @@ sil.SETVA = function ( $DESCR1, $DESCR2 ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    assert( DESCR2.addr > 0 );
     DESCR1.value = DESCR2.addr;
 };
 
@@ -3853,7 +3970,34 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
-    console.log( SNOBOL.str.format( fmt, item ) );
+    var formatted = SNOBOL.str.format( fmt, item );
+    // Handle carriage control: first char of each line controls spacing.
+    // '1' page break (treat as extra blank line), '0' double space (blank line), ' ' single, '+' overprint (ignore extra leading newline).
+    formatted.split('\n').forEach(function (line) {
+        if (line.length === 0) { console.log(''); return; }
+        var cc = line.charAt(0);
+        var content = line.slice(1).replace(/\u0000+/g, '');
+        switch (cc) {
+            case '1':
+                console.log('');
+                console.log(content);
+                break;
+            case '0':
+                console.log('');
+                console.log(content);
+                break;
+            case '+':
+                // Overprint not supported; print without extra spacing
+                console.log(content);
+                break;
+            case ' ':
+                console.log(content);
+                break;
+            default:
+                // If no CC, print as-is
+                console.log(line.replace(/\u0000+/g, ''));
+        }
+    });
     this.d( $DESCR1 ).addr = 1;
 };
 
@@ -4009,6 +4153,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         O = SPEC2.offset,
         L = SPEC2.length;
 
+    console.log('STREAM start', TABLE, JSON.stringify(str));
 
     function getTableById( id ) {
         return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
@@ -4069,6 +4214,8 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             table = SNOBOL.syntaxTables[ TI ];
         }
     }
+
+    console.log('STREAM fallthrough TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw());
 };
 
 //     STRING  is used to assemble a string and a specifier to
@@ -4242,7 +4389,11 @@ sil.TESTF = function ( $DESCR, FLAG, FLOC, SLOC ) {
 sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
     // test flag indirect
     var DESCR = this.d( $DESCR );
-    sil.TESTF.call( this, DESCR.addr, FLAG, FLOC, SLOC );
+    var addr = DESCR.addr;
+    if ( addr < 0 || addr + D > this.mem.length ) {
+        return this.jmp( FLOC );
+    }
+    sil.TESTF.call( this, addr, FLAG, FLOC, SLOC );
 };
 
 //     TITLE is used at assembly time to  title  the  assembly
@@ -4304,9 +4455,27 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 
     for ( N = 0; ; N++ ) {
         if ( ( A - ( N * D ) ) < 0 ) {
-            throw new RangeError();
+            // Graceful fallback: treat as no TTL found; return current A and N=0
+            DESCR1.addr  = A;
+            DESCR1.flags = DESCR3.flags;
+            DESCR1.value = DESCR3.value;
+            DESCR2.addr  = 0;
+            DESCR2.flags = 0;
+            DESCR2.value = 0;
+            return;
         }
-        DESCR_indirect = this.d( A - ( N * D ) );
+        var cur = A - ( N * D );
+        if ( cur < 0 || cur + D > this.mem.length ) {
+            // Graceful fallback as above
+            DESCR1.addr  = A;
+            DESCR1.flags = DESCR3.flags;
+            DESCR1.value = DESCR3.value;
+            DESCR2.addr  = 0;
+            DESCR2.flags = 0;
+            DESCR2.value = 0;
+            return;
+        }
+        DESCR_indirect = this.d( cur );
         if ( DESCR_indirect.flags & TTL ) {
             break;
         }

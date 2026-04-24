@@ -91,11 +91,17 @@ SNOBOL.VM.prototype.define = function ( symbol, value ) {
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
     var val = this.symbols[ key ];
 
-    if ( val === undefined ) {
-        throw new ReferenceError( key );
+    if ( val !== undefined ) {
+        return val;
     }
 
-    return val;
+    // Fallback to programSymbols to support direct macro testing
+    // without running the generated SIL to bind symbols into memory.
+    if ( SNOBOL.programSymbols && SNOBOL.programSymbols.hasOwnProperty( key ) ) {
+        return SNOBOL.programSymbols[ key ];
+    }
+
+    throw new ReferenceError( key );
 };
 
 
@@ -105,6 +111,8 @@ VM.prototype.reset = function () {
     this.mem = [];
     this.callbacks = [];
     this.units = {};
-    this.CSTACK = this.d();
-    this.OSTACK = this.d();
+    // Keep stack pointers as VM registers, not memory-backed descriptors,
+    // to avoid accidental overwrites by program macros.
+    this.CSTACK = { addr: 0 };
+    this.OSTACK = { addr: 0 };
 };

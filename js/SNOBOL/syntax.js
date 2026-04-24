@@ -41,11 +41,13 @@ SNOBOL.programSymbols = {
     MDATA   : -1,
 
     // Misc
-    // OSTACK  : 2000 * D,
-    // CSTACK  : 2001 * D,
-    // STACK   : 2002 * D,
-    // OBSIZ   : 256,    // Needed for bootstrapping tests, but actually defined in SIL
-    // STSIZE  : 1000,   // ditto
+    // The following provide sensible defaults for unit tests that
+    // directly invoke macros (e.g., ISTACK) without running the
+    // generated SIL program. At full runtime, values created by the
+    // generated program should supersede these.
+    STACK   : 2002 * D,
+    OBSIZ   : 256,
+    STSIZE  : 1000,
 };
 
 // See section 4.1 (Characters) in S4D58

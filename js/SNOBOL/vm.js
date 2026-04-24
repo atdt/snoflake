@@ -45,7 +45,11 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         // treat them specially and provide them with their label.
         // args.unshift( label );
     }
+    var __prevC = this.CSTACK.addr, __prevO = this.OSTACK.addr;
     returnValue = SNOBOL.sil[ macro ].apply( this, args );
+    if ( SNOBOL.DEBUG && (this.CSTACK.addr !== __prevC || this.OSTACK.addr !== __prevO) ) {
+        console.log('DBG STACK CHG after %s: CSTACK=%s OSTACK=%s', macro, this.CSTACK.addr, this.OSTACK.addr);
+    }
 
     // XXX: Added to fix SNOBOL.options.watch undefined issue below
     if ( !SNOBOL.options ) {
@@ -62,7 +66,9 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
     }, this );
 
     if ( typeof returnValue === 'boolean' ) {
-        process.exit( returnValue );
+        // Normalize boolean to exit code and do not terminate the process abruptly
+        process.exitCode = returnValue ? 0 : 1;
+        return returnValue;
     }
 
     return returnValue;
@@ -90,6 +96,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
 
+    var __savedDebug = SNOBOL.DEBUG;
+    SNOBOL.DEBUG = false;
     for (
         this.instructionPointer = 0;
         this.instructionPointer < program.length;
@@ -146,8 +154,31 @@ SNOBOL.VM.prototype.run = function ( program ) {
     }
 
     this.instructionPointer = 0;
+    if ( SNOBOL.DEBUG ) {
+        try {
+            var __interpSym = this.symbols['INTERP'];
+            console.log('DBG PROC INTERP sym=%s mem[sym]=%s', __interpSym, typeof __interpSym === 'number' ? this.mem[ __interpSym ] : '(undef)');
+        } catch (e) {}
+    }
+    SNOBOL.DEBUG = __savedDebug;
+
+    var __startTime = Date.now();
+    var __steps = 0;
+    var __maxSteps = Number(SNOBOL.options.maxSteps || 0);
+    var __maxMillis = Number(SNOBOL.options.maxMillis || 0);
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
+        __steps++;
+        if ( __maxSteps && __steps > __maxSteps ) {
+            console.error('Aborting: exceeded maxSteps (%s) at ip=%s', __maxSteps, this.instructionPointer);
+            this.instructionPointer = -1;
+            break;
+        }
+        if ( __maxMillis && (Date.now() - __startTime) > __maxMillis ) {
+            console.error('Aborting: exceeded maxMillis (%sms) at ip=%s', __maxMillis, this.instructionPointer);
+            this.instructionPointer = -1;
+            break;
+        }
         loc = this.instructionPointer;
         stmt = program[ loc ];
         [ label, macro ] = stmt;
@@ -165,10 +196,30 @@ SNOBOL.VM.prototype.run = function ( program ) {
     return !( this.instructionPointer < 0 );
 };
 
+function RegDescriptor(vm, name) {
+    var isC = name === 'CSTACK';
+    var target = isC ? vm.CSTACK : vm.OSTACK;
+    return {
+        name: name,
+        width: 3,
+        get addr() { return target.addr; },
+        set addr(v) { target.addr = v; },
+        get flags() { return 0; },
+        set flags(v) { /* ignore */ },
+        get value() { return 0; },
+        set value(v) { /* ignore */ },
+        toString: function () { return '<' + name + ' A=' + target.addr + '>' }
+    };
+}
+
 SNOBOL.VM.prototype.d = function ( ptr ) {
-    return ptr instanceof SNOBOL.Descriptor
-        ? ptr
-        : new SNOBOL.Descriptor( this, ptr );
+    if ( ptr instanceof SNOBOL.Descriptor ) {
+        return ptr;
+    }
+    if ( typeof ptr === 'string' && ( ptr === 'CSTACK' || ptr === 'OSTACK' ) ) {
+        return RegDescriptor(this, ptr);
+    }
+    return new SNOBOL.Descriptor( this, ptr );
 };
 
 SNOBOL.VM.prototype.s = function ( ptr ) {
