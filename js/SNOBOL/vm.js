@@ -57,7 +57,13 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
     }
 
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
-        var value = this.symbols.hasOwnProperty ( variable ) ? this.symbols[ variable ] : 'UNDEF';
+        var value;
+
+        if ( variable === 'CSTACK' || variable === 'OSTACK' ) {
+            value = this[ variable ].addr;
+        } else {
+            value = this.symbols.hasOwnProperty( variable ) ? this.symbols[ variable ] : 'UNDEF';
+        }
         console.log(
             '→ %s: %s',
             SNOBOL.str.pad( variable, 6, 'left' ),

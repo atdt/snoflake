@@ -1108,15 +1108,25 @@ describe( 'Macros that Operate on Specifiers', function () {
 
     it( 'STREAM', function () {
         var s1 = this.vm.s(),
-            s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) );
+            s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) ),
+            logs = [],
+            log = console.log;
 
-        this.vm.run( [
-            [ 'STYPE',  'DESCR',  mkargs( this.vm ) ],
-            [ 'FLITYP', 'EQU',    mkargs( this.vm, 6 ) ],
-            [ null,     'STREAM', mkargs( this.vm, s1.ptr, s2.ptr, 'INTGTB', -1, -2, -3 ) ]
-        ] );
+        console.log = function () {
+            logs.push( slice.call( arguments ) );
+        };
+        try {
+            this.vm.run( [
+                [ 'STYPE',  'DESCR',  mkargs( this.vm ) ],
+                [ 'FLITYP', 'EQU',    mkargs( this.vm, 6 ) ],
+                [ null,     'STREAM', mkargs( this.vm, s1.ptr, s2.ptr, 'INTGTB', -1, -2, -3 ) ]
+            ] );
+        } finally {
+            console.log = log;
+        }
 
         assert.equal( s1.specified, '43.2' );
+        assert.deepEqual( logs, [] );
     } );
 
     it( 'SUBSP', function () {

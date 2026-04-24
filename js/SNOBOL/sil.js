@@ -4153,7 +4153,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         O = SPEC2.offset,
         L = SPEC2.length;
 
-    console.log('STREAM start', TABLE, JSON.stringify(str));
+    SNOBOL.log( 'STREAM start', TABLE, JSON.stringify( str ) );
 
     function getTableById( id ) {
         return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
@@ -4176,7 +4176,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
-        console.log( `TI = ${TI}` );
+        SNOBOL.log( 'TI = %s', TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
@@ -4215,7 +4215,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    console.log('STREAM fallthrough TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw());
+    SNOBOL.log( 'STREAM fallthrough TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
 };
 
 //     STRING  is used to assemble a string and a specifier to
