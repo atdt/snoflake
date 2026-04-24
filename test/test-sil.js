@@ -1304,6 +1304,18 @@ describe( 'Input and Output Macros', function () {
 
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( this.vm.instructionPointer, 1 );
+            assert.equal( unit.addr, 0 );
+
+            unit.addr = 5;
+            this.vm.instructionPointer = 7;
+            this.vm.d( eof ).addr = 7;
+            this.vm.d( success ).addr = 7;
+            sil.REWIND.call( this.vm, unit );
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.instructionPointer, 7 );
+            assert.equal( unit.addr, 0 );
         } finally {
             SNOBOL.options.file = oldFile;
             fs.unlinkSync( file );

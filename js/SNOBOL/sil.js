@@ -4070,6 +4070,10 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
 
     words = file.read( SPEC.length );
     if ( !words.length ) {
+        DESCR.addr = 0;
+        if ( typeof EOF === 'number' && this.mem[ EOF ] === this.instructionPointer ) {
+            return;
+        }
         return this.jmp( EOF );
     }
 
