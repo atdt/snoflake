@@ -1,4 +1,7 @@
 var assert = require('assert'),
+    fs = require( 'fs' ),
+    os = require( 'os' ),
+    path = require( 'path' ),
     slice = Array.prototype.slice,
     SNOBOL = require( '../js/SNOBOL' );
 
@@ -1129,6 +1132,23 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.deepEqual( logs, [] );
     } );
 
+    it( 'STREAM runout', function () {
+        var s1 = this.vm.s(),
+            s2 = this.vm.s( sil.STRING.call( this.vm, '   ' ) ),
+            stype = this.vm.d(),
+            error = this.vm.ptr( 1 ),
+            runout = this.vm.ptr( 2 ),
+            sloc = this.vm.ptr( 3 );
+
+        this.vm.define( 'STYPE', stype.ptr );
+        sil.STREAM.call( this.vm, s1, s2, SNOBOL.tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
+
+        assert.equal( this.vm.instructionPointer, 2 );
+        assert.equal( stype.addr, 0 );
+        assert.equal( s1.specified, '   ' );
+        assert.equal( s2.length, 0 );
+    } );
+
     it( 'SUBSP', function () {
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
@@ -1252,8 +1272,42 @@ describe( 'Input and Output Macros', function () {
         assert( sil.STPRNT ); 
     } );
 
-    it( 'STREAD', function () { // stub
-        assert( sil.STREAD ); 
+    it( 'STREAD', function () {
+        var file = path.join( os.tmpdir(), 'snoflake-stread-' + process.pid + '.sno' ),
+            oldFile = SNOBOL.options.file,
+            unit = this.vm.d(),
+            spec = this.vm.s(),
+            eof = this.vm.ptr( 1 ),
+            error = this.vm.ptr( 2 ),
+            success = this.vm.ptr( 3 ),
+            ptr = this.vm.alloc( 16, '.'.charCodeAt( 0 ) );
+
+        fs.writeFileSync( file, 'END\n1234567890\n' );
+        SNOBOL.options.file = file;
+        unit.addr = 5;
+        spec.update( ptr, 0, 0, 2, 8 );
+
+        try {
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.instructionPointer, 3 );
+            assert.equal( this.vm.mem.slice( ptr, ptr + 2 ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), '..' );
+            assert.equal( this.vm.mem.slice( ptr + 2, ptr + 10 ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), 'END     ' );
+
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.mem.slice( ptr + 2, ptr + 10 ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), '12345678' );
+
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.instructionPointer, 1 );
+        } finally {
+            SNOBOL.options.file = oldFile;
+            fs.unlinkSync( file );
+        }
     } );
 } );
 

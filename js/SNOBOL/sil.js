@@ -4215,7 +4215,11 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    SNOBOL.log( 'STREAM fallthrough TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
+    SNOBOL.log( 'STREAM runout TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
+    STYPE.addr = P;
+    SPEC1.update( A, F, V, O, L );
+    SPEC2.update( A, F, V, O, 0 );
+    this.jmp( RUNOUT );
 };
 
 //     STRING  is used to assemble a string and a specifier to
