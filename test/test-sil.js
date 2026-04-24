@@ -1328,8 +1328,31 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
         assert( sil.ENDEX ); 
     } );
 
-    it( 'INIT', function () { // stub
-        assert( sil.INIT ); 
+    it( 'INIT', function () {
+        var obstart = this.vm.alloc( this.vm.$( 'OBSIZ' ) * D ),
+            spec = this.vm.s(),
+            ptr;
+
+        this.vm.define( 'ATTRIB', 2 * D );
+        this.vm.define( 'LNKFLD', 3 * D );
+        this.vm.define( 'BCDFLD', 4 * D );
+        this.vm.define( 'S', 1 );
+        this.vm.define( 'ENDPTR', this.vm.d().ptr );
+        this.vm.define( 'ENDSP', sil.STRING.call( this.vm, 'END' ) );
+        this.vm.define( 'FRSGPT', this.vm.d().ptr );
+        this.vm.define( 'HDSGPT', this.vm.d().ptr );
+        this.vm.define( 'TLSGP1', this.vm.d().ptr );
+        this.vm.define( 'OBPTR', this.vm.d().ptr );
+        this.vm.d( 'OBPTR' ).update( obstart - this.vm.$( 'LNKFLD' ), this.vm.$( 'PTR' ), this.vm.$( 'S' ) );
+
+        sil.INIT.call( this.vm );
+        ptr = this.vm.d( 'ENDPTR' );
+        sil.LOCSP.call( this.vm, spec, ptr );
+
+        assert( ptr.addr > 0 );
+        assert.equal( ptr.flags, this.vm.$( 'PTR' ) );
+        assert.equal( ptr.value, this.vm.$( 'S' ) );
+        assert.equal( spec.specified, 'END' );
     } );
 
     it( 'LINK', function () { // stub

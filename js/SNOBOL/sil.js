@@ -11,6 +11,35 @@ var TIMER, sil = {};
 
 var titles = [];  // Seen titles. Used to prevent infinite loops.
 
+function internStringStructure( vm, $DESCR, $SPEC ) {
+    var DESCR = vm.d( $DESCR ),
+        SPEC = vm.s( $SPEC ),
+        str = SPEC.specified,
+        len = SPEC.length,
+        K_MAX = ( vm.$( 'OBSIZ' ) - 1 ) * D,
+        K = Math.abs( SNOBOL.str.hash( 'K' + str ) % ( K_MAX + 1 ) ),
+        M = Math.abs( SNOBOL.str.hash( 'M' + str ) % ( vm.$( 'SIZLIM' ) + 1 ) ),
+        FRSGPT = vm.d( 'FRSGPT' ),
+        bin = vm.d( vm.d( 'OBPTR' ).addr + K + vm.$( 'LNKFLD' ) ),
+        ptr = FRSGPT.addr,
+        size = D + ( D * ( 3 + Math.floor( ( len - 1 ) / CPD + 1 ) ) ),
+        encoded = SNOBOL.str.encode( str ),
+        i;
+
+    DESCR.update( ptr, vm.$( 'PTR' ), vm.$( 'S' ) );
+    vm.d( ptr ).update( ptr, vm.$( 'TTL' ) + vm.$( 'STTL' ), len );
+    vm.d( ptr + D ).update( 0, 0, vm.$( 'S' ) );
+    vm.d( ptr + vm.$( 'ATTRIB' ) ).update( 0, 0, 0 );
+    vm.d( ptr + vm.$( 'LNKFLD' ) ).update( bin.addr, 0, M );
+
+    for ( i = 0; i < encoded.length; i++ ) {
+        vm.mem[ ptr + vm.$( 'BCDFLD' ) + i ] = encoded[ i ];
+    }
+
+    bin.addr = ptr;
+    FRSGPT.addr += size;
+}
+
 function stackPopper( dataType ) {
     return function ( ARGs ) {
         var src, dst, arg;
@@ -1537,6 +1566,8 @@ sil.INIT = function () {
     FRSGPT.addr = this.alloc( dynamicStorageSize );
     HDSGPT.addr = FRSGPT.addr;
     TLSGP1.addr = this.alloc( dynamicStorageSize );
+
+    internStringStructure( this, 'ENDPTR', 'ENDSP' );
 };
 
 //     INSERT is used to insert  a  tree  node  above  another
