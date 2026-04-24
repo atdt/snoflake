@@ -143,6 +143,28 @@ describe( 'SNOBOL Program Execution', function () {
         assert( output.includes( '\nHELLO, WORLD\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'continues through multiple literal OUTPUT statements', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-two-output.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " OUTPUT = 'HELLO, WORLD'\n OUTPUT = 'SECOND LINE'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-two-output.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nHELLO, WORLD\nSECOND LINE\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {
