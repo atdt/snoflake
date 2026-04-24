@@ -104,6 +104,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     var __savedDebug = SNOBOL.DEBUG;
     SNOBOL.DEBUG = false;
+    var dataAssemblyPtrs = Object.create( null );
+
     for (
         this.instructionPointer = 0;
         this.instructionPointer < program.length;
@@ -116,10 +118,16 @@ SNOBOL.VM.prototype.run = function ( program ) {
             // don't execute them yet, because their arguments may refer to
             // program symbols that are not yet bound.
             case 'DESCR':
-                this.define( label, this.d().ptr );
+                dataAssemblyPtrs[ this.instructionPointer ] = this.d().ptr;
+                if ( label ) {
+                    this.define( label, dataAssemblyPtrs[ this.instructionPointer ] );
+                }
                 break;
             case 'SPEC':
-                this.define( label, this.s().ptr );
+                dataAssemblyPtrs[ this.instructionPointer ] = this.s().ptr;
+                if ( label ) {
+                    this.define( label, dataAssemblyPtrs[ this.instructionPointer ] );
+                }
                 break;
             case 'LHERE':
             case 'PROC':
@@ -155,6 +163,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
         stmt = program[ this.instructionPointer ];
         [ label, macro ] = stmt;
         if ( macro === 'DESCR' || macro === 'SPEC' ) {
+            label = dataAssemblyPtrs[ this.instructionPointer ];
+            stmt = [ label, macro, stmt[ 2 ], stmt[ 3 ] ];
             this.exec.apply( this, stmt );
         }
     }
