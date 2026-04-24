@@ -102,13 +102,25 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 206 tests.
+- `npm test` passes: 208 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
   ```sh
   printf " OUTPUT = 'HELLO, WORLD'\nEND\n" > tmp/min-output.sno
   node run.js --file=tmp/min-output.sno --maxSteps=100000 --maxMillis=1000
+  ```
+- Multiple literal `OUTPUT` statements compile, execute in order, and visibly
+  print both lines. Covered by commit `2ccfd4b`:
+  ```sh
+  printf " OUTPUT = 'HELLO, WORLD'\n OUTPUT = 'SECOND LINE'\nEND\n" > tmp/two-output.sno
+  node run.js --file=tmp/two-output.sno --maxSteps=100000 --maxMillis=1000
+  ```
+- Variable assignment followed by variable output compiles, executes, and
+  visibly prints the assigned value. Covered by commit `59c7822`:
+  ```sh
+  printf " X = 'HELLO, WORLD'\n OUTPUT = X\nEND\n" > tmp/var-output.sno
+  node run.js --file=tmp/var-output.sno --maxSteps=100000 --maxMillis=1000
   ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
@@ -132,40 +144,25 @@ them accurate, but do not let them override the core working rules above.
     by descriptor equality after that conversion.
 
 ### Active Target
-The previous active target is complete: the minimal blank-prefixed
-`OUTPUT = 'HELLO, WORLD'` program visibly prints. The next goal is to get
-slightly more sophisticated SNOBOL scripts running, adding one new semantic
-feature at a time and keeping each success covered by a focused integration
-test.
+The previous active targets are complete: multiple literal `OUTPUT` statements
+and variable assignment followed by variable output both visibly print. The
+next goal is string expression/concatenation, adding one new semantic feature at
+a time and keeping each success covered by a focused integration test.
 
 Recommended progression:
-1. Multiple literal output statements:
+1. Multiple literal output statements: complete, covered by `2ccfd4b`.
    ```snobol
     OUTPUT = 'HELLO, WORLD'
     OUTPUT = 'SECOND LINE'
    END
    ```
-   This checks object-code sequencing and interpreter continuation while
-   reusing the now-working literal-output path.
-   Start with:
-   ```sh
-   printf " OUTPUT = 'HELLO, WORLD'\n OUTPUT = 'SECOND LINE'\nEND\n" > tmp/two-output.sno
-   node run.js --file=tmp/two-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/two-output.log 2>&1
-   wc -l tmp/two-output.log
-   tail -n 80 tmp/two-output.log
-   ```
-   If this fails, focus first on compiled object-code sequencing and interpreter
-   continuation rather than I/O formatting. Dump object code around
-   `vm.d('OCBSCL').addr` and `vm.d('CMBSCL').addr`; look for the ordering of
-   `INITCL`, both literal/assignment blocks, `BASECL`/goto links, and `ENDCL`.
-2. Variable assignment followed by variable output:
+2. Variable assignment followed by variable output: complete, covered by
+   `59c7822`.
    ```snobol
     X = 'HELLO, WORLD'
     OUTPUT = X
    END
    ```
-   This adds variable lookup after assignment. If it fails, inspect `GENVAR`,
-   `ARGVAL`, `ASGN`, `ASGNVV`, and object-code descriptors for `X`.
 3. String expression or concatenation:
    ```snobol
     X = 'HELLO'
@@ -173,7 +170,13 @@ Recommended progression:
    END
    ```
    This starts exercising expression evaluation beyond a single literal or
-   variable.
+   variable. Start with:
+   ```sh
+   printf " X = 'HELLO'\n OUTPUT = X ' WORLD'\nEND\n" > tmp/concat-output.sno
+   node run.js --file=tmp/concat-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/concat-output.log 2>&1
+   wc -l tmp/concat-output.log
+   tail -n 80 tmp/concat-output.log
+   ```
 4. A minimal pattern-match-driven output:
    ```snobol
     X = 'HELLO'
