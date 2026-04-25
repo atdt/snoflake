@@ -199,7 +199,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
         loc = this.instructionPointer;
         stmt = program[ loc ];
         [ label, macro ] = stmt;
-        if ( !DATA_ASSEMBLY_MACROS.includes( macro ) ) {
+        if ( this.symbols.LOCA2 && loc === this.mem[ this.symbols.LOCA2 ] ) {
+            this.instructionPointerChanged = false;
+            SNOBOL.sil._fastLOCA2.call( this );
+        } else if ( !DATA_ASSEMBLY_MACROS.includes( macro ) ) {
             this.instructionPointerChanged = false;
             status = this.exec.apply( this, stmt );
         }

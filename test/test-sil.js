@@ -720,9 +720,11 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
     it( 'MOVA', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d();
+        d1.addr = 111;
         d2.addr = 999;
         sil.MOVA.call( this.vm, d1, d2 );
-        assert.equal( d1.addr, d2.addr );
+        assert.equal( d1.addr, 999 );
+        assert.equal( d2.addr, 999 );
     } );
 
     it( 'PUTAC', function () {
@@ -811,6 +813,13 @@ describe( 'Macros that Modify Value Fields of Descriptors', function () {
         var d = this.vm.d();
         sil.SETVC.call( this.vm, d, 77 );
         assert.equal( d.value, 77 );
+    } );
+
+    it( 'SETVC accepts zero', function () {
+        var d = this.vm.d();
+        d.value = 77;
+        sil.SETVC.call( this.vm, d, 0 );
+        assert.equal( d.value, 0 );
     } );
 } );
 

@@ -92,6 +92,58 @@ function stackPusher( dataType ) {
     };
 }
 
+// Native equivalent of the LOCA2 lookup loop in GENVAR/GNVARI.  It preserves
+// the loop's descriptor side effects and returns to the same SIL labels, but
+// avoids spending one VM dispatch per chain instruction while interning strings.
+sil._fastLOCA2 = function () {
+    var BUKPTR = this.d( 'BUKPTR' ),
+        LSTPTR = this.d( 'LSTPTR' ),
+        EQUVCL = this.d( 'EQUVCL' ),
+        SPECR1 = this.s( 'SPECR1' ),
+        SPECR2 = this.s( 'SPECR2' ),
+        LNKFLD = this.$( 'LNKFLD' ),
+        target = EQUVCL.value,
+        loca2 = this.mem[ this.$( 'LOCA2' ) ],
+        seen = Object.create( null ),
+        link,
+        currentValue;
+
+    for (;;) {
+        LSTPTR.read( BUKPTR );
+
+        link = this.d( BUKPTR.addr + LNKFLD );
+        BUKPTR.addr = link.addr;
+
+        if ( BUKPTR.addr === 0 ) {
+            this.jmp( this.$( 'LOCA5' ) );
+            return;
+        }
+        if ( seen[ BUKPTR.addr ] ) {
+            throw new Error(
+                'Object-store chain cycle in LOCA2 at ' + BUKPTR.addr +
+                ' while locating "' + SPECR1.specified + '"'
+            );
+        }
+        seen[ BUKPTR.addr ] = true;
+
+        currentValue = this.d( BUKPTR.addr + LNKFLD ).value;
+        if ( currentValue > target ) {
+            this.jmp( this.$( 'LOCA5' ) );
+            return;
+        }
+        if ( currentValue < target ) {
+            continue;
+        }
+
+        sil.LOCSP.call( this, this.$( 'SPECR2' ), this.$( 'BUKPTR' ) );
+        if ( SPECR1.specified === SPECR2.specified ) {
+            this.instructionPointer = loca2 + 6;
+            this.instructionPointerChanged = true;
+            return;
+        }
+    }
+};
+
 
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
@@ -1555,7 +1607,7 @@ sil.INCRV = function ( $DESCR, N ) {
 // 1.  See also ENDEX.
 sil.INIT = function () {
     // initialize SNOBOL4 run
-    var dynamicStorageSize = D * 5000,
+    var dynamicStorageSize = D * 50000,
 
         FRSGPT = this.d( 'FRSGPT' ),
         HDSGPT = this.d( 'HDSGPT' ),
@@ -2342,7 +2394,7 @@ sil.MOVA = function ( $DESCR1, $DESCR2 ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    DESCR2.addr = DESCR1.addr;
+    DESCR1.addr = DESCR2.addr;
 };
 
 //     MOVBLK is used to move (copy) a block of descriptors.
@@ -3737,14 +3789,14 @@ sil.SETVA = function ( $DESCR1, $DESCR2 ) {
 //      DESCR    |                   N   |
 //               +-----------------------+
 // Programming Notes:
-// 1.  N is always positive and small enough to  fit  into  the
+// 1.  N is nonnegative and small enough to  fit  into  the
 // value field.
 // 2.  See also SETVA and SETAC.
 sil.SETVC = function ( $DESCR, N ) {
     // set value to constant
     var DESCR = this.d( $DESCR );
 
-    assert( N > 0 );
+    assert( N >= 0 );
     DESCR.value = N;
 };
 

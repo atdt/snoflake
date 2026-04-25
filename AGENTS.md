@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 213 tests.
+- `npm test` passes: 218 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -168,16 +168,21 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 99\nAGAIN OUTPUT = X \" bottles of beer on the wall\"\n OUTPUT = X \" bottles of beer\"\n OUTPUT = \"Take one down, pass it around\"\n X = GT(X,0) X - 1 :S(AGAIN)F(ZERO)\nZERO OUTPUT = \"Go to store, get some more\"\n OUTPUT = \"99 bottles of beer on the wall\"\nEND\n" > tmp/beer-standard-loop.sno
   node run.js --file=tmp/beer-standard-loop.sno --maxSteps=100000 --maxMillis=1000
   ```
-- A guard-compatible standard-SNOBOL beer countdown starting from `X = 2` now
-  compiles, loops, decrements via `GT(X,0) X - 1`, branches to `ZERO`, and
-  prints clean integer/string concatenations. The full `X = 99` form starts
-  correctly but still exceeds the required `--maxSteps=100000` guard before
-  completion; do not raise the guard.
+- The standard-SNOBOL 99-bottles countdown now completes with `X = 99` under
+  the required guards. This exercises labels, looping, arithmetic, numeric
+  predicates, failure branching, integer/string concatenation, and enough
+  dynamic string allocation to expose storage-regeneration pressure:
+  ```sh
+  printf " X = 99\nAGAIN OUTPUT = X \" bottles of beer on the wall\"\n OUTPUT = X \" bottles of beer\"\n OUTPUT = \"Take one down, pass it around\"\n X = GT(X,0) X - 1 :S(AGAIN)F(ZERO)\nZERO OUTPUT = \"Go to store, get some more\"\n OUTPUT = \"99 bottles of beer on the wall\"\nEND\n" > tmp/beer-standard-loop.sno
+  node run.js --file=tmp/beer-standard-loop.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
   descriptor-aligned `VARID`/`ENDPTR` bucket offsets, `LOCAPV` relative
-  list-size bounds, and omitted-branch fallthrough in `LEXCMP`.
+  list-size bounds, omitted-branch fallthrough in `LEXCMP`, `MOVA` destination
+  direction, `SETVC` zero constants, native acceleration of the `LOCA2`
+  object-store lookup loop, and a larger dynamic-storage default.
 - Confirmed during tracing:
   - Static adjacent descriptor lists such as `OTLIST` depend on unlabeled
     `DESCR` entries being initialized in place. Allocating fresh descriptors
@@ -203,12 +208,9 @@ The previous active targets are complete: multiple literal `OUTPUT` statements,
 variable assignment followed by variable output, variable/literal
 concatenation, minimal pattern replacement, pattern failure goto, combined
 pattern success/failure gotos, and failed replacement branching all visibly
-work. The next goal is to broaden pattern behavior one small step at a time and
-keep each success covered by a focused integration test. The current target is
-to make the full standard-SNOBOL 99-bottles loop complete within the required
-guards. The guard-compatible `X = 2` form is covered and exercises labels,
-looping, arithmetic, numeric predicates, failure branching, and integer/string
-concatenation.
+work. The standard-SNOBOL 99-bottles loop is also complete under the required
+guards. The next goal is to broaden behavior one small step at a time and keep
+each success covered by a focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -289,7 +291,7 @@ Recommended progression:
    ```
    Expected output is `MATCHEDELLO`, confirming successful replacement updates
    the subject and drives the success branch.
-9. Standard-SNOBOL beer loop: partially complete.
+9. Standard-SNOBOL beer loop: complete.
    ```snobol
     X = 99
    AGAIN OUTPUT = X " bottles of beer on the wall"
@@ -300,9 +302,11 @@ Recommended progression:
     OUTPUT = "99 bottles of beer on the wall"
    END
    ```
-   A reduced `X = 2` version is complete and covered. The full `X = 99` version
-   produces clean early verses but exceeds the required execution guard before
-   completion.
+   The full `X = 99` version is complete and covered under the required
+   execution guards. It depends on `MOVA` copying the second descriptor's
+   address into the first descriptor, because `CONVAR` uses `MOVA BKLTCL,FRSGPT`
+   to return allocated string storage without moving the free-storage pointer
+   backward.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the
