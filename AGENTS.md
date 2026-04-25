@@ -154,6 +154,12 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 'HELLO'\n X 'Z' = 'MATCHED' :F(FAIL)\n OUTPUT = 'BAD'\nFAIL OUTPUT = X\nEND\n" > tmp/pattern-replace-failure-branch.sno
   node run.js --file=tmp/pattern-replace-failure-branch.sno --maxSteps=100000 --maxMillis=1000
   ```
+- Successful pattern replacement can branch on success after changing the
+  subject. Covered by the focused integration test:
+  ```sh
+  printf " X = 'HELLO'\n X 'H' = 'MATCHED' :S(SUCCESS)F(FAIL)\nFAIL OUTPUT = 'BAD'\nSUCCESS OUTPUT = X\nEND\n" > tmp/pattern-replace-success-branch.sno
+  node run.js --file=tmp/pattern-replace-success-branch.sno --maxSteps=100000 --maxMillis=1000
+  ```
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
@@ -255,7 +261,8 @@ Recommended progression:
    ```
    Expected output is `HELLO`, confirming that failed replacement can drive a
    failure branch while preserving the subject value.
-8. Suggested next target: successful pattern replacement with success branch.
+8. Successful pattern replacement with success branch: complete, covered by a
+   focused integration test.
    ```snobol
     X = 'HELLO'
     X 'H' = 'MATCHED' :S(SUCCESS)F(FAIL)
