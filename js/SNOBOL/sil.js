@@ -39,6 +39,43 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     FRSGPT.addr += size;
 }
 
+function printLinePrinterRecord( record ) {
+    record.split( '\n' ).forEach( function ( line ) {
+        var control,
+            content;
+
+        if ( line.length === 0 ) {
+            console.log( '' );
+            return;
+        }
+
+        control = line.charAt( 0 );
+        content = line.slice( 1 ).replace( /\u0000+/g, '' );
+
+        // SNOBOL4 inherited FORTRAN-style carriage control from line printers:
+        // the first character of each record is not text, but spacing
+        // metadata.  Terminals do not overprint or eject pages, so we render
+        // the intent with ordinary newlines while keeping the SIL formats
+        // historically recognizable.
+        switch ( control ) {
+            case '1':
+                console.log( '' );
+                console.log( content );
+                break;
+            case '0':
+                console.log( '' );
+                console.log( content );
+                break;
+            case '+':
+            case ' ':
+                console.log( content );
+                break;
+            default:
+                console.log( line.replace( /\u0000+/g, '' ) );
+        }
+    } );
+}
+
 function stackPopper( dataType ) {
     return function ( ARGs ) {
         var src, dst, arg;
@@ -2729,7 +2766,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     }
 
     ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
-    console.log( SNOBOL.str.format( fmt, ARGs ) );
+    printLinePrinterRecord( SNOBOL.str.format( fmt, ARGs ) );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -4060,34 +4097,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
-    var formatted = SNOBOL.str.format( fmt, item );
-    // Handle carriage control: first char of each line controls spacing.
-    // '1' page break (treat as extra blank line), '0' double space (blank line), ' ' single, '+' overprint (ignore extra leading newline).
-    formatted.split('\n').forEach(function (line) {
-        if (line.length === 0) { console.log(''); return; }
-        var cc = line.charAt(0);
-        var content = line.slice(1).replace(/\u0000+/g, '');
-        switch (cc) {
-            case '1':
-                console.log('');
-                console.log(content);
-                break;
-            case '0':
-                console.log('');
-                console.log(content);
-                break;
-            case '+':
-                // Overprint not supported; print without extra spacing
-                console.log(content);
-                break;
-            case ' ':
-                console.log(content);
-                break;
-            default:
-                // If no CC, print as-is
-                console.log(line.replace(/\u0000+/g, ''));
-        }
-    });
+    printLinePrinterRecord( SNOBOL.str.format( fmt, item ) );
     this.d( $DESCR1 ).addr = 1;
 };
 

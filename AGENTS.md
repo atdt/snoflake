@@ -76,6 +76,10 @@ temporary debugging notes below.
 - JavaScript style: CommonJS modules, `"use strict"`, 4-space indentation.
 - Prefer focused tests in `test/test-*.js` for changed macro/runtime behavior.
 - Use `rg` for searching.
+- Comments should be tasteful and useful. Prefer comments that illuminate
+  complex code, representation mismatches, historical computing conventions,
+  or non-obvious SNOBOL/SIL quirks. Avoid narrating obvious assignments or
+  control flow.
 - A good commit should be reviewable on its own: one bug, one invariant, one
   testable behavior change, or one focused documentation update.
 - Commit subjects should use imperative form. For non-trivial runtime changes,
@@ -183,6 +187,10 @@ them accurate, but do not let them override the core working rules above.
   node run.js --file=tmp/woof.sno --maxSteps=100000 --maxMillis=1000
   ```
   Expected visible output is `WOOF? ` followed by `BARK? BARK`.
+- FORTRAN-style carriage-control characters in formatted runtime output are
+  interpreted for terminal display instead of being printed literally. The SIL
+  formats still contain historically accurate leading `1`, `0`, `+`, and space
+  controls, but `OUTPUT` and `STPRNT` now render them as ordinary spacing.
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
@@ -190,7 +198,8 @@ them accurate, but do not let them override the core working rules above.
   list-size bounds, omitted-branch fallthrough in `LEXCMP`, `MOVA` destination
   direction, `SETVC` zero constants, native acceleration of the `LOCA2`
   object-store lookup loop, a larger dynamic-storage default, nonnegative
-  `CHKVAL` bounds, and `CPYPAT` then/or descriptor copying.
+  `CHKVAL` bounds, `CPYPAT` then/or descriptor copying, and line-printer
+  carriage-control rendering.
 - Confirmed during tracing:
   - Static adjacent descriptor lists such as `OTLIST` depend on unlabeled
     `DESCR` entries being initialized in place. Allocating fresh descriptors
@@ -336,8 +345,9 @@ runtime behavior is understood.
 Known areas still worth checking:
 - Runtime statistics still report zero statements and zero writes for the
   minimal output program even though visible output occurs.
-- `STPRNT` and `OUTPUT` are still minimal JavaScript implementations of
-  FORTRAN-like formatting. Exercise more formats before broadening behavior.
+- `STPRNT` and `OUTPUT` now interpret line-printer carriage control, but they
+  are still minimal JavaScript implementations of FORTRAN-like formatting.
+  Exercise more formats before broadening behavior.
 - More complex start-location and `END` card forms remain under-tested. Keep
   verifying object-code bases (`OCBSCL`, `CMBSCL`, `OCICL`) with descriptor
   probes before changing compiler control flow.

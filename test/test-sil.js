@@ -1335,16 +1335,60 @@ describe( 'Input and Output Macros', function () {
         assert.equal( this.vm.s( ptr ).specified, 'test' );
     } );
 
-    it( 'OUTPUT', function () { // stub
-        assert( sil.OUTPUT ); 
+    it( 'OUTPUT handles line-printer carriage control', function () {
+        var unit = this.vm.d(),
+            format = sil.FORMAT.call( this.vm, '(37H1SNOBOL4 (VERSION 3.11, MAY 19, 1975)/8H+_______)' ),
+            logs = [],
+            log = console.log;
+
+        console.log = function () {
+            logs.push( slice.call( arguments ).join( ' ' ) );
+        };
+        try {
+            sil.OUTPUT.call( this.vm, unit.ptr, format );
+        } finally {
+            console.log = log;
+        }
+
+        assert.deepEqual( logs, [
+            '',
+            'SNOBOL4 (VERSION 3.11, MAY 19, 1975)',
+            '_______'
+        ] );
     } );
 
     it( 'REWIND', function () { // stub
         assert( sil.REWIND ); 
     } );
 
-    it( 'STPRNT', function () { // stub
-        assert( sil.STPRNT ); 
+    it( 'STPRNT handles line-printer carriage control', function () {
+        var key = this.vm.d(),
+            block = this.vm.d(),
+            formatBase = this.vm.alloc( 20 ),
+            item = sil.STRING.call( this.vm, 'HELLO' ),
+            logs = [],
+            log = console.log,
+            format = '(1H0,A)',
+            i;
+
+        block.addr = this.vm.alloc( 9 );
+        this.vm.d( block.addr + SNOBOL.D ).addr = 6;
+        this.vm.d( block.addr + ( 2 * SNOBOL.D ) ).addr = formatBase;
+        this.vm.d( formatBase ).value = format.length;
+        for ( i = 0; i < format.length; i++ ) {
+            this.vm.mem[ formatBase + ( 4 * SNOBOL.D ) + i ] = format.charCodeAt( i );
+        }
+
+        console.log = function () {
+            logs.push( slice.call( arguments ).join( ' ' ) );
+        };
+        try {
+            sil.STPRNT.call( this.vm, key.ptr, block.ptr, item );
+        } finally {
+            console.log = log;
+        }
+
+        assert.deepEqual( logs, [ '', 'HELLO' ] );
     } );
 
     it( 'STREAD', function () {
