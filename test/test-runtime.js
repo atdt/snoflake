@@ -337,6 +337,29 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
 
+    it( 'assigns named substrings through pattern-valued alternation', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-pattern-name-alternation.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " DOG_PAT = \"WOOF\" . W | \"BARK\" . B\n \"THE DOG SAYS BARK.\" DOG_PAT\n OUTPUT = \"WOOF? \" W\n OUTPUT = \"BARK? \" B\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-pattern-name-alternation.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nWOOF? \nBARK? BARK\n' ) );
+        assert( !output.includes( 'AssertionError' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
     it( 'branches on assignment object failure', function () {
         var root = path.join( __dirname, '..' ),
             file = path.join( root, 'tmp', 'test-assignment-object-failure.sno' ),

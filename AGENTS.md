@@ -102,7 +102,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 218 tests.
+- `npm test` passes: 219 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -176,13 +176,21 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 99\nAGAIN OUTPUT = X \" bottles of beer on the wall\"\n OUTPUT = X \" bottles of beer\"\n OUTPUT = \"Take one down, pass it around\"\n X = GT(X,0) X - 1 :S(AGAIN)F(ZERO)\nZERO OUTPUT = \"Go to store, get some more\"\n OUTPUT = \"99 bottles of beer on the wall\"\nEND\n" > tmp/beer-standard-loop.sno
   node run.js --file=tmp/beer-standard-loop.sno --maxSteps=100000 --maxMillis=1000
   ```
+- Pattern-valued alternation with named substring assignment now runs. Covered
+  by the `tmp/woof.sno` shape:
+  ```sh
+  printf " DOG_PAT = \"WOOF\" . W | \"BARK\" . B\n \"THE DOG SAYS BARK.\" DOG_PAT\n OUTPUT = \"WOOF? \" W\n OUTPUT = \"BARK? \" B\nEND\n" > tmp/woof.sno
+  node run.js --file=tmp/woof.sno --maxSteps=100000 --maxMillis=1000
+  ```
+  Expected visible output is `WOOF? ` followed by `BARK? BARK`.
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
   descriptor-aligned `VARID`/`ENDPTR` bucket offsets, `LOCAPV` relative
   list-size bounds, omitted-branch fallthrough in `LEXCMP`, `MOVA` destination
   direction, `SETVC` zero constants, native acceleration of the `LOCA2`
-  object-store lookup loop, and a larger dynamic-storage default.
+  object-store lookup loop, a larger dynamic-storage default, nonnegative
+  `CHKVAL` bounds, and `CPYPAT` then/or descriptor copying.
 - Confirmed during tracing:
   - Static adjacent descriptor lists such as `OTLIST` depend on unlabeled
     `DESCR` entries being initialized in place. Allocating fresh descriptors
@@ -208,9 +216,10 @@ The previous active targets are complete: multiple literal `OUTPUT` statements,
 variable assignment followed by variable output, variable/literal
 concatenation, minimal pattern replacement, pattern failure goto, combined
 pattern success/failure gotos, and failed replacement branching all visibly
-work. The standard-SNOBOL 99-bottles loop is also complete under the required
-guards. The next goal is to broaden behavior one small step at a time and keep
-each success covered by a focused integration test.
+work. The standard-SNOBOL 99-bottles loop and `tmp/woof.sno` pattern-valued
+alternation with named substring assignment are also complete under the
+required guards. The next goal is to broaden behavior one small step at a time
+and keep each success covered by a focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -307,6 +316,18 @@ Recommended progression:
    address into the first descriptor, because `CONVAR` uses `MOVA BKLTCL,FRSGPT`
    to return allocated string storage without moving the free-storage pointer
    backward.
+10. Pattern-valued alternation with naming: complete.
+   ```snobol
+    DOG_PAT = "WOOF" . W | "BARK" . B
+    "THE DOG SAYS BARK." DOG_PAT
+    OUTPUT = "WOOF? " W
+    OUTPUT = "BARK? " B
+   END
+   ```
+   Expected output is a blank `WOOF? ` capture and `BARK? BARK`. This depends
+   on `CHKVAL` accepting zero-length scan heads and on `CPYPAT` copying the
+   source then/or descriptor with additive relocation for both address and
+   value fields.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the

@@ -700,7 +700,7 @@ sil.BUFFER = function ( N ) {
 //      DESCR2   |  I2                   |
 //               +-----------------------+
 // Programming Notes:
-// 1.  I1, I2, and L are always positive integers.
+// 1.  I1, I2, and L are always nonnegative integers.
 // 2.  CHKVAL is used only in pattern matching.
 sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
     var DESCR1 = this.d( $DESCR1 ),
@@ -712,9 +712,9 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
         SPEC = this.s( $SPEC ),
         L = SPEC.length;
 
-    assert( I1 > 0 );
-    assert( I2 > 0 );
-    assert( L > 0 );
+    assert( I1 >= 0 );
+    assert( I2 >= 0 );
+    assert( L >= 0 );
 
     if ( L + I2 > I1 ) {
         this.jmp( GTLOC );
@@ -914,7 +914,7 @@ sil.COPY = function ( FILE ) {
 //               +-----------------------+
 sil.CPYPAT = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, $DESCR5, $DESCR6 ) {
     // copy pattern
-    function F1(X) { return X === 0 ? 0 : ( X * A4 ); }
+    function F1(X) { return X === 0 ? 0 : ( X + A4 ); }
     function F2(X) { return X === 0 ? A5 : ( X + A4 ); }
 
     var DESCR1 = this.d( $DESCR1 ),
@@ -939,7 +939,7 @@ sil.CPYPAT = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, $DESCR5, $DESCR6 ) {
 
         src = this.d( R2 + 6 );
         dst = this.d( R1 + 6 );
-        dst.update( F1( dst.addr ), 0, F2( dst.value ) );
+        dst.update( F1( src.addr ), 0, F2( src.value ) );
 
         src = this.d( R2 + 9 );
         dst = this.d( R1 + 9 );

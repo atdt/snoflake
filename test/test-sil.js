@@ -252,6 +252,12 @@ describe( 'Comparison Macros', function () {
         d1.addr = d2.addr + s.length;
         sil.CHKVAL.call( this.vm, d1, d2, s, GTLOC, EQLOC, LTLOC );
         assert.equal( this.vm.instructionPointer, 3 );
+
+        s.length = 0;
+        d1.addr = 0;
+        d2.addr = 0;
+        sil.CHKVAL.call( this.vm, d1, d2, s, GTLOC, EQLOC, LTLOC );
+        assert.equal( this.vm.instructionPointer, 3 );
     } );
 
     it( 'DEQL', function () {
@@ -1259,8 +1265,32 @@ describe( 'Macros that Construct Pattern Nodes', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'CPYPAT', function () { // stub
-        assert( sil.CPYPAT ); 
+    it( 'CPYPAT', function () {
+        var dst = this.vm.d(),
+            src = this.vm.d(),
+            shift = this.vm.d(),
+            offset = this.vm.d(),
+            next = this.vm.d(),
+            size = this.vm.d(),
+            dstBase;
+
+        dst.addr = this.vm.alloc( 20 );
+        dstBase = dst.addr;
+        src.addr = this.vm.alloc( 20 );
+        shift.addr = 100;
+        offset.addr = 30;
+        next.addr = 60;
+        size.addr = 9;
+
+        this.vm.d( src.addr + 3 ).update( 1, 2, 2 );
+        this.vm.d( src.addr + 6 ).update( 6, 0, 9 );
+        this.vm.d( src.addr + 9 ).update( 12, 0, 15 );
+
+        sil.CPYPAT.call( this.vm, dst, src, shift, offset, next, size );
+
+        assert.deepEqual( this.vm.d( dstBase + 3 ).raw(), [ 1, 2, 2 ] );
+        assert.deepEqual( this.vm.d( dstBase + 6 ).raw(), [ 36, 0, 39 ] );
+        assert.deepEqual( this.vm.d( dstBase + 9 ).raw(), [ 112, 0, 115 ] );
     } );
 
     it( 'MAKNOD', function () { // stub
