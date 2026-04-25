@@ -160,6 +160,19 @@ them accurate, but do not let them override the core working rules above.
   printf " X = 'HELLO'\n X 'H' = 'MATCHED' :S(SUCCESS)F(FAIL)\nFAIL OUTPUT = 'BAD'\nSUCCESS OUTPUT = X\nEND\n" > tmp/pattern-replace-success-branch.sno
   node run.js --file=tmp/pattern-replace-success-branch.sno --maxSteps=100000 --maxMillis=1000
   ```
+- The Rosetta-style `tmp/beer.sno` sample uses assignment inside an expression,
+  which is a CSNOBOL4/SPITBOL extension rather than a strict SNOBOL4 v3.11
+  feature. The next target is a standard-SNOBOL reduction of the beer loop that
+  splits the decrement assignment into its own statement:
+  ```sh
+  printf " X = 99\nAGAIN OUTPUT = X \" bottles of beer on the wall\"\n OUTPUT = X \" bottles of beer\"\n OUTPUT = \"Take one down, pass it around\"\n X = GT(X,0) X - 1 :S(AGAIN)F(ZERO)\nZERO OUTPUT = \"Go to store, get some more\"\n OUTPUT = \"99 bottles of beer on the wall\"\nEND\n" > tmp/beer-standard-loop.sno
+  node run.js --file=tmp/beer-standard-loop.sno --maxSteps=100000 --maxMillis=1000
+  ```
+- A guard-compatible standard-SNOBOL beer countdown starting from `X = 2` now
+  compiles, loops, decrements via `GT(X,0) X - 1`, branches to `ZERO`, and
+  prints clean integer/string concatenations. The full `X = 99` form starts
+  correctly but still exceeds the required `--maxSteps=100000` guard before
+  completion; do not raise the guard.
 - Recent confirmed fixes: fixed-width source records, `ENDPTR` initialization,
   EOF handling in `STREAD`, `STREAM` STOP branching, `LOCAPV` value-field
   copying, unlabeled `DESCR`/`SPEC` assembly into preallocated slots,
@@ -191,7 +204,11 @@ variable assignment followed by variable output, variable/literal
 concatenation, minimal pattern replacement, pattern failure goto, combined
 pattern success/failure gotos, and failed replacement branching all visibly
 work. The next goal is to broaden pattern behavior one small step at a time and
-keep each success covered by a focused integration test.
+keep each success covered by a focused integration test. The current target is
+to make the full standard-SNOBOL 99-bottles loop complete within the required
+guards. The guard-compatible `X = 2` form is covered and exercises labels,
+looping, arithmetic, numeric predicates, failure branching, and integer/string
+concatenation.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -272,6 +289,20 @@ Recommended progression:
    ```
    Expected output is `MATCHEDELLO`, confirming successful replacement updates
    the subject and drives the success branch.
+9. Standard-SNOBOL beer loop: partially complete.
+   ```snobol
+    X = 99
+   AGAIN OUTPUT = X " bottles of beer on the wall"
+    OUTPUT = X " bottles of beer"
+    OUTPUT = "Take one down, pass it around"
+    X = GT(X,0) X - 1 :S(AGAIN)F(ZERO)
+   ZERO OUTPUT = "Go to store, get some more"
+    OUTPUT = "99 bottles of beer on the wall"
+   END
+   ```
+   A reduced `X = 2` version is complete and covered. The full `X = 99` version
+   produces clean early verses but exceeds the required execution guard before
+   completion.
 
 For each step, first reproduce with a scratch `.sno` file in `tmp/` and the
 required guards, then add or extend a focused integration test only after the

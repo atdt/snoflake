@@ -87,6 +87,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     // execution should fall through to the next instruction.
     if ( typeof loc === 'number' ) {
         this.instructionPointer = this.mem[loc];
+        this.instructionPointerChanged = true;
     }
 };
 
@@ -199,12 +200,13 @@ SNOBOL.VM.prototype.run = function ( program ) {
         stmt = program[ loc ];
         [ label, macro ] = stmt;
         if ( !DATA_ASSEMBLY_MACROS.includes( macro ) ) {
+            this.instructionPointerChanged = false;
             status = this.exec.apply( this, stmt );
         }
 
         // If the procedure did not update the instruction pointer,
         // fall through to the next instruction.
-        if ( this.instructionPointer === loc ) {
+        if ( !this.instructionPointerChanged && this.instructionPointer === loc ) {
             this.instructionPointer++;
         }
     }

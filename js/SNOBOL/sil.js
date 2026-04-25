@@ -495,7 +495,7 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
         this.mem[ base + i ] = encoded[ i ];
     }
 
-    SPEC1.length = encoded.length;
+    SPEC1.length = combined.length;
 };
 
 //     ARRAY is used to assemble an array of descriptors.
@@ -1701,7 +1701,8 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
         I = DESCR.addr,
-        I_enc = SNOBOL.str.encode( I.toString() ),
+        I_str = I.toString(),
+        I_enc = SNOBOL.str.encode( I_str ),
         idx;
 
     if ( !SPEC.addr ) {
@@ -1712,7 +1713,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     for ( idx = 0; idx < I_enc.length; idx++ ) {
         this.mem[ SPEC.addr + SPEC.offset + idx ] = I_enc[ idx ];
     }
-    SPEC.length = I_enc.length;
+    SPEC.length = I_str.length;
 };
 
 //     ISTACK is used to initialize the system stack.
@@ -3169,15 +3170,19 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
                 var locPtr = $LOCs[ idx ];
                 if ( typeof locPtr === 'number' ) {
                     this.instructionPointer = this.mem[ locPtr ];
+                    this.instructionPointerChanged = true;
                 } else {
                     // If a label pointer wasn't provided, fall through
                     this.instructionPointer = retLoc + 1;
+                    this.instructionPointerChanged = true;
                 }
             } else {
                 this.instructionPointer = retLoc + 1;
+                this.instructionPointerChanged = true;
             }
         } else {
             this.instructionPointer = retLoc + 1;
+            this.instructionPointerChanged = true;
         }
     } );
 

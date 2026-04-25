@@ -336,6 +336,53 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( '\nBAD\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'branches on assignment object failure', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-assignment-object-failure.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " X = 0\n X = GT(X,0) :S(OK)F(BAD)\nOK OUTPUT = 'OK'\nBAD OUTPUT = 'BAD'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-assignment-object-failure.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nBAD\n' ) );
+        assert( !output.includes( '\nOK\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
+    it( 'runs a guarded standard-SNOBOL beer countdown loop', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-beer-countdown-loop.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " X = 2\nAGAIN OUTPUT = X \" bottles of beer on the wall\"\n OUTPUT = X \" bottles of beer\"\n OUTPUT = \"Take one down, pass it around\"\n X = GT(X,0) X - 1 :S(AGAIN)F(ZERO)\nZERO OUTPUT = \"Go to store, get some more\"\n OUTPUT = \"99 bottles of beer on the wall\"\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-beer-countdown-loop.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\n2 bottles of beer on the wall\n2 bottles of beer\nTake one down, pass it around\n1 bottles of beer on the wall\n' ) );
+        assert( output.includes( '\n0 bottles of beer on the wall\n0 bottles of beer\nTake one down, pass it around\nGo to store, get some more\n99 bottles of beer on the wall\n' ) );
+        assert( !output.includes( 'Aborting: exceeded maxSteps' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {

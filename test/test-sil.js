@@ -1033,6 +1033,18 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s1.specified, 'supercalifragilisticexpialidocious' );
     } );
 
+    it( 'APDSP keeps logical length separate from descriptor padding', function () {
+        var s1 = this.vm.s( sil.STRING.call( this.vm, '99' ) ),
+            s2;
+
+        this.vm.alloc( 50 );
+        s2 = this.vm.s( sil.STRING.call( this.vm, ' bottles of beer' ) );
+        sil.APDSP.call( this.vm, s1, s2 );
+
+        assert.equal( s1.length, '99 bottles of beer'.length );
+        assert.equal( s1.specified, '99 bottles of beer' );
+    } );
+
     it( 'FSHRTN', function () {
         var s = this.vm.s(),
             N = 4;
@@ -1052,6 +1064,7 @@ describe( 'Macros that Operate on Specifiers', function () {
         d.addr = -58;
         sil.INTSPC.call( this.vm, s, d );
         assert.equal( s.specified, '-58' );
+        assert.equal( s.length, 3 );
     } );
 
     it( 'LOCSP', function () {
