@@ -54,18 +54,13 @@ function printLinePrinterRecord( record ) {
 
         // SNOBOL4 inherited FORTRAN-style carriage control from line printers:
         // the first character of each record is not text, but spacing
-        // metadata.  Terminals do not overprint or eject pages, so we render
-        // the intent with ordinary newlines while keeping the SIL formats
-        // historically recognizable.
+        // metadata.  A literal terminal rendering of "double space" and
+        // "new page" is too airy because the SIL formats also contain explicit
+        // slash records, so we strip the control and preserve only real record
+        // breaks produced by the format.
         switch ( control ) {
             case '1':
-                console.log( '' );
-                console.log( content );
-                break;
             case '0':
-                console.log( '' );
-                console.log( content );
-                break;
             case '+':
             case ' ':
                 console.log( content );

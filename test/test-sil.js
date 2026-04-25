@@ -1351,7 +1351,6 @@ describe( 'Input and Output Macros', function () {
         }
 
         assert.deepEqual( logs, [
-            '',
             'SNOBOL4 (VERSION 3.11, MAY 19, 1975)',
             '_______'
         ] );
@@ -1388,7 +1387,7 @@ describe( 'Input and Output Macros', function () {
             console.log = log;
         }
 
-        assert.deepEqual( logs, [ '', 'HELLO' ] );
+        assert.deepEqual( logs, [ 'HELLO' ] );
     } );
 
     it( 'STREAD', function () {

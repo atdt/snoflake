@@ -141,7 +141,7 @@ describe( 'SNOBOL Program Execution', function () {
         } );
 
         assert( output.includes( '\nHELLO, WORLD\n' ) );
-        assert( output.includes( '\nSNOBOL4 (VERSION 3.11, MAY 19, 1975)\n' ) );
+        assert( output.includes( 'SNOBOL4 (VERSION 3.11, MAY 19, 1975)\n' ) );
         assert( output.includes( '\nNO ERRORS DETECTED IN SOURCE PROGRAM\n' ) );
         assert( !output.includes( '1SNOBOL4' ) );
         assert( !output.includes( '0NO ERRORS' ) );
