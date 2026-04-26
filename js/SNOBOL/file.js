@@ -3,16 +3,25 @@
 var SNOBOL = require( './base' ),
     fs = require( 'fs' );
 
-SNOBOL.File = function ( vm, unitNum ) {
-    if ( vm.units[unitNum] !== undefined ) {
-        return vm.units[ unitNum ];
+SNOBOL.File = function ( vm, unitNum, role ) {
+    var key;
+
+    role = role || 'source';
+    key = role + ':' + unitNum;
+
+    if ( vm.units[ key ] !== undefined ) {
+        return vm.units[ key ];
     } else {
         this.vm = vm;
         this.unitNum = unitNum;
+        this.role = role;
+        this.path = role === 'input' && SNOBOL.options.input ?
+            SNOBOL.options.input :
+            SNOBOL.options.file;
         this.pos = 0;
         this.fd = null;
         this.buf = null;
-        this.vm.units[ unitNum ] = this;
+        this.vm.units[ key ] = this;
     }
 };
 
@@ -28,7 +37,7 @@ SNOBOL.File.prototype.read = function ( length ) {
     var end, record, next, str;
 
     if ( this.buf === null ) {
-        this.buf = fs.readFileSync( SNOBOL.options.file );
+        this.buf = fs.readFileSync( this.path );
     }
 
     if ( this.pos >= this.buf.length ) {

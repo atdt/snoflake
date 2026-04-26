@@ -1393,6 +1393,7 @@ describe( 'Input and Output Macros', function () {
     it( 'STREAD', function () {
         var file = path.join( os.tmpdir(), 'snoflake-stread-' + process.pid + '.sno' ),
             oldFile = SNOBOL.options.file,
+            oldInput = SNOBOL.options.input,
             unit = this.vm.d(),
             spec = this.vm.s(),
             eof = this.vm.ptr( 1 ),
@@ -1402,6 +1403,7 @@ describe( 'Input and Output Macros', function () {
 
         fs.writeFileSync( file, 'END\n1234567890\n' );
         SNOBOL.options.file = file;
+        delete SNOBOL.options.input;
         unit.addr = 5;
         spec.update( ptr, 0, 0, 2, 8 );
 
@@ -1436,7 +1438,47 @@ describe( 'Input and Output Macros', function () {
             assert.equal( unit.addr, 0 );
         } finally {
             SNOBOL.options.file = oldFile;
+            SNOBOL.options.input = oldInput;
             fs.unlinkSync( file );
+        }
+    } );
+
+    it( 'STREAD separates source cards from runtime INPUT data', function () {
+        var sourceFile = path.join( os.tmpdir(), 'snoflake-stread-source-' + process.pid + '.sno' ),
+            inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-' + process.pid + '.txt' ),
+            oldFile = SNOBOL.options.file,
+            oldInput = SNOBOL.options.input,
+            unit = this.vm.d(),
+            spec = this.vm.s(),
+            eof = this.vm.ptr( 1 ),
+            error = this.vm.ptr( 2 ),
+            success = this.vm.ptr( 3 ),
+            ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
+
+        fs.writeFileSync( sourceFile, 'SOURCE\n' );
+        fs.writeFileSync( inputFile, 'DATA\n' );
+        SNOBOL.options.file = sourceFile;
+        SNOBOL.options.input = inputFile;
+        unit.addr = this.vm.$( 'UNITI' );
+        spec.update( ptr, 0, 0, 0, 6 );
+
+        try {
+            this.vm.currentLabel = 'XLATRN';
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.mem.slice( ptr, ptr + 6 ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), 'SOURCE' );
+
+            this.vm.currentLabel = null;
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.mem.slice( ptr, ptr + 6 ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), 'DATA  ' );
+        } finally {
+            SNOBOL.options.file = oldFile;
+            SNOBOL.options.input = oldInput;
+            fs.unlinkSync( sourceFile );
+            fs.unlinkSync( inputFile );
         }
     } );
 } );

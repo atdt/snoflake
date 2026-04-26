@@ -71,6 +71,30 @@ function printLinePrinterRecord( record ) {
     } );
 }
 
+function sourceReadLabel( label ) {
+    return label === 'XLATRN' || label === 'DIAGRN' || label === 'FORRUR';
+}
+
+function fileRole( unitNum ) {
+    var inputUnit;
+
+    try {
+        inputUnit = this.$( 'UNITI' );
+    } catch ( e ) {
+        inputUnit = null;
+    }
+
+    // Historical SNOBOL talks about numbered I/O units; this JavaScript port
+    // also uses unit 5 for source-card reads while compiling the program.
+    // Keep those compiler reads on --file, and let runtime INPUT use --input
+    // when the caller supplies a separate data file.
+    if ( SNOBOL.options.input && unitNum === inputUnit && !sourceReadLabel( this.currentLabel ) ) {
+        return 'input';
+    }
+
+    return 'source';
+}
+
 function stackPopper( dataType ) {
     return function ( ARGs ) {
         var src, dst, arg;
@@ -656,7 +680,7 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 sil.BKSPCE = function ( $DESCR ) {
     // backspace record
     var DESCR = this.d( $DESCR ),
-        file = new SNOBOL.File( this, DESCR.addr );
+        file = new SNOBOL.File( this, DESCR.addr, fileRole.call( this, DESCR.addr ) );
 
     if ( file.pos > 0 ) {
         file.pos--;
@@ -3411,7 +3435,7 @@ sil.RESETF = function ( $DESCR, FLAG ) {
 sil.REWIND = function ( $DESCR ) {
     // rewind file
     var DESCR = this.d( $DESCR ),
-        f = new SNOBOL.File( this, DESCR.addr );
+        f = new SNOBOL.File( this, DESCR.addr, fileRole.call( this, DESCR.addr ) );
 
     f.seek( 0 );
 };
@@ -4124,7 +4148,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
         I = DESCR.addr,
-        file = new SNOBOL.File( this, I ),
+        file = new SNOBOL.File( this, I, fileRole.call( this, I ) ),
         words, raw;
 
     if ( !file ) {

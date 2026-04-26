@@ -187,6 +187,23 @@ them accurate, but do not let them override the core working rules above.
   node run.js --file=tmp/woof.sno --maxSteps=100000 --maxMillis=1000
   ```
   Expected visible output is `WOOF? ` followed by `BARK? BARK`.
+- Runtime `INPUT` can now read from a separate data file supplied with
+  `--input=...` while source-card compilation continues to read from
+  `--file=...`. This preserves the historical unit-number model at the SIL
+  boundary, while accounting for the JavaScript port's use of unit 5 for both
+  compiler source reads and the program's default input unit:
+  ```sh
+  printf "LOOP S = TRIM(INPUT) :F(DONE)\n OUTPUT = S :(LOOP)\nDONE\nEND\n" > tmp/input-echo.sno
+  printf "ALPHA\nBETA\n" > tmp/input-echo.txt
+  node run.js --file=tmp/input-echo.sno --input=tmp/input-echo.txt --maxSteps=100000 --maxMillis=1000
+  ```
+  Expected visible output includes `ALPHA` and `BETA`.
+- `tmp/palindromes.sno` now reaches runtime input when run with
+  `--input=tmp/palindromes-input.txt`, but currently fails with
+  `UNDEFINED FUNCTION OR OPERATION` because `REVERSE` is not part of the local
+  historical v3.11 SIL function table. Phil Budne's later CSNOBOL4 SIL lists
+  `REVERSE(S)` as a `[PLB37]` addition, so supporting this sample should be
+  treated as a separate, explicitly annotated library/SIL feature decision.
 - FORTRAN-style carriage-control characters in formatted runtime output are
   interpreted for terminal display instead of being printed literally. The SIL
   formats still contain historically accurate leading `1`, `0`, `+`, and space

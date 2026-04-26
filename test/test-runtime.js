@@ -411,6 +411,31 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( 'Aborting: exceeded maxSteps' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'reads runtime INPUT records from --input', function () {
+        var root = path.join( __dirname, '..' ),
+            programFile = path.join( root, 'tmp', 'test-input-echo.sno' ),
+            inputFile = path.join( root, 'tmp', 'test-input-echo.txt' ),
+            output;
+
+        fs.mkdirSync( path.dirname( programFile ), { recursive: true } );
+        fs.writeFileSync( programFile, "LOOP S = TRIM(INPUT) :F(DONE)\n OUTPUT = S :(LOOP)\nDONE\nEND\n" );
+        fs.writeFileSync( inputFile, "ALPHA\nBETA\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-input-echo.sno',
+            '--input=tmp/test-input-echo.txt',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nALPHA\nBETA\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {
