@@ -542,8 +542,9 @@ sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 // 1.  A2 may be a relocatable address.
 // 2.  N2 is never negative.
 // 3.  N1 is always zero.
-//     XXX: This is patently false! I think the documentation mixed up
-//     N1 and N2. N2 is indeed always zero. --OL
+//     Note: the published programming note appears to have swapped
+//     N1 and N2.  The v311 SIL call sites use N1 as the nonzero
+//     field offset and pass N2 as zero.
 // 4.  See also AEQL, AEQLC, LEQLC, ACOMP, and ACOMPC.
 sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
     var DESCR = this.d( $DESCR ),
@@ -696,7 +697,9 @@ sil.BKSPCE = function ( $DESCR ) {
 // procedure.
 // Programming Notes:
 // 1.  See also PROC.
-// XXX: How are LOCs local?!
+// In the source SIL, PROC disambiguates the procedure-local assembly
+// context for LOC.  The JavaScript translator resolves labels into
+// global memory entries up front, so the LOC pointer is sufficient here.
 sil.BRANCH = function ( LOC, PROC ) {
     // branch to program location
     this.jmp( LOC );
@@ -3244,9 +3247,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     this.CSTACK.addr += D;
     if ( SNOBOL.DEBUG ) console.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
 
-    // XXX: We don't store LOC on the stack, but maybe sil expects it.
-    // The specs say the new CSTACK is A+(2+N)*D. The 2 is 1 for the old stack
-    // pointer and one for LOC.
+    // The translated runtime carries the return continuation in callbacks,
+    // but still reserves the SIL LOC descriptor slot so the stack frame shape
+    // remains A+(2+N)*D with zeroed descriptor flags.
     this.d( this.CSTACK.addr + D ).update( 0 );
     this.CSTACK.addr += D;
     if ( SNOBOL.DEBUG ) console.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
@@ -4494,13 +4497,14 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 );
 
-    // XXX: Should F and V be set regardless of A+I overflows?
-    DESCR1.flags = DESCR2.flags;
-    DESCR1.value = DESCR2.value;
-    if ( !SNOBOL.isInt32( DESCR2.addr + DESCR3.addr ) ) {
+    var newAddr = DESCR2.addr + DESCR3.addr;
+    if ( !SNOBOL.isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
-    DESCR1.addr = DESCR2.addr + DESCR3.addr;
+
+    DESCR1.addr  = newAddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
     return this.jmp( SLOC );
 };
 

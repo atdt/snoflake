@@ -925,8 +925,10 @@ describe( 'Macros that Perform Integer Arithmetic on Address Fields', function (
         assert.equal( this.vm.instructionPointer, 9 );
 
         // A+I overflow:
+        d1.update( 11, 22, 33 );
         d3.addr = INT32_MAX;
         sil.SUM.call( this.vm, d1, d2, d3, FLOC, SLOC );
+        assert.deepEqual( d1.raw(), [ 11, 22, 33 ] );
         assert.equal( this.vm.instructionPointer, 7 );
     } );
 } );
@@ -1553,8 +1555,6 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
 describe( 'Miscellaneous Macros', function () {
     beforeEach( function () {
         this.vm = new SNOBOL.VM();
-        // XXX: Needed for VARID test. Move to generic setup?
-        this.vm.run( [ [ 'OBSIZ', 'EQU', mkargs( this.vm, 256 ) ] ] );
         this.vm.define( 'EQTYP', 4 );
     } );
 
