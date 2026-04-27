@@ -106,7 +106,7 @@ The notes below describe the active investigation and may become stale. Keep
 them accurate, but do not let them override the core working rules above.
 
 ### Current State
-- `npm test` passes: 219 tests.
+- `npm test` passes: 221 tests.
 - `tmp/hello.sno` (just `END`) compiles and terminates normally with guards.
 - A correctly blank-prefixed minimal visible-output program now compiles,
   executes, and prints `HELLO, WORLD` with the required guards:
@@ -204,6 +204,16 @@ them accurate, but do not let them override the core working rules above.
   historical v3.11 SIL function table. Phil Budne's later CSNOBOL4 SIL lists
   `REVERSE(S)` as a `[PLB37]` addition, so supporting this sample should be
   treated as a separate, explicitly annotated library/SIL feature decision.
+- A no-`REVERSE` palindrome implementation in `tmp/palindromes2.sno` runs
+  correctly with external input. This exercises `INPUT`, `TRIM`, `LEN(1)`
+  pattern matching with named assignment, replacement/deletion, concatenation,
+  `IDENT`, success/failure branching, and looping:
+  ```sh
+  printf "LEVEL\nHELLO\nRADAR\nABLE WAS I ERE I SAW ELBA\n" > tmp/palindromes-input.txt
+  node run.js --file=tmp/palindromes2.sno --input=tmp/palindromes-input.txt --maxSteps=100000 --maxMillis=1000
+  ```
+  Expected visible output classifies `LEVEL`, `RADAR`, and
+  `ABLE WAS I ERE I SAW ELBA` as palindromes and `HELLO` as not a palindrome.
 - FORTRAN-style carriage-control characters in formatted runtime output are
   interpreted for terminal display instead of being printed literally. The SIL
   formats still contain historically accurate leading `1`, `0`, `+`, and space
@@ -244,8 +254,18 @@ concatenation, minimal pattern replacement, pattern failure goto, combined
 pattern success/failure gotos, and failed replacement branching all visibly
 work. The standard-SNOBOL 99-bottles loop and `tmp/woof.sno` pattern-valued
 alternation with named substring assignment are also complete under the
-required guards. The next goal is to broaden behavior one small step at a time
-and keep each success covered by a focused integration test.
+required guards. Runtime `INPUT` works with `--input`, and the no-`REVERSE`
+palindrome sample runs correctly with a text file of input lines.
+
+The recommended next target is runtime statistics. Visible execution now works
+for reads, writes, loops, pattern matches, and arithmetic, but the historical
+summary still reports zero statements, reads, writes, arithmetic operations,
+and pattern matches in many successful runs. Start with the smallest visible
+counters, likely `RSTAT`/reads and `WSTAT`/writes, then broaden only after
+tracing where the v3.11 SIL expects each counter to be incremented.
+
+Keep broadening behavior one small step at a time and keep each success covered
+by a focused integration test.
 
 Recommended progression:
 1. Multiple literal output statements: complete, covered by `2ccfd4b`.
@@ -360,8 +380,10 @@ required guards, then add or extend a focused integration test only after the
 runtime behavior is understood.
 
 Known areas still worth checking:
-- Runtime statistics still report zero statements and zero writes for the
-  minimal output program even though visible output occurs.
+- Runtime statistics still report zero statements, reads, writes, arithmetic
+  operations, and pattern matches in programs that visibly perform those
+  actions. The next focused target is to make the summary counters reflect
+  successful runtime behavior without disturbing the SIL control flow.
 - `STPRNT` and `OUTPUT` now interpret line-printer carriage control, but they
   are still minimal JavaScript implementations of FORTRAN-like formatting.
   Exercise more formats before broadening behavior.
