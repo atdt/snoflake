@@ -1,0 +1,30 @@
+* @title chapter 1 string concatenation, coercion, and null variables
+* @expect >>>
+* CONCATENATION
+* ONE,TWO,THREE
+* ABC
+* BEGINNING AND END.
+* 3 DOG NIGHT
+* 194
+* EGGSHELL
+*
+* EGGSHELL
+* 60
+* EGG17
+* <<<
+ OUTPUT = 'CONCAT' 'ENATION'
+ OUTPUT = 'ONE,' 'TWO,' 'THREE'
+ OUTPUT = 'A'                 'B'       'C'
+ OUTPUT = 'BEGINNING '   'AND '   'END.'
+ OUTPUT = (20 - 17)  ' DOG NIGHT'
+ OUTPUT = 19  (12 / 3)
+ ABC = 'EGG'
+ D = 'SHELL'
+ OUTPUT = ABC D
+ OUTPUT = NONESUCH
+ OUTPUT = ABC NULL D
+ N1 = 43
+ D = 17
+ OUTPUT = N1 + D
+ OUTPUT = ABC D
+END

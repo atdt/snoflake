@@ -1,0 +1,11 @@
+* @title chapter 1 default case folding of variable and OUTPUT names
+* @expect >>>
+* EGGSHELL
+* EGG17
+* <<<
+ ABC = 'EGG'
+ D = 'SHELL'
+ OUTPUT = abc d
+ D = 17
+ output = ABC D
+END

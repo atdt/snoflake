@@ -1,0 +1,207 @@
+# Program-level test convention
+
+`test/programs/` holds end-to-end SNOBOL test programs. Each `*.sno` file is a
+single test case: a runnable SNOBOL program with an embedded header that
+declares the test's title, runtime options, optional stdin, expected output,
+and match mode. The mocha runner at `test/test-programs.js` enumerates the
+directory and emits one `it(...)` per file.
+
+These tests complement the focused unit tests in `test/test-*.js`. Use a
+program-level test when the behavior under test is observable only by running
+a full SNOBOL program through `run.js`; use a focused unit test when the
+behavior can be exercised at a single macro or helper.
+
+## File format
+
+Each `.sno` file starts with a header consisting of contiguous SNOBOL comment
+lines (`*` in column 1). The header ends at the first non-comment line.
+Everything below is the SNOBOL program and runs unmodified under
+`node run.js --file=test/programs/<name>.sno --maxSteps=100000 --maxMillis=1000`.
+
+Header lines take one of two forms.
+
+**Single-line directive.** The value is the rest of the line, trimmed.
+
+```
+* @key value
+```
+
+**Multi-line block.** Each line inside the block is `* ` followed by payload;
+the runner strips the leading `* ` (or bare `*` for an empty payload line) and
+preserves the rest verbatim.
+
+```
+* @key >>>
+*   payload line 1
+*   payload line 2
+* <<<
+```
+
+An unrecognized `@key` is a parse error, so typos surface early instead of
+silently dropping expectations.
+
+## Directives
+
+| Directive  | Form       | Required                          | Purpose                                                   |
+|------------|------------|-----------------------------------|-----------------------------------------------------------|
+| `@title`   | single     | yes                               | Used as the mocha test name.                              |
+| `@options` | single     | no                                | JSON object merged into `run.js`'s options.               |
+| `@input`   | multi-line | no                                | Lines written to a tmp file; runner wires up `input` opt. |
+| `@expect`  | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                          |
+| `@match`   | single     | no                                | `exact` (default), `substring`, or `error`.               |
+
+### `@options`
+
+JSON object. As a matter of convention, keep this on one line.
+
+Validation enforced by the runner:
+
+- Must parse as a JSON object. Arrays, strings, numbers, booleans, and
+  `null` are rejected.
+- The runner injects the AGENTS.md-mandated guards
+  `{"maxSteps": 100000, "maxMillis": 1000}` first, then merges the test's
+  `@options` on top. The merged values are then clamped: `maxSteps` must be
+  `> 0` and `<= 100000`; `maxMillis` must be `> 0` and `<= 1000`. Higher
+  values are rejected outright (no silent capping). Tests may freely lower
+  the guards.
+- `file` is reserved for the runner (which sets it to the fixture path) and
+  is rejected if present in `@options`.
+- `input` is rejected in `@options`. Inline `@input` blocks are the only
+  supported way to feed runtime `INPUT(...)` reads, which keeps tests
+  hermetic.
+
+Other recognized keys (`caseFold`, `debug`, `watch`, …) are passed through to
+`SNOBOL.VM(options)` exactly as `run.js` does today.
+
+### `@input`
+
+The inline `@input` block is the only supported way to feed runtime
+`INPUT(...)` reads. If present, the block payload is written to a tmp file
+and the runner sets `"input": "<path>"` in the merged options object. Tests
+without an `@input` block should not reference `INPUT`. The runner rejects
+`input` in `@options` (see above), so `@input` and `@options.input` cannot
+coexist.
+
+### `@expect` block contents
+
+Each line inside the block contributes one logical line of expected output.
+The runner strips the leading `* ` (or bare `*` for an empty payload line)
+and joins the payloads with `\n`, then appends a single trailing `\n`. So:
+
+```
+* @expect >>>
+* A
+* <<<
+```
+
+means `"A\n"`. To express a trailing blank line, include an explicit empty
+payload:
+
+```
+* @expect >>>
+* A
+*
+* <<<
+```
+
+means `"A\n\n"`. Interior blank lines are preserved verbatim; only the final
+newline of the actual output is normalized when comparing.
+
+### `@match`
+
+Match modes:
+
+- **`exact`** (default): the `@expect` block must equal the *data section* of
+  `run.js`'s stdout. The data section runs from the line after the
+  `NO ERRORS DETECTED IN SOURCE PROGRAM` banner up to the line before the
+  `NORMAL TERMINATION AT LEVEL` epilogue. The runner anchors on the *last*
+  `NORMAL TERMINATION AT LEVEL` occurrence after the success banner so a
+  program that prints the phrase itself does not truncate the data section.
+  Interior blank lines are preserved; only the final trailing newline of the
+  captured section is normalized before comparison.
+
+  In this mode the runner also asserts that none of the recognized error
+  markers appear anywhere in stdout.
+
+- **`substring`**: the `@expect` block must appear as a contiguous substring
+  anywhere in `run.js`'s full stdout. Useful when banner extraction is
+  brittle or the test is intentionally loose. The same error-marker check
+  applies as in `exact`.
+
+- **`error`**: assert the run *did* produce one of the recognized error
+  markers. If `@expect` is present, it is matched as a substring against the
+  captured stdout/stderr.
+
+#### Recognized error markers
+
+The same fixed list is used for both the negative check in `exact`/`substring`
+and the positive check in `error`:
+
+- `ERROR IN SNOBOL4 SYSTEM`
+- `Compilation error`
+- `Execution error`
+- `Aborting: exceeded`
+
+Adding a new marker is a deliberate change to the runner, not something
+tests can introduce ad hoc.
+
+On mismatch, the runner dumps full actual output to
+`tmp/test-programs/<name>.actual` and references the path in the assertion
+message.
+
+## Examples
+
+Simple case:
+
+```snobol
+* @title chapter 1 integer arithmetic precedence
+* @expect >>>
+* -1
+* 28
+* 1
+* 243
+* 256
+* <<<
+ OUTPUT = 3 - 6 + 2
+ OUTPUT = 2 * (10 + 4)
+ OUTPUT = 7 / 4
+ OUTPUT = 3 ** 5
+ OUTPUT = (2 ** 2) ** 3
+END
+```
+
+Input plus runtime options:
+
+```snobol
+* @title chapter 3 input copy loop, no case folding
+* @options {"caseFold": false}
+* @input >>>
+* alpha
+* Beta
+* GAMMA
+* <<<
+* @expect >>>
+* alpha
+* Beta
+* GAMMA
+* <<<
+LOOP    LINE = TRIM(INPUT)              :F(DONE)
+        OUTPUT = LINE                   :(LOOP)
+DONE
+END
+```
+
+Error-path test:
+
+```snobol
+* @title undefined function call reports execution error
+* @match error
+* @expect ERROR IN SNOBOL4 SYSTEM
+ OUTPUT = NOSUCH(1)
+END
+```
+
+## Running
+
+`npm test` picks up `test/test-programs.js` along with the rest of the suite.
+Each `.sno` file becomes one mocha `it(...)` named by its `@title`.

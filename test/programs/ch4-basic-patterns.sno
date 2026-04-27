@@ -1,0 +1,18 @@
+* @title chapter 4 literal pattern alternation and captured substrings
+* @expect >>>
+* BLUE
+* BIRD
+* <<<
+ B = 'THE BLUEBIRD'
+ B 'FISH' :S(BAD)F(OK1)
+OK1 B 'FISH' | 'BIRD' :S(OK2)F(BAD)
+OK2 B ('GOLD' | 'BLUE') ('FISH' | 'BIRD') :S(OK3)F(BAD)
+OK3 COLOR = ('GOLD' | 'BLUE') . SHADE
+ CRITTER = ('FISH' | 'BIRD') . ANIMAL
+ BOTH = COLOR CRITTER
+ B BOTH :F(BAD)
+ OUTPUT = SHADE
+ OUTPUT = ANIMAL
+ :(END)
+BAD OUTPUT = 'BAD'
+END

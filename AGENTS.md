@@ -62,7 +62,9 @@ temporary debugging notes below.
     translation; local SIL fixes belong here.
 - `js/`: runtime; entry point is `js/snobol.js`, core modules are under
   `js/SNOBOL/`.
-- `test/`: Mocha tests.
+- `test/`: Mocha tests. Focused macro/runtime/syntax tests live as
+  `test/test-*.js`; end-to-end SNOBOL program tests live as `*.sno` fixtures
+  under `test/programs/` (see `test/programs/README.md`).
 - `tmp/`: scratch programs and logs.
 
 ## Project Map
@@ -88,6 +90,11 @@ temporary debugging notes below.
   emit `js/SNOBOL/snobol.sil.js`.
 - `test/test-sil.js`, `test/test-runtime.js`, `test/test-syntax.js`: focused
   macro/runtime/syntax coverage.
+- `test/programs/`: end-to-end SNOBOL program tests. Each `*.sno` is a
+  runnable program with an embedded `*` comment header declaring `@title`,
+  optional `@options` (single-line JSON), optional `@input` block, `@expect`
+  block, and `@match` mode. Driven by `test/test-programs.js`. Convention
+  documented in `test/programs/README.md`.
 - `SIL-CHANGES.md`: notes on candidate fixes from later CSNOBOL4 SIL.
 - `tmp/`: scratch SNOBOL programs, probes, and logs. Do not commit contents.
 
@@ -101,6 +108,8 @@ temporary debugging notes below.
 ## Development Rules
 - JavaScript style: CommonJS modules, `"use strict"`, 4-space indentation.
 - Prefer focused tests in `test/test-*.js` for changed macro/runtime behavior.
+  Use a program-level fixture under `test/programs/` only when the behavior
+  is observable solely by running a full SNOBOL program through `run.js`.
 - Use `rg` for searching.
 - Comments should be tasteful and useful. Prefer comments that illuminate
   complex code, representation mismatches, historical computing conventions,

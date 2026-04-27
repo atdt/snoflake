@@ -1,0 +1,22 @@
+* @title chapter 4 primitive and integer pattern function examples
+* @expect >>>
+* TER WINDS
+* UNT
+*
+* ABC
+* CD
+* CDA
+* D
+* AB
+* CD
+* <<<
+ 'THE WINTER WINDS' 'WIN' REM . OUTPUT
+ 'MOUNTAIN' 'O' ARB . OUTPUT 'A'
+ 'MOUNTAIN' 'O' ARB . OUTPUT 'U'
+ S = 'ABCDA'
+ S LEN(3) . OUTPUT
+ S LEN(2) . OUTPUT 'A'
+ S LEN(3) . OUTPUT RPOS(0)
+ S POS(3) LEN(1) . OUTPUT
+ 'ABCDE' TAB(2) . OUTPUT RTAB(1) . OUTPUT
+END

@@ -1,0 +1,33 @@
+* @title chapter 2 predicate function success and failure examples
+* @expect >>>
+* EQ
+* IDENT
+* EQ2
+* NE
+* INTEGER
+* DIFFER
+* IDENT2
+* OK
+* <<<
+ N = 3
+ OUTPUT = EQ(N, 3) 'EQ' :F(BAD1)
+ OUTPUT = IDENT(N, 3) 'IDENT' :F(BAD2)
+ OUTPUT = EQ(3, "3") "EQ2" :F(BAD3)
+ OUTPUT = IDENT(3, "3") "BAD" :S(BAD4)F(OK1)
+OK1 OUTPUT = NE(N, 4) 'NE' :F(BAD5)
+ OUTPUT = INTEGER('47') 'INTEGER' :F(BAD6)
+ OUTPUT = DIFFER('ABC', 'abc') 'DIFFER' :F(BAD7)
+ OUTPUT = IDENT('a' 'b' 'c', 'abc') 'IDENT2' :F(BAD8)
+ OUTPUT = LGT('ABC', 'ABD') 'BAD' :S(BAD9)F(OK2)
+OK2 OUTPUT = 'OK'
+ :(END)
+BAD1 OUTPUT = 'BAD1'
+BAD2 OUTPUT = 'BAD2'
+BAD3 OUTPUT = 'BAD3'
+BAD4 OUTPUT = 'BAD4'
+BAD5 OUTPUT = 'BAD5'
+BAD6 OUTPUT = 'BAD6'
+BAD7 OUTPUT = 'BAD7'
+BAD8 OUTPUT = 'BAD8'
+BAD9 OUTPUT = 'BAD9'
+END

@@ -1,0 +1,24 @@
+* @title chapter 1 integer arithmetic precedence and associativity
+* @expect >>>
+* -1
+* 28
+* 1
+* 243
+* 1
+* 25
+* 3
+* 12
+* 256
+* 64
+* <<<
+ OUTPUT = 3 - 6 + 2
+ OUTPUT = 2 * (10 + 4)
+ OUTPUT = 7 / 4
+ OUTPUT = 3 ** 5
+ OUTPUT = 10 / 2 * 5
+ OUTPUT = (10 / 2) * 5
+ OUTPUT = 24 / 4 / 2
+ OUTPUT = 24 / (4 / 2)
+ OUTPUT = 2 ** 2 ** 3
+ OUTPUT = (2 ** 2) ** 3
+END

@@ -1,0 +1,18 @@
+* @title chapter 4 character pattern function examples
+* @expect >>>
+* A
+* A
+* UU
+* AC
+* SAMPLE
+* TEN
+* -43
+* <<<
+ 'ABC' ANY('A') . OUTPUT
+ 'ABC' NOTANY('BC') . OUTPUT
+ 'UUA' SPAN('U') . OUTPUT
+ 'ACB' SPAN('AC') . OUTPUT
+ 'SAMPLE,TEN' BREAK(',') . OUTPUT
+ 'SAMPLE,TEN,' BREAK(',') LEN(1) BREAK(',') . OUTPUT
+ 'X-43Y' BREAK('-') (LEN(1) SPAN('0123456789')) . OUTPUT
+END

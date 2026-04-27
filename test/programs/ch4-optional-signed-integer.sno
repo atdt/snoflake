@@ -1,0 +1,8 @@
+* @title chapter 4 optional signed integer composed pattern
+* @expect >>>
+* -43
+* <<<
+ DIGITS = '0123456789'
+ INTEGER = (ANY('+-') | '') SPAN(DIGITS)
+ 'SET -43 VOLTS' INTEGER . OUTPUT
+END

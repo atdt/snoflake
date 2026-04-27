@@ -1,0 +1,14 @@
+* @title chapter 2 string function examples including REPLACE
+* @expect >>>
+* ABCABCABC
+* 5
+* 0
+* TRAILING BLANKSGONE
+* sPOOn
+* <<<
+ OUTPUT = DUPL('ABC', 3)
+ OUTPUT = SIZE('ZIPPY')
+ OUTPUT = SIZE('')
+ OUTPUT = TRIM('TRAILING BLANKS  ') 'GONE'
+ OUTPUT = REPLACE('spoon','po','PO')
+END
