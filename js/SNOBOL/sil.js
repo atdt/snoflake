@@ -307,7 +307,7 @@ sil.ADDLG = function ( $SPEC, $DESCR ) {
     var SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR );
 
-    assert( DESCR.addr > 0 );
+    assert( DESCR.addr >= 0 );
     SPEC.length += DESCR.addr;
 };
 

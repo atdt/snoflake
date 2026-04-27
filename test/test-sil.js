@@ -1042,6 +1042,15 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s.length, 123 + 5 );
     } );
 
+    it( 'ADDLG accepts a zero increment', function () {
+        var s = this.vm.s(),
+            d = this.vm.d();
+        s.length = 123;
+        d.addr = 0;
+        sil.ADDLG.call( this.vm, s, d );
+        assert.equal( s.length, 123 );
+    } );
+
     it( 'APDSP', function () {
         var s1 = this.vm.s( sil.STRING.call( this.vm, 'supercalifragilistic' ) );
         this.vm.alloc( 50 );
