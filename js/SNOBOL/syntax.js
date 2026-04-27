@@ -91,7 +91,11 @@ var characterClasses = {
 };
 
 SNOBOL.match = function ( characterClass, char ) {
-    return characterClasses[ characterClass ].test( char );
+    if ( characterClasses[ characterClass ] ) {
+        return characterClasses[ characterClass ].test( char );
+    }
+
+    return characterClass === char;
 };
 
 SNOBOL.syntaxTables = {

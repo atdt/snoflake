@@ -1252,12 +1252,43 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         this.vm = new SNOBOL.VM();
     } );
 
-    it( 'CLERTB', function () { // stub
-        assert( sil.CLERTB );
+    it( 'CLERTB resolves a table id and fills character entries', function () {
+        var original = SNOBOL.syntaxTables.SNABTB;
+
+        try {
+            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), this.vm.$( 'ERROR' ) );
+
+            assert( SNOBOL.syntaxTables.SNABTB.length >= SNOBOL.programSymbols.ALPHSZ );
+            assert( SNOBOL.syntaxTables.SNABTB.every( function ( entry ) {
+                return entry[2] === 'ERROR';
+            } ) );
+        } finally {
+            SNOBOL.syntaxTables.SNABTB = original;
+        }
     } );
 
-    it( 'PLUGTB', function () { // stub
-        assert( sil.PLUGTB );
+    it( 'PLUGTB updates the entries selected by a specifier', function () {
+        var original = SNOBOL.syntaxTables.SNABTB,
+            spec = this.vm.s( sil.STRING.call( this.vm, 'AZ' ) ),
+            table;
+
+        try {
+            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), this.vm.$( 'ERROR' ) );
+            sil.PLUGTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), this.vm.$( 'STOP' ), spec );
+            table = SNOBOL.syntaxTables.SNABTB;
+
+            assert.equal( table.find( function ( entry ) {
+                return entry[0] === 'A';
+            } )[2], 'STOP' );
+            assert.equal( table.find( function ( entry ) {
+                return entry[0] === 'Z';
+            } )[2], 'STOP' );
+            assert.equal( table.find( function ( entry ) {
+                return entry[0] === 'B';
+            } )[2], 'ERROR' );
+        } finally {
+            SNOBOL.syntaxTables.SNABTB = original;
+        }
     } );
 } );
 

@@ -95,6 +95,10 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
         return val;
     }
 
+    if ( key === 'CONTIN' || key === 'ERROR' || key === 'STOP' || key === 'STOPSH' ) {
+        return key;
+    }
+
     // Fallback to programSymbols to support direct macro testing
     // without running the generated SIL to bind symbols into memory.
     if ( SNOBOL.programSymbols && SNOBOL.programSymbols.hasOwnProperty( key ) ) {

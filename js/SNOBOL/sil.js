@@ -817,10 +817,38 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 // Programming Notes:
 // 1.  See Section 4.2.
 // 2.  See also PLUGTB.
+function syntaxTableName( TABLE ) {
+    if ( typeof TABLE === 'number' ) {
+        return SNOBOL.tableNames[ TABLE ];
+    }
+
+    return TABLE;
+}
+
+function syntaxTable( TABLE ) {
+    if ( Array.isArray( TABLE ) ) {
+        return TABLE;
+    }
+
+    return SNOBOL.syntaxTables[ syntaxTableName( TABLE ) ];
+}
+
 sil.CLERTB = function ( TABLE, KEY ) {
     // clear syntax table
-    for ( var i = 0; i < TABLE.length; i++ ) {
-        TABLE[i][2] = KEY;
+    var tableName = syntaxTableName( TABLE ),
+        table = syntaxTable( TABLE ),
+        chars = SNOBOL.programSymbols.ALPHA;
+
+    if ( tableName ) {
+        table = SNOBOL.syntaxTables[ tableName ] = chars
+            .split( '' )
+            .map( function ( ch ) {
+                return [ ch, null, KEY ];
+            } );
+    } else {
+        for ( var i = 0; i < table.length; i++ ) {
+            table[i][2] = KEY;
+        }
     }
 };
 
@@ -2833,9 +2861,21 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
 // 2.  See also CLERTB.
 sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
     // plug syntax table
-    var SPEC = this.s( $SPEC );
-    for ( var i = 0; i < Math.min( SPEC.length, TABLE.length ); i++ ) {
-        TABLE[i][2] = KEY;
+    var SPEC = this.s( $SPEC ),
+        table = syntaxTable( TABLE ),
+        index = Object.create( null ),
+        i,
+        ch;
+
+    for ( i = 0; i < table.length; i++ ) {
+        index[ table[i][0] ] = table[i];
+    }
+
+    for ( i = 0; i < SPEC.length; i++ ) {
+        ch = String.fromCharCode( this.mem[ SPEC.addr + SPEC.offset + i ] );
+        if ( index[ ch ] ) {
+            index[ ch ][2] = KEY;
+        }
     }
 };
 
