@@ -95,6 +95,9 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
         return val;
     }
 
+    // STREAM table indicators are SIL macro constants, not labels.  The
+    // translator currently represents all bare operands as vm.$(...), so keep
+    // these documented CLERTB/PLUGTB KEY values as literal control actions.
     if ( key === 'CONTIN' || key === 'ERROR' || key === 'STOP' || key === 'STOPSH' ) {
         return key;
     }
