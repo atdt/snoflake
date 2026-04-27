@@ -80,15 +80,20 @@ SNOBOL.str = {
             template = template.slice(start + 1, end);
         }
 
-        // Normalize data: allow string or array of descriptors/values.
+        // Data arrives as a string from STPRNT (character data for A format)
+        // or as an array of descriptors from OUTPUT (numeric fields for I/F).
         var strData = '';
+        var descrData = null;
+        var descrIdx = 0;
         if (typeof data === 'string') {
             strData = data;
+        } else if (Array.isArray(data) && data.length > 0 && data[0] && typeof data[0] === 'object' && 'addr' in data[0]) {
+            descrData = data;
         } else if (Array.isArray(data)) {
-            // Join string-like items; for numeric formats, code below can be extended if needed.
             strData = data.map(String).join('');
+        } else if (data && typeof data === 'object' && 'addr' in data) {
+            descrData = [ data ];
         } else if (data && typeof data === 'object') {
-            // Descriptor-like
             strData = String(data.specified || data.addr || '');
         }
         var pos = 0;
@@ -99,60 +104,68 @@ SNOBOL.str = {
             pos += n;
             return s;
         }
+        function nextDescr() {
+            if (descrData && descrIdx < descrData.length) {
+                return descrData[descrIdx++];
+            }
+            return null;
+        }
         function skipSpaces() {
             while (i < template.length && /[\s,]/.test(template[i])) i++;
         }
+
+        // Parse a run of decimal digits at the current template position,
+        // advancing past them. Returns 0 if no digits are present.
+        function parseDigits() {
+            var m = /^(\d+)/.exec(template.slice(i));
+            if (!m) return 0;
+            i += m[1].length;
+            return parseInt(m[1], 10);
+        }
+
         while (i < template.length) {
             skipSpaces();
             if (i >= template.length) break;
-            if (template[i] === '/') { out += '\n'; i++; continue; }
 
-            // Parse repeat count (optional)
-            var m, rep = 1;
-            m = /^(\d+)/.exec(template.slice(i));
-            if (m) { rep = parseInt(m[1], 10); i += m[1].length; }
+            if (template[i] === '/') {
+                out += '\n';
+                i++;
+                continue;
+            }
 
+            var rep = parseDigits() || 1;
             var code = template[i++];
+
             if (code === 'H') {
-                // repHtext
-                var text = template.slice(i, i + rep);
-                out += text;
+                // Hollerith literal: rep is the character count.
+                out += template.slice(i, i + rep);
                 i += rep;
-                continue;
-            }
-            if (code === 'X') {
+            } else if (code === 'X') {
                 out += pad('', rep, 'left', ' ');
-                continue;
-            }
-            if (code === 'A') {
-                // width after A
-                m = /^(\d+)/.exec(template.slice(i));
-                var w = m ? (i += m[1].length, parseInt(m[1], 10)) : 0;
+            } else if (code === 'A') {
+                var aw = parseDigits();
                 for (var r = 0; r < rep; r++) {
-                    var s = w ? take(w) : strData.slice(pos);
-                    out += s;
+                    out += aw ? take(aw) : strData.slice(pos);
                 }
-                continue;
-            }
-            if (code === 'I') {
-                m = /^(\d+)/.exec(template.slice(i));
-                var iw = m ? (i += m[1].length, parseInt(m[1], 10)) : 0;
-                // Minimal: consume one integer from data (not robust). Pad left to width.
-                var val = parseInt(strData.slice(pos), 10) || 0;
-                var text = String(val);
-                out += iw ? pad(text, iw) : text;
-                continue;
-            }
-            if (code === 'F') {
-                m = /^(\d+)(?:\.(\d+))?/.exec(template.slice(i));
-                var fw = 0, fd = 0;
-                if (m) { i += m[0].length; fw = parseInt(m[1], 10); fd = m[2] ? parseInt(m[2], 10) : 0; }
-                var fval = parseFloat(strData.slice(pos)) || 0;
+            } else if (code === 'I') {
+                var iw = parseDigits();
+                // Consume the next descriptor's address field, or fall back to string data.
+                var descr = nextDescr();
+                var val = descr ? descr.addr : (parseInt(strData.slice(pos), 10) || 0);
+                out += pad(String(val), iw);
+            } else if (code === 'F') {
+                var fw = parseDigits();
+                var fd = 0;
+                if (template[i] === '.') {
+                    i++;
+                    fd = parseDigits();
+                }
+                // Consume the next descriptor's real-typed address field, or fall back to string data.
+                var descr = nextDescr();
+                var fval = descr ? descr.raddr : (parseFloat(strData.slice(pos)) || 0);
                 var ftxt = fd ? fval.toFixed(fd) : String(fval);
-                out += fw ? pad(ftxt, fw) : ftxt;
-                continue;
+                out += pad(ftxt, fw);
             }
-            // Unknown code: skip one char to avoid infinite loop
         }
         return out;
     }
