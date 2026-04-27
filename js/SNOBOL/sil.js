@@ -3521,8 +3521,31 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
 // priate error comment.
 sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
     // replace characters
-    throw new Error( 'RPLACE is undefined' );
-    this.jmp( 'UNDF' );  // XXX
+    var SPEC1 = this.s( $SPEC1 ),
+        SPEC2 = this.s( $SPEC2 ),
+        SPEC3 = this.s( $SPEC3 ),
+        targetStart = SPEC1.addr + SPEC1.offset,
+        sourceStart = SPEC2.addr + SPEC2.offset,
+        replacementStart = SPEC3.addr + SPEC3.offset,
+        replacements = new Map(),
+        target,
+        from,
+        to,
+        i;
+
+    for ( i = 0; i < SPEC2.length; i++ ) {
+        from = this.mem[ sourceStart + i ];
+        to = this.mem[ replacementStart + i ];
+        replacements.set( from, to );
+    }
+
+    for ( i = 0; i < SPEC1.length; i++ ) {
+        target = targetStart + i;
+        from = this.mem[ target ];
+        if ( replacements.has( from ) ) {
+            this.mem[ target ] = replacements.get( from );
+        }
+    }
 };
 
 //     RRTURN  is used to return from a recursive call.  DESCR

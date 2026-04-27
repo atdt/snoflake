@@ -1618,8 +1618,55 @@ describe( 'Miscellaneous Macros', function () {
         assert( sil.ORDVST ); 
     } );
 
-    it( 'RPLACE', function () { // stub
-        assert( sil.RPLACE ); 
+    it( 'RPLACE replaces characters in place', function () {
+        var target = this.vm.s( sil.STRING.call( this.vm, 'spoon' ) ),
+            from = this.vm.s( sil.STRING.call( this.vm, 'po' ) ),
+            to = this.vm.s( sil.STRING.call( this.vm, 'PO' ) );
+
+        sil.RPLACE.call( this.vm, target, from, to );
+
+        assert.equal( target.specified, 'sPOOn' );
+    } );
+
+    it( 'RPLACE uses the last replacement for duplicate source characters', function () {
+        var target = this.vm.s( sil.STRING.call( this.vm, 'banana' ) ),
+            from = this.vm.s( sil.STRING.call( this.vm, 'anab' ) ),
+            to = this.vm.s( sil.STRING.call( this.vm, 'ANXY' ) );
+
+        sil.RPLACE.call( this.vm, target, from, to );
+
+        assert.equal( target.specified, 'YXNXNX' );
+    } );
+
+    it( 'RPLACE leaves a zero-length target unchanged', function () {
+        var target = this.vm.s( sil.STRING.call( this.vm, 'abc' ) ),
+            from = this.vm.s( sil.STRING.call( this.vm, 'abc' ) ),
+            to = this.vm.s( sil.STRING.call( this.vm, 'ABC' ) );
+
+        target.length = 0;
+        sil.RPLACE.call( this.vm, target, from, to );
+
+        assert.equal( target.length, 0 );
+        assert.equal( this.vm.mem[ target.addr ], 'a'.charCodeAt( 0 ) );
+    } );
+
+    it( 'RPLACE respects specifier offsets and lengths', function () {
+        var target = this.vm.s( sil.STRING.call( this.vm, 'xxabcdefxx' ) ),
+            from = this.vm.s( sil.STRING.call( this.vm, '_bcd_' ) ),
+            to = this.vm.s( sil.STRING.call( this.vm, '_BCD_' ) );
+
+        target.offset = 2;
+        target.length = 6;
+        from.offset = 1;
+        from.length = 3;
+        to.offset = 1;
+        to.length = 3;
+
+        sil.RPLACE.call( this.vm, target, from, to );
+
+        target.offset = 0;
+        target.length = 10;
+        assert.equal( target.specified, 'xxaBCDefxx' );
     } );
 
     it( 'SPCINT', function () {
