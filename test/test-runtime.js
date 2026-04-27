@@ -436,6 +436,53 @@ describe( 'SNOBOL Program Execution', function () {
         assert( output.includes( '\nALPHA\nBETA\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'case-folds source names, labels, and built-in variable names by default', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-case-fold-default.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " abc = 'EGG'\n d = 'SHELL'\n output = abc d\n :(done)\n output = 'BAD'\nDone output = 'OK'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-case-fold-default.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nEGGSHELL\nOK\n' ) );
+        assert( !output.includes( '\nBAD\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
+    it( 'can disable source name and label case folding', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-case-fold-disabled.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file, " ABC = 'UP'\n abc = 'LOW'\n OUTPUT = ABC\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-case-fold-disabled.sno',
+            '--caseFold=false',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nUP\n' ) );
+        assert( !output.includes( '\nLOW\n' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {

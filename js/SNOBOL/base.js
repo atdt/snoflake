@@ -9,6 +9,8 @@ var SNOBOL = {
         maxSteps: 0,
         // Stop after this many milliseconds (0/undefined to disable)
         maxMillis: 0,
+        // Fold SNOBOL source names and labels to uppercase during compilation.
+        caseFold: true,
     },
     log: function () {
         if ( SNOBOL.options.debug ) {

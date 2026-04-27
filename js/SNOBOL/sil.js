@@ -95,6 +95,34 @@ function fileRole( unitNum ) {
     return 'source';
 }
 
+function caseFoldEnabled() {
+    return SNOBOL.options.caseFold !== false &&
+        SNOBOL.options.caseFold !== 'false' &&
+        SNOBOL.options.caseFold !== 0 &&
+        SNOBOL.options.caseFold !== '0';
+}
+
+function foldSpecifierAsciiUpper( vm, SPEC, length ) {
+    var start = SPEC.addr + SPEC.offset,
+        end = start + length,
+        c;
+
+    for ( var p = start; p < end; p++ ) {
+        c = vm.mem[ p ];
+        if ( c >= 97 && c <= 122 ) {
+            vm.mem[ p ] = c - 32;
+        }
+    }
+}
+
+function isFoldableStreamTable( tableName ) {
+    return tableName === 'LBLTB' ||
+        tableName === 'LBLXTB' ||
+        tableName === 'VARTB' ||
+        tableName === 'VARATB' ||
+        tableName === 'VARBTB';
+}
+
 function stackPopper( dataType ) {
     return function ( ARGs ) {
         var src, dst, arg;
@@ -4333,7 +4361,8 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         J,  // J is the smallest value of I for which TI is STOP or STOPSH
         ch, // The current character
         TI, // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
-        t;  // The table row (rule) index that we are currently applying
+        t,  // The table row (rule) index that we are currently applying
+        tableName;
 
     var P = 0,
         A = SPEC2.addr,
@@ -4348,7 +4377,14 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
     }
 
+    tableName = SNOBOL.tableNames[ TABLE ];
     var table = getTableById( TABLE );
+
+    function maybeFoldToken( length ) {
+        if ( caseFoldEnabled() && isFoldableStreamTable( tableName ) ) {
+            foldSpecifierAsciiUpper( this, SPEC1, length );
+        }
+    }
 
     for ( I = 1; I <= str.length; I++ ) {
         J = I;
@@ -4373,6 +4409,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         case 'STOPSH':
             STYPE.addr = P;
             SPEC1.update( A, F, V, O, J - 1 );
+            maybeFoldToken.call( this, J - 1 );
             SPEC2.update( A, F, V, O + J - 1, L - J + 1 );
             this.jmp( SLOC );
             return;
@@ -4380,6 +4417,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         case 'STOP':
             STYPE.addr = P;
             SPEC1.update( A, F, V, O, J );
+            maybeFoldToken.call( this, J );
             SPEC2.update( A, F, V, O + J, L - J );
             this.jmp( SLOC );
             return;
@@ -4400,6 +4438,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         default:
             // GOTO
             assert( TI in SNOBOL.syntaxTables );
+            tableName = TI;
             table = SNOBOL.syntaxTables[ TI ];
         }
     }
@@ -4407,6 +4446,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     SNOBOL.log( 'STREAM runout TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
     STYPE.addr = P;
     SPEC1.update( A, F, V, O, L );
+    maybeFoldToken.call( this, L );
     SPEC2.update( A, F, V, O, 0 );
     this.jmp( RUNOUT );
 };
