@@ -33,7 +33,7 @@ probes. It is a guide for surgical, evidence-backed fixes; do not treat
 `external/snobol4-v311.sil` as a replacement baseline or port modern CSNOBOL4
 features wholesale.
 
-## Core Working Rules
+## Rules & Workflow
 These are the durable project rules. Treat them as more important than any
 temporary debugging notes below.
 
@@ -50,53 +50,35 @@ temporary debugging notes below.
 - Avoid ingesting huge runtime output. Redirect probe output to `tmp/`, check
   size with `wc`, and inspect targeted excerpts with `tail`, `head`, and `rg`.
 - Keep scratch programs and logs in `tmp/`; do not commit them.
-- Commit each logical fix separately with a clear, expressive message. Do not
-  mix probe artifacts, unrelated cleanup, and behavior changes in one commit.
-- Do not revert unrelated dirty or untracked files.
+- Commit each logical fix separately with an imperative subject. The body should
+  explain why the change is correct, what evidence supports it, and which
+  macro/spec invariant it preserves.
+- JavaScript style: CommonJS modules, `"use strict"`, 4-space indentation.
+- Prefer focused tests in `test/test-*.js` for changed macro/runtime behavior.
+  Use program-level fixtures under `test/programs/` only when necessary.
+- Comments should be tasteful and useful. Prefer comments that illuminate
+  complex code, representation mismatches, historical conventions, or SIL
+  quirks. Avoid narrating obvious assignments.
 
-## Layout
-- `src/`: SIL parser and translator (`sil.peg`, `translate.js`).
-- `external/`: upstream SIL and syntax-table sources.
-  - `external/v311.sil`: historical reference source.
-  - `external/v311-snoflake.sil`: snoflake's working SIL input for
-    translation; local SIL fixes belong here.
-- `js/`: runtime; entry point is `js/snobol.js`, core modules are under
-  `js/SNOBOL/`.
-- `test/`: Mocha tests. Focused macro/runtime/syntax tests live as
-  `test/test-*.js`; end-to-end SNOBOL program tests live as `*.sno` fixtures
-  under `test/programs/` (see `test/programs/README.md`).
-- `tmp/`: scratch programs and logs.
-
-## Project Map
-- `run.js`: command-line entry point for running a SNOBOL source file through
-  the translated SIL interpreter.
-- `js/snobol.js`: runtime assembly point; loads the base runtime, memory,
-  datatypes, SIL macro implementations, and generated translated SIL.
-- `js/SNOBOL/sil.js`: JavaScript implementations of SIL macros. The comment
-  blocks here are the local macro spec and should be treated as authoritative.
-- `js/SNOBOL/snobol.sil.js`: generated JavaScript translation of
-  `external/v311-snoflake.sil`; regenerate with `make translate`.
-- `js/SNOBOL/vm.js`, `mem.js`, `datatypes.js`, `string.js`, `file.js`,
-  `syntax.js`: VM execution, descriptor/specifier memory model, string and
-  file primitives, and syntax constants.
-- `external/v311.sil`: untouched historical SNOBOL4 3.11 SIL baseline.
-- `external/v311-snoflake.sil`: local SIL input for translation; carefully
-  annotated snoflake behavior fixes belong here.
-- `external/syntax.tbl`: historical syntax-table source/reference; the active
-  JavaScript syntax tables live in `js/SNOBOL/syntax.js`.
-- `external/snobol4-v311.sil`: optional later CSNOBOL4 reference when present;
-  useful for evidence-backed comparisons, not a replacement baseline.
-- `src/sil.peg` and `src/translate.js`: SIL parser grammar and translator that
+## Repository Structure
+- `run.js`: CLI entry point for running a SNOBOL source file.
+- `src/`: SIL parser grammar (`sil.peg`) and translator (`translate.js`) that
   emit `js/SNOBOL/snobol.sil.js`.
-- `test/test-sil.js`, `test/test-runtime.js`, `test/test-syntax.js`: focused
-  macro/runtime/syntax coverage.
-- `test/programs/`: end-to-end SNOBOL program tests. Each `*.sno` is a
-  runnable program with an embedded `*` comment header declaring `@title`,
-  optional `@options` (single-line JSON), optional `@input` block, `@expect`
-  block, and `@match` mode. Driven by `test/test-programs.js`. Convention
-  documented in `test/programs/README.md`.
-- `SIL-CHANGES.md`: notes on candidate fixes from later CSNOBOL4 SIL.
-- `tmp/`: scratch SNOBOL programs, probes, and logs. Do not commit contents.
+- `external/`: Upstream SIL and syntax-table sources.
+  - `v311.sil`: Untouched historical reference source.
+  - `v311-snoflake.sil`: Local SIL input for translation; annotated snoflake
+    fixes belong here.
+  - `snobol4-v311.sil`: Optional later CSNOBOL4 reference.
+  - `syntax.tbl`: Historical syntax-table source.
+- `js/`: Runtime.
+  - `snobol.js`: Runtime assembly and entry point.
+  - `SNOBOL/sil.js`: JS implementations of SIL macros (authoritative spec).
+  - `SNOBOL/snobol.sil.js`: Generated translation (regenerate via `make translate`).
+  - `SNOBOL/{vm,mem,datatypes,string,file,syntax}.js`: Core VM components.
+- `test/`: Focused macro/runtime tests (`test-*.js`) and end-to-end `*.sno`
+  fixtures (`test/programs/`).
+- `tmp/`: Scratch programs, probes, and logs (do not commit).
+- `SIL-CHANGES.md`: Notes on candidate fixes from later CSNOBOL4 SIL.
 
 ## Commands
 - `npm test`: run all tests.
@@ -104,22 +86,6 @@ temporary debugging notes below.
 - `make translate`: regenerate `js/SNOBOL/snobol.sil.js`.
 - `node run.js --file=tmp/example.sno --maxSteps=100000 --maxMillis=1000`:
   run a SNOBOL program with required execution guards.
-
-## Development Rules
-- JavaScript style: CommonJS modules, `"use strict"`, 4-space indentation.
-- Prefer focused tests in `test/test-*.js` for changed macro/runtime behavior.
-  Use a program-level fixture under `test/programs/` only when the behavior
-  is observable solely by running a full SNOBOL program through `run.js`.
-- Use `rg` for searching.
-- Comments should be tasteful and useful. Prefer comments that illuminate
-  complex code, representation mismatches, historical computing conventions,
-  or non-obvious SNOBOL/SIL quirks. Avoid narrating obvious assignments or
-  control flow.
-- A good commit should be reviewable on its own: one bug, one invariant, one
-  testable behavior change, or one focused documentation update.
-- Commit subjects should use imperative form. For non-trivial runtime changes,
-  the body should explain why the change is correct, what evidence supports it,
-  and which macro/spec invariant it preserves.
 
 ## Runtime Invariants
 - `SNOBOL.options` is currently process-global, not VM-local. Creating a new
@@ -164,10 +130,7 @@ them accurate, but do not let them override the core working rules above.
 ### Debugging Tips
 - SNOBOL source statement cards normally need a leading blank. Without it,
   `OUTPUT = 'HELLO, WORLD'` is parsed as a label field, not as an assignment.
-- The `--watch` option prints symbol addresses, not descriptor contents. For
-  useful probes, wrap `vm.exec` in a small Node script and log
-  `vm.d('OCBSCL').raw()`, `vm.d('CMBSCL').raw()`, `vm.d('CMOFCL').raw()`,
-  `vm.d('OCICL').raw()`, `vm.d('XPTR').raw()`, and `vm.s('IOSP').specified`.
+- The `--watch` option prints symbol addresses, not descriptor contents.
 - Good trace points for compilation are `XLATRN`, `XLATNX`, `XLATP`, `XLAEND`,
   `XLATND`, `CMPILE`, `CMPILC`, `CMPILA`, `CMPFRM`, and `CMPFT`.
 - Good trace points for interpretation/output are `INTERP`, `INIT`, `ASGN`,
@@ -176,7 +139,6 @@ them accurate, but do not let them override the core working rules above.
 - Dump object code around `vm.d('OCBSCL').addr` and `vm.d('CMBSCL').addr` after
   a guarded run. Look for function descriptors such as `INITCL`, `ASGNCL`,
   `LIT1CL`, `BASECL`, and `ENDCL`.
-- Keep scratch `.sno` files and logs in `tmp/`; do not commit probe logs.
 
 ### Sample Debug Commands
 - Create and run the minimal visible-output probe:
@@ -193,38 +155,9 @@ them accurate, but do not let them override the core working rules above.
 - Capture a debug run for later searching:
   ```sh
   node run.js --file=tmp/min-output.sno --maxSteps=100000 --maxMillis=1000 --debug=true > tmp/min-output-debug.log 2>&1
-  wc -l tmp/min-output-debug.log
-  rg "XLATRN|XLATNX|XLATP|XLAEND|CMPILE|ASGN|PUTOUT|STPRNT|BASE|END" tmp/min-output-debug.log
+  rg "XLATRN|XLATNX|INTERP|ASGN|PUTOUT|END" tmp/min-output-debug.log
   ```
-- Use a Node one-off probe when descriptor contents matter:
-  ```sh
-  node - <<'NODE'
-  const SNOBOL = require('./js/snobol.js');
-  const vm = new SNOBOL.VM({ file: 'tmp/min-output.sno', maxSteps: 100000, maxMillis: 1000 });
-  const orig = vm.exec;
-
-  function d(name) {
-      try {
-          return vm.d(name).raw();
-      } catch (e) {
-          return [];
-      }
-  }
-
-  vm.exec = function (label, macro, args, comment) {
-      const hit = /Compile statement|Call interpreter|Perform output|Perform print/.test(comment || '') ||
-          ['XLATRN', 'XLATNX', 'XLATP', 'XLAEND', 'INTERP', 'ASGN', 'PUTV', 'PUTVU', 'END'].includes(label);
-      if (hit) {
-          console.error(label, macro, comment || '',
-              'OCBSCL=', d('OCBSCL'),
-              'CMBSCL=', d('CMBSCL'),
-              'OCICL=', d('OCICL'),
-              'XPTR=', d('XPTR'));
-      }
-      return orig.apply(this, arguments);
-  };
-
-  vm.reset();
-  vm.run(SNOBOL.interp(vm));
-  NODE
-  ```
+- **Custom Descriptor Probes:** To capture descriptor contents during execution,
+  write a short Node script that instantiates `vm`, overrides `vm.exec = function (label, macro, args, comment) { ... }`
+  to log values like `vm.d('OCBSCL').raw()` or `vm.s('IOSP').specified` on specific `label`
+  or `comment` matches, then calls the original `exec` and runs the interpreter.
