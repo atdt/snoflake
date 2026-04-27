@@ -65,6 +65,32 @@ temporary debugging notes below.
 - `test/`: Mocha tests.
 - `tmp/`: scratch programs and logs.
 
+## Project Map
+- `run.js`: command-line entry point for running a SNOBOL source file through
+  the translated SIL interpreter.
+- `js/snobol.js`: runtime assembly point; loads the base runtime, memory,
+  datatypes, SIL macro implementations, and generated translated SIL.
+- `js/SNOBOL/sil.js`: JavaScript implementations of SIL macros. The comment
+  blocks here are the local macro spec and should be treated as authoritative.
+- `js/SNOBOL/snobol.sil.js`: generated JavaScript translation of
+  `external/v311-snoflake.sil`; regenerate with `make translate`.
+- `js/SNOBOL/vm.js`, `mem.js`, `datatypes.js`, `string.js`, `file.js`,
+  `syntax.js`: VM execution, descriptor/specifier memory model, string and
+  file primitives, and syntax constants.
+- `external/v311.sil`: untouched historical SNOBOL4 3.11 SIL baseline.
+- `external/v311-snoflake.sil`: local SIL input for translation; carefully
+  annotated snoflake behavior fixes belong here.
+- `external/syntax.tbl`: historical syntax-table source/reference; the active
+  JavaScript syntax tables live in `js/SNOBOL/syntax.js`.
+- `external/snobol4-v311.sil`: optional later CSNOBOL4 reference when present;
+  useful for evidence-backed comparisons, not a replacement baseline.
+- `src/sil.peg` and `src/translate.js`: SIL parser grammar and translator that
+  emit `js/SNOBOL/snobol.sil.js`.
+- `test/test-sil.js`, `test/test-runtime.js`, `test/test-syntax.js`: focused
+  macro/runtime/syntax coverage.
+- `SIL-CHANGES.md`: notes on candidate fixes from later CSNOBOL4 SIL.
+- `tmp/`: scratch SNOBOL programs, probes, and logs. Do not commit contents.
+
 ## Commands
 - `npm test`: run all tests.
 - `make test`: alias for `npm test`.
@@ -87,6 +113,20 @@ temporary debugging notes below.
   and which macro/spec invariant it preserves.
 
 ## Runtime Invariants
+- `SNOBOL.options` is currently process-global, not VM-local. Creating a new
+  `SNOBOL.VM(options)` merges into that shared options object, so tests and
+  probes that mutate options should restore them.
+- `vm.run(program)` has assembly phases before execution: it binds built-in
+  symbols, preallocates `DESCR`/`SPEC` storage so forward references can
+  resolve, initializes those preallocated records in a second pass, then skips
+  data-assembly macros during the execution loop.
+- Descriptors and specifiers are lightweight views over `vm.mem`, not copied
+  objects. `Descriptor` is three words (`addr`, `flags`, `value`);
+  `Specifier` is six words and adds `offset` and `length`.
+- Normal fallthrough depends on `instructionPointerChanged`. Branching macros
+  should use `vm.jmp(...)` or otherwise set both `instructionPointer` and
+  `instructionPointerChanged`; otherwise the VM advances to the next
+  instruction after the macro returns.
 - `CSTACK` and `OSTACK` are VM register descriptors, not normal memory-backed
   descriptors. Use `vm.d('CSTACK')` and `vm.d('OSTACK')` for proxy descriptor
   access when a macro expects a descriptor.
@@ -99,6 +139,13 @@ temporary debugging notes below.
   flow.
 - `STREAD` reads fixed-width source records into the input buffer and marks the
   input unit closed at EOF.
+- File objects are cached by role and unit number. Source-card reads use the
+  program file role; runtime `INPUT` on `UNITI` can use the separate `--input`
+  role. This is a JavaScript representation split around the historical unit
+  model.
+- `LOCA2` is accelerated by `sil._fastLOCA2` during VM execution. Treat it as a
+  native equivalent of the SIL lookup loop: it must preserve descriptor side
+  effects and branch to the same SIL labels.
 - `STREAM` diagnostics should remain gated behind debug logging.
 
 ## Current Debugging Handoff
