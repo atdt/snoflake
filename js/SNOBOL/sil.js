@@ -4001,8 +4001,21 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     // convert specifier to integer
     var DESCR = this.d( $DESCR ),
         SPEC = this.s( $SPEC ),
-        I = this.$( 'I' ),
-        val = parseInt( SPEC.specified, 10 );
+        I = this.$( 'I' );
+
+    if ( SPEC.length === 0 ) {
+        DESCR.update( 0, 0, I );
+        DESCR.addr = 0;
+        return this.jmp( SLOC );
+    }
+
+    var val = parseInt( SPEC.specified, 10 );
+
+    // Ensure entire string matched integer (no trailing garbage like "10A")
+    // Note: SNOBOL integers might have leading signs, but trailing characters are invalid.
+    if ( isNaN( val ) || !/^[+-]?\d+$/.test( SPEC.specified ) ) {
+        return this.jmp( FLOC );
+    }
 
     DESCR.update( 0, 0, I );
     try {
