@@ -437,6 +437,34 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
 
+    it( 'recognizes RETURN from a function invoked with APPLY', function () {
+        var root = path.join( __dirname, '..' ),
+            programFile = path.join( root, 'tmp', 'test-apply-return.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( programFile ), { recursive: true } );
+        fs.writeFileSync( programFile,
+            "          DEFINE('DOUBLE(X)') :(SKIP)\n" +
+            "DOUBLE    DOUBLE = X * 2 :(RETURN)\n" +
+            "SKIP      OUTPUT = APPLY('DOUBLE', 5)\n" +
+            "          :(END)\n" +
+            "END\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-apply-return.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\n10\n' ) );
+        assert( !output.includes( 'UNDEFINED OR ERRONEOUS GOTO' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
     it( 'accepts a positional source file path', function () {
         var root = path.join( __dirname, '..' ),
             programFile = path.join( root, 'tmp', 'test-positional-source.sno' ),

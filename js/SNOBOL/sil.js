@@ -1733,7 +1733,17 @@ sil.INIT = function () {
     HDSGPT.addr = FRSGPT.addr;
     TLSGP1.addr = this.alloc( dynamicStorageSize );
 
-    internStringStructure( this, 'ENDPTR', 'ENDSP' );
+    [
+        [ 'ENDPTR', 'ENDSP' ],
+        [ 'FRETCL', 'FRETSP' ],
+        [ 'NRETCL', 'NRETSP' ],
+        [ 'RETCL', 'RETSP' ],
+    ].forEach( function ( pair ) {
+        if ( this.symbols.hasOwnProperty( pair[ 0 ] ) &&
+                this.symbols.hasOwnProperty( pair[ 1 ] ) ) {
+            internStringStructure( this, pair[ 0 ], pair[ 1 ] );
+        }
+    }, this );
 };
 
 //     INSERT is used to insert  a  tree  node  above  another
