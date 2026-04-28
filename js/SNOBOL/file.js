@@ -15,7 +15,7 @@ SNOBOL.File = function ( vm, unitNum, role ) {
         this.vm = vm;
         this.unitNum = unitNum;
         this.role = role;
-        this.path = role === 'input' && SNOBOL.options.input ?
+        this.path = role === 'input' ?
             SNOBOL.options.input :
             SNOBOL.options.file;
         this.pos = 0;
@@ -37,7 +37,13 @@ SNOBOL.File.prototype.read = function ( length ) {
     var end, record, next, str;
 
     if ( this.buf === null ) {
-        this.buf = fs.readFileSync( this.path );
+        if ( !this.path && this.role === 'input' ) {
+            this.buf = Buffer.alloc( 0 );
+        } else if ( this.path ) {
+            this.buf = fs.readFileSync( this.path );
+        } else {
+            throw new Error( 'No source file configured' );
+        }
     }
 
     if ( this.pos >= this.buf.length ) {

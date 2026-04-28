@@ -437,6 +437,52 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
 
+    it( 'accepts a positional source file path', function () {
+        var root = path.join( __dirname, '..' ),
+            programFile = path.join( root, 'tmp', 'test-positional-source.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( programFile ), { recursive: true } );
+        fs.writeFileSync( programFile, " OUTPUT = 'POSITIONAL'\nEND\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            'tmp/test-positional-source.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nPOSITIONAL\n' ) );
+        assert( !output.includes( 'ERR_INVALID_ARG_TYPE' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
+    it( 'treats a missing runtime input file as EOF', function () {
+        var oldFile = SNOBOL.options.file,
+            hadInput = Object.prototype.hasOwnProperty.call( SNOBOL.options, 'input' ),
+            oldInput = SNOBOL.options.input,
+            vm = new SNOBOL.VM(),
+            file;
+
+        SNOBOL.options.file = path.join( __dirname, '..', 'tmp', 'unused-source.sno' );
+        delete SNOBOL.options.input;
+
+        try {
+            file = new SNOBOL.File( vm, 5, 'input' );
+            assert.equal( file.read( 80 ), '' );
+        } finally {
+            SNOBOL.options.file = oldFile;
+            if ( hadInput ) {
+                SNOBOL.options.input = oldInput;
+            } else {
+                delete SNOBOL.options.input;
+            }
+        }
+    } );
+
     it( 'case-folds source names, labels, and built-in variable names by default', function () {
         var root = path.join( __dirname, '..' ),
             file = path.join( root, 'tmp', 'test-case-fold-default.sno' ),
