@@ -244,8 +244,12 @@ CODE   EQU     4*DESCR		   Offset of code in code node
 ESASIZ EQU     50		   Limit on number of syntactic errors
 FBLKSZ EQU     10*DESCR 	   Size of function descriptor block
 ARRLEN EQU     20		   Limit on length of array print image
-CARDSZ EQU     80		   Width of compiler input
-SEQSIZ EQU     8		   Width of sequence field
+* [snoflake] Support longer lines and disable the fixed 8-character
+* sequence field by porting CSNOBOL4 [PLB1], [PLB21], [PLB57] values.
+* This allows modern SNOBOL4 sources to exceed 72 columns. Original
+* CARDSZ was 80, SEQSIZ was 8.
+CARDSZ EQU     1024		   Width of compiler input
+SEQSIZ EQU     0 		   Width of sequence field
 STNOSZ EQU     8		   Length of statement number field
 DSTSZ  EQU     2*STNOSZ 	   Space for left and right numbering
 CNODSZ EQU     4*DESCR		   Size of code node

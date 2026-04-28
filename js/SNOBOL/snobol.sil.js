@@ -31,9 +31,9 @@ SNOBOL.interp = function (vm) {
   }, "Size of function descriptor block"], ["ARRLEN", "EQU", function () {
     return [20];
   }, "Limit on length of array print image"], ["CARDSZ", "EQU", function () {
-    return [80];
+    return [1024];
   }, "Width of compiler input"], ["SEQSIZ", "EQU", function () {
-    return [8];
+    return [0];
   }, "Width of sequence field"], ["STNOSZ", "EQU", function () {
     return [8];
   }, "Length of statement number field"], ["DSTSZ", "EQU", function () {
