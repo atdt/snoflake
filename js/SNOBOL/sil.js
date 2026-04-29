@@ -39,13 +39,18 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     FRSGPT.addr += size;
 }
 
-function printLinePrinterRecord( record ) {
+function printLinePrinterRecord( record, carriageControl ) {
     record.split( '\n' ).forEach( function ( line ) {
         var control,
             content;
 
         if ( line.length === 0 ) {
             console.log( '' );
+            return;
+        }
+
+        if ( carriageControl === false ) {
+            console.log( line.replace( /\u0000+/g, '' ) );
             return;
         }
 
@@ -69,6 +74,32 @@ function printLinePrinterRecord( record ) {
                 console.log( line.replace( /\u0000+/g, '' ) );
         }
     } );
+}
+
+function formatHasLeadingCarriageControl( fmt ) {
+    var i = 0,
+        digits,
+        code;
+
+    if ( !fmt ) {
+        return false;
+    }
+
+    if ( fmt.charAt( i ) === '(' ) {
+        i++;
+    }
+
+    while ( i < fmt.length && /[\s,]/.test( fmt.charAt( i ) ) ) {
+        i++;
+    }
+
+    digits = /^(\d+)/.exec( fmt.slice( i ) );
+    if ( digits ) {
+        i += digits[1].length;
+    }
+
+    code = fmt.charAt( i );
+    return code === 'H' || code === 'X' || code === '"' || code === "'";
 }
 
 function sourceReadLabel( label ) {
@@ -4237,7 +4268,10 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
-    printLinePrinterRecord( SNOBOL.str.format( fmt, item ) );
+    printLinePrinterRecord(
+        SNOBOL.str.format( fmt, item ),
+        formatHasLeadingCarriageControl( fmt )
+    );
     this.d( $DESCR1 ).addr = 1;
 };
 

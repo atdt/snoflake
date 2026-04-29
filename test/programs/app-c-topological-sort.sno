@@ -1,0 +1,63 @@
+* @title Appendix C Sample 4: Topological Sort
+* @match substring
+* @expect >>>
+* 0 THE RELATIONS ARE:
+* A<B,B<C,C<D,,
+* 0 THE LINEAR ORDERING IS:
+* A
+* B
+* C
+* D
+* <<<
+* @input >>>
+* A<B,B<C,C<D,
+* <<<
+          &DUMP = 1
+          &TRIM = 1
+          OUTPUT('OUT','6','(121A1)')
+          PAIR = BREAK('<') . MU LEN(1) BREAK(',') . NU LEN(1)
+          DATA('ITEM(COUNT,TOP)')
+          DATA('NODE(SUC,NEXT)')
+          DEFINE('DECR(X)')
+*
+*         SET UP A TABLE THAT ASSOCIATES WITH EACH OBJECT AN ITEM.
+          X = TABLE(50)
+*
+T1A       OUT = '0 THE RELATIONS ARE:'
+T2A       REL = INPUT ','                       :F(T3A)
+          OUTPUT = REL
+T2        REL PAIR =                            :F(T2A)
+          X<NU> = IDENT(X<NU>) ITEM(0)
+          COUNT(X<NU>) = COUNT(X<NU>) + 1
+          X<MU> = IDENT(X<MU>) ITEM(0)
+          TOP(X<MU>) = NODE(NU,TOP(X<MU>))      :(T2)
+*
+T3A       OPSYN('QLINK','COUNT')
+          Y = CONVERT(X,'ARRAY')
+          PROTOTYPE(Y) BREAK(',') . N
+*
+          K = 0
+T4        K = ?Y<K + 1,1> K + 1                 :F(T8)
+          F = EQ(COUNT(Y<K,2>),0) Y<K,1>        :F(T4)
+T4A       R = Y<K,2>
+T4B       K = ?Y<K + 1,1> K + 1                 :F(T5)
+          QLINK(R) = EQ(COUNT(Y<K,2>),0) Y<K,1> :F(T4B)S(T4A)
+*
+T5        OUT = '0 THE LINEAR ORDERING IS:'
+T5A       OUTPUT = DIFFER(X<F>) F               :F(T8)
+          N = N - 1
+          P = TOP(X<F>)
+*
+T6        IDENT(P)                              :S(T7)
+          DECR(.COUNT(X<SUC(P)>))               :S(T6A)
+          QLINK(R) = SUC(P)
+          R = X<SUC(P)>
+T6A       P = NEXT(P)                           :(T6)
+*
+T7        F = QLINK(X<F>)                       :(T5A)
+*
+DECR      $X = GT($X,1) $X - 1                  :S(RETURN)
+          $X = 0                                :(FRETURN)
+*
+T8        OUTPUT = NE(N,0) 'THE ORDERING CONTAINS A LOOP.'
+END

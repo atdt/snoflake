@@ -152,7 +152,10 @@ variable
 
 
 expr "expression"
-  = head:( integer / name ) tail:( operator:[*+-] term:( integer / name ) { return { operator: operator, term: term }; } )*
+  = additive
+
+additive
+  = head:multiplicative tail:( operator:[+-] term:multiplicative { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
         return {
@@ -163,6 +166,22 @@ expr "expression"
         };
     }, head );
 }
+
+multiplicative
+  = head:primary tail:( operator:"*" term:primary { return { operator: operator, term: term }; } )*
+{
+    return tail.reduce( function ( left, node ) {
+        return {
+            type: 'BinaryExpression',
+            operator: node.operator,
+            left: left,
+            right: node.term
+        };
+    }, head );
+}
+
+primary
+  = integer / name
 
 literal "literal"
   = "'" literal:[^']* "'"

@@ -122,6 +122,41 @@ SNOBOL.str = {
             i += m[1].length;
             return parseInt(m[1], 10);
         }
+        function readQuotedLiteral(quote) {
+            var literal = '';
+            while (i < template.length) {
+                var ch = template[i++];
+                if (ch === quote) {
+                    if (template[i] === quote) {
+                        literal += quote;
+                        i++;
+                        continue;
+                    }
+                    break;
+                }
+                literal += ch;
+            }
+            return literal;
+        }
+        function skipPauseQuoteMarks() {
+            var mark, saved, literal;
+            for (;;) {
+                while (i < template.length && /\s/.test(template[i])) {
+                    i++;
+                }
+                mark = template[i];
+                if (mark !== '"' && mark !== "'") {
+                    return;
+                }
+                saved = i;
+                i++;
+                literal = readQuotedLiteral(mark);
+                if (literal !== "'") {
+                    i = saved;
+                    return;
+                }
+            }
+        }
 
         while (i < template.length) {
             skipSpaces();
@@ -136,7 +171,10 @@ SNOBOL.str = {
             var rep = parseDigits() || 1;
             var code = template[i++];
 
-            if (code === 'H') {
+            if (code === '"' || code === "'") {
+                var literal = readQuotedLiteral(code);
+                out += SNOBOL.str.repeat(literal, rep);
+            } else if (code === 'H') {
                 // Hollerith literal: rep is the character count.
                 out += template.slice(i, i + rep);
                 i += rep;
@@ -165,6 +203,19 @@ SNOBOL.str = {
                 var fval = descr ? descr.raddr : (parseFloat(strData.slice(pos)) || 0);
                 var ftxt = fd ? fval.toFixed(fd) : String(fval);
                 out += pad(ftxt, fw);
+            } else if (/[A-Za-z]/.test(code)) {
+                // Ignore unsupported FORTRAN control words and scale factors.
+                // In historical sample programs, words such as PAUSE can
+                // appear in formats; the "A" inside them must not be parsed
+                // as an A-conversion and consume character data.
+                var word = code;
+                while (i < template.length && /[A-Za-z0-9.]/.test(template[i])) {
+                    word += template[i];
+                    i++;
+                }
+                if (word === 'PAUSE') {
+                    skipPauseQuoteMarks();
+                }
             }
         }
         return out;

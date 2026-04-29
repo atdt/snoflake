@@ -7703,7 +7703,7 @@ SNOBOL.interp = function (vm) {
   }, "Size of long pattern node"], ["NODSIZ", "DESCR", function () {
     return [vm.$("NODESZ"), 0, vm.$("P")];
   }, "Size of short pattern node"], ["OBEND", "DESCR", function () {
-    return [(vm.$("OBLIST") + vm.$("DESCR")) * vm.$("OBOFF"), 0, 0];
+    return [vm.$("OBLIST") + vm.$("DESCR") * vm.$("OBOFF"), 0, 0];
   }, "End on bin list"], ["OCALIM", "DESCR", function () {
     return [vm.$("OCASIZ") * vm.$("DESCR"), 0, vm.$("C")];
   }, "Size of object code block"], ["ONECL", "DESCR", function () {

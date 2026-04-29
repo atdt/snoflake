@@ -1448,6 +1448,66 @@ describe( 'Input and Output Macros', function () {
         assert.deepEqual( logs, [ 'HELLO' ] );
     } );
 
+    it( 'STPRNT does not treat letters in format control words as A-conversions', function () {
+        var key = this.vm.d(),
+            block = this.vm.d(),
+            formatBase = this.vm.alloc( 40 ),
+            item = sil.STRING.call( this.vm, 'HELLO' ),
+            logs = [],
+            log = console.log,
+            format = '(" " PAUSE,100A1)',
+            i;
+
+        block.addr = this.vm.alloc( 9 );
+        this.vm.d( block.addr + SNOBOL.D ).addr = 6;
+        this.vm.d( block.addr + ( 2 * SNOBOL.D ) ).addr = formatBase;
+        this.vm.d( formatBase ).value = format.length;
+        for ( i = 0; i < format.length; i++ ) {
+            this.vm.mem[ formatBase + ( 4 * SNOBOL.D ) + i ] = format.charCodeAt( i );
+        }
+
+        console.log = function () {
+            logs.push( slice.call( arguments ).join( ' ' ) );
+        };
+        try {
+            sil.STPRNT.call( this.vm, key.ptr, block.ptr, item );
+        } finally {
+            console.log = log;
+        }
+
+        assert.deepEqual( logs, [ 'HELLO' ] );
+    } );
+
+    it( 'STPRNT preserves leading data characters when the format starts with A', function () {
+        var key = this.vm.d(),
+            block = this.vm.d(),
+            formatBase = this.vm.alloc( 20 ),
+            item = sil.STRING.call( this.vm, '0 DATA' ),
+            logs = [],
+            log = console.log,
+            format = '(121A1)',
+            i;
+
+        block.addr = this.vm.alloc( 9 );
+        this.vm.d( block.addr + SNOBOL.D ).addr = 6;
+        this.vm.d( block.addr + ( 2 * SNOBOL.D ) ).addr = formatBase;
+        this.vm.d( formatBase ).value = format.length;
+        for ( i = 0; i < format.length; i++ ) {
+            this.vm.mem[ formatBase + ( 4 * SNOBOL.D ) + i ] = format.charCodeAt( i );
+        }
+
+        console.log = function () {
+            logs.push( slice.call( arguments ).join( ' ' ) );
+        };
+        try {
+            sil.STPRNT.call( this.vm, key.ptr, block.ptr, item );
+        } finally {
+            console.log = log;
+        }
+
+        assert.deepEqual( logs, [ '0 DATA' ] );
+    } );
+
     it( 'STREAD', function () {
         var file = path.join( os.tmpdir(), 'snoflake-stread-' + process.pid + '.sno' ),
             oldFile = SNOBOL.options.file,
