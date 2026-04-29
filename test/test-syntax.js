@@ -226,7 +226,7 @@ describe( 'Character Classes', function () {
     } );
 
     it( 'NOTSYM (operator)', function () {
-        var characters = '˜';
+        var characters = '~';
         for ( var ch = 0; ch <= 0x7F; ch++ ) {
             var char = String.fromCharCode( ch );
             assert.equal(

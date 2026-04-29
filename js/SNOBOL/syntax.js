@@ -72,7 +72,7 @@ var characterClasses = {
     LEFTPAREN    : /\(/,
     LETTER       : /[a-z]/i,
     MINUS        : /-/,
-    NOTSYM       : /˜/,
+    NOTSYM       : /~/,
     NUMBER       : /\d/,
     ORSYM        : /\|/,
     PERCENT      : /%/,
