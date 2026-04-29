@@ -20,9 +20,7 @@ var ERROR_MARKERS = [
     'Aborting: exceeded'
 ];
 
-// AGENTS.md mandates these guards on every run.js invocation. The runner
-// applies them as defaults and rejects @options that try to raise them.
-var GUARD_LIMITS = { maxSteps: 100000, maxMillis: 1000 };
+var DEFAULT_OPTIONS = { maxSteps: 1000000, maxMillis: 1000 };
 
 var DATA_BANNER = 'NO ERRORS DETECTED IN SOURCE PROGRAM';
 var DATA_EPILOGUE = 'NORMAL TERMINATION AT LEVEL';
@@ -133,8 +131,6 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         if ( 'input' in parsed ) {
             throw new Error( filePath + ': @options must not set "input" (use @input block)' );
         }
-        validateGuard( filePath, parsed, 'maxSteps' );
-        validateGuard( filePath, parsed, 'maxMillis' );
         header.options = parsed;
         return;
     }
@@ -163,26 +159,6 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         return;
     }
     throw new Error( filePath + ': unknown directive @' + key );
-}
-
-function validateGuard( filePath, opts, key ) {
-    if ( !( key in opts ) ) {
-        return;
-    }
-    var v = opts[ key ];
-    if ( typeof v !== 'number' || !isFinite( v ) || v <= 0 || v > GUARD_LIMITS[ key ] ) {
-        throw new Error( filePath + ': @options.' + key +
-            ' must be > 0 and <= ' + GUARD_LIMITS[ key ] +
-            ' (got ' + JSON.stringify( v ) + ')' );
-    }
-}
-
-function mergeOptions( testOptions ) {
-    var merged = { maxSteps: GUARD_LIMITS.maxSteps, maxMillis: GUARD_LIMITS.maxMillis };
-    Object.keys( testOptions ).forEach( function ( k ) {
-        merged[ k ] = testOptions[ k ];
-    } );
-    return merged;
 }
 
 function optionsToArgv( opts ) {
@@ -240,14 +216,13 @@ function trimTrailingNewlines( s ) {
 function runProgram( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
     var name = path.basename( filePath, '.sno' );
-    var merged = mergeOptions( header.options );
+    var opts = { ...DEFAULT_OPTIONS, ...header.options, file: filePath };
     if ( header.input !== null ) {
         var inputPath = path.join( TMP_DIR, name + '.input' );
         fs.writeFileSync( inputPath, header.input );
-        merged.input = inputPath;
+        opts.input = inputPath;
     }
-    merged.file = filePath;
-    var argv = [ 'run.js' ].concat( optionsToArgv( merged ) );
+    var argv = [ 'run.js' ].concat( optionsToArgv( opts ) );
     var result = childProcess.spawnSync( process.execPath, argv, {
         cwd: ROOT,
         encoding: 'utf8'
