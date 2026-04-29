@@ -37,6 +37,14 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the [GNU General Public License][2] for more details.
 
+Acknowledgments
+---------------
+This project incorporates several surgical bug fixes from [CSNOBOL4][3], Phil
+Budne's free port of the original SNOBOL4 macro implementation to C. We are
+deeply grateful to Phil Budne for his extensive work in maintaining and
+improving the SNOBOL4 SIL source over several decades.
+
 [0]: http://en.wikipedia.org/wiki/SNOBOL
 [1]: mailto:ori.livneh@gmail.com
 [2]: http://www.gnu.org/licenses/gpl-2.0.html
+[3]: https://github.com/philbudne/csnobol4
