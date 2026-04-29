@@ -1819,7 +1819,9 @@ sil.INSERT = function ( $DESCR1, $DESCR2 ) {
         A2_CODE = this.d( A2 + CODE ),
         I = A2_CODE.value,
 
-        A4_RSIB = this.d( A4 + RSIB );
+        A4_RSIB = this.d( A4 + RSIB ),
+        A2_FATHER = this.d( A2 + FATHER ),
+        A2_LSON = this.d( A2 + LSON );
         
 
     A1_FATHER.update( A2, F2, V2 );
