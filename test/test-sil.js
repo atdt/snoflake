@@ -1602,8 +1602,59 @@ describe( 'Miscellaneous Macros', function () {
         assert( sil.LINKOR ); 
     } );
 
-    it( 'LOCAPT', function () { // stub
-        assert( sil.LOCAPT ); 
+    it( 'LOCAPT', function () {
+        var DESCR = this.vm.$( 'DESCR' ),
+            PAIR_WIDTH = 2 * DESCR,
+            PAIR_COUNT = 2,
+            LIST_FLAGS = 7,
+            LIST_VALUE = 11,
+            FOUND_IP = 123,
+            MISSING_IP = 456,
+            SAME_VALUE_AS_ZEROCL = [ 99, 8, 0 ],
+            FIRST_VALUE_DESCRIPTOR = [ 42, 0, 2 ],
+            ZEROCL = [ 0, 0, 0 ],
+            SECOND_VALUE_DESCRIPTOR = [ 43, 0, 3 ],
+            SAME_ADDRESS_DIFFERENT_FLAGS = [ 99, 0, 0 ],
+            result = this.vm.d(),
+            list = this.vm.d(),
+            key = this.vm.d(),
+            found = this.vm.ptr( FOUND_IP ),
+            missing = this.vm.ptr( MISSING_IP ),
+            base = this.vm.alloc( DESCR + ( PAIR_COUNT * PAIR_WIDTH ) ),
+            firstType = base + DESCR,
+            firstValue = firstType + DESCR,
+            secondType = firstType + PAIR_WIDTH,
+            secondValue = secondType + DESCR;
+
+        function setDescriptor( ptr, fields ) {
+            this.vm.d( ptr ).update.apply( this.vm.d( ptr ), fields );
+        }
+
+        list.update( base, LIST_FLAGS, LIST_VALUE );
+        this.vm.d( base ).update( 0, 0, PAIR_COUNT * PAIR_WIDTH );
+
+        // LOCAPT searches only type descriptors: A+D, A+3D, ...
+        // The first type has the same value field as ZEROCL but is not the
+        // same descriptor, so it must not be treated as a hole.
+        setDescriptor.call( this, firstType, SAME_VALUE_AS_ZEROCL );
+        setDescriptor.call( this, firstValue, FIRST_VALUE_DESCRIPTOR );
+
+        // The second type is an exact ZEROCL descriptor.  AUGATL relies on
+        // LOCAPT returning the descriptor immediately before that slot.
+        setDescriptor.call( this, secondType, ZEROCL );
+        setDescriptor.call( this, secondValue, SECOND_VALUE_DESCRIPTOR );
+        key.update.apply( key, ZEROCL );
+
+        sil.LOCAPT.call( this.vm, result, list, key, missing, found );
+
+        assert.equal( this.vm.instructionPointer, FOUND_IP );
+        assert.deepEqual( result.raw(), [ firstValue, LIST_FLAGS, LIST_VALUE ] );
+
+        key.update.apply( key, SAME_ADDRESS_DIFFERENT_FLAGS );
+        this.vm.instructionPointer = 0;
+        sil.LOCAPT.call( this.vm, result, list, key, missing, found );
+
+        assert.equal( this.vm.instructionPointer, MISSING_IP );
     } );
 
     it( 'LOCAPV', function () { // stub

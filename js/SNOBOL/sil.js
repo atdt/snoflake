@@ -2212,10 +2212,12 @@ sil.LOCAPT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     var DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        start = DESCR2.addr + 3;
+        A = DESCR2.addr,
+        stop = A + this.d( A ).value,
+        ptr;
 
-    for ( var ptr = start; ptr < this.mem.length; ptr += 6 ) {
-        if ( this.d( ptr ).value === DESCR3.value ) {
+    for ( ptr = A + 3; ptr < stop; ptr += 6 ) {
+        if ( this.d( ptr ).isEqualTo( DESCR3 ) ) {
             DESCR1.addr = ptr - 3;
             DESCR1.flags = DESCR2.flags;
             DESCR1.value = DESCR2.value;
