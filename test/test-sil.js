@@ -1093,6 +1093,22 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s.length, 3 );
     } );
 
+    it( 'INTSPC uses a private conversion buffer', function () {
+        var d = this.vm.d(),
+            s = this.vm.s(),
+            original;
+
+        this.vm.specify( 'abc', s );
+        original = s.addr;
+        d.addr = 42;
+
+        sil.INTSPC.call( this.vm, s, d );
+
+        assert.equal( s.specified, '42' );
+        assert.notEqual( s.addr, original );
+        assert.equal( SNOBOL.str.decode( this.vm.mem.slice( original, original + 3 ) ), 'abc' );
+    } );
+
     it( 'LOCSP', function () {
         const CPD = 3;
         var s = this.vm.s(),

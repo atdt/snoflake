@@ -1884,15 +1884,15 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
         I_enc = SNOBOL.str.encode( I_str ),
         idx;
 
-    if ( !SPEC.addr ) {
-        SPEC.addr = this.alloc( 255 );
+    if ( this.INTSPC_BUFFER === null ) {
+        this.INTSPC_BUFFER = this.alloc( 255 );
     }
 
     assert( I_enc.length <= 255 );
+    SPEC.update( this.INTSPC_BUFFER, 0, 0, 0, I_str.length );
     for ( idx = 0; idx < I_enc.length; idx++ ) {
         this.mem[ SPEC.addr + SPEC.offset + idx ] = I_enc[ idx ];
     }
-    SPEC.length = I_str.length;
 };
 
 //     ISTACK is used to initialize the system stack.

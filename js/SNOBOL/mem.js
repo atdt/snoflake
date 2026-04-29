@@ -118,6 +118,7 @@ VM.prototype.reset = function () {
     this.mem = [];
     this.callbacks = [];
     this.units = {};
+    this.INTSPC_BUFFER = null;
     // Keep stack pointers as VM registers, not memory-backed descriptors,
     // to avoid accidental overwrites by program macros.
     this.CSTACK = { addr: 0 };
