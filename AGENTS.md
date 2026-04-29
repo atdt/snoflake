@@ -71,6 +71,9 @@ crystal-clear, beautiful, simple, and well-documented.
 ## Commands
 
 - `npm test` (or `make test`): run all tests.
+- `npx mocha test/test-programs.js`: run only the program-level tests.
+- `npx mocha test/test-sil.js`: run a specific unit test file.
+- `npm test -- -g "Appendix C Sample 3"`: run a specific test by title.
 - `make translate`: regenerate `js/SNOBOL/snobol.sil.js`.
 - `node run.js --file=tmp/example.sno --maxSteps=1000000 --maxMillis=1000`:
   run a SNOBOL program with recommended execution guards.
