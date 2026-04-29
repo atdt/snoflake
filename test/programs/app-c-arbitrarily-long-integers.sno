@@ -1,0 +1,64 @@
+* @title Appendix C Sample 3: Arbitrarily Long Integers
+* @match substring
+* @expect >>>
+* POWERS OF 256
+*
+* 1: 256
+* 2: 65536
+* 3: 16777216
+* <<<
+          &ANCHOR = 1
+          OPSYN('SUM','+',2)
+          OPSYN('PROD','*',2)
+          DATA('ALI(V,L)')
+          DEFINE('OUT(OUT)')
+          DEFINE('APPEND(V,L)')
+          DEFINE('ADD(I1,I2)C')
+          DEFINE('MUL(I1,I2)C')
+          DEFINE('VAL(VAL)')
+          DEFINE('LINK(I)')
+          OPSYN('+','ADD',2)
+          OPSYN('*','MUL',2)
+          OPSYN('%','APPEND',2)
+          OPSYN('/','LINK',1)
+          OPSYN('#','VAL',1)
+          MAX = 10000
+          ADDFIX = RTAB(SIZE(MAX) - 1) . C REM . ADD
+          MULFIX = RTAB(SIZE(MAX) - 1) . C REM . MUL :(FEND)
+*
+*         FUNCTION DEFINITIONS
+*
+APPEND    APPEND = ALI(V,L)                     :(RETURN)
+*
+ADD       ADD = IDENT(I2) I1                    :S(RETURN)
+          ADD = IDENT(I1) I2                    :S(RETURN)
+          ADD = SUM(#I1,#I2)
+          LT(ADD,MAX) INTEGER(I1) INTEGER(I2)   :S(RETURN)
+          ADD = LT(ADD,MAX) ADD % (/I1 + /I2)   :S(RETURN)
+          ADD ADDFIX
+          ADD = ADD % (C + (/I1 + /I2))         :(RETURN)
+*
+LINK      LINK = ~INTEGER(I) L(I)               :(RETURN)
+*
+VAL       VAL = ~INTEGER(VAL) V(VAL)            :(RETURN)
+*
+*
+OUT       OUT = IDENT(/OUT) #OUT                :S(RETURN)
+          OUT = OUT(/OUT) DUPL('0',SIZE(MAX) - SIZE(#OUT) - 1) #OUT :(RETURN)
+*
+*
+MUL       MUL = DIFFER(#I1) DIFFER(#I2) PROD(#I1,#I2) :F(RETURN)
+          LT(MUL,MAX) INTEGER(I1) INTEGER(I2)   :S(RETURN)
+          MUL = LT(MUL,MAX) MUL % (I1 * /I2 + I2 * /I1) :S(RETURN)
+          MUL MULFIX
+          MUL = MUL % (C + I1 * /I2 + I2 * /I1) :(RETURN)
+FEND
+          N = 256
+          K = 25
+          P = 1
+          OUTPUT = 'POWERS OF ' N
+          OUTPUT =
+L         I = LT(I,K) I + 1                     :F(END)
+          P = P * N
+          OUTPUT = I ': ' OUT(P)                :(L)
+END

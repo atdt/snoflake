@@ -20,7 +20,7 @@ var ERROR_MARKERS = [
     'Aborting: exceeded'
 ];
 
-var DEFAULT_OPTIONS = { maxSteps: 1000000, maxMillis: 1000 };
+var DEFAULT_OPTIONS = { maxSteps: 5000000, maxMillis: 0 };
 
 var DATA_BANNER = 'NO ERRORS DETECTED IN SOURCE PROGRAM';
 var DATA_EPILOGUE = 'NORMAL TERMINATION AT LEVEL';
