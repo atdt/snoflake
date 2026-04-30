@@ -1,4 +1,5 @@
-* @title chapter 1 string concatenation, coercion, and null variables
+* @title String concatenation, coercion, and null variables
+* @attribution Griswold 1971, Chapter 1
 * @expect >>>
 * CONCATENATION
 * ONE,TWO,THREE

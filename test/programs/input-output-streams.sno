@@ -1,0 +1,15 @@
+* @title Input and output streams
+* @attribution Griswold 1971, Chapter 1
+* @match substring
+* @expect >>>
+* IN1
+* IN2
+* <<<
+* @input >>>
+* IN1
+* IN2
+* <<<
+          &TRIM = 1
+          OUTPUT = INPUT
+          OUTPUT = INPUT
+END

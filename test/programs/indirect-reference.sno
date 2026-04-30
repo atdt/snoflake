@@ -1,0 +1,10 @@
+* @title Indirect reference
+* @attribution Griswold 1971, Chapter 1
+* @match substring
+* @expect >>>
+* APRIL
+* <<<
+          MONTH = 'APRIL'
+          VAR = 'MONTH'
+          OUTPUT = $VAR
+END

@@ -1,0 +1,82 @@
+* @title Syntactic recognizer
+* @attribution Griswold 1971, Appendix C, Sample 5
+* @match substring
+* @expect >>>
+*           OUTPUT = 'HELLO'
+* <<<
+* @input >>>
+*           OUTPUT = 'HELLO'
+* <<<
+          DEFINE('opt(pattern)')
+          OPSYN('t','opt',1)
+          OPSYN('%','SPAN',1)
+          OPSYN('#','ANY',1)
+          leftbr = "#" "'<['" "'"
+          rightbr = "#" "'<]'" "'"
+          letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+          digits = '0123456789'
+          alphanumerics = letters digits
+          blanks = %' '
+          integer = %digits
+          real = integer '.' tinteger
+          identifier = #letters t %(alphanumerics '._')
+          opsyms = '~?$.!%*/#+-@|&'
+          unary = #opsyms
+          binarysyms = #opsyms | '**'
+          unaryop = %opsyms
+          binaryop = blanks t(binarysyms blanks)
+          unqalpha = &ALPHABET
+          unqalpha "'" =
+          unqalpha '"' =
+          dliteral = '"' t %(unqalpha '"') '"'
+          sliteral = "'" t %(unqalpha "'") "'"
+          literal = sliteral | dliteral | integer | real
+          element = tunaryop (identifier | literal | *function_call |
++                   '(' *expression ')' | *array_ref)
+          operation = *element binaryop (*element | *expression)
+          expression = tblanks (*element | *operation | null) tblanks
+          arglist = *expression t(',' *arglist)
+          function_call = identifier '(' *arglist ')'
+          array_ref = identifier leftbr *arglist rightbr
+          label = #alphanumerics (BREAK(' ;') | REM)
+          label_field = tlabel
+          goto = '(' expression ')' | leftbr expression rightbr
+          goto_field = t(blanks ':' FENCE tblanks (goto | 'S' goto
++                   | 'F' goto | 'S' goto tblanks 'F' goto | 'F' goto
++                   tblanks 'S' goto) tblanks)
+          eql = #'=-'
+          rule = (blanks element (blanks eql t(blanks expression) |
++                   (blanks expression t(blanks eql t(blanks expression))
++                   )))
+          eos = RPOS(0) | ';'
+          statement = label_field rule goto_field eos
+*
+          INPUT(.input,5,72)
+          &ANCHOR = 1
+          &TRIM = 1
+          &FULLSCAN = 1
+          eof =
+          space = DUPL(' ',5)
+          line =
+          comment = #'*-|.'
+          continue = #'+.' . cc
+readi     image = input                         :F(END)
+          OUTPUT = space line
+          image comment                         :F(readc)S(readi)
+nextst    IDENT(eof)                            :F(END)
+          OUTPUT = space line
+          image = line
+readc     line = input                          :F(endgam)
+          line comment                          :S(print)
+          line continue =                       :F(anlyz)
+          OUTPUT = space cc line
+          image = image line                    :(readc)
+anlyz     image statement =                     :F(error)
+          DIFFER(image)                         :S(anlyz)
++                                               :F(nextst)
+error     OUTPUT = '<<< syntactic error >>>'    :(nextst)
+print     OUTPUT = space line                   :(readc)
+endgam    eof = 1                               :(anlyz)
+*
+opt       opt = null | pattern                  :(RETURN)
+END

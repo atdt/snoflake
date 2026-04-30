@@ -1,0 +1,12 @@
+* @title Recursive Polish to infix translator
+* @attribution Griswold 1971, Chapter 4
+* @expect >>>
+* ((A*(B+C))-(D/E))
+* <<<
+         DEFINE('INF(EX)OP,X,Y')
+         INPAT = LEN(1) . OP '(' BAL . X ',' BAL . Y ')' RPOS(0)
+         OUTPUT = INF('-(*(A,+(B,C)),/(D,E))')   :(END)
+INF      EX INPAT =                   :F(RETVAR)
+         INF = '(' INF(X) OP INF(Y) ')'       :(RETURN)
+RETVAR   INF = EX                             :(RETURN)
+END

@@ -1,4 +1,5 @@
-* @title chapter 4 optional signed integer composed pattern
+* @title Optional signed integer composed pattern
+* @attribution Griswold 1971, Chapter 4
 * @expect >>>
 * -43
 * <<<

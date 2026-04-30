@@ -1,0 +1,41 @@
+* @title Recursive pattern definition for balanced strings
+* @attribution Griswold 1971, Chapter 2
+* @expect >>>
+* 0
+* ((A+B*C))
+* ((A+B*C))+
+* ((A+B*C))+D
+* 1
+* (A+B*C)
+* 2
+* A
+* A+
+* A+B
+* A+B*
+* A+B*C
+* 3
+* +
+* +B
+* +B*
+* +B*C
+* 4
+* B
+* B*
+* B*C
+* 5
+* *
+* *C
+* 6
+* C
+* 7
+* 8
+* 9
+* +
+* +D
+* 10
+* D
+* <<<
+         BALEXP = NOTANY('()') | '(' ARBNO(*BALEXP) ')'
+         BAL = BALEXP ARBNO(BALEXP)
+         '((A+B*C))+D' @OUTPUT BAL $ OUTPUT FAIL
+END

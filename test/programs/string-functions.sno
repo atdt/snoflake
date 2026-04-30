@@ -1,4 +1,5 @@
-* @title chapter 2 string function examples including REPLACE
+* @title String function examples including REPLACE
+* @attribution Griswold 1971, Chapter 2
 * @expect >>>
 * ABCABCABC
 * 5

@@ -1,0 +1,13 @@
+* @title Immediate vs. conditional value assignment
+* @attribution Griswold 1971, Chapter 2
+* @expect >>>
+* FIRST: B SECOND: EA THIRD: 
+* BRVAL: READ
+* <<<
+         BR = (('B' | 'R') $ FIRST ('E' | 'EA') $ SECOND ('D' | 'DS') $ THIRD) . BRVAL
+         'BEATS' BR                    :S(OK)
+         OUTPUT = 'FIRST: ' FIRST ' SECOND: ' SECOND ' THIRD: ' THIRD
+         'BREADS' BR                   :S(SHOW)
+SHOW     OUTPUT = 'BRVAL: ' BRVAL
+OK
+END

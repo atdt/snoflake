@@ -1,4 +1,5 @@
-* @title chapter 2 predicate function success and failure examples
+* @title Predicate function success and failure examples
+* @attribution Griswold 1971, Chapter 2
 * @expect >>>
 * EQ
 * IDENT

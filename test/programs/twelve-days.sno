@@ -1,4 +1,5 @@
-* @title Appendix C Sample 6: Twelve Days of Christmas
+* @title Twelve days of Christmas
+* @attribution Griswold 1971, Appendix C, Sample 6
 * @match substring
 * @expect >>>
 * ON THE FIRST DAY OF CHRISTMAS,

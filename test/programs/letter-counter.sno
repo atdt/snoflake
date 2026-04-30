@@ -1,0 +1,27 @@
+* @title Letter counter
+* @attribution Griswold 1971, Appendix C, Sample 1
+* @match substring
+* @expect >>>
+* D OCCURS 1 TIMES
+* E OCCURS 1 TIMES
+* H OCCURS 1 TIMES
+* L OCCURS 3 TIMES
+* O OCCURS 2 TIMES
+* R OCCURS 1 TIMES
+* W OCCURS 1 TIMES
+* <<<
+* @input >>>
+* HELLO WORLD
+* <<<
+          &TRIM   = 1
+          CHAR    = LEN(1) . CH
+          LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+          COUNT   = TABLE(30)
+READ      OUTPUT  = INPUT                       :F(DISPLAY)
+NEXT      TEXT    = OUTPUT
+NEXT1     TEXT    CHAR    =                     :F(READ)
+          COUNT<CH> = COUNT<CH> + 1             :(NEXT1)
+DISPLAY   OUTPUT  =
+LOOP      LETTERS CHAR    =                     :F(END)
+          OUTPUT  = NE(COUNT<CH>) CH ' OCCURS ' COUNT<CH> ' TIMES'  :(LOOP)
+END

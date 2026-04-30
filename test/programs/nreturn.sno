@@ -1,0 +1,13 @@
+* @title Returning a variable with NRETURN
+* @attribution Griswold 1971, Chapter 4
+* @expect >>>
+* FIRST SECOND
+* <<<
+         DEFINE('NEXT(A)')                    :(N_END)
+NEXT     A<0> = A<0> + 1
+         NEXT = .A<A<0>>                      :(NRETURN)
+N_END    B = ARRAY('0:10')
+         NEXT(B) = 'FIRST'
+         NEXT(B) = 'SECOND'
+         OUTPUT = B<1> ' ' B<2>
+END

@@ -1,0 +1,21 @@
+* @title Hexadecimal to decimal conversion
+* @attribution Griswold 1971, Appendix D
+* @expect >>>
+* DECIMAL VALUE: 6844
+* <<<
+         &TRIM = 1
+         HEX = TABLE(16)
+         HEX<'0'> = 0; HEX<'1'> = 1; HEX<'2'> = 2; HEX<'3'> = 3
+         HEX<'4'> = 4; HEX<'5'> = 5; HEX<'6'> = 6; HEX<'7'> = 7
+         HEX<'8'> = 8; HEX<'9'> = 9
+         HEX<'A'> = 10; HEX<'B'> = 11; HEX<'C'> = 12
+         HEX<'D'> = 13; HEX<'E'> = 14; HEX<'F'> = 15
+         CHARP = LEN(1) . CH
+         STR = '1ABC'
+         TOTAL = 0
+NEXT     STR CHARP =                          :F(DONE)
+         DEHEX = HEX<CH>                      :F(ERR)
+         TOTAL = (16 * TOTAL) + DEHEX         :(NEXT)
+DONE     OUTPUT = 'DECIMAL VALUE: ' TOTAL     :(END)
+ERR      OUTPUT = 'INVALID HEX'
+END

@@ -1,0 +1,16 @@
+* @title Dynamic definition and evaluation
+* @attribution Griswold 1971, Chapter 3
+* @match substring
+* @expect >>>
+* 42
+* 10
+* 10
+* <<<
+          OPSYN('ADD', '+', 2)
+          OUTPUT = ADD(20, 22)
+          OUTPUT = EVAL('5 * 2')
+          DEFINE('DOUBLE(X)') :(SKIP)
+DOUBLE    DOUBLE = X * 2 :(RETURN)
+SKIP      OUTPUT = APPLY('DOUBLE', 5)
+          :(END)
+END

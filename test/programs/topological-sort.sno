@@ -1,4 +1,5 @@
-* @title Appendix C Sample 4: Topological Sort
+* @title Topological sort
+* @attribution Griswold 1971, Appendix C, Sample 4
 * @match substring
 * @expect >>>
 * 0 THE RELATIONS ARE:

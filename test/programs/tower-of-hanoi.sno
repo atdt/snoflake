@@ -1,0 +1,18 @@
+* @title Tower of Hanoi
+* @attribution Griswold 1971, Chapter 4
+* @expect >>>
+* MOVE DISC 1 FROM A TO C
+* MOVE DISC 2 FROM A TO B
+* MOVE DISC 1 FROM C TO B
+* MOVE DISC 3 FROM A TO C
+* MOVE DISC 1 FROM B TO A
+* MOVE DISC 2 FROM B TO C
+* MOVE DISC 1 FROM A TO C
+* <<<
+         DEFINE('HANOI(N,NS,ND,NI)')          :(TEST)
+HANOI    EQ(N, 0)                             :S(RETURN)
+         HANOI(N - 1, NS, NI, ND)
+         OUTPUT = 'MOVE DISC ' N ' FROM ' NS ' TO ' ND
+         HANOI(N - 1, NI, ND, NS)             :(RETURN)
+TEST     HANOI(3, 'A', 'C', 'B')
+END

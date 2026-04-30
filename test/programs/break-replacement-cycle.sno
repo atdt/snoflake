@@ -1,4 +1,5 @@
-* @title chapter 4 BREAK replacement cycle example
+* @title BREAK replacement cycle example
+* @attribution Griswold 1971, Chapter 4
 * @expect >>>
 * RED
 * ORANGE,YELLOW,GREEN,BLUE,INDIGO,VIOLET,RED,

@@ -1,0 +1,10 @@
+* @title Linked list via programmer-defined data types
+* @attribution Griswold 1971, Chapter 5
+* @expect >>>
+* T
+* <<<
+         DATA('NODE(VALUE,LINK)')
+         P = NODE('S', )
+         LINK(P) = NODE('T', P)
+         OUTPUT = VALUE(LINK(P))
+END

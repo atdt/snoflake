@@ -1,0 +1,15 @@
+* @title FENCE and ABORT search-control primitives
+* @attribution Griswold 1971, Chapter 2
+* @expect >>>
+* FENCE FAILED
+* ABORT TERMINATED MATCH
+* <<<
+         &ANCHOR = 1
+         'BERATES' ('BE' | 'GE' | 'FRE') FENCE ('TS' | 'T') :S(OK)
+         OUTPUT = 'FENCE FAILED'                            :(NEXT)
+OK       OUTPUT = 'FENCE MATCHED'
+NEXT     CARDFORM = '*' ABORT | ARB
+         '* COMMENT' CARDFORM          :S(BAD)F(GOOD)
+GOOD     OUTPUT = 'ABORT TERMINATED MATCH'   :(END)
+BAD      OUTPUT = 'ABORT FAILED'
+END

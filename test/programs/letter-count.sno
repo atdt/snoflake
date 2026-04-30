@@ -1,0 +1,52 @@
+* @title Letter count program
+* @attribution Griswold 1971, Figure 1.16
+* @match substring
+* @input >>>
+* "THE WORLD OF THE FUTURE WILL BE AN EVER MORE DEMANDING STRUGGLE
+* AGAINST THE LIMITATIONS OF OUR INTELLIGENCE, ....",
+* N. WEINER
+* <<<
+* @expect >>>
+* "THE WORLD OF THE FUTURE WILL BE AN EVER MORE DEMANDING STRUGGLE
+* AGAINST THE LIMITATIONS OF OUR INTELLIGENCE, ....",
+* N. WEINER
+* 
+* A OCCURS 5 TIMES
+* B OCCURS 1 TIMES
+* C OCCURS 1 TIMES
+* D OCCURS 3 TIMES
+* E OCCURS 15 TIMES
+* F OCCURS 3 TIMES
+* G OCCURS 5 TIMES
+* H OCCURS 3 TIMES
+* I OCCURS 9 TIMES
+* L OCCURS 7 TIMES
+* M OCCURS 3 TIMES
+* N OCCURS 9 TIMES
+* O OCCURS 6 TIMES
+* R OCCURS 7 TIMES
+* S OCCURS 3 TIMES
+* T OCCURS 9 TIMES
+* U OCCURS 4 TIMES
+* V OCCURS 1 TIMES
+* W OCCURS 3 TIMES
+* <<<
+*****************************************************************
+*                                                               *
+*       THIS PROGRAM COUNTS THE NUMBER OF TIMES EACH            *
+*       LETTER IS USED IN INPUT TEXT.                           *
+*                                                               *
+*****************************************************************
+        &TRIM     = 1
+        CHAR      = LEN(1) . CH
+        LETTERS   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        COUNT     = TABLE(30)
+READ    OUTPUT    = INPUT                       :F(DISPLAY)
+        TEXT      = OUTPUT
+NEXT    TEXT      CHAR    =                     :F(READ)
+        COUNT<CH> = COUNT<CH> + 1               :(NEXT)
+DISPLAY OUTPUT    =
+LOOP    LETTERS   CHAR    =                     :F(END)
+        OUTPUT    = NE(COUNT<CH>) CH ' OCCURS ' COUNT<CH> ' TIMES'
++                                               :(LOOP)
+END

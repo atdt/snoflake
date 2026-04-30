@@ -1,0 +1,20 @@
+* @title Control flow and indirect goto
+* @attribution Griswold 1971, Chapter 1
+* @match substring
+* @expect >>>
+* ONE
+* TWO
+* THREE
+* FOUR
+* <<<
+          OUTPUT = 'ONE'
+          :(L2)
+L1        OUTPUT = 'TWO'
+          LVAR = 'L3'
+          :($LVAR)
+L2        IDENT('A', 'A') :S(L1)
+L3        DIFFER('A', 'A') :F(L4)
+L4        OUTPUT = 'THREE'
+          :(L5)
+L5        OUTPUT = 'FOUR'
+END

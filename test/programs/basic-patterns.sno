@@ -1,4 +1,5 @@
-* @title chapter 4 literal pattern alternation and captured substrings
+* @title Literal pattern alternation and captured substrings
+* @attribution Griswold 1971, Chapter 4
 * @expect >>>
 * BLUE
 * BIRD

@@ -1,0 +1,12 @@
+* @title Longest substring via unevaluated expressions
+* @attribution Griswold 1971, Chapter 2
+* @expect >>>
+* LARGEST NUMBER IS 4,807,884
+* <<<
+         BIGP = (*P $ TRY *GT(SIZE(TRY),SIZE(BIG))) $ BIG FAIL
+         STR = 'IN 1964 NFL ATTENDANCE JUMPED TO 4,807,884'
+         P = SPAN('0123456789,')
+         BIG = ''
+         STR BIGP
+         OUTPUT = 'LARGEST NUMBER IS ' BIG
+END

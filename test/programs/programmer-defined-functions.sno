@@ -1,0 +1,20 @@
+* @title Programmer-defined functions
+* @attribution Griswold 1971, Chapter 4
+* @match substring
+* @expect >>>
+* 100
+* FAILED
+* NRET
+* <<<
+          DEFINE('TESTF(X)Y') :(SKIP)
+TESTF     EQ(X, 0) :S(FRETURN)
+          TESTF = X * 10 :(RETURN)
+SKIP      OUTPUT = TESTF(10)
+          TESTF(0) :F(OK1)
+          OUTPUT = 'BAD1' :(END)
+OK1       OUTPUT = 'FAILED'
+          DEFINE('NRETF()') :(SKIP2)
+NRETF     NRETF = .GLOBALVAR :(NRETURN)
+SKIP2     NRETF() = 'NRET'
+          OUTPUT = GLOBALVAR
+END

@@ -1,0 +1,10 @@
+* @title Numeric and system functions
+* @attribution Griswold 1971, Chapter 3
+* @match substring
+* @expect >>>
+* 2
+* <<<
+          OUTPUT = REMDR(17, 5)
+          D = DATE()
+          T = TIME()
+END

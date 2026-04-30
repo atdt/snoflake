@@ -1,0 +1,31 @@
+* @title Factorial table
+* @attribution Griswold 1971, Appendix C, Sample 2
+* @match substring
+* @expect >>>
+* 35! = 10,333,147,966,386,144,929,666,651,337,523,200,000,000
+* <<<
+          NX = 35
+          N  = 1  ;  NSET = 1
+          NUM = ARRAY(1000)
+          NUM<1> = 1
+          FILL = ARRAY('0:3')
+          FILL<0> = '000';  FILL<1> = '00';  FILL<2> = '0'
+          OUTPUT = ' TABLE OF FACTORIALS FOR 1 THROUGH ' NX
+L1        I = 1
+L2        NUM<I> = NUM<I> * N                   :F(ERR)
+          I = LT(I,NSET) I + 1                  :S(L2)
+          I = 1
+L3        LT(NUM<I>, 1000)                      :S(L4)
+          NUMX = NUM<I> / 1000                  :F(ERR)
+          NUM<I + 1> = NUM<I + 1> + NUMX        :F(ERR)
+          NUM<I> = NUM<I> - 1000 * NUMX         :F(ERR)
+L4        I = LT(I,NSET) I + 1                  :S(L3)
+          NSET = DIFFER(NUM<NSET + 1>) NSET + 1
+          NUMBER = NUM<NSET>
+          I = GT(NSET,1) NSET - 1               :F(L7)
+L6        NUMBER = NUMBER ',' FILL<SIZE(NUM<I>)> NUM<I>
+          I = GT(I,1) I - 1                     :S(L6)
+L7        OUTPUT = N '! = ' NUMBER
+          N = LT(N,NX) N + 1                    :S(L1)F(END)
+ERR       OUTPUT = N '! OVERFLOW'
+END

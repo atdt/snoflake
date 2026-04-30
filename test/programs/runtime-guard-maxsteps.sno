@@ -1,4 +1,4 @@
-* @title infinite loop trips the maxSteps guard
+* @title Infinite loop trips the maxSteps guard
 * @options {"maxSteps": 20}
 * @match error
 * @expect Aborting: exceeded

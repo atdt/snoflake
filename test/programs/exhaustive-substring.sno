@@ -1,0 +1,14 @@
+* @title Exhaustive substring generation with &FULLSCAN
+* @attribution Griswold 1971, Chapter 2
+* @expect >>>
+* 1
+* 12
+* 123
+* 2
+* 23
+* 3
+* <<<
+         &ANCHOR   = 0
+         &FULLSCAN = 1
+         '123' (LEN(1) ARB) $ OUTPUT FAIL
+END

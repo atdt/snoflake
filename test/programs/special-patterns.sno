@@ -1,0 +1,21 @@
+* @title Special pattern symbols
+* @attribution Griswold 1971, Chapter 2
+* @match substring
+* @expect >>>
+* ARBNO SUCCEEDED
+* BAL SUCCEEDED
+* ABORT SUCCEEDED
+* <<<
+          S = 'AABBB'
+          S 'A' ARBNO('B') :F(BAD1)
+          OUTPUT = 'ARBNO SUCCEEDED'
+          S2 = '(A(B)C)'
+          S2 BAL :F(BAD2)
+          OUTPUT = 'BAL SUCCEEDED'
+          'ABC' 'X' | ABORT | 'Y' :S(BAD3)F(OK3)
+OK3       OUTPUT = 'ABORT SUCCEEDED'
+          :(END)
+BAD1      OUTPUT = 'BAD1'
+BAD2      OUTPUT = 'BAD2'
+BAD3      OUTPUT = 'BAD3'
+END

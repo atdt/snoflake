@@ -1,4 +1,5 @@
-* @title chapter 1 integer arithmetic precedence and associativity
+* @title Integer arithmetic precedence and associativity
+* @attribution Griswold 1971, Chapter 1
 * @expect >>>
 * -1
 * 28

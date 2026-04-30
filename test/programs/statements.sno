@@ -1,0 +1,14 @@
+* @title Statements, continuation, comments, semicolons
+* @attribution Griswold 1971, Chapter 1
+* @match substring
+* @expect >>>
+* HELLO
+* WORLD
+* 42
+* <<<
+* THIS IS A COMMENT
+L1        OUTPUT = 'HELLO' ; OUTPUT = 'WORLD'
+          A = 20 +
+.             22
+          OUTPUT = A
+END

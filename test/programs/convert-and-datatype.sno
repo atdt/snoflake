@@ -1,0 +1,15 @@
+* @title Table-to-array conversion and data type inspection
+* @attribution Griswold 1971, Chapter 7
+* @expect >>>
+* PROTOTYPE: 2,2
+* TYPE OF A<1,1>: STRING
+* TYPE OF A<1,2>: INTEGER
+* <<<
+         T = TABLE(5)
+         T<'RED'> = 1
+         T<'BLUE'> = 2
+         A = CONVERT(T, 'ARRAY')
+         OUTPUT = 'PROTOTYPE: ' PROTOTYPE(A)
+         OUTPUT = 'TYPE OF A<1,1>: ' DATATYPE(A<1,1>)
+         OUTPUT = 'TYPE OF A<1,2>: ' DATATYPE(A<1,2>)
+END

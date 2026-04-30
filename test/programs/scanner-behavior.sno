@@ -1,0 +1,18 @@
+* @title Scanner behavior modes
+* @attribution Griswold 1971, Chapter 2
+* @match substring
+* @expect >>>
+* ANCHORED FAILED
+* UNANCHORED SUCCEEDED
+* <<<
+          S = 'XYZ'
+          &ANCHOR = 1
+          S 'Y' :S(BAD1)F(OK1)
+OK1       OUTPUT = 'ANCHORED FAILED'
+          &ANCHOR = 0
+          S 'Y' :F(BAD2)S(OK2)
+OK2       OUTPUT = 'UNANCHORED SUCCEEDED'
+          :(END)
+BAD1      OUTPUT = 'BAD1'
+BAD2      OUTPUT = 'BAD2'
+END

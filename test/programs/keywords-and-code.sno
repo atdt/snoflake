@@ -1,0 +1,10 @@
+* @title Keywords and code compilation
+* @attribution Griswold 1971, Chapter 6
+* @match substring
+* @expect >>>
+* CODE SUCCESS
+* <<<
+          C = CODE(' OUTPUT = "CODE SUCCESS" :(END) ') :S(OK1)F(BAD1)
+OK1       :<C>
+BAD1      OUTPUT = 'BAD1'
+END

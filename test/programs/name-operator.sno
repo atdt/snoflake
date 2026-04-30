@@ -1,0 +1,12 @@
+* @title Unary name operator
+* @attribution Griswold 1971, Chapter 6
+* @expect >>>
+* BUMP SUCCESSFUL
+* <<<
+         DEFINE('BUMP(VAR)')          :(START)
+BUMP     $VAR = $VAR + 1              :(RETURN)
+START    COUNT = 0
+         BUMP(.COUNT)
+         BUMP(.COUNT)
+         OUTPUT = EQ(COUNT, 2) 'BUMP SUCCESSFUL'
+END

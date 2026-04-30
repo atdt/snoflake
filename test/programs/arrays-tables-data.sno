@@ -1,4 +1,5 @@
-* @title chapter 5 basic array indexing
+* @title Basic array indexing
+* @attribution Griswold 1971, Chapter 5
 * @expect >>>
 * ONE
 * TWO
