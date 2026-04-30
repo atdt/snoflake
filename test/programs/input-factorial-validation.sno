@@ -1,0 +1,25 @@
+* @title Input factorial validates positive integers
+* @attribution Griswold 1971, Appendix D, Solution 3.5
+* @input >>>
+* 1
+* 5
+* 0
+* ABC
+* 7
+* <<<
+* @expect >>>
+* 1! = 1
+* 5! = 120
+* *** ERROR : 0 NOT A POSITIVE INTEGER.
+* *** ERROR : ABC NOT A POSITIVE INTEGER.
+* 7! = 5040
+* <<<
+          &TRIM = 1
+READ      N = INPUT :F(END)
+          FACT = INTEGER(N) GT(N) 1 :F(ERROR)
+          I = 1
+L         I = LT(I,N) I + 1 :F(PRINT)
+          FACT = FACT * I :(L)
+PRINT     OUTPUT = N '! = ' FACT :(READ)
+ERROR     OUTPUT = '*** ERROR : ' N ' NOT A POSITIVE INTEGER.' :(READ)
+END

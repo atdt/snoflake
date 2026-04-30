@@ -1,0 +1,61 @@
+* @title Bubble sort over an input array
+* @attribution Griswold 1971, Chapter 5, Section 5.1.1
+* @input >>>
+* 15
+* ADDSIB
+* BUKINT
+* ADJTTL
+* BUCKET
+* ADREAL
+* BKSPCE
+* APDSP
+* ARRAY
+* BKSIZE
+* ALTERN
+* BRANCH
+* ADJUST
+* BUFFER
+* ADDSON
+* ADDLG
+* <<<
+* @expect >>>
+* ADDLG
+* ADDSIB
+* ADDSON
+* ADJTTL
+* ADJUST
+* ADREAL
+* ALTERN
+* APDSP
+* ARRAY
+* BKSIZE
+* BKSPCE
+* BRANCH
+* BUCKET
+* BUFFER
+* BUKINT
+* <<<
+* BUBBLE SORT PROGRAM
+          &TRIM = 1
+          DEFINE('SORT(N)I')
+          DEFINE('SWITCH(I)TEMP')
+          DEFINE('BUBBLE(J)')
+          N = INPUT :F(ERROR)
+          A = ARRAY(N)
+READ      I = I + 1
+          A<I> = INPUT :F(GO)S(READ)
+GO        SORT(N)
+          M = 1
+PRINT     OUTPUT = A<M> :F(END)
+          M = M + 1 :(PRINT)
+SORT      I = LT(I,N - 1) I + 1 :F(RETURN)
+          LGT(A<I>,A<I + 1>) :F(SORT)
+          SWITCH(I)
+          BUBBLE(I) :(SORT)
+SWITCH    TEMP = A<I>
+          A<I> = A<I + 1>
+          A<I + 1> = TEMP :(RETURN)
+BUBBLE    J = GT(J,1) J - 1 :F(RETURN)
+          LGT(A<J>,A<J + 1>) :F(RETURN)
+          SWITCH(J) :(BUBBLE)
+END

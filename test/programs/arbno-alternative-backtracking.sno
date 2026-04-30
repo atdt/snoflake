@@ -1,0 +1,16 @@
+* @title ARBNO backtracks through alternative subpatterns
+* @attribution Griswold 1971, Chapter 2, Section 2.18
+* @expect >>>
+*
+* 1234
+* 12341234
+* 1234123
+* 123
+* 123412
+* 123412341
+* <<<
+          &ANCHOR = 1
+          P = '1234' | '123' | '234' | '341' | '412'
+          ARBNOTEST = ARBNO(P) $ OUTPUT RPOS(0)
+          '123412341' ARBNOTEST
+END

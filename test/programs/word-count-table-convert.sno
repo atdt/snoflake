@@ -1,0 +1,60 @@
+* @title Word counting with TABLE and CONVERT to ARRAY
+* @attribution Griswold 1971, Chapter 5, Section 5.3.4
+* @input >>>
+* ON THE FUTURE! - HOW IT TELLS
+* OF THE RAPTURE THAT IMPELLS
+* TO THE SWINGING AND THE RINGING
+* OF THE BELLS, BELLS, BELLS, -
+* OF THE BELLS, BELLS, BELLS, BELLS,
+* BELLS, BELLS, BELLS, -
+* TO THE RHYMING AND THE CHIMING OF THE BELLS!
+* <<<
+* @expect >>>
+* ON THE FUTURE! - HOW IT TELLS
+* OF THE RAPTURE THAT IMPELLS
+* TO THE SWINGING AND THE RINGING
+* OF THE BELLS, BELLS, BELLS, -
+* OF THE BELLS, BELLS, BELLS, BELLS,
+* BELLS, BELLS, BELLS, -
+* TO THE RHYMING AND THE CHIMING OF THE BELLS!
+*
+* WORD COUNTS ARE:
+*
+* ON = 1
+* THE = 9
+* FUTURE = 1
+* HOW = 1
+* IT = 1
+* TELLS = 1
+* OF = 4
+* RAPTURE = 1
+* THAT = 1
+* IMPELLS = 1
+* TO = 2
+* SWINGING = 1
+* AND = 2
+* RINGING = 1
+* BELLS = 11
+* RHYMING = 1
+* CHIMING = 1
+* <<<
+          &ANCHOR = 1
+          SEPARATOR = ' . , ; : ? ! - '
+          ENDPAT = BREAK(SEPARATOR)
+          GAP = SPAN(SEPARATOR)
+          TOKEN = ENDPAT . WORD GAP
+          COUNT = TABLE(20,10)
+READ      RAW = INPUT :F(PRINT)
+          OUTPUT = TRIM(RAW)
+          LINE = RAW ' '
+          LINE GAP =
+NEXTT     LINE TOKEN = :F(READ)
+          COUNT<WORD> = COUNT<WORD> + 1 :(NEXTT)
+PRINT     OUTPUT =
+          OUTPUT = 'WORD COUNTS ARE:'
+          OUTPUT =
+          COUNT = CONVERT(COUNT,'ARRAY')
+          I = 1 :F(END)
+NEXTC     OUTPUT = COUNT<I,1> ' = ' COUNT<I,2> :F(END)
+          I = I + 1 :(NEXTC)
+END

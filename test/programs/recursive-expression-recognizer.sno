@@ -1,0 +1,24 @@
+* @title Recursive pattern recognizes simple arithmetic expressions
+* @attribution Griswold 1971, Chapter 2, Section 2.16.4
+* @input >>>
+* X+Y*(Z+X)
+* X+Y+Z
+* XY
+* <<<
+* @expect >>>
+* X+Y*(Z+X) IS AN EXPRESSION.
+* X+Y+Z IS AN EXPRESSION.
+* XY IS NOT AN EXPRESSION.
+* <<<
+          &ANCHOR = 1; &TRIM = 1
+          VARIABLE = ANY('XYZ')
+          ADDOP = ANY('+-')
+          MULOP = ANY('*/')
+          FACTOR = VARIABLE | '(' *EXP ')'
+          TERM = FACTOR | *TERM MULOP FACTOR
+          EXP = ADDOP TERM | TERM | *EXP ADDOP TERM
+LOOP      STRING = TRIM(INPUT) :F(END)
+          STRING EXP RPOS(0) :F(NOGOOD)
+          OUTPUT = STRING ' IS AN EXPRESSION.' :(LOOP)
+NOGOOD    OUTPUT = STRING ' IS NOT AN EXPRESSION.' :(LOOP)
+END

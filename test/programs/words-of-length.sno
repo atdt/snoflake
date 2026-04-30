@@ -1,0 +1,24 @@
+* @title Word-length filter over input text
+* @attribution Griswold 1971, Appendix D, Solution 2.3
+* @input >>>
+* 5
+* THE QUICK BROWN FOX JUMPS.
+* SIXTY SEVEN EIGHT NINE?
+* <<<
+* @expect >>>
+*  WORDS OF LENGTH 5 ARE:
+* QUICK
+* BROWN
+* JUMPS
+* SIXTY
+* SEVEN
+* EIGHT
+* <<<
+          &TRIM = 1
+          WORD = BREAK(' ,.;?') . W LEN(1)
+          N = INPUT
+          OUTPUT = ' WORDS OF LENGTH ' N ' ARE:'
+READ      TEXT = INPUT ' ' :F(END)
+NEXTW     TEXT WORD = :F(READ)
+          OUTPUT = EQ(SIZE(W),N) W :(NEXTW)
+END

@@ -1,0 +1,14 @@
+* @title Unevaluated expression matches a repeated adjacent character
+* @attribution Griswold 1971, Chapter 2, Section 2.16.1
+* @expect >>>
+* OO
+* MM
+* AA
+* EE
+* <<<
+          PAIR = (LEN(1) $ X *X) . OUTPUT
+          'COOK' PAIR
+          'COMMON' PAIR
+          'AARON' PAIR
+          'CHICKADEE' PAIR
+END

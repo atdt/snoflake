@@ -1,0 +1,30 @@
+* @title FAIL forces all alternatives for logical word filtering
+* @attribution Griswold 1971, Chapter 2, Section 2.13
+* @input >>>
+* ALPHA
+* BETA
+* ABRACADABRA
+* ABSOLUTELY
+* AWFUL
+* ALBEIT
+* <<<
+* @expect >>>
+* ACCEPTABLE WORDS ARE:
+*
+*  BETA
+*  ABSOLUTELY
+*  ALBEIT
+* <<<
+          &ANCHOR = 1; &TRIM = 1
+          OUTPUT = 'ACCEPTABLE WORDS ARE:'
+          OUTPUT =
+          PAT = (BREAK('A') $ A | BREAK('B') $ B |
++                BREAK('C') $ C) FAIL
+LOOP      STRING = ' ' INPUT :F(END)
+          A =
+          B =
+          C =
+          STRING PAT
+          (DIFFER(A) DIFFER(B) IDENT(C)) :F(LOOP)
+          OUTPUT = STRING :(LOOP)
+END

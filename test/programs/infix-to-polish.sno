@@ -1,0 +1,29 @@
+* @title Recursive infix-to-Polish translator
+* @attribution Griswold 1971, Chapter 4, Section 4.6.3
+* @input >>>
+* ((A*(B+C))-(D/E))
+* A-B-C-D-E-F*G
+* ((A+(B*G))-(D/P))
+* <<<
+* @expect >>>
+*  INFIX FORM                          PREFIX FORM
+*
+* ((A*(B+C))-(D/E))                   -(*(A, +(B, C)), /(D, E))
+* A-B-C-D-E-F*G                       -(-(-(-(-(A, B), C), D), E), *(F, G))
+* ((A+(B*G))-(D/P))                   -(+(A, *(B, G)), /(D, P))
+* <<<
+          &ANCHOR = 1; &TRIM = 1
+          PMPAT = (ARBNO(BAL ANY('+-')) $ X FAIL | *DIFFER(X)
++                TAB(*(SIZE(X) - 1))) . X LEN(1) . OP REM . Y
+          MDPAT = (ARBNO(BAL ANY('*/')) $ X FAIL | *DIFFER(X)
++                TAB(*(SIZE(X) - 1))) . X LEN(1) . OP REM . Y
+          STRIP = '(' BAL . POL ')' RPOS(0)
+          DEFINE('POL(POL)X,Y,OP')
+          OUTPUT = ' INFIX FORM' DUPL(' ',26) 'PREFIX FORM'
+          OUTPUT =
+LOOP      STRING = INPUT :F(END)
+          OUTPUT = STRING DUPL(' ',36 - SIZE(STRING)) POL(STRING) :(LOOP)
+POL       POL STRIP :S(POL)
+          POL PMPAT = OP '(' POL(X) ', ' POL(Y) ')' :S(RETURN)
+          POL MDPAT = OP '(' POL(X) ', ' POL(Y) ')' :(RETURN)
+END

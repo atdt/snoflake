@@ -1,0 +1,31 @@
+* @title Cursor-position operator underlines matched substrings
+* @attribution Griswold 1971, Chapter 2, Section 2.7
+* @input >>>
+* BEDS
+* BREEDS
+* BEADS
+* RODS
+* <<<
+* @expect >>>
+* BEDS
+* ---
+*
+* BREEDS
+* P FAILED TO MATCH.
+*
+* BEADS
+* ----
+*
+* RODS
+* P FAILED TO MATCH.
+*
+* <<<
+          &TRIM = 1
+          P = ('B' | 'R') ('E' | 'EA') ('D' | 'DS')
+          PATTERN = @X P @Y
+LOOP      OUTPUT = INPUT :F(END)
+          OUTPUT PATTERN :F(NOPAT)
+          OUTPUT = DUPL(' ',X) DUPL('-',Y - X)
+BLLINE    OUTPUT = :(LOOP)
+NOPAT     OUTPUT = 'P FAILED TO MATCH.' :(BLLINE)
+END

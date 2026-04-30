@@ -1,0 +1,25 @@
+* @title Array-backed input reversal
+* @attribution Griswold 1971, Appendix D, Solution 1.5
+* @input >>>
+* 5
+* ONE
+* TWO
+* THREE
+* FOUR
+* FIVE
+* <<<
+* @expect >>>
+* FIVE
+* FOUR
+* THREE
+* TWO
+* ONE
+* <<<
+          &TRIM = 1
+          A = ARRAY(INPUT)
+          I = 1
+READ      A<I> = INPUT :F(PRINT)
+          I = I + 1 :(READ)
+PRINT     I = I - 1
+          OUTPUT = A<I> :S(PRINT)
+END

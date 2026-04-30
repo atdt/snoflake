@@ -1,0 +1,22 @@
+* @title Assembly-label recognizer prints invalid labels
+* @attribution Griswold 1971, Appendix D, Solution 2.4
+* @input >>>
+* GOOD1  LDA VALUE
+* TOOLONG9 OP X
+* 1BAD OP X
+*        NO LABEL
+* BAD-LABEL OP X
+* <<<
+* @expect >>>
+* 1BAD OP X
+* BAD-LABEL OP X
+* <<<
+          LETTER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+          DIGIT = '0123456789'
+          LABEL = ' ' | ANY(LETTER) (SPAN(LETTER DIGIT) @N *LE(N,8)
++                | NULL) ' '
+          &ANCHOR = 1
+R         CARD = INPUT :F(END)
+          CARD LABEL :S(R)
+          OUTPUT = CARD :(R)
+END

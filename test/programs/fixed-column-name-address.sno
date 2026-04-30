@@ -1,0 +1,23 @@
+* @title Fixed-column field extraction with TAB and REM
+* @attribution Griswold 1971, Chapter 2, Section 2.11
+* @input >>>
+*  1 WILLIAM T. CAHILL         REP   COLLINGSWOOD
+*  2 THOMAS C. MCGRATH, JR.    DEM   MARGATE CITY
+*  3 JAMES J. HOWARD           DEM   WALL
+* 14 DOMINICK V. DANIELS       DEM   JERSEY CITY
+* 15 EDWARD J. PATTEN          DEM   PERTH AMBOY
+* <<<
+* @expect >>>
+* WILLIAM T. CAHILL                       COLLINGSWOOD
+* THOMAS C. MCGRATH, JR.                  MARGATE CITY
+* JAMES J. HOWARD                                 WALL
+* DOMINICK V. DANIELS                     JERSEY CITY
+* EDWARD J. PATTEN                        PERTH AMBOY
+* <<<
+          &ANCHOR = 1; &TRIM = 1
+          NAMEANDPO = TAB(3) (TAB(29) . NAME) TAB(35) (REM . PO)
+LOOP      CARD = INPUT :F(END)
+          CARD NAMEANDPO :F(ERROR)
+          NAME = TRIM(NAME)
+          OUTPUT = NAME DUPL(' ',44 - (SIZE(NAME) + SIZE(PO))) PO :(LOOP)
+END

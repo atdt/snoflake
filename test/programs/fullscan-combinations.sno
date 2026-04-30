@@ -1,0 +1,31 @@
+* @title Fullscan finds all three-character combinations
+* @attribution Griswold 1971, Chapter 2, Section 2.22.1
+* @expect >>>
+* 123
+* 124
+* 125
+* 126
+* 134
+* 135
+* 136
+* 145
+* 146
+* 156
+* 234
+* 235
+* 236
+* 245
+* 246
+* 256
+* 345
+* 346
+* 356
+* 456
+* <<<
+          DEFINE('F(X,Y,Z)')
+          &FULLSCAN = 1
+          COMB3 = LEN(1) $ A ARB LEN(1) $ B ARB LEN(1) $ C
++                *F(A,B,C) FAIL
+          '123456' COMB3 :(END)
+F         OUTPUT = X Y Z :(RETURN)
+END

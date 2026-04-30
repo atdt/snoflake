@@ -1,0 +1,17 @@
+* @title LGT-driven replacement sort alphabetizes a string
+* @attribution Griswold 1971, Chapter 3, Section 3.3.2
+* @expect >>>
+* LABORATORIES
+* AABEILOORRST
+* <<<
+          &ANCHOR = 1; &FULLSCAN = 1
+          FLIP = LEN(*I) . HEAD LEN(1) $ X LEN(1) $ Y *LGT(X,Y)
+          STR = 'LABORATORIES'
+          OUTPUT = STR
+          LIMIT = SIZE(STR) - 2
+LOOP      STR FLIP = HEAD Y X
+          I = LT(I,LIMIT) I + 1 :S(LOOP)
+          I = 0
+          LIMIT = GT(LIMIT,0) LIMIT - 1 :S(LOOP)
+          OUTPUT = STR
+END

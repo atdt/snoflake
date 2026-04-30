@@ -207,6 +207,52 @@ Error-path test:
 END
 ```
 
+## Adding fixtures
+
+Use descriptive file names and titles that identify the behavior under test,
+not just the chapter or page number. Prefer names like
+`recursive-binary-conversion.sno` or `fullscan-combinations.sno`. Include an
+`@attribution` tag when the program comes from a book, paper, historical
+source, or local reduction of such an example.
+
+When transcribing historical examples, remember that OCR output is often wrong
+in exactly the places SNOBOL cares about most: leading blanks, continuation
+lines, quote characters, cursor-position operators, and array/name reference
+brackets. Reconstruct the runnable program from the surrounding prose and the
+book image when needed. For Griswold examples, OCR `aX` usually means the
+cursor-position operator `@X`.
+
+If the source does not provide reference input or output, the `snobol4`
+executable in `PATH` is available as a CSNOBOL4 reference implementation. Keep
+the probe in `tmp/` and run it with the startup banner disabled:
+
+```sh
+snobol4 -b tmp/probe.sno < tmp/probe.in > tmp/probe.out
+```
+
+For a self-contained quick check:
+
+```sh
+cat > tmp/probe.sno <<'EOF'
+          OUTPUT = 'HELLO, WORLD'
+END
+EOF
+snobol4 -b tmp/probe.sno
+```
+
+Treat CSNOBOL4 output as useful reference evidence, not as proof that Snoflake
+is wrong. CSNOBOL4 includes extensions and implementation choices that may not
+belong in this historical macro-port. It is still fine to add a fixture that
+currently fails when the expected behavior is well-supported by the book or by
+CSNOBOL4 and the fixture captures a real compatibility target.
+
+For input-driven fixtures, put stdin in an `@input` block rather than in
+`@options`. If the historical program assumes fixed-width card input, either
+preserve the significant blanks in the `@input` block or make the program trim
+only the display copy while matching against the fixed-width data. Be explicit
+about blank output lines in `@expect`; a bare `*` line inside the block means an
+expected empty line.
+
 ## Running
 
 `npm test` picks up `test/test-programs.js` along with the rest of the suite.

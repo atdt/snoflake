@@ -1,0 +1,38 @@
+* @title Recursive pattern inserts leadering for runs of blanks
+* @attribution Griswold 1971, Chapter 2, Section 2.16.5
+* @input >>>
+* INSERT          LEADERING
+* TRY TWO BLANKS
+* TRY THREE   BLANKS
+* TRY FOUR    BLANKS
+* TRY FIVE     BLANKS
+* TRY    SEVERAL      BREAKS
+* FINALLY, TRY
+* A RIGHT JUSTIFIED ONE.
+* <<<
+* @expect >>>
+* INSERT          LEADERING
+* INSERT . . . . . LEADERING
+* TRY TWO BLANKS
+* TRY TWO BLANKS
+* TRY THREE   BLANKS
+* TRY THREE . BLANKS
+* TRY FOUR    BLANKS
+* TRY FOUR . . BLANKS
+* TRY FIVE     BLANKS
+* TRY FIVE . . BLANKS
+* TRY    SEVERAL      BREAKS
+* TRY . . SEVERAL . . . BREAKS
+* FINALLY, TRY
+* FINALLY, TRY
+* A RIGHT JUSTIFIED ONE.
+* A RIGHT JUSTIFIED ONE.
+* <<<
+          &TRIM = 1
+          P = ' ' *P | ' '
+          PAT = @Y ' ' P @X
+LOOP      CARD = INPUT :F(END)
+          OUTPUT = CARD
+LOOP1     CARD PAT = DUPL(' .',(X - Y) / 2) ' ' :S(LOOP1)
+          OUTPUT = CARD :(LOOP)
+END

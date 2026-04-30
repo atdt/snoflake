@@ -1,0 +1,16 @@
+* @title REPLACE performs character-for-character substitution
+* @attribution Griswold 1971, Appendix D, Solution 1.4
+* @input >>>
+* ABC XYZ 012
+* HELLO, WORLD!
+* <<<
+* @expect >>>
+* 012MIJKMSTU
+* 74--%LMH%C-3Q
+* <<<
+          &TRIM = 1
+          IN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ, .:;!?0123456789+-*/%'
+          CODE = '0123456789+-*/%ABCDEFGHIJKLMNOPQRSTUVWXYZ, .:;!?'
+READ      LINE = INPUT :F(END)
+          OUTPUT = REPLACE(LINE,IN,CODE) :(READ)
+END

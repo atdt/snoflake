@@ -1,0 +1,22 @@
+* @title Fullscan palindrome recognizer with RTAB and ABORT
+* @attribution Griswold 1971, Appendix D, Solution 2.9
+* @input >>>
+* LEVEL
+* ABBA
+* SNOBOL
+* A MAN A PLAN A CANAL PANAMA
+* <<<
+* @expect >>>
+* "LEVEL" IS A PALINDROME.
+* "ABBA" IS A PALINDROME.
+* "SNOBOL" IS NOT A PALINDROME.
+* "A MAN A PLAN A CANAL PANAMA" IS NOT A PALINDROME.
+* <<<
+          &FULLSCAN = 1; &TRIM = 1
+          PALIN = LEN(1) $ H @X (*GT(2 * X, SIZE(S)) |
++                *RTAB(X) @Y @Z (*H @Z | *EQ(Y,Z) ABORT) FAIL)
+READ      S = INPUT :F(END)
+          S PALIN :F(NO)
+          OUTPUT = '"' S '" IS A PALINDROME.' :(READ)
+NO        OUTPUT = '"' S '" IS NOT A PALINDROME.' :(READ)
+END

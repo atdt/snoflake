@@ -1,0 +1,19 @@
+* @title Unevaluated expression uses current word in a prebuilt pattern
+* @attribution Griswold 1971, Chapter 2, Section 2.16
+* @input >>>
+* THESE TWO STRINGS ARE ALMOST ALIKE.
+* THE TWO STRINGS AREN'T ALIKE.
+* <<<
+* @expect >>>
+* TWO, STRINGS, ALIKE,
+* <<<
+          &ANCHOR = 0; &TRIM = 1
+          WORD = BREAK(' .,') . W SPAN(' .,')
+          FINDW = ' ' *W ANY(' .,')
+          STRING1 = INPUT ' ' :F(ERROR)
+          STRING2 = ' ' INPUT ' ' :F(ERROR)
+LOOP      STRING1 WORD = :F(OUTPUT)
+          STRING2 FINDW :F(LOOP)
+          LIST = LIST W ', ' :(LOOP)
+OUTPUT    OUTPUT = TRIM(LIST)
+END

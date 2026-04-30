@@ -1,0 +1,17 @@
+* @title Unevaluated BREAK argument uses the current character
+* @attribution Griswold 1971, Chapter 2, Section 2.16
+* @input >>>
+* TWO STRINGS FOR TESTING
+* ABCDEFGHIJKLMNOPQRSTUVWXYZ
+* <<<
+* @expect TWOSTRINGSFORTESTING
+          &ANCHOR = 1; &TRIM = 1
+          CHAR = LEN(1) . CH
+          FINDCH = BREAK(*CH)
+          STRING1 = INPUT :F(ERROR)
+          STRING2 = INPUT :F(ERROR)
+LOOP      STRING1 CHAR = :F(OUTPUT)
+          STRING2 FINDCH :F(LOOP)
+          LIST = LIST CH :(LOOP)
+OUTPUT    OUTPUT = LIST
+END

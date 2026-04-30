@@ -1,0 +1,21 @@
+* @title Recursive function converts decimal integers to binary
+* @attribution Griswold 1971, Chapter 4, Section 4.6.1
+* @expect >>>
+*  0 = 0
+*  13 = 1101
+*  57 = 111001
+*  472 = 111011000
+*  8192 = 10000000000000
+* 13279 = 11001111011111
+* 99999 = 11000011010011111
+* <<<
+          DEFINE('BINARY(BINARY)')
+          OUTPUT = ' 0 = ' BINARY(0)
+          OUTPUT = ' 13 = ' BINARY(13)
+          OUTPUT = ' 57 = ' BINARY(57)
+          OUTPUT = ' 472 = ' BINARY(472)
+          OUTPUT = ' 8192 = ' BINARY(8192)
+          OUTPUT = '13279 = ' BINARY(13279)
+          OUTPUT = '99999 = ' BINARY(99999) :(END)
+BINARY    BINARY = GT(BINARY,1) BINARY(BINARY / 2) REMDR(BINARY,2) :(RETURN)
+END

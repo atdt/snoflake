@@ -1,0 +1,17 @@
+* @title Recursive unevaluated pattern matches Y followed by Zs
+* @attribution Griswold 1971, Chapter 2, Section 2.16.3
+* @expect >>>
+* Y
+* YZZZ
+* YZ
+* YZZ
+* YZZZZ
+* <<<
+          P = *P 'Z' | 'Y'
+          PO = P . OUTPUT
+          'Y' PO
+          'YZZZ' PO
+          'XYZ' PO
+          'YZZX' PO
+          'AYZZZZB' PO
+END

@@ -1,0 +1,32 @@
+* @title Binary OPSYN dispatches complex multiplication
+* @attribution Griswold 1971, Appendix D, Solution 5.4
+* @expect >>>
+* 24,28
+* 20,12
+* 30,10
+* 20
+* <<<
+          DATA('COMPLEX(R,I)')
+          DEFINE('MUL(X,Y)')
+          OPSYN('%','*',2)
+          OPSYN('*','MUL',2) :(START)
+MUL       MUL = DIFFER(DATATYPE(X),'COMPLEX')
++                DIFFER(DATATYPE(Y),'COMPLEX') X % Y :S(RETURN)
+          MUL = DIFFER(DATATYPE(X),'COMPLEX')
++                COMPLEX(X % R(Y),X % I(Y)) :S(OUT)
+          MUL = DIFFER(DATATYPE(Y),'COMPLEX')
++                COMPLEX(Y % R(X),Y % I(X)) :S(OUT)
+          MUL = COMPLEX(R(X) % R(Y) - I(X) % I(Y),
++                R(X) % I(Y) + R(Y) % I(X))
+OUT       MUL = EQ(I(MUL)) R(MUL) :(RETURN)
+START     A = COMPLEX(5,3)
+          B = COMPLEX(6,2)
+          PR = A * B
+          OUTPUT = R(PR) ',' I(PR)
+          PR = 4 * A
+          OUTPUT = R(PR) ',' I(PR)
+          PR = B * 5
+          OUTPUT = R(PR) ',' I(PR)
+          PR = 5 * 4
+          OUTPUT = PR
+END

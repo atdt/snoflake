@@ -1,0 +1,24 @@
+* @title Punctuation counter using cursor assignment
+* @attribution Griswold 1971, Appendix D, Solution 2.1
+* @input >>>
+* HELLO, WORLD!
+* A(B); C? 'D'.
+* <<<
+* @expect >>>
+* HELLO, WORLD!
+* A(B); C? 'D'.
+*
+* THERE ARE 9 PUNCTUATION MARKS.
+* <<<
+          &TRIM = 1
+          COUNT = 0
+          PUNCT = '.,:;?!()' "'" '"'
+          PAT = POS(0) LEN(*N) BREAK(PUNCT) LEN(1) @N
+READ      TEXT = INPUT :F(PRINT)
+          OUTPUT = TEXT
+          N = 0
+C         TEXT PAT :F(READ)
+          COUNT = COUNT + 1 :(C)
+PRINT     OUTPUT =
+          OUTPUT = 'THERE ARE ' COUNT ' PUNCTUATION MARKS.'
+END
