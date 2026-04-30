@@ -1,0 +1,11 @@
+* @title Square array pattern from prototype
+* @attribution Griswold 1971, Appendix D
+* @expect >>>
+* 3,3,3,3
+* <<<
+         DEFINE('SQUARE(A)')                  :(SQ_END)
+SQUARE   SQUARE = ARRAY(PROTOTYPE(A) ',' PROTOTYPE(A)) :(RETURN)
+SQ_END   B = ARRAY('3,3')
+         C = SQUARE(B)
+         OUTPUT = PROTOTYPE(C)
+END

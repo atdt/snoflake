@@ -1,0 +1,15 @@
+* @title Programmer-defined trace procedure
+* @attribution Griswold 1971, Chapter 8
+* @expect >>>
+* VARIABLE X SET TO 10 AT LINE 7
+* VARIABLE X SET TO 15 AT LINE 8
+* <<<
+         DEFINE('VALTR(VAR,TAG)ST,TIME')      :(START)
+VALTR    ST = &LASTNO
+         OUTPUT = 'VARIABLE ' VAR ' SET TO ' $VAR ' AT LINE ' ST
+         :(RETURN)
+START    &TRACE = 100
+         TRACE('X', 'VALUE', , 'VALTR')
+         X = 10
+         X = X + 5
+END

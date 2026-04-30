@@ -1,0 +1,10 @@
+* @title Conditional fatal error trapping with &ERRLIMIT
+* @attribution Griswold 1971, Chapter 10
+* @expect >>>
+* ERROR TRAPPED
+* <<<
+         &ERRLIMIT = 1
+         X = ''
+         A = $X
+         OUTPUT = EQ(&ERRTYPE, 4) 'ERROR TRAPPED'
+END

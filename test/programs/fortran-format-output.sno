@@ -1,0 +1,9 @@
+* @title Custom output association with FORTRAN format
+* @attribution Griswold 1971, Chapter 9
+* @match substring
+* @expect 375
+         OUTPUT('SUM', 6, "(' THE RESULT IS: ', I10)")
+         X = 125
+         Y = 250
+         SUM = X + Y
+END

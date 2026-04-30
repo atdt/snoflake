@@ -1,0 +1,15 @@
+* @title Storage regeneration and function-local variables
+* @attribution Griswold 1971, Chapter 11
+* @match substring
+* @expect >>>
+* LOCALS ARE NULL: 
+* GLOBALS RESTORED: STAY STAY
+* <<<
+         OUTPUT = 'FREE SPACE BEFORE: ' COLLECT()
+         DEFINE('RESET(X,Y,Z)')               :(START)
+RESET    OUTPUT = 'LOCALS ARE NULL: ' IDENT(X) IDENT(Y)
+         :(RETURN)
+START    X = 'STAY'; Y = 'STAY'
+         RESET()
+         OUTPUT = 'GLOBALS RESTORED: ' X ' ' Y
+END

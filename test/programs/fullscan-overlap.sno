@@ -1,0 +1,11 @@
+* @title Overlapping pattern match with &FULLSCAN
+* @attribution Griswold 1971, Appendix D
+* @expect >>>
+* NO MATCH
+* <<<
+         &FULLSCAN = 1
+         ABC = POS(0) (SPAN('A') @N SPAN('B') POS(*(2 * N)) RPOS(*N) SPAN('C') RPOS(0))
+         'AABBBBCC' ABC                        :S(MATCH)
+         OUTPUT = 'NO MATCH'                   :(END)
+MATCH    OUTPUT = 'MATCH FOUND AT N=' N
+END
