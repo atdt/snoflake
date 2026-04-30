@@ -35,7 +35,8 @@ function parseHeader( filePath ) {
         options: {},
         input: null,
         expect: null,
-        match: 'exact'
+        match: 'exact',
+        attribution: null
     };
     var seen = {};
     var i;
@@ -145,6 +146,16 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         // Block form already has the trailing \n appended; single-line gets one
         // appended so both forms describe "one or more newline-terminated lines".
         header.expect = isBlock ? value : value + '\n';
+        return;
+    }
+    if ( key === 'attribution' ) {
+        if ( isBlock ) {
+            throw new Error( filePath + ': @attribution must be single-line' );
+        }
+        if ( value === '' ) {
+            throw new Error( filePath + ': @attribution must not be empty' );
+        }
+        header.attribution = value;
         return;
     }
     if ( key === 'match' ) {

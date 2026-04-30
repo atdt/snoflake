@@ -49,6 +49,7 @@ silently dropping expectations.
 | `@input`   | multi-line | no                                | Lines written to a tmp file; runner wires up `input` opt. |
 | `@expect`  | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                          |
 | `@match`   | single     | no                                | `exact` (default), `substring`, or `error`.               |
+| `@attribution` | single | no                                | Free-text credit for where the program came from. Informational only. |
 
 ### `@options`
 
@@ -106,6 +107,11 @@ payload:
 
 means `"A\n\n"`. Interior blank lines are preserved verbatim; only the final
 newline of the actual output is normalized when comparing.
+
+### `@attribution`
+
+Optional single-line free text crediting the source of the program (e.g.
+`Griswold 1971, §3.4`). Informational; the runner does not act on it.
 
 ### `@match`
 
