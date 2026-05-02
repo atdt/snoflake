@@ -56,8 +56,9 @@ describe( 'Assembly Control Macros', function () {
             [ 'B',  'LHERE', mkargs( this.vm ) ],
             [ null, 'DESCR', mkargs( this.vm ) ]
         ] );
-        assert.equal( this.vm.mem[ this.vm.resolve('A') ], 1 );
-        assert.equal( this.vm.mem[ this.vm.resolve('B') ], 3 );
+        assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), this.vm.$( 'DESCR' ) );
+        assert.deepEqual( this.vm.d( 'A' ).raw(), [ 0, 0, 0 ] );
+        assert.deepEqual( this.vm.d( 'B' ).raw(), [ 0, 0, 0 ] );
     } );
 
     it( 'TITLE', function () {

@@ -16,6 +16,28 @@ function getArgs( f ) {
         .replace( /(vm\.\$\("|"\))/g, '' );
 }
 
+function nextLabeledMacro( program, index ) {
+    var next = index + 1;
+
+    while (
+        next < program.length &&
+        ( program[ next ][ 1 ] === 'TITLE' || program[ next ][ 1 ] === 'LHERE' )
+    ) {
+        next++;
+    }
+
+    return next;
+}
+
+function isDataLhere( program, index ) {
+    var next = nextLabeledMacro( program, index ),
+        macro = next < program.length && program[ next ][ 1 ];
+
+    return DATA_ASSEMBLY_MACROS.includes( macro ) &&
+        macro !== 'LHERE' &&
+        macro !== 'PROC';
+}
+
 SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
@@ -87,7 +109,7 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label, macro;
+    var args, status, loc, stmt, label, macro, next;
 
     var sym;
     var i;
@@ -126,6 +148,22 @@ SNOBOL.VM.prototype.run = function ( program ) {
                 }
                 break;
             case 'LHERE':
+                // LHERE is EQU *: when it labels assembled data, no storage is
+                // emitted. Executable labels still need Snoflake's indirection
+                // cell because BRANCH/RCALL jump through symbol addresses.
+                if ( isDataLhere( program, this.instructionPointer ) ) {
+                    if ( label ) {
+                        this.define( label, this.mem.length );
+                    }
+                    break;
+                }
+                next = nextLabeledMacro( program, this.instructionPointer );
+                if ( label ) {
+                    this.define( label, this.mem.length );
+                    this.mem.push( next );
+                    assert.equal( this.mem[ this.symbols[ label ] ], next );
+                }
+                break;
             case 'PROC':
                 this.define( label, this.mem.length );
                 this.mem.push( this.instructionPointer + 1 );

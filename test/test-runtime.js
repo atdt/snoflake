@@ -557,6 +557,61 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( '\nLOW\n' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
+
+    it( 'case-folds function names supplied to OPSYN by default', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-opsyn-case-fold.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file,
+            "          DEFINE('opt(pattern)')\n" +
+            "          OPSYN('^','opt',1) :(START)\n" +
+            "OPT       OPT = NULL | PATTERN :(RETURN)\n" +
+            "START     R = ^'YY'\n" +
+            "          OUTPUT = DATATYPE(R)\n" +
+            "END\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-opsyn-case-fold.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nPATTERN\n' ) );
+        assert( !output.includes( 'UNDEFINED FUNCTION OR OPERATION' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
+    it( 'initializes ALPHABET as a string keyword value', function () {
+        var root = path.join( __dirname, '..' ),
+            file = path.join( root, 'tmp', 'test-alphabet-keyword.sno' ),
+            output;
+
+        fs.mkdirSync( path.dirname( file ), { recursive: true } );
+        fs.writeFileSync( file,
+            "          OUTPUT = DATATYPE(&ALPHABET)\n" +
+            "          OUTPUT = SIZE(&ALPHABET)\n" +
+            "END\n" );
+
+        output = childProcess.execFileSync( process.execPath, [
+            'run.js',
+            '--file=tmp/test-alphabet-keyword.sno',
+            '--maxSteps=100000',
+            '--maxMillis=1000'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert( output.includes( '\nSTRING\n127\n' ) );
+        assert( !output.includes( 'ILLEGAL DATA TYPE' ) );
+        assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
 } );
 
 describe( 'Descriptor Datatype', function () {

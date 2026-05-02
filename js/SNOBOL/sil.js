@@ -146,6 +146,19 @@ function foldSpecifierAsciiUpper( vm, SPEC, length ) {
     }
 }
 
+function foldAsciiUpperString( str ) {
+    return str.replace( /[a-z]/g, function ( ch ) {
+        return String.fromCharCode( ch.charCodeAt( 0 ) - 32 );
+    } );
+}
+
+function stringStructureText( vm, DESCR ) {
+    var title = vm.d( DESCR.addr ),
+        start = DESCR.addr + vm.$( 'BCDFLD' );
+
+    return SNOBOL.str.decode( vm.mem.slice( start, start + title.value ) );
+}
+
 function isFoldableStreamTable( tableName ) {
     return tableName === 'LBLTB' ||
         tableName === 'LBLXTB' ||
@@ -2306,7 +2319,11 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         A = DESCR2.addr,
         stop = A + this.d( A ).value,
-        ptr;
+        ptr,
+        key,
+        candidate,
+        isFunctionPairList = this.symbols.FNCPL !== undefined &&
+            A === this.d( 'FNCPL' ).addr;
 
     for ( var i = 0; ; i++ ) {
         ptr = A + 6 + ( 6 * i );
@@ -2318,6 +2335,27 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 
         if ( ptr === stop ) {
             break;
+        }
+    }
+
+    // Function names from source are folded by STREAM, but names supplied
+    // as data to DEFINE/OPSYN are ordinary strings.  FNCPL stores those
+    // names as string structures, so fall back to the same ASCII fold here
+    // after preserving the exact descriptor match above.
+    if ( caseFoldEnabled() && isFunctionPairList ) {
+        key = foldAsciiUpperString( stringStructureText( this, DESCR3 ) );
+
+        for ( i = 0; ; i++ ) {
+            ptr = A + 6 + ( 6 * i );
+            candidate = foldAsciiUpperString( stringStructureText( this, this.d( ptr ) ) );
+            if ( candidate === key ) {
+                DESCR1.update( ptr - 6, DESCR2.flags, DESCR2.value );
+                return this.jmp( SLOC );
+            }
+
+            if ( ptr === stop ) {
+                break;
+            }
         }
     }
 
