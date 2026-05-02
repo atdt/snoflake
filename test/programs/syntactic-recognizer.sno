@@ -1,52 +1,93 @@
 * @title Syntactic recognizer
-* @attribution Griswold 1971, Appendix C, Sample 5
-* @match substring
-* @expect >>>
-*           OUTPUT = 'HELLO'
-* <<<
+* @attribution Griswold 1971, Appendix C, Sample Program 5
 * @input >>>
-*           OUTPUT = 'HELLO'
+*            X     =     Y+Z
+*            ELEMENT<I,J> = ELEMENT<I,-J> + ELEMENT<-I,J>
+*            A<X,Y,Z + 1>    =    F(X,STRUCTURE.BUILD(TYPE,LENGTH + 1))
+*       SETUP     PAT1    =    (BREAK(';') $ FIRST | SPAN(' .') $ SECOND
+* +                            . VALUE ARBNO(BAL | LEN(1))  :($SWITCH)
+*            DEFINE('F(X,Y)')
+*            L     =    LT(N,B<J> L + 1
+*            NEWONE.TRIAL    X     =    ~COORD<1,K> X * X
+*            TRIM(INPUT)     PAT1      :S(OK)    :F(BAD)
+*            X     =    3.01; Y = 2.      ; Z     =    X * -Y
+*            RANDOM       =    (RAN.VAR * N) / 10000
+*       LOOP      OUTPUT     =    LT(N,10)    :S(LOP
+*       LOOP      OUTPUT     =    LT(N,10)    :S(LOOP)
+*            OUTPUT     =    X     :(FAST)
+*            ?M<X>           :S(A1)F(A2)
+*            OUTPUT     =    ''
+*            F('','')        =
+*            F('','')        =         "'
+* <<<
+* @expect >>>
+*      
+* <<< syntactic error >>>
+*                 ELEMENT<I,J> = ELEMENT<I,-J> + ELEMENT<-I,J>
+*                 A<X,Y,Z + 1>    =    F(X,STRUCTURE.BUILD(TYPE,LENGTH + 1))
+*            SETUP     PAT1    =    (BREAK(';') $ FIRST | SPAN(' .') $ SECOND
+*      +                            . VALUE ARBNO(BAL | LEN(1))  :($SWITCH)
+* <<< syntactic error >>>
+*                 DEFINE('F(X,Y)')
+* <<< syntactic error >>>
+*                 L     =    LT(N,B<J> L + 1
+* <<< syntactic error >>>
+*                 NEWONE.TRIAL    X     =    ~COORD<1,K> X * X
+*                 TRIM(INPUT)     PAT1      :S(OK)    :F(BAD)
+* <<< syntactic error >>>
+*                 X     =    3.01; Y = 2.      ; Z     =    X * -Y
+*                 RANDOM       =    (RAN.VAR * N) / 10000
+*            LOOP      OUTPUT     =    LT(N,10)    :S(LOP
+* <<< syntactic error >>>
+*            LOOP      OUTPUT     =    LT(N,10)    :S(LOOP)
+*                 OUTPUT     =    X     :(FAST)
+*                 ?M<X>           :S(A1)F(A2)
+* <<< syntactic error >>>
+*                 OUTPUT     =    ''
+*                 F('','')        =
+*                 F('','')        =         "'
+* <<< syntactic error >>>
 * <<<
           DEFINE('opt(pattern)')
-          OPSYN('t','opt',1)
+          OPSYN('^','opt',1)
           OPSYN('%','SPAN',1)
           OPSYN('#','ANY',1)
-          leftbr = "#" "'<['" "'"
-          rightbr = "#" "'<]'" "'"
+          leftbr = #'<'
+          rightbr = #'>'
           letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
           digits = '0123456789'
           alphanumerics = letters digits
           blanks = %' '
           integer = %digits
-          real = integer '.' tinteger
-          identifier = #letters t %(alphanumerics '._')
+          real = integer '.' ^integer
+          identifier = #letters ^%(alphanumerics '._')
           opsyms = '~?$.!%*/#+-@|&'
           unary = #opsyms
           binarysyms = #opsyms | '**'
           unaryop = %opsyms
-          binaryop = blanks t(binarysyms blanks)
+          binaryop = blanks ^(binarysyms blanks)
           unqalpha = &ALPHABET
-          unqalpha "'" =
           unqalpha '"' =
-          dliteral = '"' t %(unqalpha '"') '"'
-          sliteral = "'" t %(unqalpha "'") "'"
+          unqalpha "'" =
+          dliteral = '"' ^%(unqalpha "'") '"'
+          sliteral = "'" ^%(unqalpha '"') "'"
           literal = sliteral | dliteral | integer | real
-          element = tunaryop (identifier | literal | *function_call |
+          element = ^unaryop (identifier | literal | *function_call |
 +                   '(' *expression ')' | *array_ref)
           operation = *element binaryop (*element | *expression)
-          expression = tblanks (*element | *operation | null) tblanks
-          arglist = *expression t(',' *arglist)
+          expression = ^blanks (*element | *operation | null) ^blanks
+          arglist = *expression ^(',' *arglist)
           function_call = identifier '(' *arglist ')'
           array_ref = identifier leftbr *arglist rightbr
           label = #alphanumerics (BREAK(' ;') | REM)
-          label_field = tlabel
+          label_field = ^label
           goto = '(' expression ')' | leftbr expression rightbr
-          goto_field = t(blanks ':' FENCE tblanks (goto | 'S' goto
-+                   | 'F' goto | 'S' goto tblanks 'F' goto | 'F' goto
-+                   tblanks 'S' goto) tblanks)
+          goto_field = ^(blanks ':' FENCE ^blanks (goto | 'S' goto
++                   | 'F' goto | 'S' goto ^blanks 'F' goto | 'F' goto
++                   ^blanks 'S' goto) ^blanks)
           eql = #'=-'
-          rule = (blanks element (blanks eql t(blanks expression) |
-+                   (blanks expression t(blanks eql t(blanks expression))
+          rule = (blanks element (blanks eql ^(blanks expression) |
++                   (blanks expression ^(blanks eql ^(blanks expression))
 +                   )))
           eos = RPOS(0) | ';'
           statement = label_field rule goto_field eos
@@ -58,7 +99,7 @@
           eof =
           space = DUPL(' ',5)
           line =
-          comment = #'*-|.'
+          comment = #'*'
           continue = #'+.' . cc
 readi     image = input                         :F(END)
           OUTPUT = space line
