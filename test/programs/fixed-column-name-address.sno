@@ -8,11 +8,11 @@
 * 15 EDWARD J. PATTEN          DEM   PERTH AMBOY
 * <<<
 * @expect >>>
-* WILLIAM T. CAHILL                       COLLINGSWOOD
-* THOMAS C. MCGRATH, JR.                  MARGATE CITY
-* JAMES J. HOWARD                                 WALL
-* DOMINICK V. DANIELS                     JERSEY CITY
-* EDWARD J. PATTEN                        PERTH AMBOY
+* WILLIAM T. CAHILL               COLLINGSWOOD
+* THOMAS C. MCGRATH, JR.          MARGATE CITY
+* JAMES J. HOWARD                         WALL
+* DOMINICK V. DANIELS              JERSEY CITY
+* EDWARD J. PATTEN                 PERTH AMBOY
 * <<<
           &ANCHOR = 1; &TRIM = 1
           NAMEANDPO = TAB(3) (TAB(29) . NAME) TAB(35) (REM . PO)
