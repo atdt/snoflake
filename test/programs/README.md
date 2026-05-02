@@ -257,3 +257,23 @@ expected empty line.
 
 `npm test` picks up `test/test-programs.js` along with the rest of the suite.
 Each `.sno` file becomes one mocha `it(...)` named by its `@title`.
+
+## CSNOBOL4 cross-check
+
+`tools/check-csnobol4.js` runs fixtures through `snobol4 -b` and compares the
+captured output against the parsed `@expect` / `@match` directives. Use it to
+validate a new fixture's expected output against the reference implementation,
+or to spot drift after editing `@expect`.
+
+```sh
+node tools/check-csnobol4.js                 # all fixtures
+node tools/check-csnobol4.js basic-patterns  # one fixture (basename or path)
+node tools/check-csnobol4.js --update FIX    # rewrite @expect with CSNOBOL4 stdout
+```
+
+`--update` only rewrites `@match exact` fixtures whose CSNOBOL4 run did not
+error; `substring` and `error` fixtures are left untouched with a skip note.
+`@options` runtime flags (`caseFold`, `debug`, …) are not translated to
+CSNOBOL4 invocation flags — fixtures that set them get a `WARN` line so
+disagreements are not mis-attributed. Mismatched runs are dumped to
+`tmp/check-csnobol4/<name>.actual`. Override the binary with `SNOBOL4=<path>`.
