@@ -1513,7 +1513,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
             case ')':
                 stack--;
                 if ( stack === 0 ) {
-                    SPEC.length += j;
+                    SPEC.length += j + 1;
                     return this.jmp( SLOC );
                 }
                 break;

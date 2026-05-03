@@ -1096,8 +1096,52 @@ describe( 'Macros that Operate on Specifiers', function () {
         assert.equal( s.length, 4 );
     } );
 
-    it( 'GETBAL', function () { // stub
-        assert( sil.GETBAL ); 
+    it( 'GETBAL consumes the shortest balanced substring', function () {
+        var spec = this.vm.s(),
+            max = this.vm.d(),
+            SLOC = 111,
+            FLOC = 222;
+
+        this.vm.specify( '(A*(B+C))-Z', spec );
+        spec.length = 0;
+        max.addr = '(A*(B+C))-Z'.length;
+
+        sil.GETBAL.call( this.vm, spec, max, FLOC, SLOC );
+
+        assert.equal( this.vm.instructionPointer, SLOC );
+        assert.equal( spec.specified, '(A*(B+C))' );
+    } );
+
+    it( 'GETBAL consumes one non-parenthesis character', function () {
+        var spec = this.vm.s(),
+            max = this.vm.d(),
+            SLOC = 111,
+            FLOC = 222;
+
+        this.vm.specify( 'ABC', spec );
+        spec.length = 0;
+        max.addr = 3;
+
+        sil.GETBAL.call( this.vm, spec, max, FLOC, SLOC );
+
+        assert.equal( this.vm.instructionPointer, SLOC );
+        assert.equal( spec.specified, 'A' );
+    } );
+
+    it( 'GETBAL fails on right parenthesis', function () {
+        var spec = this.vm.s(),
+            max = this.vm.d(),
+            SLOC = 111,
+            FLOC = 222;
+
+        this.vm.specify( ')ABC', spec );
+        spec.length = 0;
+        max.addr = 4;
+
+        sil.GETBAL.call( this.vm, spec, max, FLOC, SLOC );
+
+        assert.equal( this.vm.instructionPointer, FLOC );
+        assert.equal( spec.specified, '' );
     } );
 
     it( 'INTSPC', function () {
