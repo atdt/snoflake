@@ -1,13 +1,20 @@
 "use strict";
 
-var SNOBOL = require( './base' ),
-    assert = require( 'assert' );
+var SNOBOL = require( './base' );
 
-var DATA_ASSEMBLY_MACROS = [
+// These macros belong to the memory-location counter.  Most emit storage;
+// EQU does not, but it is commonly used at data boundaries for size
+// expressions such as END-START.
+var MEMORY_LOCATION_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
-    'EQU', 'FORMAT', 'LHERE',
-    'REAL',  'SPEC',  'STRING', 'PROC'
+    'EQU', 'FORMAT', 'REAL',
+    'SPEC', 'STRING'
 ];
+
+// These assembly markers do not occupy either address space.  A label on one
+// aliases the next located statement.
+var LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
+var ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS );
 
 function getArgs( f ) {
     return f
@@ -16,12 +23,17 @@ function getArgs( f ) {
         .replace( /(vm\.\$\("|"\))/g, '' );
 }
 
-function nextLabeledMacro( program, index ) {
+// SIL labels live in one textual namespace, but they do not all name the
+// same kind of address.  Data labels are offsets in vm.mem; control labels
+// are indexes in the translated instruction stream.  Keeping those address
+// spaces separate lets LOC operands be the direct branch targets described by
+// the macro comments, instead of memory cells that point at branch targets.
+function nextLocatedStatement( program, index ) {
     var next = index + 1;
 
     while (
         next < program.length &&
-        ( program[ next ][ 1 ] === 'TITLE' || program[ next ][ 1 ] === 'LHERE' )
+        LOCATIONLESS_MACROS.includes( program[ next ][ 1 ] )
     ) {
         next++;
     }
@@ -29,13 +41,16 @@ function nextLabeledMacro( program, index ) {
     return next;
 }
 
-function isDataLhere( program, index ) {
-    var next = nextLabeledMacro( program, index ),
+function locationAtHere( vm, program, index ) {
+    var next = nextLocatedStatement( program, index ),
         macro = next < program.length && program[ next ][ 1 ];
 
-    return DATA_ASSEMBLY_MACROS.includes( macro ) &&
-        macro !== 'LHERE' &&
-        macro !== 'PROC';
+    // LHERE is EQU *: it names the current location counter.  If the next
+    // real statement belongs to assembled data, that counter is vm.mem.length;
+    // otherwise it is the next executable instruction.
+    return MEMORY_LOCATION_MACROS.includes( macro )
+        ? vm.mem.length
+        : next;
 }
 
 SNOBOL.D = 3;
@@ -57,21 +72,11 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         );
     }
 
-    var currentInstruction = this.instructionPointer,
-        args = argsCallback.call( this ),
+    var args = argsCallback.call( this ),
         returnValue;
 
     this.currentLabel = label;
-    if ( macro === 'DESCR' || macro === 'SPEC' ) {
-        // Because some DESCR and SPEC are recursively defined, we have to
-        // treat them specially and provide them with their label.
-        // args.unshift( label );
-    }
-    var __prevC = this.CSTACK.addr, __prevO = this.OSTACK.addr;
     returnValue = SNOBOL.sil[ macro ].apply( this, args );
-    if ( SNOBOL.DEBUG && (this.CSTACK.addr !== __prevC || this.OSTACK.addr !== __prevO) ) {
-        console.log('DBG STACK CHG after %s: CSTACK=%s OSTACK=%s', macro, this.CSTACK.addr, this.OSTACK.addr);
-    }
 
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
         var value;
@@ -100,19 +105,25 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
 
 SNOBOL.VM.prototype.jmp = function ( loc ) {
     // `loc` will be undefined when a procedure takes an optional
-    // location argument which the caller ommitted. In such cases
+    // location argument which the caller omitted. In such cases
     // execution should fall through to the next instruction.
+    //
+    // Some hand-written macro helpers still branch to fixed system labels
+    // by name; translated SIL operands arrive here already resolved.
+    if ( typeof loc === 'string' ) {
+        loc = this.resolve( loc );
+    }
     if ( typeof loc === 'number' ) {
-        this.instructionPointer = this.mem[loc];
+        if (loc === 6) console.log("JUMPED TO 6", new Error().stack);
+        this.instructionPointer = loc;
         this.instructionPointerChanged = true;
     }
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var args, status, loc, stmt, label, macro, next;
+    var loc, stmt, label, macro;
 
     var sym;
-    var i;
 
     for ( sym in SNOBOL.programSymbols ) {
         this.define( sym, SNOBOL.programSymbols[sym] );
@@ -120,7 +131,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
 
-    var __savedDebug = SNOBOL.DEBUG;
+    var savedDebug = SNOBOL.DEBUG;
     SNOBOL.DEBUG = false;
     var dataAssemblyPtrs = Object.create( null );
 
@@ -148,26 +159,14 @@ SNOBOL.VM.prototype.run = function ( program ) {
                 }
                 break;
             case 'LHERE':
-                // LHERE is EQU *: when it labels assembled data, no storage is
-                // emitted. Executable labels still need Snoflake's indirection
-                // cell because BRANCH/RCALL jump through symbol addresses.
-                if ( isDataLhere( program, this.instructionPointer ) ) {
-                    if ( label ) {
-                        this.define( label, this.mem.length );
-                    }
-                    break;
-                }
-                next = nextLabeledMacro( program, this.instructionPointer );
                 if ( label ) {
-                    this.define( label, this.mem.length );
-                    this.mem.push( next );
-                    assert.equal( this.mem[ this.symbols[ label ] ], next );
+                    this.define( label, locationAtHere( this, program, this.instructionPointer ) );
                 }
                 break;
             case 'PROC':
-                this.define( label, this.mem.length );
-                this.mem.push( this.instructionPointer + 1 );
-                assert.equal( this.mem[ this.symbols[ label ] ], this.instructionPointer + 1 );
+                if ( label ) {
+                    this.define( label, nextLocatedStatement( program, this.instructionPointer ) );
+                }
                 break;
             case 'STRING':
             case 'FORMAT':
@@ -181,9 +180,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
                 break;
             default:
                 if ( label ) {
-                    this.define( label, this.mem.length );
-                    this.mem.push( this.instructionPointer );
-                    assert.equal( this.mem[ this.symbols[ label ] ], this.instructionPointer );
+                    this.define( label, this.instructionPointer );
                 }
                 break;
         }
@@ -204,40 +201,35 @@ SNOBOL.VM.prototype.run = function ( program ) {
     }
 
     this.instructionPointer = 0;
-    if ( SNOBOL.DEBUG ) {
-        try {
-            var __interpSym = this.symbols['INTERP'];
-            console.log('DBG PROC INTERP sym=%s mem[sym]=%s', __interpSym, typeof __interpSym === 'number' ? this.mem[ __interpSym ] : '(undef)');
-        } catch (e) {}
-    }
-    SNOBOL.DEBUG = __savedDebug;
+    this.instructionPointerChanged = false;
+    SNOBOL.DEBUG = savedDebug;
 
-    var __startTime = Date.now();
-    var __steps = 0;
-    var __maxSteps = Number(SNOBOL.options.maxSteps || 0);
-    var __maxMillis = Number(SNOBOL.options.maxMillis || 0);
+    var startTime = Date.now();
+    var steps = 0;
+    var maxSteps = Number(SNOBOL.options.maxSteps || 0);
+    var maxMillis = Number(SNOBOL.options.maxMillis || 0);
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
-        __steps++;
-        if ( __maxSteps && __steps > __maxSteps ) {
-            console.error('Aborting: exceeded maxSteps (%s) at ip=%s', __maxSteps, this.instructionPointer);
+        steps++;
+        if ( maxSteps && steps > maxSteps ) {
+            console.error('Aborting: exceeded maxSteps (%s) at ip=%s', maxSteps, this.instructionPointer);
             this.instructionPointer = -1;
             break;
         }
-        if ( __maxMillis && (Date.now() - __startTime) > __maxMillis ) {
-            console.error('Aborting: exceeded maxMillis (%sms) at ip=%s', __maxMillis, this.instructionPointer);
+        if ( maxMillis && (Date.now() - startTime) > maxMillis ) {
+            console.error('Aborting: exceeded maxMillis (%sms) at ip=%s', maxMillis, this.instructionPointer);
             this.instructionPointer = -1;
             break;
         }
         loc = this.instructionPointer;
         stmt = program[ loc ];
         [ label, macro ] = stmt;
-        if ( this.symbols.LOCA2 && loc === this.mem[ this.symbols.LOCA2 ] ) {
+        if ( this.symbols.LOCA2 && loc === this.symbols.LOCA2 ) {
             this.instructionPointerChanged = false;
             SNOBOL.sil._fastLOCA2.call( this );
-        } else if ( !DATA_ASSEMBLY_MACROS.includes( macro ) ) {
+        } else if ( !ASSEMBLY_MACROS.includes( macro ) ) {
             this.instructionPointerChanged = false;
-            status = this.exec.apply( this, stmt );
+            this.exec.apply( this, stmt );
         }
 
         // If the procedure did not update the instruction pointer,

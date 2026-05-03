@@ -818,9 +818,7 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'jmp', function () {
-        var ptr = this.vm.alloc( 1 );
-        this.vm.mem[ ptr ] = 4;
-        this.vm.jmp( ptr );
+        this.vm.jmp( 4 );
         assert.equal( this.vm.instructionPointer, 4 );
     } );
 

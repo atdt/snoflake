@@ -182,12 +182,13 @@ function stackPopper( dataType ) {
             if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
                 if ( SNOBOL.DEBUG ) {
                     console.log('UNDERFLOW %s: ip=%s, CSTACK=%s, STACK=%s, width=%s',
-                        dataType.toUpperCase(), this.instructionPointer, this.CSTACK.addr, STACK_BASE, dst.width);
+                        dataType.toUpperCase(), this.instructionPointer,
+                        this.CSTACK.addr, STACK_BASE, dst.width);
                 }
                 throw new RangeError( 'Stack underflow' );
             }
-            // Pop: read from current top, then move pointer down
-            src = this[ dataType ]( this.CSTACK.addr );
+            // Pop: read from current top (base is CSTACK.addr - (width - D)), then move pointer down
+            src = this[ dataType ]( this.CSTACK.addr - (dst.width - D) );
             this.CSTACK.addr -= dst.width;
             dst.read( src );
         }
@@ -212,9 +213,9 @@ function stackPusher( dataType ) {
             if ( this.CSTACK.addr + src.width > STACK_BASE + ( D * STSIZE ) ) {
                 throw new RangeError( 'Stack overflow' );
             }
-            // Push: advance pointer, then write at new top
+            // Push: advance pointer, then write at new top (base is CSTACK.addr - (width - D))
             this.CSTACK.addr += src.width;
-            dst = this[ dataType ]( this.CSTACK.addr );
+            dst = this[ dataType ]( this.CSTACK.addr - (src.width - D) );
             dst.read( src );
         }
     };
@@ -231,7 +232,7 @@ sil._fastLOCA2 = function () {
         SPECR2 = this.s( 'SPECR2' ),
         LNKFLD = this.$( 'LNKFLD' ),
         target = EQUVCL.value,
-        loca2 = this.mem[ this.$( 'LOCA2' ) ],
+        loca2 = this.$( 'LOCA2' ),
         seen = Object.create( null ),
         link,
         currentValue;
@@ -3431,7 +3432,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
             if ( idx >= 0 && $LOCs && $LOCs[ idx ] !== undefined ) {
                 var locPtr = $LOCs[ idx ];
                 if ( typeof locPtr === 'number' ) {
-                    this.instructionPointer = this.mem[ locPtr ];
+                    this.instructionPointer = locPtr;
                     this.instructionPointerChanged = true;
                 } else {
                     // If a label pointer wasn't provided, fall through
@@ -5036,5 +5037,8 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
         this.d( ptr ).update( 0, 0, 0 );
     }
 };
+
+SNOBOL.sil = sil;
+
 
 SNOBOL.sil = sil;

@@ -61,6 +61,20 @@ describe( 'Assembly Control Macros', function () {
         assert.deepEqual( this.vm.d( 'B' ).raw(), [ 0, 0, 0 ] );
     } );
 
+    it( 'keeps executable labels in the instruction stream', function () {
+        this.vm.run( [
+            [ 'PAD', 'BUFFER', mkargs( this.vm, 10 ) ],
+            [ 'DS',  'DESCR',  mkargs( this.vm ) ],
+            [ null,  'BRANCH', mkargs( this.vm, 'LBL' ) ],
+            [ null,  'SETAC',  mkargs( this.vm, 'DS', 11 ) ],
+            [ 'LBL', 'SETAC',  mkargs( this.vm, 'DS', 22 ) ],
+            [ null,  'END',    mkargs( this.vm ) ]
+        ] );
+
+        assert.equal( this.vm.resolve( 'LBL' ), 4 );
+        assert.equal( this.vm.d( 'DS' ).addr, 22 );
+    } );
+
     it( 'TITLE', function () {
         assert( sil.TITLE );
     } );
@@ -127,16 +141,16 @@ describe( 'Branch Macros', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d();
         d1.addr = d2.ptr;
-        d2.addr = this.vm.ptr( 1234 );
+        d2.addr = 1234;
         sil.BRANIC.call( this.vm, d1, 0 );
         assert.equal( this.vm.instructionPointer, 1234 );
     } );
 
     it( 'SELBRA', function () {
         var d = this.vm.d(),
-            LOC1 = this.vm.ptr( 222 ),
-            LOC2 = this.vm.ptr( 333 ),
-            LOC3 = this.vm.ptr( 555 );
+            LOC1 = 222,
+            LOC2 = 333,
+            LOC3 = 555;
         d.addr = 2;
         sil.SELBRA.call( this.vm, d.ptr, [ null, LOC1, LOC2, null, LOC3 ] );
         assert.equal( this.vm.instructionPointer, 222 );
@@ -153,9 +167,9 @@ describe( 'Comparison Macros', function () {
     it( 'ACOMP', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
-            GTLOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 ),
-            LTLOC = this.vm.ptr( 3 );
+            GTLOC = 1,
+            EQLOC = 2,
+            LTLOC = 3;
         d1.addr = 456;
         d2.addr = 123;
         sil.ACOMP.call( this.vm, d1, d2, GTLOC, EQLOC, LTLOC );
@@ -171,8 +185,8 @@ describe( 'Comparison Macros', function () {
     it( 'ACOMPC', function () {
         var DESCR = this.vm.d(),
             N = 4,
-            NELOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 );
+            NELOC = 1,
+            EQLOC = 2;
 
         this.vm.run( [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
@@ -189,8 +203,8 @@ describe( 'Comparison Macros', function () {
     it( 'AEQL', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
-            NELOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 );
+            NELOC = 1,
+            EQLOC = 2;
 
         d1.addr = 123;
         d2.addr = 456;
@@ -204,8 +218,8 @@ describe( 'Comparison Macros', function () {
     it( 'AEQLC', function () {
         var d = this.vm.d(),
             N = 1000,
-            NELOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 );
+            NELOC = 1,
+            EQLOC = 2;
         d.addr = -1000;
         sil.AEQLC.call( this.vm, d, N, NELOC, EQLOC );
         assert.equal( this.vm.instructionPointer, 1 );
@@ -215,8 +229,8 @@ describe( 'Comparison Macros', function () {
     } );
 
     it( 'AEQLIC', function () {
-        var NELOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 ),
+        var NELOC = 1,
+            EQLOC = 2,
             N1 = 50,
             N2 = 0;
         var d1 = this.vm.d();
@@ -236,9 +250,9 @@ describe( 'Comparison Macros', function () {
         var s = this.vm.s(),
             d1 = this.vm.d(),
             d2 = this.vm.d(),
-            GTLOC = this.vm.ptr( 1 ),
-            LTLOC = this.vm.ptr( 2 ),
-            EQLOC = this.vm.ptr( 3 );
+            GTLOC = 1,
+            LTLOC = 2,
+            EQLOC = 3;
 
         s.length = 50;
         d1.addr = 20;
@@ -264,8 +278,8 @@ describe( 'Comparison Macros', function () {
     it( 'DEQL', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
-            EQLOC = this.vm.ptr( 1 ),
-            NELOC = this.vm.ptr( 2 );
+            EQLOC = 1,
+            NELOC = 2;
 
         d1.update( 123, 456, 789 );
         d2.read( d1 );
@@ -279,9 +293,9 @@ describe( 'Comparison Macros', function () {
     it( 'LCOMP', function () {
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
-            GTLOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 ),
-            LTLOC = this.vm.ptr( 3 );
+            GTLOC = 1,
+            EQLOC = 2,
+            LTLOC = 3;
         s1.length = 55;
         s2.length = 44;
         sil.LCOMP.call( this.vm, s1, s2, GTLOC, EQLOC, LTLOC );
@@ -296,8 +310,8 @@ describe( 'Comparison Macros', function () {
 
     it( 'LEQLC', function () {
         var s = this.vm.s(),
-            NELOC = this.vm.ptr( 20 ),
-            EQLOC = this.vm.ptr( 30 ),
+            NELOC = 20,
+            EQLOC = 30,
             N = 333;
         s.length = N;
         sil.LEQLC.call( this.vm, s, N, NELOC, EQLOC );
@@ -309,9 +323,9 @@ describe( 'Comparison Macros', function () {
     it( 'LEXCMP', function () {
         var SPEC1 = this.vm.s(),
             SPEC2 = this.vm.s(),
-            GTLOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 ),
-            LTLOC = this.vm.ptr( 3 );
+            GTLOC = 1,
+            EQLOC = 2,
+            LTLOC = 3;
 
         this.vm.specify( 'abd', SPEC1 );
         this.vm.specify( 'abc', SPEC2 );
@@ -336,8 +350,8 @@ describe( 'Comparison Macros', function () {
     it( 'TESTF', function () {
         var d = this.vm.d(),
             FLAG = 4,
-            FLOC = this.vm.ptr( 1 ),
-            SLOC = this.vm.ptr( 2 );
+            FLOC = 1,
+            SLOC = 2;
         sil.TESTF.call( this.vm, d, FLAG, FLOC, SLOC );
         assert.equal( this.vm.instructionPointer, 1 );
         d.flags |= FLAG;
@@ -348,8 +362,8 @@ describe( 'Comparison Macros', function () {
     it( 'TESTFI', function () {
         var d = this.vm.d(),
             FLAG = 4,
-            FLOC = this.vm.ptr( 1 ),
-            SLOC = this.vm.ptr( 2 );
+            FLOC = 1,
+            SLOC = 2;
         this.vm.alloc( 50 );
         var da = this.vm.d();
         d.addr = da.ptr;
@@ -364,9 +378,9 @@ describe( 'Comparison Macros', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
             N = 5,
-            GTLOC = this.vm.ptr( 10 ),
-            EQLOC = this.vm.ptr( 20 ),
-            LTLOC = this.vm.ptr( 30 );
+            GTLOC = 10,
+            EQLOC = 20,
+            LTLOC = 30;
         this.vm.alloc( 30 );
         var src = this.vm.d();
         d1.addr = src.ptr - N;
@@ -391,8 +405,8 @@ describe( 'Comparison Macros', function () {
     it( 'VEQL', function () {
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
-            NELOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 );
+            NELOC = 1,
+            EQLOC = 2;
         d1.value = 123;
         d2.value = 456;
         sil.VEQL.call( this.vm, d1, d2, NELOC, EQLOC );
@@ -405,8 +419,8 @@ describe( 'Comparison Macros', function () {
     it( 'VEQLC', function () {
         var d = this.vm.d(),
             N = 555,
-            NELOC = this.vm.ptr( 1 ),
-            EQLOC = this.vm.ptr( 2 );
+            NELOC = 1,
+            EQLOC = 2;
         d.value = 444;
         sil.VEQLC.call( this.vm, d, N, NELOC, EQLOC );
         assert.equal( this.vm.instructionPointer, 1 );
@@ -479,6 +493,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
     } );
 
     it( 'SPOP', function () {
+        SNOBOL.DEBUG = true;
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
             s3 = this.vm.s(),
@@ -503,7 +518,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         s.update( 1, 2, 3, 4, 5 );
         sil.SPUSH.call( this.vm, s );
 
-        s = this.vm.s( cur + s.width );
+        s = this.vm.s( cur + SNOBOL.D );
         assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 5 ] );
     } );
 } );
@@ -915,8 +930,8 @@ describe( 'Macros that Perform Integer Arithmetic on Address Fields', function (
         var d1 = this.vm.d(),
             d2 = this.vm.d(),
             d3 = this.vm.d(),
-            FLOC = this.vm.ptr( 7 ),
-            SLOC = this.vm.ptr( 9 );
+            FLOC = 7,
+            SLOC = 9;
         d2.update( 555, 666, 777 );
 
         // A+I in range:
@@ -1196,9 +1211,9 @@ describe( 'Macros that Operate on Specifiers', function () {
         var s1 = this.vm.s(),
             s2 = this.vm.s( sil.STRING.call( this.vm, '   ' ) ),
             stype = this.vm.d(),
-            error = this.vm.ptr( 1 ),
-            runout = this.vm.ptr( 2 ),
-            sloc = this.vm.ptr( 3 );
+            error = 1,
+            runout = 2,
+            sloc = 3;
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
@@ -1214,9 +1229,9 @@ describe( 'Macros that Operate on Specifiers', function () {
         var s1 = this.vm.s(),
             s2 = this.vm.s( sil.STRING.call( this.vm, ' = X' ) ),
             stype = this.vm.d(),
-            error = this.vm.ptr( 1 ),
-            runout = this.vm.ptr( 2 ),
-            sloc = this.vm.ptr( 3 );
+            error = 1,
+            runout = 2,
+            sloc = 3;
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
@@ -1232,8 +1247,8 @@ describe( 'Macros that Operate on Specifiers', function () {
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
             s3 = this.vm.s(),
-            FLOC = this.vm.ptr( 1 ),
-            SLOC = this.vm.ptr( 2 );
+            FLOC = 1,
+            SLOC = 2;
         // L3 > L2
         s2.update( 5, 2, 3, 4, 5 );
         s3.update( 6, 7, 8, 9, 8 );
@@ -1515,9 +1530,9 @@ describe( 'Input and Output Macros', function () {
             oldInput = SNOBOL.options.input,
             unit = this.vm.d(),
             spec = this.vm.s(),
-            eof = this.vm.ptr( 1 ),
-            error = this.vm.ptr( 2 ),
-            success = this.vm.ptr( 3 ),
+            eof = 1,
+            error = 2,
+            success = 3,
             ptr = this.vm.alloc( 16, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( file, 'END\n1234567890\n' );
@@ -1547,12 +1562,10 @@ describe( 'Input and Output Macros', function () {
 
             unit.addr = 5;
             this.vm.instructionPointer = 7;
-            this.vm.d( eof ).addr = 7;
-            this.vm.d( success ).addr = 7;
             sil.REWIND.call( this.vm, unit );
-            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
-            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
-            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            sil.STREAD.call( this.vm, spec, unit, 7, error, 7 );
+            sil.STREAD.call( this.vm, spec, unit, 7, error, 7 );
+            sil.STREAD.call( this.vm, spec, unit, 7, error, 7 );
             assert.equal( this.vm.instructionPointer, 7 );
             assert.equal( unit.addr, 0 );
         } finally {
@@ -1695,8 +1708,8 @@ describe( 'Miscellaneous Macros', function () {
             result = this.vm.d(),
             list = this.vm.d(),
             key = this.vm.d(),
-            found = this.vm.ptr( FOUND_IP ),
-            missing = this.vm.ptr( MISSING_IP ),
+            found = FOUND_IP,
+            missing = MISSING_IP,
             base = this.vm.alloc( DESCR + ( PAIR_COUNT * PAIR_WIDTH ) ),
             firstType = base + DESCR,
             firstValue = firstType + DESCR,
@@ -1738,8 +1751,8 @@ describe( 'Miscellaneous Macros', function () {
         var result = this.vm.d(),
             list = this.vm.d(),
             key = this.vm.d(),
-            found = this.vm.ptr( 123 ),
-            missing = this.vm.ptr( 456 ),
+            found = 123,
+            missing = 456,
             base = this.vm.alloc( 15 );
 
         list.update( base, 7, 11 );
@@ -1840,8 +1853,8 @@ describe( 'Miscellaneous Macros', function () {
     it( 'SPCINT', function () {
         var d = this.vm.d(),
             s = this.vm.s(),
-            FLOC = this.vm.ptr( 1 ),
-            SLOC = this.vm.ptr( 2 ),
+            FLOC = 1,
+            SLOC = 2,
             I = 6;
         this.vm.define( 'I', I );
         this.vm.specify( '-00521', s );
