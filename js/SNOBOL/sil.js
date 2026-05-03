@@ -127,13 +127,6 @@ function fileRole( unitNum ) {
     return 'source';
 }
 
-function caseFoldEnabled( vm ) {
-    return vm.options.caseFold !== false &&
-        vm.options.caseFold !== 'false' &&
-        vm.options.caseFold !== 0 &&
-        vm.options.caseFold !== '0';
-}
-
 function foldSpecifierAsciiUpper( vm, SPEC, length ) {
     const start = SPEC.addr + SPEC.offset,
           end = start + length;
@@ -2336,7 +2329,7 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // as data to DEFINE/OPSYN are ordinary strings.  FNCPL stores those
     // names as string structures, so fall back to the same ASCII fold here
     // after preserving the exact descriptor match above.
-    if ( caseFoldEnabled( this ) && isFunctionPairList ) {
+    if ( this.options.caseFold && isFunctionPairList ) {
         key = foldAsciiUpperString( stringStructureText( this, DESCR3 ) );
 
         for ( i = 0; ; i++ ) {
@@ -4480,7 +4473,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     let table = getTableById( TABLE );
 
     function maybeFoldToken( length ) {
-        if ( caseFoldEnabled( this ) && isFoldableStreamTable( tableName ) ) {
+        if ( this.options.caseFold && isFoldableStreamTable( tableName ) ) {
             foldSpecifierAsciiUpper( this, SPEC1, length );
         }
     }
