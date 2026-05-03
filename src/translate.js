@@ -4,7 +4,7 @@
 // generate the JavaScript code from the AST, but escodegen works just as well.
 import PEG from 'pegjs';
 import fs from 'node:fs';
-import astring from 'astring';
+import { generate as astringGenerate } from 'astring';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -19,6 +19,6 @@ var source = __dirname + '/../external/v311-snoflake.sil',
 	"// Source: external/v311-snoflake.sil\n" +
 	"import SNOBOL from './base.js';\n"
     ),
-    code = prolog + astring.generate( ast ).trim();
+    code = prolog + astringGenerate( ast ).trim();
 
 console.log( code );
