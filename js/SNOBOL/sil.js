@@ -40,18 +40,19 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     FRSGPT.addr += size;
 }
 
-function printLinePrinterRecord( vm, record, carriageControl ) {
+SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, carriageControl ) {
+    const stdout = this.stdout;
     record.split( '\n' ).forEach( function ( line ) {
         let control,
             content;
 
         if ( line.length === 0 ) {
-            vm.stdout.write( '' );
+            stdout.write( '' );
             return;
         }
 
         if ( carriageControl === false ) {
-            vm.stdout.write( line.replace( /\u0000+/g, '' ) );
+            stdout.write( line.replace( /\u0000+/g, '' ) );
             return;
         }
 
@@ -69,13 +70,13 @@ function printLinePrinterRecord( vm, record, carriageControl ) {
             case '0':
             case '+':
             case ' ':
-                vm.stdout.write( content );
+                stdout.write( content );
                 break;
             default:
-                vm.stdout.write( line.replace( /\u0000+/g, '' ) );
+                stdout.write( line.replace( /\u0000+/g, '' ) );
         }
     } );
-}
+};
 
 function formatHasLeadingCarriageControl( fmt ) {
     let i = 0,
@@ -125,19 +126,6 @@ function fileRole( unitNum ) {
     }
 
     return 'source';
-}
-
-function foldSpecifierAsciiUpper( vm, SPEC, length ) {
-    const start = SPEC.addr + SPEC.offset,
-          end = start + length;
-    let c;
-
-    for ( let p = start; p < end; p++ ) {
-        c = vm.mem[ p ];
-        if ( c >= 97 && c <= 122 ) {
-            vm.mem[ p ] = c - 32;
-        }
-    }
 }
 
 function foldAsciiUpperString( str ) {
@@ -2914,7 +2902,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     }
 
     ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
-    printLinePrinterRecord( this, SNOBOL.str.format( fmt, ARGs ) );
+    this.printLinePrinterRecord( SNOBOL.str.format( fmt, ARGs ) );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -4293,8 +4281,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
-    printLinePrinterRecord(
-        this,
+    this.printLinePrinterRecord(
         SNOBOL.str.format( fmt, item ),
         formatHasLeadingCarriageControl( fmt )
     );
@@ -4473,8 +4460,16 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     let table = getTableById( TABLE );
 
     function maybeFoldToken( length ) {
-        if ( this.options.caseFold && isFoldableStreamTable( tableName ) ) {
-            foldSpecifierAsciiUpper( this, SPEC1, length );
+        if ( !this.options.caseFold || !isFoldableStreamTable( tableName ) ) {
+            return;
+        }
+        const start = SPEC1.addr + SPEC1.offset,
+            end = start + length;
+        for ( let p = start; p < end; p++ ) {
+            const c = this.mem[ p ];
+            if ( c >= 97 && c <= 122 ) {
+                this.mem[ p ] = c - 32;
+            }
         }
     }
 
