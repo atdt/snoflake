@@ -1,4 +1,4 @@
-* @title Recursive Polish to infix translator
+* @title Recursive Polish-to-infix translator
 * @attribution Griswold 1971, Chapter 4
 * @expect >>>
 * ((A*(B+C))-(D/E))
