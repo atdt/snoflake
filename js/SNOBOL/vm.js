@@ -15,6 +15,7 @@ const MEMORY_LOCATION_MACROS = [
 // aliases the next located statement.
 const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 const ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS );
+const ASSEMBLY_MACROS_SET = new Set( ASSEMBLY_MACROS );
 
 function getArgs( f ) {
     return f
@@ -77,20 +78,23 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
     this.currentLabel = label;
     let returnValue = SNOBOL.sil[ macro ].call( this, ...args );
 
-    ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
-        let value;
+    const watch = SNOBOL.options.watch;
+    if ( watch && watch.length > 0 ) {
+        watch.forEach( function ( variable ) {
+            let value;
 
-        if ( variable === 'CSTACK' || variable === 'OSTACK' ) {
-            value = this[ variable ].addr;
-        } else {
-            value = Object.hasOwn( this.symbols, variable ) ? this.symbols[ variable ] : 'UNDEF';
-        }
-        console.log(
-            '→ %s: %s',
-            SNOBOL.str.pad( variable, 6, 'left' ),
-            value
-        );
-    }, this );
+            if ( variable === 'CSTACK' || variable === 'OSTACK' ) {
+                value = this[ variable ].addr;
+            } else {
+                value = Object.hasOwn( this.symbols, variable ) ? this.symbols[ variable ] : 'UNDEF';
+            }
+            console.log(
+                '→ %s: %s',
+                SNOBOL.str.pad( variable, 6, 'left' ),
+                value
+            );
+        }, this );
+    }
 
     if ( typeof returnValue === 'boolean' ) {
         // Normalize boolean to exit code and do not terminate the process abruptly
@@ -183,6 +187,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
         }
     }
 
+    this.loca2Ptr = this.symbols.LOCA2;
+
     for (
         this.instructionPointer = 0;
         this.instructionPointer < program.length;
@@ -221,10 +227,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
         loc = this.instructionPointer;
         stmt = program[ loc ];
         [ label, macro ] = stmt;
-        if ( this.symbols.LOCA2 && loc === this.symbols.LOCA2 ) {
+        if ( loc === this.loca2Ptr ) {
             this.instructionPointerChanged = false;
             SNOBOL.sil._fastLOCA2.call( this );
-        } else if ( !ASSEMBLY_MACROS.includes( macro ) ) {
+        } else if ( !ASSEMBLY_MACROS_SET.has( macro ) ) {
             this.instructionPointerChanged = false;
             this.exec( ...stmt );
         }
@@ -265,8 +271,11 @@ SNOBOL.VM.prototype.d = function ( ptr ) {
     if ( ptr instanceof SNOBOL.Descriptor ) {
         return ptr;
     }
-    if ( ptr === 'CSTACK' || ptr === 'OSTACK' ) {
-        return new RegDescriptor( this, ptr );
+    if ( ptr === 'CSTACK' ) {
+        return this.CSTACK_DESCRIPTOR;
+    }
+    if ( ptr === 'OSTACK' ) {
+        return this.OSTACK_DESCRIPTOR;
     }
     return new SNOBOL.Descriptor( this, ptr );
 };
@@ -275,4 +284,20 @@ SNOBOL.VM.prototype.s = function ( ptr ) {
     return ptr instanceof SNOBOL.Specifier
         ? ptr
         : new SNOBOL.Specifier( this, ptr );
+};
+
+SNOBOL.VM.prototype.reset = function () {
+    this.instructionPointer = null;
+    this.symbols = {};
+    this.mem = [];
+    this.callbacks = [];
+    this.units = {};
+    this.INTSPC_BUFFER = null;
+    // Keep stack pointers as VM registers, not memory-backed descriptors,
+    // to avoid accidental overwrites by program macros.
+    this.CSTACK = { addr: 0 };
+    this.OSTACK = { addr: 0 };
+    this.CSTACK_DESCRIPTOR = new RegDescriptor( this, 'CSTACK' );
+    this.OSTACK_DESCRIPTOR = new RegDescriptor( this, 'OSTACK' );
+    this.loca2Ptr = undefined;
 };

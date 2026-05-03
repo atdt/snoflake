@@ -21,7 +21,6 @@ function nearlyEqual( a, b ) {
 
 function typedGetter( typedArray ) {
     return function ( ptr ) {
-        u32.fill( 0 );
         u32[ 0 ] = this.mem[ ptr ];
         return typedArray[ 0 ];
     };
@@ -30,7 +29,6 @@ function typedGetter( typedArray ) {
 function typedSetter( typedArray ) {
     const typeName = /(\w+)Array/.exec( typedArray.constructor )[1];
     return function ( ptr, value ) {
-        u32.fill( 0 );
         typedArray[ 0 ] = value;
         if ( !nearlyEqual( typedArray[ 0 ], value ) ) {
             throw new RangeError( 'Invalid ' + typeName + ': ' + JSON.stringify( value ) );
@@ -112,15 +110,5 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
 };
 
 
-VM.prototype.reset = function () {
-    this.instructionPointer = null;
-    this.symbols = {};
-    this.mem = [];
-    this.callbacks = [];
-    this.units = {};
-    this.INTSPC_BUFFER = null;
-    // Keep stack pointers as VM registers, not memory-backed descriptors,
-    // to avoid accidental overwrites by program macros.
-    this.CSTACK = { addr: 0 };
-    this.OSTACK = { addr: 0 };
-};
+// End of mem.js logic
+

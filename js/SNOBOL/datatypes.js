@@ -14,10 +14,6 @@ function defineValues( dst, src ) {
     return dst;
 }
 
-function titleCase( str ) {
-    return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
-}
-
 SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
     this.vm = vm;
 
@@ -27,10 +23,6 @@ SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
         ptr = vm.resolve( ptr );
     }
     this.ptr = ptr;
-
-    while ( this.ptr + this.width > vm.mem.length ) {
-        vm.mem.push( 0 );
-    }
 };
 
 SNOBOL.Specifier = function Specifier( vm, ptr ) {
