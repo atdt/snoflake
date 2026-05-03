@@ -1,11 +1,17 @@
 'use strict';
 
 import assert from 'node:assert';
-import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import SNOBOL from '../js/snobol.js';
 import { parseHeader, loadCases } from './program-fixture.js';
+
+// Snapshot the pristine SNOBOL.options at module load. The VM constructor
+// merges its `options` argument into the live SNOBOL.options object, so
+// without an explicit reset between fixtures, values like `debug` or
+// `caseFold` set by an earlier case would leak into later ones.
+const PRISTINE_OPTIONS = { ...SNOBOL.options };
 
 var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 var ROOT = path.join( __dirname, '..' ),
@@ -27,17 +33,20 @@ var DEFAULT_OPTIONS = { maxSteps: 5000000, maxMillis: 0 };
 var DATA_BANNER = 'NO ERRORS DETECTED IN SOURCE PROGRAM';
 var DATA_EPILOGUE = 'NORMAL TERMINATION AT LEVEL';
 
-function optionsToArgv( opts ) {
-    return Object.keys( opts ).map( function ( k ) {
-        var v = opts[ k ];
-        if ( v === true ) {
-            return '--' + k;
-        }
-        if ( Array.isArray( v ) ) {
-            return '--' + k + '=' + v.join( ',' );
-        }
-        return '--' + k + '=' + v;
-    } );
+function captureWriter() {
+    var lines = [];
+    return {
+        lines: lines,
+        write: function ( line ) { lines.push( line ); }
+    };
+}
+
+// Mirror run.js's stdout shape: each writer.write(line) corresponds to one
+// console.log(line) in the CLI, which appends '\n'. Rejoining with '\n' and
+// adding a trailing '\n' reproduces the byte stream the subprocess used to
+// produce, so extractDataSection's anchor logic still works unchanged.
+function joinLines( lines ) {
+    return lines.length === 0 ? '' : lines.join( '\n' ) + '\n';
 }
 
 function findErrorMarker( output ) {
@@ -88,15 +97,25 @@ function runProgram( filePath, header ) {
         fs.writeFileSync( inputPath, header.input );
         opts.input = inputPath;
     }
-    var argv = [ 'run.js' ].concat( optionsToArgv( opts ) );
-    var result = childProcess.spawnSync( process.execPath, argv, {
-        cwd: ROOT,
-        encoding: 'utf8'
-    } );
-    if ( result.error ) {
-        throw result.error;
+
+    // Restore SNOBOL.options to its pristine state so flags from a prior
+    // case (debug, caseFold, watch, …) do not bleed into this one. The VM
+    // constructor will then merge `opts` on top.
+    SNOBOL.options = { ...PRISTINE_OPTIONS };
+
+    var stdout = captureWriter();
+    var stderr = captureWriter();
+    var vm = new SNOBOL.VM( { ...opts, stdout: stdout, stderr: stderr } );
+    vm.reset();
+    try {
+        vm.run( SNOBOL.interp( vm ) );
+    } catch ( e ) {
+        // Treat thrown runtime errors as recognized error output so the
+        // assertion logic ('Execution error' marker) can react instead of
+        // failing the whole mocha process.
+        stderr.write( 'Execution error: ' + ( e && e.stack || e ) );
     }
-    return ( result.stdout || '' ) + ( result.stderr || '' );
+    return joinLines( stdout.lines ) + joinLines( stderr.lines );
 }
 
 function dumpActual( filePath, output ) {
