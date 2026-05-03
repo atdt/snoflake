@@ -12,7 +12,7 @@
   "devDependencies": {
     "astring": "^1.9.0",
     "mocha": "^11.7.5",
-    "pegjs": "^0.10.0"
+    "peggy": "^4.2.0"
   },
   "scripts": {
     "test": "mocha"
