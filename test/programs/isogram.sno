@@ -1,0 +1,95 @@
+* @title isogrammatic word extraction
+* @attribution https://github.com/OLIMEX/WPC/blob/21614bb7dae6c60e8c14cd9c2ab1ccc32d458d55/ISSUE-4/SOLUTION-21/wpc4.sno (ported to vanilla 3.11)
+* @input >>>
+* This is a test file for the isogram program.
+* It contains some words, some of which are isograms, like cat, dog, and bird.
+* Non-isograms include letter, apple, and book.
+* <<<
+* @expect >>>
+* AND. . . . . . . . . . . . . . . . . . 2
+* SOME . . . . . . . . . . . . . . . . . 2
+* A. . . . . . . . . . . . . . . . . . . 1
+* ARE. . . . . . . . . . . . . . . . . . 1
+* BIRD . . . . . . . . . . . . . . . . . 1
+* CAT. . . . . . . . . . . . . . . . . . 1
+* DOG. . . . . . . . . . . . . . . . . . 1
+* FILE . . . . . . . . . . . . . . . . . 1
+* FOR. . . . . . . . . . . . . . . . . . 1
+* INCLUDE. . . . . . . . . . . . . . . . 1
+* IS . . . . . . . . . . . . . . . . . . 1
+* ISOGRAM. . . . . . . . . . . . . . . . 1
+* IT . . . . . . . . . . . . . . . . . . 1
+* LIKE . . . . . . . . . . . . . . . . . 1
+* OF . . . . . . . . . . . . . . . . . . 1
+* THE. . . . . . . . . . . . . . . . . . 1
+* THIS . . . . . . . . . . . . . . . . . 1
+* WORDS. . . . . . . . . . . . . . . . . 1
+* <<<
+* EXTRACT ALL THE ISOGRAMMATIC WORDS FROM STDIN AND COUNT THEM
+* https://github.com/OLIMEX/WPC/blob/21614bb7dae6c60e8c14cd9c2ab1ccc32d458d55/ISSUE-4/SOLUTION-21/wpc4.sno
+*
+* Define a pattern that defines a word
+        UCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        LCASE = 'abcdefghijklmnopqrstuvwxyz'
+        LETTERS = UCASE LCASE
+        NUMERALS  = "0123456789"
+        REMAINDER = "'’" LETTERS NUMERALS
+        WPATTERN = SPAN(LETTERS) (SPAN(REMAINDER) | '')
+* Create table to hold words
+        LEXICON = TABLE()
+*
+* LOOP THRU THE WORDS IN THE TEXT AND COUNT THEM
+*
+NXLINE  LINE = INPUT                         :F(DONE)
+        LINE = REPLACE(LINE, LCASE, UCASE)
+NXWORD  LINE BREAK(LETTERS) WPATTERN . WORD = '' :F(NXLINE)
+        WORD "’" = "'"
+        WORD "'" RPOS(0) = ""
+*
+* SLICE THE CHARS OFF 1 AT A TIME AND SEE IF IN REMAINDER OF STRING
+*
+        TEMP = WORD
+NXCHR   TEMP LEN(1) . CH = ""                :F(ISISOGR)
+        TEMP BREAK(CH)                       :S(NXWORD)F(NXCHR)
+ISISOGR LEXICON<WORD> = LEXICON<WORD> + 1    :(NXWORD)
+* 
+* NOW OUTPUT THE FREQUENCY COUNTS
+*
+DONE    COUNTS = CONVERT(LEXICON, 'ARRAY')   :F(END)
+        P_STR = PROTOTYPE(COUNTS)
+        P_STR BREAK(',') . N
+
+* Sort the array using bubble sort: count descending, then word ascending
+        I = 1
+OUTER   I = I + 1
+        GT(I, N) :S(OUTCT_INIT)
+        J = N
+INNER   LT(J, I) :S(OUTER)
+        JM1 = J - 1
+        C1 = COUNTS<JM1, 2>
+        C2 = COUNTS<J, 2>
+        LT(C1, C2) :S(SWAP)
+        EQ(C1, C2) :F(J_DEC)
+        W1 = COUNTS<JM1, 1>
+        W2 = COUNTS<J, 1>
+        LGT(W1, W2) :S(SWAP)F(J_DEC)
+SWAP    TW = COUNTS<JM1, 1>
+        TC = COUNTS<JM1, 2>
+        COUNTS<JM1, 1> = COUNTS<J, 1>
+        COUNTS<JM1, 2> = COUNTS<J, 2>
+        COUNTS<J, 1> = TW
+        COUNTS<J, 2> = TC
+J_DEC   J = J - 1                            :(INNER)
+
+OUTCT_INIT I = 1
+OUTCT   WORD = COUNTS<I,1>                   :F(END)
+        COUNT = COUNTS<I,2>
+        PAD_LEN = 40 - SIZE(WORD) - SIZE(COUNT)
+        LE(PAD_LEN, 0) :S(NOPAD)
+        DOTS_STR = DUPL(" .", 20)
+        SKIP_LEN = SIZE(WORD)
+        DOTS_STR LEN(SKIP_LEN) LEN(PAD_LEN) . DOTS
+        OUTPUT = WORD DOTS COUNT           :(OUTCT_NEXT)
+NOPAD   OUTPUT = WORD " " COUNT
+OUTCT_NEXT I = I + 1                       :(OUTCT)
+END
