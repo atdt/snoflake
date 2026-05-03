@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 SNOBOL.File = class File {
     constructor( vm, unitNum, role = 'source' ) {
-        var key = role + ':' + unitNum;
+        const key = role + ':' + unitNum;
 
         if ( vm.units[ key ] !== undefined ) {
             return vm.units[ key ];
@@ -32,7 +32,7 @@ SNOBOL.File = class File {
     }
 
     readRecord( length ) {
-        var end, record, next, str;
+        let end, next;
 
         if ( this.buf === null ) {
             if ( !this.path && this.role === 'input' ) {
@@ -60,10 +60,10 @@ SNOBOL.File = class File {
             end--;
         }
 
-        record = this.buf.slice( this.pos, end );
+        const record = this.buf.slice( this.pos, end );
         this.pos = next;
 
-        str = record.toString( 'utf-8' );
+        const str = record.toString( 'utf-8' );
         if ( str.length > length ) {
             return { eof: false, text: str.slice( 0, length ) };
         }

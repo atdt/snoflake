@@ -2,8 +2,6 @@
 
 import SNOBOL from './js/snobol.js';
 
-var vm;
-
 function optionValue( value ) {
     if ( value === undefined ) {
         return true;
@@ -20,15 +18,15 @@ function optionValue( value ) {
     return value;
 }
 
-vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
-    var k, v, m = /--(\w+)(?:=(.*))?/g.exec( c );
+const vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
+    const m = /--(\w+)(?:=(.*))?/g.exec( c );
     if ( c === '-f' ) {
         p.caseFold = false;
         return p;
     }
     if ( m ) {
-        k = m[1];
-        v = optionValue( m[2] );
+        const k = m[1];
+        const v = optionValue( m[2] );
         p[k] = v;
         return p;
     }

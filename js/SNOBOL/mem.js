@@ -2,12 +2,12 @@
 
 import SNOBOL from './base.js';
 import assert from 'node:assert';
-var VM = SNOBOL.VM;
+const VM = SNOBOL.VM;
 
-var buf = new ArrayBuffer( 4 ),
-    f32 = new Float32Array( buf ),
-    i32 = new Int32Array( buf ),
-    u32 = new Uint32Array( buf );
+const buf = new ArrayBuffer( 4 );
+const f32 = new Float32Array( buf );
+const i32 = new Int32Array( buf );
+const u32 = new Uint32Array( buf );
 
 
 SNOBOL.isInt32 = function isInteger( v ) {
@@ -28,7 +28,7 @@ function typedGetter( typedArray ) {
 }
 
 function typedSetter( typedArray ) {
-    var typeName = /(\w+)Array/.exec( typedArray.constructor )[1];
+    const typeName = /(\w+)Array/.exec( typedArray.constructor )[1];
     return function ( ptr, value ) {
         u32.fill( 0 );
         typedArray[ 0 ] = value;
@@ -49,13 +49,13 @@ VM.prototype.getReal = typedGetter( f32 );
 VM.prototype.setReal = typedSetter( f32 );
 
 VM.prototype.alloc = function ( size, value ) {
-    var i, ptr = this.mem.length;
+    const ptr = this.mem.length;
 
     if ( typeof value === 'undefined' ) {
         value = 0;
     }
 
-    for ( i = 0; i < size; i++ ) {
+    for ( let i = 0; i < size; i++ ) {
         this.mem.push( value );
     }
 
@@ -63,7 +63,7 @@ VM.prototype.alloc = function ( size, value ) {
 };
 
 VM.prototype.specify = function ( str, $SPEC ) {
-    var SPEC = this.s( $SPEC ), encodedString = SNOBOL.str.encode( str );
+    const SPEC = this.s( $SPEC ), encodedString = SNOBOL.str.encode( str );
     SPEC.update( this.mem.length, 0, 0, 0, encodedString.length );
     this.mem.push( ...encodedString );
     return SPEC.ptr;
@@ -80,7 +80,7 @@ SNOBOL.VM.prototype.define = function ( symbol, value ) {
     }
     if ( typeof value === 'string' ) {
         this.symbols[ symbol ] = this.mem.length;
-        for ( var i = 0; i < value.length; i++ ) {
+        for ( let i = 0; i < value.length; i++ ) {
             this.mem.push( value.charCodeAt( i ) );
         }
     } else {
@@ -89,7 +89,7 @@ SNOBOL.VM.prototype.define = function ( symbol, value ) {
 }
 
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
-    var val = this.symbols[ key ];
+    const val = this.symbols[ key ];
 
     if ( val !== undefined ) {
         return val;

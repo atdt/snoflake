@@ -5,7 +5,7 @@ import SNOBOL from './base.js';
 // These macros belong to the memory-location counter.  Most emit storage;
 // EQU does not, but it is commonly used at data boundaries for size
 // expressions such as END-START.
-var MEMORY_LOCATION_MACROS = [
+const MEMORY_LOCATION_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
     'EQU', 'FORMAT', 'REAL',
     'SPEC', 'STRING'
@@ -13,8 +13,8 @@ var MEMORY_LOCATION_MACROS = [
 
 // These assembly markers do not occupy either address space.  A label on one
 // aliases the next located statement.
-var LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-var ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS );
+const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
+const ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS );
 
 function getArgs( f ) {
     return f
@@ -29,7 +29,7 @@ function getArgs( f ) {
 // spaces separate lets LOC operands be the direct branch targets described by
 // the macro comments, instead of memory cells that point at branch targets.
 function nextLocatedStatement( program, index ) {
-    var next = index + 1;
+    let next = index + 1;
 
     while (
         next < program.length &&
@@ -42,8 +42,8 @@ function nextLocatedStatement( program, index ) {
 }
 
 function locationAtHere( vm, program, index ) {
-    var next = nextLocatedStatement( program, index ),
-        macro = next < program.length && program[ next ][ 1 ];
+    const next = nextLocatedStatement( program, index );
+    const macro = next < program.length && program[ next ][ 1 ];
 
     // LHERE is EQU *: it names the current location counter.  If the next
     // real statement belongs to assembled data, that counter is vm.mem.length;
@@ -63,7 +63,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         } else {
             comment = '';
         }
-        var code = ( macro + '(' + getArgs( argsCallback ) + ')' ).padEnd( 70, ' ' );
+        const code = ( macro + '(' + getArgs( argsCallback ) + ')' ).padEnd( 70, ' ' );
         console.log( '[%s] [%s] %s %s',
             SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
             SNOBOL.str.pad( label || '', 6 ),
@@ -72,14 +72,13 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         );
     }
 
-    var args = argsCallback.call( this ),
-        returnValue;
+    const args = argsCallback.call( this );
 
     this.currentLabel = label;
-    returnValue = SNOBOL.sil[ macro ].call( this, ...args );
+    let returnValue = SNOBOL.sil[ macro ].call( this, ...args );
 
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
-        var value;
+        let value;
 
         if ( variable === 'CSTACK' || variable === 'OSTACK' ) {
             value = this[ variable ].addr;
@@ -121,19 +120,17 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
 };
 
 SNOBOL.VM.prototype.run = function ( program ) {
-    var loc, stmt, label, macro;
+    let loc, stmt, label, macro;
 
-    var sym;
-
-    for ( sym in SNOBOL.programSymbols ) {
+    for ( const sym in SNOBOL.programSymbols ) {
         this.define( sym, SNOBOL.programSymbols[sym] );
     }
 
     SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
 
-    var savedDebug = SNOBOL.DEBUG;
+    const savedDebug = SNOBOL.DEBUG;
     SNOBOL.DEBUG = false;
-    var dataAssemblyPtrs = Object.create( null );
+    const dataAssemblyPtrs = Object.create( null );
 
     for (
         this.instructionPointer = 0;
@@ -204,10 +201,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointerChanged = false;
     SNOBOL.DEBUG = savedDebug;
 
-    var startTime = Date.now();
-    var steps = 0;
-    var maxSteps = Number(SNOBOL.options.maxSteps || 0);
-    var maxMillis = Number(SNOBOL.options.maxMillis || 0);
+    const startTime = Date.now();
+    let steps = 0;
+    const maxSteps = Number(SNOBOL.options.maxSteps || 0);
+    const maxMillis = Number(SNOBOL.options.maxMillis || 0);
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         steps++;

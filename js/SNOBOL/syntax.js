@@ -4,11 +4,11 @@ import SNOBOL from './base.js';
 
 // 0x7F is just the ASCII range; it should really be
 // 0x10000, but we get crashes.
-var CHAR_MAX = 0x7F,
-    ALPHA = '',
-    D = 3;
+const CHAR_MAX = 0x7F;
+const D = 3;
+let ALPHA = '';
 
-for ( var i = 1; i <= CHAR_MAX; i++ ) {
+for ( let i = 1; i <= CHAR_MAX; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
@@ -51,7 +51,7 @@ SNOBOL.programSymbols = {
 };
 
 // See section 4.1 (Characters) in S4D58
-var characterClasses = {
+const characterClasses = {
     ALPHANUMERIC : /[a-z0-9]/i,
     AT           : /@/,
     BLANK        : /[ \t]/,

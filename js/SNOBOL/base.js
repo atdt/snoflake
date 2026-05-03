@@ -1,6 +1,6 @@
 "use strict";
 
-var SNOBOL = {
+const SNOBOL = {
     options: {
         debug: false,
         watch: [],

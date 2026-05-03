@@ -8,7 +8,7 @@ import assert from 'node:assert';
 // as non-enumerable data descriptors.
 function defineValues( dst, src ) {
     Object.keys( src ).forEach( function (key) {
-        var property = { value: src[ key ] };
+        const property = { value: src[ key ] };
         Object.defineProperty( dst, key, property );
     } );
     return dst;
@@ -70,7 +70,7 @@ SNOBOL.Descriptor.prototype = Object.create( null, {
 
 defineValues( SNOBOL.Descriptor.prototype, {
     update: function (...args) {
-        for ( var slot of this.slots ) {
+        for ( const slot of this.slots ) {
             this[slot] = args.length ? args.shift() : 0;
         }
         return this;
@@ -81,7 +81,7 @@ defineValues( SNOBOL.Descriptor.prototype, {
         if ( this.width !== other.width ) {
             return false;
         }
-        for ( var i = 0; i < this.width; i++ ) {
+        for ( let i = 0; i < this.width; i++ ) {
             if ( this.vm.mem[ this.ptr + i ] !== this.vm.mem[ other.ptr + i ] ) {
                 return false;
             }
@@ -101,7 +101,7 @@ defineValues( SNOBOL.Descriptor.prototype, {
 
     // Read (copy) the content of another instance into self
     read: function ( src ) {
-        for ( var i = 0; i < this.width; i++ ) {
+        for ( let i = 0; i < this.width; i++ ) {
             this.vm.mem[ this.ptr + i ] = this.vm.mem[ src.ptr + i ];
         }
     },
@@ -111,9 +111,9 @@ defineValues( SNOBOL.Descriptor.prototype, {
     },
 
     toString: function () {
-        var fields = [], props = {};
+        const fields = [], props = {};
 
-        for ( var k in this ) {
+        for ( const k in this ) {
             props[ k.charAt( 0 ).toUpperCase() ] = this[ k ];
         }
 
@@ -141,8 +141,8 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
     specified   : {
         enumerable: false,
         get: function () {
-            var start = this.addr + this.offset,
-                end = start + this.length;
+            const start = this.addr + this.offset,
+                  end = start + this.length;
 
             return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
         }
