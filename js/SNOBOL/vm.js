@@ -76,7 +76,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         returnValue;
 
     this.currentLabel = label;
-    returnValue = SNOBOL.sil[ macro ].apply( this, args );
+    returnValue = SNOBOL.sil[ macro ].call( this, ...args );
 
     ( SNOBOL.options.watch || [] ).forEach( function ( variable ) {
         var value;
@@ -84,7 +84,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         if ( variable === 'CSTACK' || variable === 'OSTACK' ) {
             value = this[ variable ].addr;
         } else {
-            value = this.symbols.hasOwnProperty( variable ) ? this.symbols[ variable ] : 'UNDEF';
+            value = Object.hasOwn( this.symbols, variable ) ? this.symbols[ variable ] : 'UNDEF';
         }
         console.log(
             '→ %s: %s',
@@ -173,10 +173,10 @@ SNOBOL.VM.prototype.run = function ( program ) {
             case 'BUFFER':
             case 'ARRAY':
                 this.define( label, this.mem.length );
-                this.exec.apply( this, stmt );
+                this.exec( ...stmt );
                 break;
             case 'EQU':
-                this.define( label, this.exec.apply( this, stmt ) );
+                this.define( label, this.exec( ...stmt ) );
                 break;
             default:
                 if ( label ) {
@@ -196,7 +196,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
         if ( macro === 'DESCR' || macro === 'SPEC' ) {
             label = dataAssemblyPtrs[ this.instructionPointer ];
             stmt = [ label, macro, stmt[ 2 ], stmt[ 3 ] ];
-            this.exec.apply( this, stmt );
+            this.exec( ...stmt );
         }
     }
 
@@ -229,7 +229,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
             SNOBOL.sil._fastLOCA2.call( this );
         } else if ( !ASSEMBLY_MACROS.includes( macro ) ) {
             this.instructionPointerChanged = false;
-            this.exec.apply( this, stmt );
+            this.exec( ...stmt );
         }
 
         // If the procedure did not update the instruction pointer,

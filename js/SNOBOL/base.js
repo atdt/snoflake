@@ -12,9 +12,9 @@ var SNOBOL = {
         // Fold SNOBOL source names and labels to uppercase during compilation.
         caseFold: true,
     },
-    log: function () {
+    log: function ( ...args ) {
         if ( SNOBOL.options.debug ) {
-            console.log.apply( console, arguments );
+            console.log( ...args );
         }
     },
     VM: function ( options ) {

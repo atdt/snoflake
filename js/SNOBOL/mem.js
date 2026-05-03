@@ -65,7 +65,7 @@ VM.prototype.alloc = function ( size, value ) {
 VM.prototype.specify = function ( str, $SPEC ) {
     var SPEC = this.s( $SPEC ), encodedString = SNOBOL.str.encode( str );
     SPEC.update( this.mem.length, 0, 0, 0, encodedString.length );
-    this.mem.push.apply( this.mem, encodedString );
+    this.mem.push( ...encodedString );
     return SPEC.ptr;
 }
 
@@ -104,7 +104,7 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
 
     // Fallback to programSymbols to support direct macro testing
     // without running the generated SIL to bind symbols into memory.
-    if ( SNOBOL.programSymbols && SNOBOL.programSymbols.hasOwnProperty( key ) ) {
+    if ( SNOBOL.programSymbols && Object.hasOwn( SNOBOL.programSymbols, key ) ) {
         return SNOBOL.programSymbols[ key ];
     }
 

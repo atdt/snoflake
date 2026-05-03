@@ -1775,8 +1775,8 @@ sil.INIT = function () {
         [ 'NRETCL', 'NRETSP' ],
         [ 'RETCL', 'RETSP' ],
     ].forEach( function ( pair ) {
-        if ( this.symbols.hasOwnProperty( pair[ 0 ] ) &&
-                this.symbols.hasOwnProperty( pair[ 1 ] ) ) {
+        if ( Object.hasOwn( this.symbols, pair[ 0 ] ) &&
+                Object.hasOwn( this.symbols, pair[ 1 ] ) ) {
             internStringStructure( this, pair[ 0 ], pair[ 1 ] );
         }
     }, this );
@@ -2631,7 +2631,7 @@ sil.MOVBLK = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         block = this.mem.slice( DESCR2.addr + 3, DESCR2.addr + DESCR3.addr + 3 );
 
     block.unshift( DESCR1.addr + 3, block.length );
-    Array.prototype.splice.apply( this.mem, block );
+    this.mem.splice( ...block );
 };
 
 //     MOVD is used to move (copy) a descriptor from one loca-
