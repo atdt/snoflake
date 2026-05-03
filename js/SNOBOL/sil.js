@@ -4343,15 +4343,15 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         DESCR = this.d( $DESCR ),
         I = DESCR.addr,
         file = new SNOBOL.File( this, I, fileRole.call( this, I ) ),
-        words, raw;
+        record, words;
 
     if ( !file ) {
         // invalid file descriptor
         return this.jmp( ERROR );
     }
 
-    words = file.read( SPEC.length );
-    if ( !words.length ) {
+    record = file.readRecord( SPEC.length );
+    if ( record.eof ) {
         DESCR.addr = 0;
         if ( typeof EOF === 'number' && this.mem[ EOF ] === this.instructionPointer ) {
             return;
@@ -4359,8 +4359,13 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    for ( var p = 0; p < SPEC.length; p++ ) {
+    words = record.text;
+    for ( var p = 0; p < words.length; p++ ) {
         this.mem[ SPEC.addr + SPEC.offset + p ] = words.codePointAt( p ) || 0;
+    }
+
+    if ( file.role === 'input' ) {
+        SPEC.length = words.length;
     }
 
     return this.jmp( SLOC );

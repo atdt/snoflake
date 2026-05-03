@@ -1647,13 +1647,73 @@ describe( 'Input and Output Macros', function () {
 
             this.vm.currentLabel = null;
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
-            assert.equal( this.vm.mem.slice( ptr, ptr + 6 ).map( function ( c ) {
+            assert.equal( spec.length, 4 );
+            assert.equal( this.vm.mem.slice( ptr, ptr + spec.length ).map( function ( c ) {
                 return String.fromCharCode( c );
-            } ).join( '' ), 'DATA  ' );
+            } ).join( '' ), 'DATA' );
         } finally {
             SNOBOL.options.file = oldFile;
             SNOBOL.options.input = oldInput;
             fs.unlinkSync( sourceFile );
+            fs.unlinkSync( inputFile );
+        }
+    } );
+
+    it( 'STREAD keeps runtime INPUT record length without discarding significant blanks', function () {
+        var inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-blanks-' + process.pid + '.txt' ),
+            oldInput = SNOBOL.options.input,
+            unit = this.vm.d(),
+            spec = this.vm.s(),
+            eof = this.vm.ptr( 1 ),
+            error = this.vm.ptr( 2 ),
+            success = this.vm.ptr( 3 ),
+            ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
+
+        fs.writeFileSync( inputFile, 'ABC   \n' );
+        SNOBOL.options.input = inputFile;
+        unit.addr = this.vm.$( 'UNITI' );
+        spec.update( ptr, 0, 0, 0, 8 );
+
+        try {
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( spec.length, 6 );
+            assert.equal( this.vm.mem.slice( ptr, ptr + spec.length ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), 'ABC   ' );
+        } finally {
+            SNOBOL.options.input = oldInput;
+            fs.unlinkSync( inputFile );
+        }
+    } );
+
+    it( 'STREAD treats an empty runtime INPUT record as data, not EOF', function () {
+        var inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-empty-' + process.pid + '.txt' ),
+            oldInput = SNOBOL.options.input,
+            unit = this.vm.d(),
+            spec = this.vm.s(),
+            eof = this.vm.ptr( 1 ),
+            error = this.vm.ptr( 2 ),
+            success = this.vm.ptr( 3 ),
+            ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
+
+        fs.writeFileSync( inputFile, '\nNEXT\n' );
+        SNOBOL.options.input = inputFile;
+        unit.addr = this.vm.$( 'UNITI' );
+        spec.update( ptr, 0, 0, 0, 8 );
+
+        try {
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( this.vm.instructionPointer, success );
+            assert.equal( spec.length, 0 );
+
+            spec.length = 8;
+            sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( spec.length, 4 );
+            assert.equal( this.vm.mem.slice( ptr, ptr + spec.length ).map( function ( c ) {
+                return String.fromCharCode( c );
+            } ).join( '' ), 'NEXT' );
+        } finally {
+            SNOBOL.options.input = oldInput;
             fs.unlinkSync( inputFile );
         }
     } );

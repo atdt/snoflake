@@ -33,7 +33,7 @@ SNOBOL.File.prototype.seek = function ( pos ) {
     this.pos = pos;
 };
 
-SNOBOL.File.prototype.read = function ( length ) {
+SNOBOL.File.prototype.readRecord = function ( length ) {
     var end, record, next, str;
 
     if ( this.buf === null ) {
@@ -47,7 +47,7 @@ SNOBOL.File.prototype.read = function ( length ) {
     }
 
     if ( this.pos >= this.buf.length ) {
-        return '';
+        return { eof: true, text: '' };
     }
 
     end = this.buf.indexOf( 10, this.pos );
@@ -67,10 +67,18 @@ SNOBOL.File.prototype.read = function ( length ) {
 
     str = record.toString( 'utf-8' );
     if ( str.length > length ) {
-        return str.slice( 0, length );
+        return { eof: false, text: str.slice( 0, length ) };
     }
 
-    return SNOBOL.str.pad( str, length, 'left' );
+    if ( this.role === 'input' ) {
+        return { eof: false, text: str };
+    }
+
+    return { eof: false, text: SNOBOL.str.pad( str, length, 'left' ) };
+};
+
+SNOBOL.File.prototype.read = function ( length ) {
+    return this.readRecord( length ).text;
 };
 
 SNOBOL.File.prototype.write = function ( a /* ... */ ) {
