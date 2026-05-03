@@ -242,28 +242,34 @@ SNOBOL.VM.prototype.run = function ( program ) {
     return !( this.instructionPointer < 0 );
 };
 
-function RegDescriptor(vm, name) {
-    var isC = name === 'CSTACK';
-    var target = isC ? vm.CSTACK : vm.OSTACK;
-    return {
-        name: name,
-        width: 3,
-        get addr() { return target.addr; },
-        set addr(v) { target.addr = v; },
-        get flags() { return 0; },
-        set flags(v) { /* ignore */ },
-        get value() { return 0; },
-        set value(v) { /* ignore */ },
-        toString: function () { return '<' + name + ' A=' + target.addr + '>' }
-    };
+// Stack pointer pseudo-descriptor: lets `vm.d('CSTACK')` and `vm.d('OSTACK')`
+// be used wherever a Descriptor is expected, while delegating addr reads/writes
+// to the live stack object. Other slots are inert.
+class RegDescriptor {
+    constructor( vm, name ) {
+        this.name = name;
+        this.width = 3;
+        this._target = name === 'CSTACK' ? vm.CSTACK : vm.OSTACK;
+    }
+
+    get addr()     { return this._target.addr; }
+    set addr( v )  { this._target.addr = v; }
+    get flags()    { return 0; }
+    set flags( v ) { /* ignore */ }
+    get value()    { return 0; }
+    set value( v ) { /* ignore */ }
+
+    toString() {
+        return '<' + this.name + ' A=' + this._target.addr + '>';
+    }
 }
 
 SNOBOL.VM.prototype.d = function ( ptr ) {
     if ( ptr instanceof SNOBOL.Descriptor ) {
         return ptr;
     }
-    if ( typeof ptr === 'string' && ( ptr === 'CSTACK' || ptr === 'OSTACK' ) ) {
-        return RegDescriptor(this, ptr);
+    if ( ptr === 'CSTACK' || ptr === 'OSTACK' ) {
+        return new RegDescriptor( this, ptr );
     }
     return new SNOBOL.Descriptor( this, ptr );
 };
