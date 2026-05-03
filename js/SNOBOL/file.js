@@ -1,7 +1,6 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import fs from 'node:fs';
 
 SNOBOL.File = class File {
     constructor( vm, unitNum, role = 'source' ) {
@@ -38,7 +37,7 @@ SNOBOL.File = class File {
             if ( !this.path && this.role === 'input' ) {
                 this.buf = Buffer.alloc( 0 );
             } else if ( this.path ) {
-                this.buf = fs.readFileSync( this.path );
+                this.buf = this.vm.loader.load( this.path );
             } else {
                 throw new Error( 'No source file configured' );
             }
@@ -80,6 +79,6 @@ SNOBOL.File = class File {
     }
 
     write( a /* ... */ ) {
-        console.log( a );
+        this.vm.stdout.write( a );
     }
 };

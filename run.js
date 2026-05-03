@@ -38,3 +38,4 @@ const vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
 
 vm.reset();
 vm.run( SNOBOL.interp( vm ) );
+process.exitCode = vm.exitCode;

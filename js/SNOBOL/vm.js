@@ -98,7 +98,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
 
     if ( typeof returnValue === 'boolean' ) {
         // Normalize boolean to exit code and do not terminate the process abruptly
-        process.exitCode = returnValue ? 0 : 1;
+        this.exitCode = returnValue ? 0 : 1;
         return returnValue;
     }
 
@@ -215,12 +215,12 @@ SNOBOL.VM.prototype.run = function ( program ) {
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         steps++;
         if ( maxSteps && steps > maxSteps ) {
-            console.error('Aborting: exceeded maxSteps (%s) at ip=%s', maxSteps, this.instructionPointer);
+            this.stderr.write( `Aborting: exceeded maxSteps (${maxSteps}) at ip=${this.instructionPointer}` );
             this.instructionPointer = -1;
             break;
         }
         if ( maxMillis && (Date.now() - startTime) > maxMillis ) {
-            console.error('Aborting: exceeded maxMillis (%sms) at ip=%s', maxMillis, this.instructionPointer);
+            this.stderr.write( `Aborting: exceeded maxMillis (${maxMillis}ms) at ip=${this.instructionPointer}` );
             this.instructionPointer = -1;
             break;
         }

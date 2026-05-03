@@ -40,18 +40,18 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     FRSGPT.addr += size;
 }
 
-function printLinePrinterRecord( record, carriageControl ) {
+function printLinePrinterRecord( vm, record, carriageControl ) {
     record.split( '\n' ).forEach( function ( line ) {
         let control,
             content;
 
         if ( line.length === 0 ) {
-            console.log( '' );
+            vm.stdout.write( '' );
             return;
         }
 
         if ( carriageControl === false ) {
-            console.log( line.replace( /\u0000+/g, '' ) );
+            vm.stdout.write( line.replace( /\u0000+/g, '' ) );
             return;
         }
 
@@ -69,10 +69,10 @@ function printLinePrinterRecord( record, carriageControl ) {
             case '0':
             case '+':
             case ' ':
-                console.log( content );
+                vm.stdout.write( content );
                 break;
             default:
-                console.log( line.replace( /\u0000+/g, '' ) );
+                vm.stdout.write( line.replace( /\u0000+/g, '' ) );
         }
     } );
 }
@@ -1314,7 +1314,7 @@ sil.ENDEX = function ( $DESCR ) {
     // end execution of SNOBOL4 run
     const I = this.d( $DESCR ).addr;
     // Normalize exit code and terminate main loop
-    process.exitCode = I === 0 ? 0 : 1;
+    this.exitCode = I === 0 ? 0 : 1;
     this.instructionPointer = -1;
     return I === 0;
 };
@@ -2921,7 +2921,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     }
 
     ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
-    printLinePrinterRecord( SNOBOL.str.format( fmt, ARGs ) );
+    printLinePrinterRecord( this, SNOBOL.str.format( fmt, ARGs ) );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -4301,6 +4301,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     fmt = SNOBOL.str.decode( fmt );
     item = SNOBOL.str.decode( item );
     printLinePrinterRecord(
+        this,
         SNOBOL.str.format( fmt, item ),
         formatHasLeadingCarriageControl( fmt )
     );
