@@ -21,6 +21,13 @@ const SNOBOL = {
         // XXX: Make this local to the VM instance.
         SNOBOL.options = { ...SNOBOL.options, ...options };
         SNOBOL.DEBUG = !!SNOBOL.options.debug;
+        // I/O adapters: defaults target Node (console + node:fs) but a host
+        // may inject its own writers and loader to redirect program output
+        // or supply pre-loaded sources. See js/SNOBOL/io.js.
+        this.stdout = SNOBOL.options.stdout || SNOBOL.io.nodeStdout;
+        this.stderr = SNOBOL.options.stderr || SNOBOL.io.nodeStderr;
+        this.loader = SNOBOL.options.loader || SNOBOL.io.nodeLoader;
+        this.exitCode = 0;
         this.reset();
     },
 };
