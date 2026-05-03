@@ -492,26 +492,11 @@ describe( 'SNOBOL Program Execution', function () {
     } );
 
     it( 'treats a missing runtime input file as EOF', function () {
-        var oldFile = SNOBOL.options.file,
-            hadInput = Object.prototype.hasOwnProperty.call( SNOBOL.options, 'input' ),
-            oldInput = SNOBOL.options.input,
-            vm = new SNOBOL.VM(),
-            file;
-
-        SNOBOL.options.file = path.join( __dirname, '..', 'tmp', 'unused-source.sno' );
-        delete SNOBOL.options.input;
-
-        try {
+        var vm = new SNOBOL.VM( {
+                file: path.join( __dirname, '..', 'tmp', 'unused-source.sno' )
+            } ),
             file = new SNOBOL.File( vm, 5, 'input' );
-            assert.equal( file.read( 80 ), '' );
-        } finally {
-            SNOBOL.options.file = oldFile;
-            if ( hadInput ) {
-                SNOBOL.options.input = oldInput;
-            } else {
-                delete SNOBOL.options.input;
-            }
-        }
+        assert.equal( file.read( 80 ), '' );
     } );
 
     it( 'case-folds source names, labels, and built-in variable names by default', function () {

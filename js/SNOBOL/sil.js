@@ -120,18 +120,18 @@ function fileRole( unitNum ) {
     // also uses unit 5 for source-card reads while compiling the program.
     // Keep those compiler reads on --file, and let runtime INPUT use --input
     // when the caller supplies a separate data file.
-    if ( SNOBOL.options.input && unitNum === inputUnit && !sourceReadLabel( this.currentLabel ) ) {
+    if ( this.options.input && unitNum === inputUnit && !sourceReadLabel( this.currentLabel ) ) {
         return 'input';
     }
 
     return 'source';
 }
 
-function caseFoldEnabled() {
-    return SNOBOL.options.caseFold !== false &&
-        SNOBOL.options.caseFold !== 'false' &&
-        SNOBOL.options.caseFold !== 0 &&
-        SNOBOL.options.caseFold !== '0';
+function caseFoldEnabled( vm ) {
+    return vm.options.caseFold !== false &&
+        vm.options.caseFold !== 'false' &&
+        vm.options.caseFold !== 0 &&
+        vm.options.caseFold !== '0';
 }
 
 function foldSpecifierAsciiUpper( vm, SPEC, length ) {
@@ -181,7 +181,7 @@ function stackPopper( dataType ) {
         for ( let i = 0; i < ARGs.length; i++ ) {
             dst = this[ dataType ]( ARGs[i] );
             if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
-                if ( SNOBOL.DEBUG ) {
+                if ( this.debug ) {
                     console.log('UNDERFLOW %s: ip=%s, CSTACK=%s, STACK=%s, width=%s',
                         dataType.toUpperCase(), this.instructionPointer,
                         this.CSTACK.addr, STACK_BASE, dst.width);
@@ -1455,8 +1455,8 @@ sil.GETAC = function ( $DESCR1, $DESCR2, N ) {
           A = DESCR_indirect.addr;
 
     DESCR1.addr = A;
-    if ( SNOBOL.options.debug ) {
-        SNOBOL.log('GETAC', $DESCR1, 'from', $DESCR2, 'N', N, 'A2', A2, '->', A, 'flags', DESCR_indirect.flags);
+    if ( this.options.debug ) {
+        this.log('GETAC', $DESCR1, 'from', $DESCR2, 'N', N, 'A2', A2, '->', A, 'flags', DESCR_indirect.flags);
     }
 };
 
@@ -1948,7 +1948,7 @@ sil.ISTACK = function () {
     // initialize stack
     this.OSTACK.addr = 0;
     this.CSTACK.addr = this.$( 'STACK' );
-    if ( SNOBOL.DEBUG ) console.log('ISTACK set CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    if ( this.debug ) console.log('ISTACK set CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2072,8 +2072,8 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
         }
     }
 
-    if ( SNOBOL.options.debug ) {
-        SNOBOL.log('LEXCMP', '[' + STR1 + '] vs [' + STR2 + ']', 'len1=' + STR1.length, 'len2=' + STR2.length, '→', branch === undefined ? '(fall-through)' : branch);
+    if ( this.options.debug ) {
+        this.log('LEXCMP', '[' + STR1 + '] vs [' + STR2 + ']', 'len1=' + STR1.length, 'len2=' + STR2.length, '→', branch === undefined ? '(fall-through)' : branch);
     }
 
     this.jmp( branch );
@@ -2336,7 +2336,7 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // as data to DEFINE/OPSYN are ordinary strings.  FNCPL stores those
     // names as string structures, so fall back to the same ASCII fold here
     // after preserving the exact descriptor match above.
-    if ( caseFoldEnabled() && isFunctionPairList ) {
+    if ( caseFoldEnabled( this ) && isFunctionPairList ) {
         key = foldAsciiUpperString( stringStructureText( this, DESCR3 ) );
 
         for ( i = 0; ; i++ ) {
@@ -3118,8 +3118,8 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
 
     if ( A1 === 0 && DESCR1.ptr !== undefined ) {
         base = DESCR1.ptr + N;
-        if ( SNOBOL.options.debug ) {
-            SNOBOL.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
+        if ( this.options.debug ) {
+            this.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
         }
     }
 
@@ -3128,8 +3128,8 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
     if ( DESCR2.flags & PTR ) {
         target.flags |= PTR;
     }
-    if ( SNOBOL.options.debug ) {
-        SNOBOL.log('PUTAC write', base, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
+    if ( this.options.debug ) {
+        this.log('PUTAC write', base, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
     }
 };
 
@@ -3166,7 +3166,7 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     }
     const target = base + DESCR2.addr;
 
-    if ( SNOBOL.DEBUG ) console.log('PUTD target=%s (base=%s A1=%s A2=%s)', target, base, DESCR1.addr, DESCR2.addr);
+    if ( this.debug ) console.log('PUTD target=%s (base=%s A1=%s A2=%s)', target, base, DESCR1.addr, DESCR2.addr);
     this.d( target ).read( DESCR3 );
 };
 
@@ -3262,8 +3262,8 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 
     const target = this.d( DESCR1.addr + N );
     target.value = DESCR2.value;
-    if ( SNOBOL.options.debug ) {
-        SNOBOL.log('PUTVC', $DESCR1, 'N', N, 'value', DESCR2.value, 'dst', target.raw());
+    if ( this.options.debug ) {
+        this.log('PUTVC', $DESCR1, 'N', N, 'value', DESCR2.value, 'dst', target.raw());
     }
 };
 
@@ -3375,7 +3375,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         $LOCs = [ $LOCs ];
     }
 
-    if ( SNOBOL.DEBUG ) console.log('RCALL enter: CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    if ( this.debug ) console.log('RCALL enter: CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
     // Do not write at A; only store A0 at A+D and LOC at A+2D as descriptors.
 
     // The old stack pointer (A0) is saved on the stack.
@@ -3386,18 +3386,18 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // The current stack pointer becomes the old stack pointer.
     // Old stack pointer becomes current
     this.OSTACK.addr = this.CSTACK.addr;
-    if ( SNOBOL.DEBUG ) console.log('RCALL after save: OSTACK=%s', this.OSTACK.addr);
+    if ( this.debug ) console.log('RCALL after save: OSTACK=%s', this.OSTACK.addr);
 
     // A new current stack pointer is generated.
     this.CSTACK.addr += D;
-    if ( SNOBOL.DEBUG ) console.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
+    if ( this.debug ) console.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
 
     // The translated runtime carries the return continuation in callbacks,
     // but still reserves the SIL LOC descriptor slot so the stack frame shape
     // remains A+(2+N)*D with zeroed descriptor flags.
     this.d( this.CSTACK.addr + D ).update( 0 );
     this.CSTACK.addr += D;
-    if ( SNOBOL.DEBUG ) console.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
+    if ( this.debug ) console.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
 
 
     // The return location LOC is saved on the stack so that the return can be
@@ -3414,11 +3414,11 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
 
         const A = this.OSTACK.addr;
-        if ( SNOBOL.DEBUG ) console.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
+        if ( this.debug ) console.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
         // Restore CSTACK to A and OSTACK to saved A0 (at A+D)
         this.CSTACK.addr = this.OSTACK.addr;
         this.OSTACK.addr = this.d( A + D ).addr;
-        if ( SNOBOL.DEBUG ) console.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
+        if ( this.debug ) console.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
 
         if ( typeof N === 'number' ) {
             const idx = N - 1;
@@ -3443,8 +3443,8 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     } );
 
     sil.PUSH.call( this, $DESCRs.reverse() );
-    if ( SNOBOL.DEBUG ) console.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
-    if ( SNOBOL.DEBUG ) {
+    if ( this.debug ) console.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
+    if ( this.debug ) {
         try {
             console.log('RCALL jmp ->', $PROC, '->', typeof $PROC === 'number' ? this.mem[$PROC] : '(not number)');
         } catch (e) {
@@ -4470,7 +4470,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           O = SPEC2.offset,
           L = SPEC2.length;
 
-    SNOBOL.log( 'STREAM start', TABLE, JSON.stringify( str ) );
+    this.log( 'STREAM start', TABLE, JSON.stringify( str ) );
 
     function getTableById( id ) {
         return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
@@ -4480,7 +4480,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     let table = getTableById( TABLE );
 
     function maybeFoldToken( length ) {
-        if ( caseFoldEnabled() && isFoldableStreamTable( tableName ) ) {
+        if ( caseFoldEnabled( this ) && isFoldableStreamTable( tableName ) ) {
             foldSpecifierAsciiUpper( this, SPEC1, length );
         }
     }
@@ -4500,7 +4500,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
-        SNOBOL.log( 'TI = %s', TI );
+        this.log( 'TI = %s', TI );
         switch ( TI ) {
         case 'CONTIN':
             continue;
@@ -4542,7 +4542,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    SNOBOL.log( 'STREAM runout TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
+    this.log( 'STREAM runout TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
     STYPE.addr = P;
     SPEC1.update( A, F, V, O, L );
     maybeFoldToken.call( this, L );
@@ -4741,7 +4741,7 @@ sil.TITLE = function ( MSG ) {
         throw new Error( "Program loop detected." );
     }
     titles.push( MSG );
-    if ( SNOBOL.DEBUG ) console.log( MSG );
+    if ( this.debug ) console.log( MSG );
 };
 
 sil.DBG = sil.TITLE; // nonstandard ;)

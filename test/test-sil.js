@@ -494,7 +494,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
     } );
 
     it( 'SPOP', function () {
-        SNOBOL.DEBUG = true;
+        this.vm.debug = true;
         var s1 = this.vm.s(),
             s2 = this.vm.s(),
             s3 = this.vm.s(),
@@ -1563,8 +1563,6 @@ describe( 'Input and Output Macros', function () {
 
     it( 'STREAD', function () {
         var file = path.join( os.tmpdir(), 'snoflake-stread-' + process.pid + '.sno' ),
-            oldFile = SNOBOL.options.file,
-            oldInput = SNOBOL.options.input,
             unit = this.vm.d(),
             spec = this.vm.s(),
             eof = 1,
@@ -1573,8 +1571,7 @@ describe( 'Input and Output Macros', function () {
             ptr = this.vm.alloc( 16, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( file, 'END\n1234567890\n' );
-        SNOBOL.options.file = file;
-        delete SNOBOL.options.input;
+        this.vm.options.file = file;
         unit.addr = 5;
         spec.update( ptr, 0, 0, 2, 8 );
 
@@ -1606,8 +1603,6 @@ describe( 'Input and Output Macros', function () {
             assert.equal( this.vm.instructionPointer, 7 );
             assert.equal( unit.addr, 0 );
         } finally {
-            SNOBOL.options.file = oldFile;
-            SNOBOL.options.input = oldInput;
             fs.unlinkSync( file );
         }
     } );
@@ -1615,8 +1610,6 @@ describe( 'Input and Output Macros', function () {
     it( 'STREAD separates source cards from runtime INPUT data', function () {
         var sourceFile = path.join( os.tmpdir(), 'snoflake-stread-source-' + process.pid + '.sno' ),
             inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-' + process.pid + '.txt' ),
-            oldFile = SNOBOL.options.file,
-            oldInput = SNOBOL.options.input,
             unit = this.vm.d(),
             spec = this.vm.s(),
             eof = this.vm.ptr( 1 ),
@@ -1626,8 +1619,8 @@ describe( 'Input and Output Macros', function () {
 
         fs.writeFileSync( sourceFile, 'SOURCE\n' );
         fs.writeFileSync( inputFile, 'DATA\n' );
-        SNOBOL.options.file = sourceFile;
-        SNOBOL.options.input = inputFile;
+        this.vm.options.file = sourceFile;
+        this.vm.options.input = inputFile;
         unit.addr = this.vm.$( 'UNITI' );
         spec.update( ptr, 0, 0, 0, 6 );
 
@@ -1645,8 +1638,6 @@ describe( 'Input and Output Macros', function () {
                 return String.fromCharCode( c );
             } ).join( '' ), 'DATA' );
         } finally {
-            SNOBOL.options.file = oldFile;
-            SNOBOL.options.input = oldInput;
             fs.unlinkSync( sourceFile );
             fs.unlinkSync( inputFile );
         }
@@ -1654,7 +1645,6 @@ describe( 'Input and Output Macros', function () {
 
     it( 'STREAD keeps runtime INPUT record length without discarding significant blanks', function () {
         var inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-blanks-' + process.pid + '.txt' ),
-            oldInput = SNOBOL.options.input,
             unit = this.vm.d(),
             spec = this.vm.s(),
             eof = this.vm.ptr( 1 ),
@@ -1663,7 +1653,7 @@ describe( 'Input and Output Macros', function () {
             ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( inputFile, 'ABC   \n' );
-        SNOBOL.options.input = inputFile;
+        this.vm.options.input = inputFile;
         unit.addr = this.vm.$( 'UNITI' );
         spec.update( ptr, 0, 0, 0, 8 );
 
@@ -1674,14 +1664,12 @@ describe( 'Input and Output Macros', function () {
                 return String.fromCharCode( c );
             } ).join( '' ), 'ABC   ' );
         } finally {
-            SNOBOL.options.input = oldInput;
             fs.unlinkSync( inputFile );
         }
     } );
 
     it( 'STREAD treats an empty runtime INPUT record as data, not EOF', function () {
         var inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-empty-' + process.pid + '.txt' ),
-            oldInput = SNOBOL.options.input,
             unit = this.vm.d(),
             spec = this.vm.s(),
             eof = this.vm.ptr( 1 ),
@@ -1690,7 +1678,7 @@ describe( 'Input and Output Macros', function () {
             ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( inputFile, '\nNEXT\n' );
-        SNOBOL.options.input = inputFile;
+        this.vm.options.input = inputFile;
         unit.addr = this.vm.$( 'UNITI' );
         spec.update( ptr, 0, 0, 0, 8 );
 
@@ -1706,7 +1694,6 @@ describe( 'Input and Output Macros', function () {
                 return String.fromCharCode( c );
             } ).join( '' ), 'NEXT' );
         } finally {
-            SNOBOL.options.input = oldInput;
             fs.unlinkSync( inputFile );
         }
     } );

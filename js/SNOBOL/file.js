@@ -14,8 +14,8 @@ SNOBOL.File = class File {
         this.unitNum = unitNum;
         this.role = role;
         this.path = role === 'input' ?
-            SNOBOL.options.input :
-            SNOBOL.options.file;
+            vm.options.input :
+            vm.options.file;
         this.pos = 0;
         this.fd = null;
         this.buf = null;

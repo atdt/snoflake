@@ -58,7 +58,7 @@ SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
 
-    if ( SNOBOL.DEBUG ) {
+    if ( this.debug ) {
         if ( comment ) {
             comment = '// ' + comment;
         } else {
@@ -78,7 +78,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
     this.currentLabel = label;
     let returnValue = SNOBOL.sil[ macro ].call( this, ...args );
 
-    const watch = SNOBOL.options.watch;
+    const watch = this.options.watch;
     if ( watch && watch.length > 0 ) {
         watch.forEach( function ( variable ) {
             let value;
@@ -106,6 +106,12 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
 };
 
 
+SNOBOL.VM.prototype.log = function ( ...args ) {
+    if ( this.debug ) {
+        console.log( ...args );
+    }
+};
+
 SNOBOL.VM.prototype.jmp = function ( loc ) {
     // `loc` will be undefined when a procedure takes an optional
     // location argument which the caller omitted. In such cases
@@ -132,8 +138,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
 
-    const savedDebug = SNOBOL.DEBUG;
-    SNOBOL.DEBUG = false;
+    const savedDebug = this.debug;
+    this.debug = false;
     const dataAssemblyPtrs = Object.create( null );
 
     for (
@@ -205,12 +211,12 @@ SNOBOL.VM.prototype.run = function ( program ) {
 
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
-    SNOBOL.DEBUG = savedDebug;
+    this.debug = savedDebug;
 
     const startTime = Date.now();
     let steps = 0;
-    const maxSteps = Number(SNOBOL.options.maxSteps || 0);
-    const maxMillis = Number(SNOBOL.options.maxMillis || 0);
+    const maxSteps = Number(this.options.maxSteps || 0);
+    const maxMillis = Number(this.options.maxMillis || 0);
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         steps++;

@@ -7,12 +7,6 @@ import { fileURLToPath } from 'node:url';
 import SNOBOL from '../js/snobol.js';
 import { parseHeader, loadCases } from './program-fixture.js';
 
-// Snapshot the pristine SNOBOL.options at module load. The VM constructor
-// merges its `options` argument into the live SNOBOL.options object, so
-// without an explicit reset between fixtures, values like `debug` or
-// `caseFold` set by an earlier case would leak into later ones.
-const PRISTINE_OPTIONS = { ...SNOBOL.options };
-
 var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 var ROOT = path.join( __dirname, '..' ),
     TMP_DIR = path.join( ROOT, 'tmp', 'test-programs' );
@@ -97,11 +91,6 @@ function runProgram( filePath, header ) {
         fs.writeFileSync( inputPath, header.input );
         opts.input = inputPath;
     }
-
-    // Restore SNOBOL.options to its pristine state so flags from a prior
-    // case (debug, caseFold, watch, …) do not bleed into this one. The VM
-    // constructor will then merge `opts` on top.
-    SNOBOL.options = { ...PRISTINE_OPTIONS };
 
     var stdout = captureWriter();
     var stderr = captureWriter();
