@@ -1,67 +1,44 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import assert from 'node:assert';
 
+class Descriptor {
+    constructor( vm, ptr ) {
+        this.vm = vm;
 
-// Extend `dst` by copying enumerable properties on `src`
-// as non-enumerable data descriptors.
-function defineValues( dst, src ) {
-    Object.keys( src ).forEach( function (key) {
-        const property = { value: src[ key ] };
-        Object.defineProperty( dst, key, property );
-    } );
-    return dst;
-}
-
-SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
-    this.vm = vm;
-
-    if ( ptr === undefined ) {
-        ptr = vm.alloc( this.width );
-    } else if ( typeof ptr === 'string' ) {
-        ptr = vm.resolve( ptr );
+        if ( ptr === undefined ) {
+            ptr = vm.alloc( this.width );
+        } else if ( typeof ptr === 'string' ) {
+            ptr = vm.resolve( ptr );
+        }
+        this.ptr = ptr;
     }
-    this.ptr = ptr;
-};
 
-SNOBOL.Specifier = function Specifier( vm, ptr ) {
-    SNOBOL.Descriptor.call( this, vm, ptr );
-};
+    get name()      { return 'Descriptor'; }
+    get width()     { return 3; }
+    get rawLength() { return 3; }
 
-SNOBOL.Descriptor.prototype = Object.create( null, {
-    name        : { value: 'Descriptor' },
-    constructor : { value : SNOBOL.Descriptor },
-    width       : { value : 3 },
-    slots       : { value: Object.freeze( [ 'addr', 'flags', 'value' ] ) },
-    addr        : {
-        get: function ()  { return this.vm.getInt( this.ptr + 0 ); },
-        set: function (n) { this.vm.setInt( this.ptr + 0, n ); }
-    },
-    raddr       : {
-        get: function ()  { return this.vm.getReal( this.ptr + 0 ); },
-        set: function (n) { this.vm.setReal( this.ptr + 0, n ); }
-    },
-    flags       : {
-        get: function ()  { return this.vm.getUint( this.ptr + 1 ); },
-        set: function (n) { this.vm.setUint( this.ptr + 1, n ); }
-    },
-    value       : {
-        get: function ()  { return this.vm.getUint( this.ptr + 2 ); },
-        set: function (n) { this.vm.setUint( this.ptr + 2, n ); }
-    }
-} );
+    get addr()    { return this.vm.getInt( this.ptr + 0 ); }
+    set addr( n ) { this.vm.setInt( this.ptr + 0, n ); }
 
-defineValues( SNOBOL.Descriptor.prototype, {
-    update: function (...args) {
+    get raddr()    { return this.vm.getReal( this.ptr + 0 ); }
+    set raddr( n ) { this.vm.setReal( this.ptr + 0, n ); }
+
+    get flags()    { return this.vm.getUint( this.ptr + 1 ); }
+    set flags( n ) { this.vm.setUint( this.ptr + 1, n ); }
+
+    get value()    { return this.vm.getUint( this.ptr + 2 ); }
+    set value( n ) { this.vm.setUint( this.ptr + 2, n ); }
+
+    update( ...args ) {
         this.addr = args.length ? args.shift() : 0;
         this.flags = args.length ? args.shift() : 0;
         this.value = args.length ? args.shift() : 0;
         return this;
-    },
+    }
 
     // Test two instances for equality
-    isEqualTo: function ( other ) {
+    isEqualTo( other ) {
         if ( this.width !== other.width ) {
             return false;
         }
@@ -71,34 +48,34 @@ defineValues( SNOBOL.Descriptor.prototype, {
             }
         }
         return true;
-    },
+    }
 
     // Get next aligned data structure
-    next: function () {
+    next() {
         return new this.constructor( this.vm, this.ptr + this.width );
-    },
+    }
 
     // Get prev aligned data structure
-    prev: function () {
+    prev() {
         return new this.constructor( this.vm, this.ptr - this.width );
-    },
+    }
 
     // Read (copy) the content of another instance into self
-    read: function ( src ) {
+    read( src ) {
         for ( let i = 0; i < this.width; i++ ) {
             this.vm.mem[ this.ptr + i ] = this.vm.mem[ src.ptr + i ];
         }
-    },
+    }
 
-    raw: function () {
+    raw() {
         const r = [];
-        for ( let i = 0; i < this.slots.length; i++ ) {
+        for ( let i = 0; i < this.rawLength; i++ ) {
             r.push( this.vm.mem[ this.ptr + i ] );
         }
         return r;
-    },
+    }
 
-    toString: function () {
+    toString() {
         const fields = [];
         const props = {
             A: this.addr,
@@ -121,35 +98,27 @@ defineValues( SNOBOL.Descriptor.prototype, {
                 fields.join( ', ' ), '>'
         ].join( '' );
     }
-} );
+}
 
+class Specifier extends Descriptor {
+    get name()      { return 'Specifier'; }
+    get width()     { return 6; }
+    get rawLength() { return 5; }
 
-SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
-    name        : { value: 'Specifier' },
-    constructor : { value: SNOBOL.Specifier },
-    width       : { value: 6 },
-    slots       : { value: Object.freeze( [ 'addr', 'flags', 'value', 'offset', 'length' ] ) },
-    offset      : {
-        get: function ()  { return this.vm.getUint( this.ptr + 3 ); },
-        set: function (n) { this.vm.setUint( this.ptr + 3, n ); }
-    },
-    length      : {
-        get: function ()  { return this.vm.getUint( this.ptr + 4 ); },
-        set: function (n) { this.vm.setUint( this.ptr + 4, n ); }
-    },
-    specified   : {
-        enumerable: false,
-        get: function () {
-            const start = this.addr + this.offset,
-                  end = start + this.length;
+    get offset()    { return this.vm.getUint( this.ptr + 3 ); }
+    set offset( n ) { this.vm.setUint( this.ptr + 3, n ); }
 
-            return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
-        }
+    get length()    { return this.vm.getUint( this.ptr + 4 ); }
+    set length( n ) { this.vm.setUint( this.ptr + 4, n ); }
+
+    get specified() {
+        const start = this.addr + this.offset,
+              end = start + this.length;
+
+        return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
     }
-} );
 
-defineValues( SNOBOL.Specifier.prototype, {
-    update: function (...args) {
+    update( ...args ) {
         this.addr = args.length ? args.shift() : 0;
         this.flags = args.length ? args.shift() : 0;
         this.value = args.length ? args.shift() : 0;
@@ -157,4 +126,7 @@ defineValues( SNOBOL.Specifier.prototype, {
         this.length = args.length ? args.shift() : 0;
         return this;
     }
-} );
+}
+
+SNOBOL.Descriptor = Descriptor;
+SNOBOL.Specifier = Specifier;
