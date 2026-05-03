@@ -624,17 +624,12 @@ describe( 'Descriptor Datatype', function () {
 
     it( 'enumerables', function () {
         var d = this.vm.d(),
-            fields = [ 'addr', 'flags', 'raddr', 'value' ],
+            fields = [ 'addr', 'flags', 'ptr', 'raddr', 'value', 'vm' ],
             keys = [];
         for ( var key in d ) {
             keys.push( key );
         }
         assert.deepEqual( keys.sort(), fields );
-    } );
-
-    it( 'frozen', function () {
-        var d = this.vm.d();
-        assert( Object.isFrozen(d) );
     } );
 
     it( 'next', function () {
@@ -714,18 +709,13 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'enumerables', function () {
-        var fields = [ 'addr', 'flags', 'length', 'offset', 'raddr', 'value' ],
+        var fields = [ 'addr', 'flags', 'length', 'offset', 'ptr', 'raddr', 'value', 'vm' ],
             s = new SNOBOL.Specifier( this.vm ),
             keys = [];
         for ( var key in s ) {
             keys.push( key );
         }
         assert.deepEqual( keys.sort(), fields );
-    } );
-
-    it( 'frozen', function () {
-        var s = new SNOBOL.Specifier( this.vm );
-        assert( Object.isFrozen(s) );
     } );
 
     it( 'next', function () {

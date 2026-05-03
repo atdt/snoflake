@@ -36,20 +36,18 @@ function MemorySlot( type, offset ) {
 MemorySlot.prototype.enumerable = true;
 
 SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
-    Object.defineProperty( this, 'vm', { value: vm } );
+    this.vm = vm;
 
     if ( ptr === undefined ) {
         ptr = vm.alloc( this.width );
     } else if ( typeof ptr === 'string' ) {
         ptr = vm.resolve( ptr );
     }
-    Object.defineProperty( this, 'ptr', { value: ptr } );
+    this.ptr = ptr;
 
     while ( this.ptr + this.width > vm.mem.length ) {
         vm.mem.push( 0 );
     }
-
-    Object.freeze( this );
 };
 
 SNOBOL.Specifier = function Specifier( vm, ptr ) {
@@ -114,6 +112,9 @@ defineValues( SNOBOL.Descriptor.prototype, {
         const fields = [], props = {};
 
         for ( const k in this ) {
+            if ( k === 'vm' || k === 'ptr' ) {
+                continue;
+            }
             props[ k.charAt( 0 ).toUpperCase() ] = this[ k ];
         }
 
