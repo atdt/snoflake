@@ -204,7 +204,6 @@ function stackPusher( dataType ) {
             ARGs = [ ARGs ];
         }
 
-        // Are we iterating in the right direction here?
         for ( var i = 0; i < ARGs.length; i++ ) {
             src = this[ dataType ]( ARGs[i] );
             var STACK_BASE = this.$( 'STACK' );
@@ -1555,20 +1554,12 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         A3 = DESCR3.addr,
 
         target = A2 + A3;
-    if ( SNOBOL.DEBUG && ( target < 0 || target > this.mem.length + 1000 ) ) {
-        console.log('WARN GETD out-of-range target=%s (A2=%s + A3=%s) memlen=%s', target, A2, A3, this.mem.length);
-    }
     if ( target < 0 || target + D > this.mem.length ) {
         DESCR1.update( 0, 0, 0 );
         return;
     }
     var DESCR_indirect = this.d( target );
     DESCR1.read( DESCR_indirect );
-    if ( SNOBOL.DEBUG ) {
-        try {
-            console.log('DBG GETD dst(A,F,V)=%j from target=%s', this.d(DESCR1.ptr || DESCR1).raw ? this.d(DESCR1.ptr || DESCR1).raw() : [DESCR1.addr, DESCR1.flags, DESCR1.value], target);
-        } catch (e) {}
-    }
 };
 
 //     GETDC  is  used to get a descriptor with an offset con-
