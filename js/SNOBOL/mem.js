@@ -1,8 +1,8 @@
 "use strict";
 
-var SNOBOL = require( './base' ),
-    assert = require( 'assert' ),
-    VM = SNOBOL.VM;
+import SNOBOL from './base.js';
+import assert from 'node:assert';
+var VM = SNOBOL.VM;
 
 var buf = new ArrayBuffer( 4 ),
     f32 = new Float32Array( buf ),

@@ -1,9 +1,12 @@
 
-var assert = require( 'assert' ),
-    childProcess = require( 'child_process' ),
-    fs = require( 'fs' ),
-    path = require( 'path' ),
-    SNOBOL = require( '../js/SNOBOL' );
+import assert from 'node:assert';
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import SNOBOL from '../js/snobol.js';
+
+var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 
 Object.keys( SNOBOL ).forEach( function ( k ) {
     global[k] = SNOBOL[k];

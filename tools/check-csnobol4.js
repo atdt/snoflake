@@ -24,12 +24,13 @@
 //   apply: CSNOBOL4 with -b prints program output verbatim (no banner, no
 //   "NORMAL TERMINATION" epilogue).
 
-var childProcess = require( 'child_process' ),
-    fs = require( 'fs' ),
-    path = require( 'path' );
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import * as fixture from '../test/program-fixture.js';
 
-var fixture = require( '../test/program-fixture' );
-
+var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 var ROOT = path.join( __dirname, '..' ),
     TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' );
 
@@ -390,8 +391,8 @@ function main( argv ) {
     return failed === 0 ? 0 : 1;
 }
 
-if ( require.main === module ) {
+if ( import.meta.url === pathToFileURL( process.argv[ 1 ] ).href ) {
     process.exit( main( process.argv.slice( 2 ) ) );
 }
 
-module.exports = { checkOne: checkOne, main: main };
+export { checkOne, main };

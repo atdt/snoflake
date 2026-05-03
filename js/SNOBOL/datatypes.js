@@ -1,7 +1,7 @@
 "use strict";
 
-var SNOBOL = require( './base' ),
-    assert = require('assert');
+import SNOBOL from './base.js';
+import assert from 'node:assert';
 
 
 // Extend `dst` by copying enumerable properties on `src`

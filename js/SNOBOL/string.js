@@ -1,7 +1,7 @@
 "use strict";
 
-var SNOBOL = require( './base' );
-var assert = require( 'assert' );
+import SNOBOL from './base.js';
+import assert from 'node:assert';
 
 var FORMAT_RE = /(\d*)([HI])(\d*)([^,\/]*)([,\/]\s*)?/g;
 

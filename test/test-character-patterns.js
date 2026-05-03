@@ -1,10 +1,12 @@
 "use strict";
 
-var assert = require( 'assert' ),
-    childProcess = require( 'child_process' ),
-    fs = require( 'fs' ),
-    path = require( 'path' );
+import assert from 'node:assert';
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 var root = path.join( __dirname, '..' ),
     tmp = path.join( root, 'tmp' );
 

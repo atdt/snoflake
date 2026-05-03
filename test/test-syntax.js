@@ -1,8 +1,8 @@
 // Test that each character class matches only the characters it is supposed to
 // match. Tests auto-generated from the table in section 4.1 of S4D58.
 
-var assert = require('assert'),
-    SNOBOL = require( '../js/SNOBOL' );
+import assert from 'node:assert';
+import SNOBOL from '../js/snobol.js';
 
 describe( 'Character Classes', function () {
     it( 'ALPHANUMERIC (digit and letter)', function () {

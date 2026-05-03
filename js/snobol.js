@@ -1,12 +1,12 @@
-var SNOBOL = require( './SNOBOL/base' );
+import SNOBOL from './SNOBOL/base.js';
 
-module.exports = SNOBOL;
+import './SNOBOL/string.js';
+import './SNOBOL/mem.js';
+import './SNOBOL/syntax.js';
+import './SNOBOL/datatypes.js';
+import './SNOBOL/file.js';
+import './SNOBOL/vm.js';
+import './SNOBOL/sil.js';
+import './SNOBOL/snobol.sil.js';
 
-require( './SNOBOL/string' );
-require( './SNOBOL/mem' );
-require( './SNOBOL/syntax' );
-require( './SNOBOL/datatypes' );
-require( './SNOBOL/file' );
-require( './SNOBOL/vm' );
-require( './SNOBOL/sil' );
-require( './SNOBOL/snobol.sil.js' );
+export default SNOBOL;

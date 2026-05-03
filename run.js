@@ -1,7 +1,8 @@
 "use strict";
 
-var SNOBOL = require( './js/snobol.js' ),
-    vm;
+import SNOBOL from './js/snobol.js';
+
+var vm;
 
 function optionValue( value ) {
     if ( value === undefined ) {

@@ -1,6 +1,6 @@
 "use strict";
 
-var SNOBOL = require( './base' );
+import SNOBOL from './base.js';
 
 // These macros belong to the memory-location counter.  Most emit storage;
 // EQU does not, but it is commonly used at data boundaries for size

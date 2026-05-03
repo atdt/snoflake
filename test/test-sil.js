@@ -1,9 +1,10 @@
-var assert = require('assert'),
-    fs = require( 'fs' ),
-    os = require( 'os' ),
-    path = require( 'path' ),
-    slice = Array.prototype.slice,
-    SNOBOL = require( '../js/SNOBOL' );
+import assert from 'node:assert';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import SNOBOL from '../js/snobol.js';
+
+var slice = Array.prototype.slice;
 
 Object.keys( SNOBOL ).forEach( function ( k ) {
     global[k] = SNOBOL[k];
@@ -719,7 +720,7 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
             d1 = this.vm.d(),
             d2 = this.vm.d();
         d2.addr = s.length;
-        len = SNOBOL.str.encode( s ).length + 9;
+        var len = SNOBOL.str.encode( s ).length + 9;
         sil.GETLTH.call( this.vm, d1, d2 );
         assert.equal( d1.addr, len );
     } );

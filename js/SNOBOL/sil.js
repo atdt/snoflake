@@ -1,7 +1,7 @@
 "use strict";
 
-var SNOBOL = require( './base' ),
-    assert = require( 'assert' );
+import SNOBOL from './base.js';
+import assert from 'node:assert';
 
 var D = 3,
     S = 2 * D,

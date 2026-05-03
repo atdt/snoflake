@@ -1,7 +1,7 @@
 "use strict";
 
-var SNOBOL = require( './base' ),
-    fs = require( 'fs' );
+import SNOBOL from './base.js';
+import fs from 'node:fs';
 
 SNOBOL.File = function ( vm, unitNum, role ) {
     var key;

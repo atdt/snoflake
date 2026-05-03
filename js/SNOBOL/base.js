@@ -25,4 +25,4 @@ var SNOBOL = {
     },
 };
 
-module.exports = SNOBOL;
+export default SNOBOL;

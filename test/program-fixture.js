@@ -5,9 +5,11 @@
 // helper (tools/check-csnobol4.js) consume fixtures through this module so the
 // two stay in lockstep.
 
-var fs = require( 'fs' ),
-    path = require( 'path' );
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 var PROGRAMS_DIR = path.join( __dirname, 'programs' );
 
 var VALID_MATCH_MODES = [ 'exact', 'substring', 'error' ];
@@ -165,9 +167,9 @@ function loadCases() {
         .map( function ( name ) { return path.join( PROGRAMS_DIR, name ); } );
 }
 
-module.exports = {
-    PROGRAMS_DIR: PROGRAMS_DIR,
-    VALID_MATCH_MODES: VALID_MATCH_MODES,
-    parseHeader: parseHeader,
-    loadCases: loadCases
+export {
+    PROGRAMS_DIR,
+    VALID_MATCH_MODES,
+    parseHeader,
+    loadCases
 };

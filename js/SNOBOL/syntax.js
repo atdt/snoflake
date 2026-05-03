@@ -1,6 +1,6 @@
 "use strict";
 
-var SNOBOL = require( './base' );
+import SNOBOL from './base.js';
 
 // 0x7F is just the ASCII range; it should really be
 // 0x10000, but we get crashes.

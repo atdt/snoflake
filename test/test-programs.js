@@ -1,16 +1,15 @@
 'use strict';
 
-var assert = require( 'assert' ),
-    childProcess = require( 'child_process' ),
-    fs = require( 'fs' ),
-    path = require( 'path' ),
-    fixture = require( './program-fixture' );
+import assert from 'node:assert';
+import childProcess from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseHeader, loadCases } from './program-fixture.js';
 
+var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 var ROOT = path.join( __dirname, '..' ),
     TMP_DIR = path.join( ROOT, 'tmp', 'test-programs' );
-
-var parseHeader = fixture.parseHeader,
-    loadCases = fixture.loadCases;
 
 // Recognized error markers. Used both for the negative check in
 // exact/substring modes and the positive check in error mode. Adding a
