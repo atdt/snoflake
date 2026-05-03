@@ -18,23 +18,6 @@ function titleCase( str ) {
     return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
 }
 
-function MemorySlot( type, offset ) {
-    type   = titleCase( type );
-    offset = offset || 0;
-
-    this.enumerable = true;
-
-    this.get = function () {
-        return this.vm[ 'get' + type ]( this.ptr + offset );
-    };
-
-    this.set = function ( n ) {
-        this.vm[ 'set' + type ]( this.ptr + offset, n );
-    };
-}
-
-MemorySlot.prototype.enumerable = true;
-
 SNOBOL.Descriptor = function Descriptor( vm, ptr ) {
     this.vm = vm;
 
@@ -59,18 +42,29 @@ SNOBOL.Descriptor.prototype = Object.create( null, {
     constructor : { value : SNOBOL.Descriptor },
     width       : { value : 3 },
     slots       : { value: Object.freeze( [ 'addr', 'flags', 'value' ] ) },
-    addr        : new MemorySlot( 'int',  0 ),
-    raddr       : new MemorySlot( 'real', 0 ),
-    flags       : new MemorySlot( 'uint', 1 ),
-    value       : new MemorySlot( 'uint', 2 ),
-
+    addr        : {
+        get: function ()  { return this.vm.getInt( this.ptr + 0 ); },
+        set: function (n) { this.vm.setInt( this.ptr + 0, n ); }
+    },
+    raddr       : {
+        get: function ()  { return this.vm.getReal( this.ptr + 0 ); },
+        set: function (n) { this.vm.setReal( this.ptr + 0, n ); }
+    },
+    flags       : {
+        get: function ()  { return this.vm.getUint( this.ptr + 1 ); },
+        set: function (n) { this.vm.setUint( this.ptr + 1, n ); }
+    },
+    value       : {
+        get: function ()  { return this.vm.getUint( this.ptr + 2 ); },
+        set: function (n) { this.vm.setUint( this.ptr + 2, n ); }
+    }
 } );
 
 defineValues( SNOBOL.Descriptor.prototype, {
     update: function (...args) {
-        for ( const slot of this.slots ) {
-            this[slot] = args.length ? args.shift() : 0;
-        }
+        this.addr = args.length ? args.shift() : 0;
+        this.flags = args.length ? args.shift() : 0;
+        this.value = args.length ? args.shift() : 0;
         return this;
     },
 
@@ -105,17 +99,23 @@ defineValues( SNOBOL.Descriptor.prototype, {
     },
 
     raw: function () {
-        return this.vm.mem.slice( this.ptr, this.ptr + this.slots.length );
+        const r = [];
+        for ( let i = 0; i < this.slots.length; i++ ) {
+            r.push( this.vm.mem[ this.ptr + i ] );
+        }
+        return r;
     },
 
     toString: function () {
-        const fields = [], props = {};
-
-        for ( const k in this ) {
-            if ( k === 'vm' || k === 'ptr' ) {
-                continue;
-            }
-            props[ k.charAt( 0 ).toUpperCase() ] = this[ k ];
+        const fields = [];
+        const props = {
+            A: this.addr,
+            F: this.flags,
+            V: this.value
+        };
+        if ( this.width === 6 ) {
+            props.O = this.offset;
+            props.L = this.length;
         }
 
         [ 'A', 'F', 'V', 'O', 'L' ].forEach( function ( k ) {
@@ -137,8 +137,14 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
     constructor : { value: SNOBOL.Specifier },
     width       : { value: 6 },
     slots       : { value: Object.freeze( [ 'addr', 'flags', 'value', 'offset', 'length' ] ) },
-    offset      : new MemorySlot( 'uint', 3 ),
-    length      : new MemorySlot( 'uint', 4 ),
+    offset      : {
+        get: function ()  { return this.vm.getUint( this.ptr + 3 ); },
+        set: function (n) { this.vm.setUint( this.ptr + 3, n ); }
+    },
+    length      : {
+        get: function ()  { return this.vm.getUint( this.ptr + 4 ); },
+        set: function (n) { this.vm.setUint( this.ptr + 4, n ); }
+    },
     specified   : {
         enumerable: false,
         get: function () {
@@ -147,5 +153,16 @@ SNOBOL.Specifier.prototype = Object.create( SNOBOL.Descriptor.prototype, {
 
             return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
         }
+    }
+} );
+
+defineValues( SNOBOL.Specifier.prototype, {
+    update: function (...args) {
+        this.addr = args.length ? args.shift() : 0;
+        this.flags = args.length ? args.shift() : 0;
+        this.value = args.length ? args.shift() : 0;
+        this.offset = args.length ? args.shift() : 0;
+        this.length = args.length ? args.shift() : 0;
+        return this;
     }
 } );

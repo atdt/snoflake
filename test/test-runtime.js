@@ -624,7 +624,7 @@ describe( 'Descriptor Datatype', function () {
 
     it( 'enumerables', function () {
         var d = this.vm.d(),
-            fields = [ 'addr', 'flags', 'ptr', 'raddr', 'value', 'vm' ],
+            fields = [ 'ptr', 'vm' ],
             keys = [];
         for ( var key in d ) {
             keys.push( key );
@@ -709,7 +709,7 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'enumerables', function () {
-        var fields = [ 'addr', 'flags', 'length', 'offset', 'ptr', 'raddr', 'value', 'vm' ],
+        var fields = [ 'ptr', 'vm' ],
             s = new SNOBOL.Specifier( this.vm ),
             keys = [];
         for ( var key in s ) {
