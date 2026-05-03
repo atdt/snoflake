@@ -10,11 +10,11 @@
           DEFINE('TOP(A)')
           OPSYN('%','PUSH',1)
           OPSYN('#','POP',1)
-          OPSYN('!','TOP',1)
+          OPSYN('^','TOP',1)
           X = ARRAY('0:10',0)
           %X = 'ONE'
           %X = 'TWO'
-          OUTPUT = !X
+          OUTPUT = ^X
           OUTPUT = #X
           OUTPUT = #X
           OUTPUT = #X :S(BAD)F(END)
