@@ -1,0 +1,154 @@
+* @title Wang theorem prover validates propositional formulas
+* @attribution Michael G. Shafto, Artificial Intelligence Programming in SNOBOL4, WANG.SNO
+* @input >>>
+* IMP(NOT(OR(P,Q)),NOT(P))
+* NOT(IMP(NOT(OR(P,Q)),NOT(P)))
+* IMP(AND(NOT(P),NOT(Q)),EQU(P,Q))
+* IMP(IMP(OR(P,Q),OR(P,R)),OR(P,IMP(Q,R)))
+* IMP(IMP(OR(P,Q),OR(P,R)),AND(P,IMP(Q,R)))
+* <<<
+* @expect >>>
+*
+* FORMULA:  IMP(NOT(OR(P,Q)),NOT(P))
+*
+*  >>>  IMP(NOT(OR(P,Q)),NOT(P))
+*  NOT(OR(P,Q)) >>>  NOT(P)
+*  >>>  NOT(P) OR(P,Q)
+*  P >>>  OR(P,Q)
+*  P >>>  P Q
+* VALID
+*
+* FORMULA:  NOT(IMP(NOT(OR(P,Q)),NOT(P)))
+*
+*  >>>  NOT(IMP(NOT(OR(P,Q)),NOT(P)))
+*  IMP(NOT(OR(P,Q)),NOT(P)) >>> 
+*  NOT(P) >>> 
+*  >>>  P
+* INVALID
+*
+* FORMULA:  IMP(AND(NOT(P),NOT(Q)),EQU(P,Q))
+*
+*  >>>  IMP(AND(NOT(P),NOT(Q)),EQU(P,Q))
+*  AND(NOT(P),NOT(Q)) >>>  EQU(P,Q)
+*  NOT(P) NOT(Q) >>>  EQU(P,Q)
+*  NOT(Q) >>>  EQU(P,Q) P
+*  >>>  EQU(P,Q) P Q
+*  P >>>  P Q Q
+*  Q >>>  P Q P
+* VALID
+*
+* FORMULA:  IMP(IMP(OR(P,Q),OR(P,R)),OR(P,IMP(Q,R)))
+*
+*  >>>  IMP(IMP(OR(P,Q),OR(P,R)),OR(P,IMP(Q,R)))
+*  IMP(OR(P,Q),OR(P,R)) >>>  OR(P,IMP(Q,R))
+*  OR(P,R) >>>  OR(P,IMP(Q,R))
+*  P >>>  OR(P,IMP(Q,R))
+*  P >>>  P IMP(Q,R)
+*  P Q >>>  P R
+*  R >>>  OR(P,IMP(Q,R))
+*  R >>>  P IMP(Q,R)
+*  R Q >>>  P R
+*  >>>  OR(P,IMP(Q,R)) OR(P,Q)
+*  >>>  OR(P,Q) P IMP(Q,R)
+*  >>>  P IMP(Q,R) P Q
+*  Q >>>  P P Q R
+* VALID
+*
+* FORMULA:  IMP(IMP(OR(P,Q),OR(P,R)),AND(P,IMP(Q,R)))
+*
+*  >>>  IMP(IMP(OR(P,Q),OR(P,R)),AND(P,IMP(Q,R)))
+*  IMP(OR(P,Q),OR(P,R)) >>>  AND(P,IMP(Q,R))
+*  OR(P,R) >>>  AND(P,IMP(Q,R))
+*  P >>>  AND(P,IMP(Q,R))
+*  P >>>  P
+*  P >>>  IMP(Q,R)
+*  P Q >>>  R
+* INVALID
+* <<<
+*  WANG.SNO - SNOBOL4+ Version
+*
+* Wang's algorlthm
+*
+* Adapted from
+*      Griswold, R. E., Poage, J. F., & Polonsky, I. P.
+*          The SNOBOL4 Programming Language.
+*          Pp. 183-185.
+*
+* To run:
+* SNOBOL4 WANG <WANG.IN
+*
+ DEFINE('WANG(ANTECEDENT,CONSEQUENT)PHI,PSI')
+ UNOP = 'NOT'
+ BINOP  = ('AND' | 'IMP' | 'OR' | 'EQU')
+ UNOP.FORMULA = ' ' (UNOP . OP) '(' (BAL . PHI) ')'
+ BINOP.FORMULA = ' ' (BINOP . OP) '(' (BAL . PHI) ','
++                    (BAL . PSI) ')'
+ FORMULA = UNOP.FORMULA | BINOP.FORMULA
+ ATOM = (NOTANY(' ') (BREAK(' ') | REM)) . A
++                                               :(WANG.END)
+*
+WANG
+       OUTPUT = ANTECEDENT ' >>> ' CONSEQUENT
+       ANTECEDENT FORMULA = NULL
++             :F(WANG1)S( $('WANG.A.' OP) )
+WANG.A.NOT
+       WANG(ANTECEDENT, CONSEQUENT ' ' PHI)
++          :S(RETURN)F(FRETURN)
+WANG.A.AND
+       WANG(ANTECEDENT ' ' PHI ' ' PSI, CONSEQUENT)
++          :S(RETURN)F(FRETURN)
+WANG.A.OR
+       WANG(ANTECEDENT ' ' PHI, CONSEQUENT)     :F(FRETURN)
+       WANG(ANTECEDENT ' ' PSI, CONSEQUENT)
++          :S(RETURN)F(FRETURN)
+WANG.A.IMP
+       WANG(ANTECEDENT ' ' PSI, CONSEQUENT)     :F(FRETURN)
+       WANG(ANTECEDENT, CONSEQUENT ' ' PHI)
++          :S(RETURN)F(FRETURN)
+WANG.A.EQU
+       WANG(ANTECEDENT ' ' PHI ' ' PSI, CONSEQUENT)
++        :F(FRETURN)
+       WANG(ANTECEDENT, CONSEQUENT ' ' PHI ' ' PSI)
++          :S(RETURN)F(FRETURN)
+WANG1
+       CONSEQUENT FORMULA =
++          :F(WANG2)S( $('WANG.C.' OP) )
+WANG.C.NOT
+       WANG(ANTECEDENT ' ' PHI, CONSEQUENT)
++          :S(RETURN)F(FRETURN)
+WANG.C.AND
+       WANG(ANTECEDENT, CONSEQUENT ' ' PHI)       :F(FRETURN)
+       WANG(ANTECEDENT, CONSEQUENT ' ' PSI)
++          :S(RETURN)F(FRETURN)
+WANG.C.OR
+       WANG(ANTECEDENT, CONSEQUENT ' ' PHI ' ' PSI)
++          :S(RETURN)F(FRETURN)
+WANG.C.IMP
+       WANG(ANTECEDENT ' ' PHI, CONSEQUENT ' ' PSI)
++         :S(RETURN)F(FRETURN)
+WANG.C.EQU
+       WANG(ANTECEDENT ' ' PHI, CONSEQUENT ' ' PSI)
++        :F(FRETURN)
+       WANG(ANTECEDENT ' ' PSI, CONSEQUENT ' ' PHI)
++        :S(RETURN)F(FRETURN)
+WANG2
+       ANTECEDENT ATOM =                          :F(FRETURN)
+       CONSEQUENT A                               :S(RETURN)F(WANG2)
+WANG.END
+*
+*
+*
+ &ANCHOR = 0
+ &FULLSCAN = 1
+ &TRIM  = 1
+*
+READ
+       EXPRESSION = INPUT                         :F(END)
+       OUTPUT =
+       OUTPUT = 'FORMULA:  ' EXPRESSION
+       OUTPUT =
+       OUTPUT = WANG( NULL, ' ' EXPRESSION ) 'VALID'
++        :S(READ)
+       OUTPUT = 'INVALID'
++        :(READ)
+END

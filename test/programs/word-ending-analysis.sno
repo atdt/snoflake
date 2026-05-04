@@ -1,0 +1,164 @@
+* @title Word ending analysis recovers dictionary stems
+* @attribution Michael G. Shafto, Artificial Intelligence Programming in SNOBOL4, ENDING.SNO; ported from SNOBOL4+ by replacing &LCASE/&UCASE with literal alphabets
+* @input >>>
+* BASH
+* BASES
+* BATHES
+* LEAN
+* LEANING
+* LEAVING
+* DENTED
+* DANCING
+* DOGS
+* KISSES
+* CURVED
+* CURLING
+* ROTTING
+* ROLLS
+* PLAY
+* PLYING
+* REALLY
+* PALED
+* KNIFE
+* PRETTIEST
+* NOBLEST
+* PATROL
+* <<<
+* @expect >>>
+* BASH
+* BASE
+* BATHE
+* LEAN
+* LEAN
+* LEAVE
+* DENT
+* DANCE
+* DOG
+* KISS
+* CURVE
+* CURL
+* ROT
+* ROLL
+* PLAY
+* PLY
+* REAL
+* PALE
+* KNIFE
+* PRETTY
+* NOBLE
+* PATROL
+* <<<
+* ENDING.SNO -- SNOBOL4+ Version
+*
+* Analysis of English Endings
+*
+* SNO8OL4 implementation of flowchart on p. 74 of
+*     Winograd, T.  Understanding Natural Language.
+*           New York:  Academic Press, 1972.
+*
+*	To run:
+*	  SNOBOL4 ENDING <ENDING.IN
+*
+ &FULLSCAN = 1
+ &TRIM = 1
+ LCASE = 'abcdefghijklmnopqrstuvwxyz'
+ UCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+ DEFINE('WORDEND(WORD)L,VOWEL,DOUBLE,LIQUID,NOEND')
+ DEFINE('MATCH(L,PAT)')
+ DEFINE('CUT(N)')
+ DEFINE('ADDON(X)')
+ DEFINE('TRY()')
+            :(WORDEND.END)
+*
+WORDEND
+        WRD = WORD
+        DOUBLE = (LEN(1) $ L) *L RPOS(0)
+        LIQUID = ANY("LRSVZ")
+        NOEND = ANY("CGSVZ")
+        VOWEL = ANY("AEIOUY")
+*
+        WRD
++       ("N'T" | "'S" | "S'" | "S" | "LY" |
++        "ING" | "ED" | "EN" | "ER" | "EST")
++        $ WEND RPOS(0) =                          :F(WTRY)
+*
+        WEND POS(0) ("S" | "'S" | "S'" | "N'T") RPOS(0)
++                                                 :F(WORDEND.1)
+*
+        MATCH(1,"E")                              :F(WTRY)
+        MATCH(2,"I") CUT(2) ADDON("Y")            :S(WTRY)
+        MATCH(2,"TH")                             :S(WTRY)
+        MATCH(2,ANY("HX")) CUT(1)                 :S(WTRY)
+        MATCH(2,ANY("SZ") ANY("SZ")) CUT(1)       :S(WTRY)
+        MATCH(2,ANY("SZ"))                        :S(WTRY)
+        MATCH(2,"V")                              :F(WTRY)
+        ~TRY() CUT(2) ADDON("FE")                 :S(WTRY)F(RETURN)
+*
+WORDEND.1
+        IDENT(WEND,"LY")                          :F(WORDEND.2)
+        MATCH(1,"I") CUT(1) ADDON("Y")            :S(WTRY)
+        ~TRY() ADDON("LE")                        :S(WTRY)F(RETURN)
+*
+WORDEND.2
+        MATCH(1,VOWEL)                            :F(WORDEND.3)
+        MATCH(1,"I") CUT(1) ADDON("Y")            :S(WTRY)
+        MATCH(1,"Y")                              :S(WTRY)
+        ~MATCH(1,"E") ADDON("E")                  :S(WTRY)
+        MATCH(2,"E")                              :S(WTRY)
+        ~TRY() ADDON("E")                         :S(WTRY)F(RETURN)
+*
+WORDEND.3
+        MATCH(1,"H")                              :F(WORDEND.4)
+        MATCH(2,"T")                              :F(WTRY)
+        ~TRY() ADDON("E")                         :S(WTRY)F(RETURN)
+*
+WORDEND.4
+        WRD DOUBLE                                :F(WORDEND.5)
+        ~MATCH(1,LIQUID) CUT(1)                   :S(WTRY)
+        ~TRY() CUT(1)                             :S(WTRY)F(RETURN)
+*
+WORDEND.5
+        MATCH(2,VOWEL)                            :S(WORDEND.6)
+        MATCH(1,"RL")                             :S(WTRY)
+        MATCH(1,LIQUID | NOEND) ADDON("E")        :(WTRY)
+*
+WORDEND.6
+        ~MATCH(3,VOWEL) ADDON("E")                :S(WTRY)
+        MATCH(1,NOEND) ADDON("E")                 :(WTRY)
+*
+WTRY    TRY()                                     :S(RETURN)F(FRETURN)
+*
+*
+*
+MATCH
+        WRD PAT RPOS(L - 1)                       :S(RETURN)F(FRETURN)
+*
+CUT
+        WRD RPOS(N) REM =                         :(RETURN)
+*
+ADDON
+        WRD = WRD X                               :(RETURN)
+*
+TRY
+        DIFFER(DICTIONARY<WRD>)                   :S(RETURN)F(FRETURN)
+*
+WORDEND.END
+*
+*
+* Main program starts here
+*
+ DICTIONARY = TABLE(101)
+ WORDS  =
++     'BASH,BATHE,LEAN,LEAVE,DENT,DANCE,DOG,KISS,CURVE,'
++     'CURL,ROT,ROLL,PLAY,PLY,REAL,PALE,KNIFE,PRETTY,'
++     'NOBLE,PATROL,'
+DICT.LOOP
+       WORDS BREAK(',') . W LEN(1) =              :F(DICT.LOOP.END)
+       DICTIONARY<W> = 1                          :(DICT.LOOP)
+DICT.LOOP.END
+*
+READ   W = REPLACE(INPUT,LCASE,UCASE)             :F(END)
+       WORDEND(W)
+       OUTPUT = WRD                               :(READ)
+END
