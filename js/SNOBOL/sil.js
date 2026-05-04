@@ -2600,10 +2600,17 @@ sil.MOVBLK = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
           DESCR3 = this.d( $DESCR3 ),
-          block = this.mem.slice( DESCR2.addr + 3, DESCR2.addr + DESCR3.addr + 3 );
+          dst = DESCR1.addr + D,
+          src = DESCR2.addr + D,
+          n = DESCR3.addr;
 
-    block.unshift( DESCR1.addr + 3, block.length );
-    this.mem.splice( ...block );
+    // The doc-block notes that overlap is only possible when A1 < A2, in
+    // which case the source lives at higher addresses than the destination
+    // and a forward copy reads each source cell before any later write can
+    // reach it.
+    for ( let i = 0; i < n; i++ ) {
+        this.mem[ dst + i ] = this.mem[ src + i ];
+    }
 };
 
 //     MOVD is used to move (copy) a descriptor from one loca-
