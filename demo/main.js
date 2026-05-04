@@ -41,13 +41,13 @@ function run() {
     renderResult( runSnoflake( editor.value, { inputText: input.value } ) );
 }
 
-editor.value = sampleProgram;
-input.value = sampleInput;
-runButton.addEventListener( 'click', run );
-resetButton.addEventListener( 'click', function () {
+function reset() {
     editor.value = sampleProgram;
     input.value = sampleInput;
-    run();
-} );
+    output.textContent = '';
+    status.textContent = 'Ready';
+}
 
-run();
+reset();
+runButton.addEventListener( 'click', run );
+resetButton.addEventListener( 'click', reset );
