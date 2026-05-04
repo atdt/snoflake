@@ -9,8 +9,6 @@ const D = 3,
 
 const sil = {};
 
-const titles = [];  // Seen titles. Used to prevent infinite loops.
-
 function internStringStructure( vm, $DESCR, $SPEC ) {
     const DESCR = vm.d( $DESCR ),
           SPEC = vm.s( $SPEC ),
@@ -4706,10 +4704,6 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
 // perform no operation.
 sil.TITLE = function ( MSG ) {
     // title assembly listing
-    if ( titles.includes( MSG ) ) {
-        throw new Error( "Program loop detected." );
-    }
-    titles.push( MSG );
     this.log( MSG );
 };
 
