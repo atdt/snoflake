@@ -244,6 +244,7 @@ sil._fastLOCA2 = function () {
 
         sil.LOCSP.call( this, this.$( 'SPECR2' ), this.$( 'BUKPTR' ) );
         if ( SPECR1.specified === SPECR2.specified ) {
+            // +6 is the matched-key continuation in the LOCA2 expansion.
             this.instructionPointer = loca2 + 6;
             this.instructionPointerChanged = true;
             return;
@@ -3088,8 +3089,9 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
           DESCR2 = this.d( $DESCR2 ),
           PTR = this.$( 'PTR' ),
           A2 = DESCR2.addr;
+    // When A1 is zero, fall back to DESCR1's own slot as the base, the
+    // same way PUTD does, so the write lands on the slot rather than 0+N.
     let base = A1 + N;
-
     if ( A1 === 0 && DESCR1.ptr !== undefined ) {
         base = DESCR1.ptr + N;
         this.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
@@ -4159,6 +4161,8 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     const DESCR = this.d( $DESCR ),
           SPEC = this.s( $SPEC );
 
+    // The empty alternative covers L=0, which spec note 3 says yields 0.0.
+    // The `+ '0'` lets parseFloat accept a trailing decimal point like "12.".
     if ( /^([+-]?0*\d+\.\d*|)$/.test( SPEC.specified ) ) {
         DESCR.raddr = parseFloat( SPEC.specified + '0', 10 );
         DESCR.flags = 0;
@@ -4304,6 +4308,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     record = file.readRecord( SPEC.length );
     if ( record.eof ) {
         DESCR.addr = 0;
+        // Avoid jumping to ourselves on EOF, which would loop forever.
         if ( typeof EOF === 'number' && this.mem[ EOF ] === this.instructionPointer ) {
             return;
         }
