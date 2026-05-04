@@ -19,6 +19,15 @@ function nearlyEqual( a, b ) {
     return a === b || Math.abs( a - b ) < 0.001;
 }
 
+// Tests whether v survives the round-trip through 32-bit IEEE 754, using the
+// same tolerance as the typed setter so callers and setters agree on what
+// counts as overflow. Real-arithmetic SIL macros use this to branch to FLOC
+// before the assignment, instead of catching the setter's RangeError.
+SNOBOL.isFloat32 = function isFloat32( v ) {
+    f32[0] = v;
+    return nearlyEqual( f32[0], v );
+};
+
 function typedGetter( typedArray ) {
     return function ( ptr ) {
         u32[ 0 ] = this.mem[ ptr ];

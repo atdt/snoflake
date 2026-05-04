@@ -514,18 +514,17 @@ sil.ADJUST = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 sil.ADREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newRaddr = DESCR2.raddr + DESCR3.raddr;
 
-    try {
-        DESCR1.raddr = DESCR2.raddr + DESCR3.raddr;
-        DESCR1.flags = DESCR2.flags;
-        DESCR1.value = DESCR2.value;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.raddr = newRaddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
+    this.jmp( SLOC );
 };
 
 //     AEQL is used to  compare  the  address  fields  of  two
@@ -1257,16 +1256,15 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // divide real numbers
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newRaddr = DESCR2.raddr / DESCR3.raddr;
 
-    try {
-        DESCR1.raddr = DESCR2.raddr / DESCR3.raddr;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.raddr = newRaddr;
+    this.jmp( SLOC );
 };
 
 //     END is used to terminate assembly of the  SNOBOL4  sys-
@@ -1343,18 +1341,17 @@ sil.EXPINT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // exponentiate integers
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newAddr = Math.pow( DESCR2.addr, DESCR3.addr );
 
-    try {
-        DESCR1.addr = Math.pow( DESCR2.addr, DESCR3.addr );
-        DESCR1.flags = DESCR2.flags;
-        DESCR1.value = DESCR2.value;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isInt32( newAddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.addr  = newAddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
+    this.jmp( SLOC );
 };
 
 //     EXREAL is used to raise a real number to a real  power.
@@ -1376,18 +1373,17 @@ sil.EXREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // exponentiate real numbers
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newRaddr = Math.pow( DESCR2.raddr, DESCR3.raddr );
 
-    try {
-        DESCR1.raddr = Math.pow( DESCR2.raddr, DESCR3.raddr );
-        DESCR1.flags = DESCR2.flags;
-        DESCR1.value = DESCR2.value;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.raddr = newRaddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
+    this.jmp( SLOC );
 };
 
 //     FSHRTN  is  used  to  exclude initial characters from a
@@ -2537,17 +2533,16 @@ sil.MNREAL = function ( $DESCR1, $DESCR2 ) {
 sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
     // minus integer
     const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+          DESCR2 = this.d( $DESCR2 ),
+          newAddr = -DESCR2.addr;
+
+    if ( !SNOBOL.isInt32( newAddr ) ) {
+        return this.jmp( FLOC );
+    }
 
     DESCR1.read( DESCR2 );
-    try {
-        DESCR1.addr *= -1;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
-    }
+    DESCR1.addr = newAddr;
+    this.jmp( SLOC );
 };
 
 //     MOVA is used to move an address field from one descrip-
@@ -2703,16 +2698,15 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // multiply real numbers
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newRaddr = DESCR2.raddr * DESCR3.raddr;
 
-    try {
-        DESCR1.raddr = DESCR2.raddr * DESCR3.raddr;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.raddr = newRaddr;
+    this.jmp( SLOC );
 };
 
 //     MSTIME is used to get the millisecond time.
@@ -2767,18 +2761,17 @@ sil.MULT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // multiply integers
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newAddr = DESCR2.addr * DESCR3.addr;
 
-    try {
-        DESCR1.addr = DESCR2.addr * DESCR3.addr;
-        DESCR1.flags = DESCR2.flags;
-        DESCR1.value = DESCR2.value;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isInt32( newAddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.addr  = newAddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
+    this.jmp( SLOC );
 };
 
 //     MULTC is used to multiply an integer by a constant.
@@ -3589,18 +3582,17 @@ sil.REWIND = function ( $DESCR ) {
 sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
     // convert real number to integer
     const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+          DESCR2 = this.d( $DESCR2 ),
+          newAddr = Math.floor( DESCR2.raddr );
 
-    try {
-        DESCR1.addr = Math.floor( DESCR2.raddr );
-        DESCR1.flags = 0;
-        DESCR1.value = this.resolve( 'I' );
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isInt32( newAddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.addr  = newAddr;
+    DESCR1.flags = 0;
+    DESCR1.value = this.resolve( 'I' );
+    this.jmp( SLOC );
 };
 
 //     RPLACE is used  to  replace  characters  in  a  string.
@@ -3772,16 +3764,15 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // subtract real numbers
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+          DESCR3 = this.d( $DESCR3 ),
+          newRaddr = DESCR2.raddr - DESCR3.addr;
 
-    try {
-        DESCR1.raddr = DESCR2.raddr - DESCR3.addr;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            this.jmp( FLOC );
-        }
+    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+        return this.jmp( FLOC );
     }
+
+    DESCR1.raddr = newRaddr;
+    this.jmp( SLOC );
 };
 
 //     SELBRA  is used to alter the flow of program control by
