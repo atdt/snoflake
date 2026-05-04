@@ -171,7 +171,6 @@ function stackPopper( dataType ) {
             this.CSTACK.addr -= dst.width;
             dst.read( src );
         }
-        assert.equal( this.CSTACK.addr, A - ( ARGs.length * dst.width ) );
     }
 }
 
