@@ -8,7 +8,7 @@ directory and emits one `it(...)` per file.
 
 These tests complement the focused unit tests in `test/test-*.js`. Use a
 program-level test when the behavior under test is observable only by running
-a full SNOBOL program through `run.js`; use a focused unit test when the
+a full SNOBOL program through `snoflake`; use a focused unit test when the
 behavior can be exercised at a single macro or helper.
 
 ## File format
@@ -16,7 +16,7 @@ behavior can be exercised at a single macro or helper.
 Each `.sno` file starts with a header consisting of contiguous SNOBOL comment
 lines (`*` in column 1). The header ends at the first non-comment line.
 Everything below is the SNOBOL program and runs unmodified under
-`node run.js --file=test/programs/<name>.sno --maxSteps=100000 --maxMillis=1000`.
+`node bin/snoflake.js --file=test/programs/<name>.sno`.
 
 Header lines take one of two forms.
 
@@ -45,7 +45,7 @@ silently dropping expectations.
 | Directive  | Form       | Required                          | Purpose                                                   |
 |------------|------------|-----------------------------------|-----------------------------------------------------------|
 | `@title`   | single     | yes                               | Used as the mocha test name.                              |
-| `@options` | single     | no                                | JSON object merged into `run.js`'s options.               |
+| `@options` | single     | no                                | JSON object merged into `snoflake`'s options.               |
 | `@input`   | multi-line | no                                | Lines written to a tmp file; runner wires up `input` opt. |
 | `@expect`  | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                          |
 | `@match`   | single     | no                                | `exact` (default), `substring`, or `error`.               |
@@ -59,12 +59,6 @@ Validation enforced by the runner:
 
 - Must parse as a JSON object. Arrays, strings, numbers, booleans, and
   `null` are rejected.
-- The runner injects the AGENTS.md-mandated guards
-  `{"maxSteps": 100000, "maxMillis": 1000}` first, then merges the test's
-  `@options` on top. The merged values are then clamped: `maxSteps` must be
-  `> 0` and `<= 100000`; `maxMillis` must be `> 0` and `<= 1000`. Higher
-  values are rejected outright (no silent capping). Tests may freely lower
-  the guards.
 - `file` is reserved for the runner (which sets it to the fixture path) and
   is rejected if present in `@options`.
 - `input` is rejected in `@options`. Inline `@input` blocks are the only
@@ -72,7 +66,7 @@ Validation enforced by the runner:
   hermetic.
 
 Other recognized keys (`caseFold`, `debug`, `watch`, …) are passed through to
-`SNOBOL.VM(options)` exactly as `run.js` does today.
+`SNOBOL.VM(options)` exactly as `snoflake` does today.
 
 ### `@input`
 
@@ -118,7 +112,7 @@ Optional single-line free text crediting the source of the program (e.g.
 Match modes:
 
 - **`exact`** (default): the `@expect` block must equal the *data section* of
-  `run.js`'s stdout. The data section runs from the line after the
+  `snoflake`'s stdout. The data section runs from the line after the
   `NO ERRORS DETECTED IN SOURCE PROGRAM` banner up to the line before the
   `NORMAL TERMINATION AT LEVEL` epilogue. The runner anchors on the *last*
   `NORMAL TERMINATION AT LEVEL` occurrence after the success banner so a
@@ -130,7 +124,7 @@ Match modes:
   markers appear anywhere in stdout.
 
 - **`substring`**: the `@expect` block must appear as a contiguous substring
-  anywhere in `run.js`'s full stdout. Useful when banner extraction is
+  anywhere in `snoflake`'s full stdout. Useful when banner extraction is
   brittle or the test is intentionally loose. The same error-marker check
   applies as in `exact`.
 
@@ -146,7 +140,6 @@ and the positive check in `error`:
 - `ERROR IN SNOBOL4 SYSTEM`
 - `Compilation error`
 - `Execution error`
-- `Aborting: exceeded`
 
 Adding a new marker is a deliberate change to the runner, not something
 tests can introduce ad hoc.

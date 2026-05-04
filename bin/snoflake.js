@@ -1,6 +1,7 @@
+#!/usr/bin/env node
 "use strict";
 
-import SNOBOL from './js/snobol.js';
+import SNOBOL from '../js/snobol.js';
 
 function optionValue( value ) {
     if ( value === undefined ) {

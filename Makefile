@@ -19,6 +19,6 @@ translate:
 	@node ./src/translate.js >| ./js/SNOBOL/snobol.sil.js
 
 run:
-	@node ./run.js --debug
+	@node ./bin/snoflake.js --debug
 
 .PHONY: test test-node test-deno test-bun test-all translate run

@@ -3,11 +3,6 @@
 const DEFAULT_OPTIONS = {
     debug: false,
     watch: [],
-    // Execution guards (configurable via CLI):
-    // Stop after this many macro steps (0/undefined to disable)
-    maxSteps: 0,
-    // Stop after this many milliseconds (0/undefined to disable)
-    maxMillis: 0,
     // Fold SNOBOL source names and labels to uppercase during compilation.
     caseFold: true,
 };

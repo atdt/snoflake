@@ -134,10 +134,8 @@ describe( 'SNOBOL Program Execution', function () {
         fs.writeFileSync( programFile, " OUTPUT = 'POSITIONAL'\nEND\n" );
 
         output = childProcess.execFileSync( process.execPath, [
-            'run.js',
-            'tmp/test-positional-source.sno',
-            '--maxSteps=100000',
-            '--maxMillis=1000'
+            'bin/snoflake.js',
+            'tmp/test-positional-source.sno'
         ], {
             cwd: root,
             encoding: 'utf8'

@@ -18,11 +18,8 @@ var ROOT = path.join( __dirname, '..' ),
 var ERROR_MARKERS = [
     'ERROR IN SNOBOL4 SYSTEM',
     'Compilation error',
-    'Execution error',
-    'Aborting: exceeded'
+    'Execution error'
 ];
-
-var DEFAULT_OPTIONS = { maxSteps: 5000000, maxMillis: 0 };
 
 var DATA_BANNER = 'NO ERRORS DETECTED IN SOURCE PROGRAM';
 var DATA_EPILOGUE = 'NORMAL TERMINATION AT LEVEL';
@@ -35,7 +32,7 @@ function captureWriter() {
     };
 }
 
-// Mirror run.js's stdout shape: each writer.write(line) corresponds to one
+// Mirror the CLI's stdout shape: each writer.write(line) corresponds to one
 // console.log(line) in the CLI, which appends '\n'. Rejoining with '\n' and
 // adding a trailing '\n' reproduces the byte stream the subprocess used to
 // produce, so extractDataSection's anchor logic still works unchanged.
@@ -85,7 +82,7 @@ function trimTrailingNewlines( s ) {
 function runProgram( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
     var name = path.basename( filePath, '.sno' );
-    var opts = { ...DEFAULT_OPTIONS, ...header.options, file: filePath };
+    var opts = { ...header.options, file: filePath };
     if ( header.input !== null ) {
         var inputPath = path.join( TMP_DIR, name + '.input' );
         fs.writeFileSync( inputPath, header.input );

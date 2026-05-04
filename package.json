@@ -3,8 +3,18 @@
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
   "version": "0.0.1",
-  "main": "./js/snobol.js",
   "type": "module",
+  "exports": {
+    ".": "./js/snobol.js"
+  },
+  "bin": {
+    "snoflake": "./bin/snoflake.js"
+  },
+  "files": [
+    "bin/",
+    "js/",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "http://github.com/atdt/snoflake"

@@ -10,7 +10,7 @@ crystal-clear, beautiful, simple, and well-documented.
 
 ## Repository Structure
 
-- `run.js`: CLI entry point for running a SNOBOL source file.
+- `bin/snoflake.js`: CLI entry point for running a SNOBOL source file.
 - `src/`: SIL parser grammar (`sil.peg`) and translator (`translate.js`) that
   emit `js/SNOBOL/snobol.sil.js`.
 - `external/`: Upstream SIL and syntax-table sources.
@@ -62,8 +62,6 @@ crystal-clear, beautiful, simple, and well-documented.
 
 ### Running & debugging
 
-- Invoke `run.js` with execution guards to avoid infinite loops:
-  `--maxSteps=1000000 --maxMillis=2000`.
 - Keep scratch programs and logs in `tmp/`; do not commit them.
 - Avoid ingesting huge runtime output. Redirect probe output to `tmp/`,
   check size, and inspect targeted excerpts.
@@ -75,25 +73,24 @@ crystal-clear, beautiful, simple, and well-documented.
 - `npx mocha test/test-sil.js`: run a specific unit test file.
 - `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
 - `make translate`: regenerate `js/SNOBOL/snobol.sil.js`.
-- `node run.js --file=tmp/example.sno --maxSteps=1000000 --maxMillis=1000`:
-  run a SNOBOL program with recommended execution guards.
+- `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
 
 ### Sample debug commands
 
 - Create and run the minimal visible-output probe:
   ```sh
   printf " OUTPUT = 'HELLO, WORLD'\nEND\n" > tmp/min-output.sno
-  node run.js --file=tmp/min-output.sno --maxSteps=100000 --maxMillis=1000
+  node bin/snoflake.js --file=tmp/min-output.sno
   ```
 - Run noisy probes through a log-size check before inspection:
   ```sh
-  node run.js --file=tmp/min-output.sno --maxSteps=100000 --maxMillis=1000 > tmp/min-output.log 2>&1
+  node bin/snoflake.js --file=tmp/min-output.sno > tmp/min-output.log 2>&1
   wc -l tmp/min-output.log
   tail -n 80 tmp/min-output.log
   ```
 - Capture a debug run for later searching:
   ```sh
-  node run.js --file=tmp/min-output.sno --maxSteps=100000 --maxMillis=1000 --debug=true > tmp/min-output-debug.log 2>&1
+  node bin/snoflake.js --file=tmp/min-output.sno --debug=true > tmp/min-output-debug.log 2>&1
   rg "XLATRN|XLATNX|INTERP|ASGN|PUTOUT|END" tmp/min-output-debug.log
   ```
 - **Custom descriptor probes:** to capture descriptor contents during

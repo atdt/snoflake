@@ -1,6 +1,0 @@
-* @title Infinite loop trips the maxSteps guard
-* @options {"maxSteps": 20}
-* @match error
-* @expect Aborting: exceeded
-LOOP OUTPUT = 'X' :(LOOP)
-END

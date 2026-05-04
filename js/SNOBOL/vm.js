@@ -208,23 +208,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointerChanged = false;
     this.debug = savedDebug;
 
-    const startTime = Date.now();
-    let steps = 0;
-    const maxSteps = Number(this.options.maxSteps || 0);
-    const maxMillis = Number(this.options.maxMillis || 0);
-
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
-        steps++;
-        if ( maxSteps && steps > maxSteps ) {
-            this.stderr.write( `Aborting: exceeded maxSteps (${maxSteps}) at ip=${this.instructionPointer}` );
-            this.instructionPointer = -1;
-            break;
-        }
-        if ( maxMillis && (Date.now() - startTime) > maxMillis ) {
-            this.stderr.write( `Aborting: exceeded maxMillis (${maxMillis}ms) at ip=${this.instructionPointer}` );
-            this.instructionPointer = -1;
-            break;
-        }
         loc = this.instructionPointer;
         stmt = program[ loc ];
         [ label, macro ] = stmt;

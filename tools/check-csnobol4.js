@@ -75,10 +75,8 @@ function runUnderCsnobol4( filePath, header ) {
     var inputBuf = header.input === null ? '' : header.input;
     // -b suppresses the CSNOBOL4 startup banner so stdout is exactly the
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
-    // CSNOBOL4 has no native step/time limits; the Snoflake fixtures rely on
-    // maxSteps/maxMillis, which we cannot translate. Cap wall-clock and
-    // output size so a runaway fixture does not hang the helper or trip
-    // ENOBUFS on stdout.
+    // Cap wall-clock and output size so a runaway fixture does not hang the
+    // helper or trip ENOBUFS on stdout.
     var result = childProcess.spawnSync( SNOBOL4_BIN, [ '-b', filePath ], {
         cwd: ROOT,
         input: inputBuf,
