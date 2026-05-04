@@ -7,7 +7,6 @@ const D = 3,
       S = 2 * D,
       CPD = 3;  // Characters per descriptor
 
-let TIMER;
 const sil = {};
 
 const titles = [];  // Seen titles. Used to prevent infinite loops.
@@ -448,10 +447,10 @@ sil.ADDSON = function ( $DESCR1, $DESCR2 ) {
     // add son to tree node
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          father = this.resolve( 'FATHER' ),
-          lson = this.resolve( 'LSON' ),
-          rsib = this.resolve( 'RSIB' ),
-          code = this.resolve( 'CODE' ),
+          father = this.$( 'FATHER' ),
+          lson = this.$( 'LSON' ),
+          rsib = this.$( 'RSIB' ),
+          code = this.$( 'CODE' ),
           a1_lson = this.d( DESCR1.addr + lson ),
           a1_code = this.d( DESCR1.addr + code ),
           a2_father = this.d( DESCR2.addr + father ),
@@ -974,7 +973,7 @@ sil.CLERTB = function ( TABLE, KEY ) {
 // 2.  Any  of  the  COPY  segments  can be used to incorporate
 // other machine-dependent data.
 sil.COPY = function ( FILE ) {
-    // pass
+    // SIL COPY pulls in machine-dependent data; the JS runtime has none.
 };
 
 //     CPYPAT is used to copy a pattern.  First set
@@ -1832,7 +1831,7 @@ sil.INSERT = function ( $DESCR1, $DESCR2 ) {
         A4_RSIB = this.d( A4 + RSIB ),
         A2_FATHER = this.d( A2 + FATHER ),
         A2_LSON = this.d( A2 + LSON );
-        
+
 
     A1_FATHER.update( A2, F2, V2 );
     A4_RSIB.update( A2, F2, V2 );
@@ -1861,7 +1860,7 @@ sil.INTRL = function ( $DESCR1, $DESCR2 ) {
 
     DESCR1.raddr = DESCR2.addr;
     DESCR1.flags = 0;
-    DESCR1.value = this.resolve( 'R' );
+    DESCR1.value = this.$( 'R' );
 };
 
 //     INTSPC is used to convert a (signed) integer to a spec-
@@ -3373,7 +3372,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // properly made.
     this.callbacks.push( function ( $DESCR_SRC, N ) {
         let DESCR_SRC;
-        
+
         if ( $DESCR_SRC !== undefined ) {
             DESCR_SRC = this.d( $DESCR_SRC );
         }
@@ -3586,7 +3585,7 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
 
     DESCR1.addr  = newAddr;
     DESCR1.flags = 0;
-    DESCR1.value = this.resolve( 'I' );
+    DESCR1.value = this.$( 'I' );
     this.jmp( SLOC );
 };
 
@@ -4744,7 +4743,7 @@ sil.DBG = sil.TITLE; // nonstandard ;)
 // 1.  N may be 0.  That is, F30 may contain TTL.
 sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // get to top of block
-    const TTL = this.resolve( 'TTL' ),
+    const TTL = this.$( 'TTL' ),
           DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
           DESCR3 = this.d( $DESCR3 ),
