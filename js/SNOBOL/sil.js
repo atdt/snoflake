@@ -4096,15 +4096,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 sil.SPEC = function ( A, F, V, O, L ) {
     // assemble specifier
     const SPEC = this.s( this.currentLabel );
-    let ptr;
 
-    if ( typeof A === 'string' ) {
-        throw new Error('dead code');
-        ptr = this.mem.length;
-        this.mem = this.mem.concat( SNOBOL.str.encode( A ) );
-        A = ptr;
-    }
-    
     SPEC.addr   = A || 0;
     SPEC.flags  = F || 0;
     SPEC.value  = V || 0;
@@ -5016,16 +5008,12 @@ sil.VEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     // zero block
     const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
-    let ptr = DESCR1.addr;
-    const last = DESCR1.addr + DESCR2.addr;
+          DESCR2 = this.d( $DESCR2 ),
+          last = DESCR1.addr + DESCR2.addr;
 
-    for ( let ptr = DESCR1.addr; ptr <= DESCR1.addr + DESCR2.addr; ptr += D ) {
+    for ( let ptr = DESCR1.addr; ptr <= last; ptr += D ) {
         this.d( ptr ).update( 0, 0, 0 );
     }
 };
-
-SNOBOL.sil = sil;
-
 
 SNOBOL.sil = sil;
