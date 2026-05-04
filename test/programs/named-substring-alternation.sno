@@ -1,0 +1,10 @@
+* @title Pattern-valued alternation assigns only the matching branch's name
+* @expect >>>
+* WOOF=
+* BARK=BARK
+* <<<
+        DOG_PAT = "WOOF" . W | "BARK" . B
+        "THE DOG SAYS BARK." DOG_PAT
+        OUTPUT = "WOOF=" W
+        OUTPUT = "BARK=" B
+END

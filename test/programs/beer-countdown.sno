@@ -1,0 +1,16 @@
+* @title Guarded countdown loop with GT predicate sentinel
+* @match substring
+* @expect >>>
+* 99 bottles of beer on the wall
+* 99 bottles of beer
+* Take one down, pass it around
+* 98 bottles of beer on the wall
+* <<<
+        X = 99
+AGAIN   OUTPUT = X " bottles of beer on the wall"
+        OUTPUT = X " bottles of beer"
+        OUTPUT = "Take one down, pass it around"
+        X = GT(X,0) X - 1               :S(AGAIN)F(ZERO)
+ZERO    OUTPUT = "Go to store, get some more"
+        OUTPUT = "99 bottles of beer on the wall"
+END

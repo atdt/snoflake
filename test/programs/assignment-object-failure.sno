@@ -1,0 +1,9 @@
+* @title Failed predicate on right of assignment branches without writing the target
+* @expect >>>
+* BAD
+* <<<
+        X = 0
+        X = GT(X,0)                     :S(OK)F(BAD)
+OK      OUTPUT = 'OK'
+BAD     OUTPUT = 'BAD'
+END

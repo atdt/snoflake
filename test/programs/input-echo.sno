@@ -1,0 +1,13 @@
+* @title TRIM(INPUT) loop echoes records from the runtime input stream
+* @input >>>
+* ALPHA
+* BETA
+* <<<
+* @expect >>>
+* ALPHA
+* BETA
+* <<<
+LOOP    S = TRIM(INPUT)                 :F(DONE)
+        OUTPUT = S                      :(LOOP)
+DONE
+END

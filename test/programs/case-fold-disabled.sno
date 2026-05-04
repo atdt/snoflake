@@ -1,0 +1,9 @@
+* @title Case folding can be disabled via runtime option
+* @options {"caseFold": false}
+* @expect >>>
+* UP
+* <<<
+ ABC = 'UP'
+ abc = 'LOW'
+ OUTPUT = ABC
+END

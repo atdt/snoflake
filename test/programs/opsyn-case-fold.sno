@@ -1,0 +1,10 @@
+* @title OPSYN folds the case of its function-name argument
+* @expect >>>
+* PATTERN
+* <<<
+          DEFINE('opt(pattern)')
+          OPSYN('^','opt',1) :(START)
+OPT       OPT = NULL | PATTERN :(RETURN)
+START     R = ^'YY'
+          OUTPUT = DATATYPE(R)
+END
