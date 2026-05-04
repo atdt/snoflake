@@ -1,9 +1,6 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import assert from 'node:assert';
-
-const FORMAT_RE = /(\d*)([HI])(\d*)([^,\/]*)([,\/]\s*)?/g;
 
 function pad( str, width, align, padChar ) {
         if ( str.length >= width ) {

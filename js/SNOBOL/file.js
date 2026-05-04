@@ -1,6 +1,7 @@
 "use strict";
 
 import SNOBOL from './base.js';
+import { Buffer } from "node:buffer";
 
 SNOBOL.File = class File {
     constructor( vm, unitNum, role = 'source' ) {
@@ -23,7 +24,10 @@ SNOBOL.File = class File {
     }
 
     close() {
-        this.pos = 0;
+        if ( this.buf === null ) {
+            this.buf = Buffer.alloc( 0 );
+        }
+        this.pos = this.buf.length;
     }
 
     seek( pos ) {

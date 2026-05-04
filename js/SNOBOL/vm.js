@@ -13,9 +13,9 @@ const MEMORY_LOCATION_MACROS = [
 
 // These assembly markers do not occupy either address space.  A label on one
 // aliases the next located statement.
-const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-const ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS );
-const ASSEMBLY_MACROS_SET = new Set( ASSEMBLY_MACROS );
+const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ],
+      ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS ),
+      ASSEMBLY_MACROS_SET = new Set( ASSEMBLY_MACROS );
 
 function getArgs( f ) {
     return f
@@ -72,7 +72,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
     const args = argsCallback.call( this );
 
     this.currentLabel = label;
-    let returnValue = SNOBOL.sil[ macro ].call( this, ...args );
+    const returnValue = SNOBOL.sil[ macro ].call( this, ...args );
 
     const watch = this.options.watch;
     if ( watch && watch.length > 0 ) {

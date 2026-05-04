@@ -1,13 +1,12 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import assert from 'node:assert';
 const VM = SNOBOL.VM;
 
-const buf = new ArrayBuffer( 4 );
-const f32 = new Float32Array( buf );
-const i32 = new Int32Array( buf );
-const u32 = new Uint32Array( buf );
+const buf = new ArrayBuffer( 4 ),
+      f32 = new Float32Array( buf ),
+      i32 = new Int32Array( buf ),
+      u32 = new Uint32Array( buf );
 
 
 SNOBOL.isInt32 = function isInteger( v ) {

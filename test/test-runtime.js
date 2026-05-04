@@ -5,11 +5,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import SNOBOL from '../js/snobol.js';
+import process from "node:process";
 
-var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
+const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 
 Object.keys( SNOBOL ).forEach( function ( k ) {
-    global[k] = SNOBOL[k];
+    globalThis[k] = SNOBOL[k];
 } );
 
 
@@ -20,7 +21,7 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 
 function mkargs( vm ) {
     // Construct a deferred operands object
-    var args = [].slice.call( arguments, 1 );
+    const args = [].slice.call( arguments, 1 );
 
     return function () { // stub
         return args.map( function ( arg ) {
@@ -50,21 +51,21 @@ describe( 'Typed Setters', function () {
     } );
 
     it( 'uint', function () {
-        var vm = this.vm;
+        const vm = this.vm;
         assert.throws( function () {
             vm.setUint( 0, -4 );
         }, 'RangeError' );
     } );
 
     it( 'int', function () {
-        var vm = this.vm;
+        const vm = this.vm;
         assert.throws( function () {
             vm.setUint( 0, 4.2 );
         }, 'RangeError' );
     } );
 
     it( 'real', function () {
-        var vm = this.vm;
+        const vm = this.vm;
         assert.throws( function () {
             vm.setReal( 0, 10e100 );
         }, 'RangeError' );
@@ -103,7 +104,7 @@ describe( 'Symbol Binding', function () {
     } );
 
     it( 'missing', function () {
-        var vm = this.vm;
+        const vm = this.vm;
         assert.throws( function () {
             vm.resolve( 'missing' );
         }, 'ReferenceError' );
@@ -117,8 +118,8 @@ describe( 'Memory Management', function () {
     } );
 
     it( 'alloc', function () {
-        var vm = new SNOBOL.VM(), 
-            ptr = vm.alloc( 3 );
+        const vm = new SNOBOL.VM(), 
+              ptr = vm.alloc( 3 );
         assert.deepEqual( vm.mem.length, ptr + 3 );
         assert.deepEqual( vm.mem.slice(-3), [ 0, 0, 0 ] );
     } );
@@ -126,14 +127,13 @@ describe( 'Memory Management', function () {
 
 describe( 'SNOBOL Program Execution', function () {
     it( 'accepts a positional source file path', function () {
-        var root = path.join( __dirname, '..' ),
-            programFile = path.join( root, 'tmp', 'test-positional-source.sno' ),
-            output;
+        const root = path.join( __dirname, '..' ),
+              programFile = path.join( root, 'tmp', 'test-positional-source.sno' );
 
         fs.mkdirSync( path.dirname( programFile ), { recursive: true } );
         fs.writeFileSync( programFile, " OUTPUT = 'POSITIONAL'\nEND\n" );
 
-        output = childProcess.execFileSync( process.execPath, [
+        const output = childProcess.execFileSync( process.execPath, [
             'bin/snoflake.js',
             'tmp/test-positional-source.sno'
         ], {
@@ -147,10 +147,10 @@ describe( 'SNOBOL Program Execution', function () {
     } );
 
     it( 'treats a missing runtime input file as EOF', function () {
-        var vm = new SNOBOL.VM( {
-                file: path.join( __dirname, '..', 'tmp', 'unused-source.sno' )
-            } ),
-            file = new SNOBOL.File( vm, 5, 'input' );
+        const vm = new SNOBOL.VM( {
+                  file: path.join( __dirname, '..', 'tmp', 'unused-source.sno' )
+              } ),
+              file = new SNOBOL.File( vm, 5, 'input' );
         assert.equal( file.read( 80 ), '' );
     } );
 } );
@@ -161,35 +161,35 @@ describe( 'Descriptor Datatype', function () {
     } );
 
     it( 'enumerables', function () {
-        var d = this.vm.d(),
-            fields = [ 'ptr', 'vm' ],
-            keys = [];
-        for ( var key in d ) {
+        const d = this.vm.d(),
+              fields = [ 'ptr', 'vm' ],
+              keys = [];
+        for ( const key in d ) {
             keys.push( key );
         }
         assert.deepEqual( keys.sort(), fields );
     } );
 
     it( 'next', function () {
-        var desc = this.vm.d(),
-            next = this.vm.d();
+        const desc = this.vm.d(),
+              next = this.vm.d();
         assert.equal( next.ptr, desc.next().ptr );
     } );
 
     it( 'init', function () {
-        var orig = this.vm.d(),
-            copy = this.vm.d( orig.ptr );
+        const orig = this.vm.d(),
+              copy = this.vm.d( orig.ptr );
         orig.addr = 90210;
         assert.equal( copy.addr, 90210 );
     } );
 
     it( 'width', function () {
-        var d = this.vm.d();
+        const d = this.vm.d();
         assert.equal( d.width, 3 );
     } );
 
     it( 'getters_setters', function () {
-        var d = this.vm.d();
+        const d = this.vm.d();
         d.addr = -123;
         assert.equal( d.addr, -123 );
         d.raddr = 6.1;
@@ -201,12 +201,12 @@ describe( 'Descriptor Datatype', function () {
     } );
 
     it( 'not_specifier', function () {
-        var d = this.vm.d();
+        const d = this.vm.d();
         assert( !d.length );
     } );
 
     it( 'raw', function () {
-        var d = this.vm.d();
+        const d = this.vm.d();
         d.addr = 6;
         d.flags = 7;
         d.value = 8;
@@ -214,23 +214,23 @@ describe( 'Descriptor Datatype', function () {
     } );
 
     it( 'read', function () {
-        var src = this.vm.d(), dst = this.vm.d();
+        const src = this.vm.d(), dst = this.vm.d();
         src.update( 6, 7, 8 );
         dst.read( src );
         assert.deepEqual( dst.raw(), src.raw() );
     } );
 
     it( 'update', function () {
-        var vm = new SNOBOL.VM(),
-            d = new SNOBOL.Descriptor( vm );
+        const vm = new SNOBOL.VM(),
+              d = new SNOBOL.Descriptor( vm );
         d.update( 6, 7, 8 );
         assert.deepEqual( d.raw(), [ 6, 7, 8 ] );
     } );
 
     it( 'eq', function () {
-        var vm = new SNOBOL.VM(),
-            d1 = new SNOBOL.Descriptor( vm ),
-            d2 = new SNOBOL.Descriptor( vm );
+        const vm = new SNOBOL.VM(),
+              d1 = new SNOBOL.Descriptor( vm ),
+              d2 = new SNOBOL.Descriptor( vm );
 
         d1.update( 6, 7, 8 );
         d2.update( 6, 7, 8 );
@@ -247,35 +247,35 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'enumerables', function () {
-        var fields = [ 'ptr', 'vm' ],
-            s = new SNOBOL.Specifier( this.vm ),
-            keys = [];
-        for ( var key in s ) {
+        const fields = [ 'ptr', 'vm' ],
+              s = new SNOBOL.Specifier( this.vm ),
+              keys = [];
+        for ( const key in s ) {
             keys.push( key );
         }
         assert.deepEqual( keys.sort(), fields );
     } );
 
     it( 'next', function () {
-        var spec = new SNOBOL.Specifier( this.vm ),
-            next = new SNOBOL.Specifier( this.vm );
+        const spec = new SNOBOL.Specifier( this.vm ),
+              next = new SNOBOL.Specifier( this.vm );
         assert.equal( next.ptr, spec.next().ptr );
     } );
 
     it( 'init', function () {
-        var orig = new SNOBOL.Specifier( this.vm ),
-            copy = new SNOBOL.Specifier( this.vm, orig.ptr );
+        const orig = new SNOBOL.Specifier( this.vm ),
+              copy = new SNOBOL.Specifier( this.vm, orig.ptr );
         orig.offset = 90210;
         assert.equal( copy.offset, 90210 );
     } );
 
     it( 'width', function () {
-        var s = new SNOBOL.Specifier( this.vm );
+        const s = new SNOBOL.Specifier( this.vm );
         assert.equal( s.width, 6 );
     } );
 
     it( 'getters_setters', function () {
-        var s = new SNOBOL.Specifier( this.vm );
+        const s = new SNOBOL.Specifier( this.vm );
         s.offset = 123;
         assert.equal( s.offset, 123 );
         s.length = 456;
@@ -283,7 +283,7 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'raw', function () {
-        var s = new SNOBOL.Specifier( this.vm );
+        const s = new SNOBOL.Specifier( this.vm );
         s.addr = 6;
         s.flags = 7;
         s.value = 8;
@@ -293,22 +293,22 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'read', function () {
-        var src = new SNOBOL.Specifier( this.vm ),
-            dst = new SNOBOL.Specifier( this.vm );
+        const src = new SNOBOL.Specifier( this.vm ),
+              dst = new SNOBOL.Specifier( this.vm );
         src.update( 6, 7, 8, 9, 10 );
         dst.read( src );
         assert.deepEqual( dst.raw(), src.raw() );
     } );
 
     it( 'update', function () {
-        var s = new SNOBOL.Specifier( this.vm );
+        const s = new SNOBOL.Specifier( this.vm );
         s.update( 6, 7, 8, 9, 10 );
         assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
     } );
 
     it( 'eq', function () {
-        var s1 = new SNOBOL.Specifier( this.vm ),
-            s2 = new SNOBOL.Specifier( this.vm );
+        const s1 = new SNOBOL.Specifier( this.vm ),
+              s2 = new SNOBOL.Specifier( this.vm );
 
         s1.update( 6, 7, 8, 9, 10 );
         s2.update( 6, 7, 8, 9, 10 );
@@ -319,7 +319,7 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'specified', function () {
-        var s = this.vm.s( SNOBOL.sil.STRING.call( this.vm, '안녕' ) );
+        const s = this.vm.s( SNOBOL.sil.STRING.call( this.vm, '안녕' ) );
         assert.equal( s.specified, '안녕' ); 
     } );
 } );
@@ -330,13 +330,13 @@ describe( 'Miscellaneous Shortcuts', function () {
     } );
 
     it( 'd', function () {
-        var d = this.vm.d( 6 );
+        const d = this.vm.d( 6 );
         assert( d instanceof SNOBOL.Descriptor );
         assert.equal( d.ptr, 6 );
     } );
 
     it( 's', function () {
-        var s = this.vm.s( 6 );
+        const s = this.vm.s( 6 );
         assert( s instanceof SNOBOL.Specifier );
         assert.equal( s.ptr, 6 );
     } );

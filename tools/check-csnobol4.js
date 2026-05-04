@@ -29,33 +29,34 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as fixture from '../test/program-fixture.js';
+import process from "node:process";
 
-var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
-var ROOT = path.join( __dirname, '..' ),
-    TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' );
+const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
+const ROOT = path.join( __dirname, '..' ),
+      TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' );
 
-var SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
+const SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
 
 // Match the runner's error-marker list so a CSNOBOL4 run that triggers any
 // of these is treated the same way the mocha runner would.
-var ERROR_MARKERS = [
-    'ERROR IN SNOBOL4 SYSTEM',
-    'Compilation error',
-    'Execution error',
-    'Aborting: exceeded'
+const ERROR_MARKERS = [
+      'ERROR IN SNOBOL4 SYSTEM',
+      'Compilation error',
+      'Execution error',
+      'Aborting: exceeded'
 ];
 
 // Options that almost certainly change observable behavior under Snoflake but
 // have no straightforward CSNOBOL4 equivalent. Fixtures that set any of
 // these get a warning so the operator knows the comparison is best-effort.
-var SEMANTIC_OPTION_KEYS = [ 'caseFold', 'debug', 'watch' ];
+const SEMANTIC_OPTION_KEYS = [ 'caseFold', 'debug', 'watch' ];
 
 function trimTrailingNewlines( s ) {
     return s.replace( /\n+$/, '' );
 }
 
 function findErrorMarker( output ) {
-    for ( var i = 0; i < ERROR_MARKERS.length; i++ ) {
+    for ( let i = 0; i < ERROR_MARKERS.length; i++ ) {
         if ( output.indexOf( ERROR_MARKERS[ i ] ) !== -1 ) {
             return ERROR_MARKERS[ i ];
         }
@@ -64,29 +65,29 @@ function findErrorMarker( output ) {
 }
 
 function semanticOptionWarnings( opts ) {
-    var keys = Object.keys( opts ).filter( function ( k ) {
-        return SEMANTIC_OPTION_KEYS.indexOf( k ) !== -1;
+    const keys = Object.keys( opts ).filter( function ( k ) {
+          return SEMANTIC_OPTION_KEYS.indexOf( k ) !== -1;
     } );
     return keys.length ? keys : null;
 }
 
 function runUnderCsnobol4( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
-    var inputBuf = header.input === null ? '' : header.input;
+    const inputBuf = header.input === null ? '' : header.input;
     // -b suppresses the CSNOBOL4 startup banner so stdout is exactly the
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
     // Cap wall-clock and output size so a runaway fixture does not hang the
     // helper or trip ENOBUFS on stdout.
-    var result = childProcess.spawnSync( SNOBOL4_BIN, [ '-b', filePath ], {
-        cwd: ROOT,
-        input: inputBuf,
-        encoding: 'utf8',
-        timeout: 10000,
-        maxBuffer: 16 * 1024 * 1024,
-        killSignal: 'SIGKILL'
+    const result = childProcess.spawnSync( SNOBOL4_BIN, [ '-b', filePath ], {
+          cwd: ROOT,
+          input: inputBuf,
+          encoding: 'utf8',
+          timeout: 10000,
+          maxBuffer: 16 * 1024 * 1024,
+          killSignal: 'SIGKILL'
     } );
     if ( result.error ) {
-        var msg;
+        let msg;
         if ( result.error.code === 'ENOENT' ) {
             msg = SNOBOL4_BIN + ' not found in PATH (set $SNOBOL4 to override)';
         } else if ( result.error.code === 'ETIMEDOUT' ) {
@@ -107,19 +108,19 @@ function runUnderCsnobol4( filePath, header ) {
 
 function dumpActual( filePath, run ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
-    var name = path.basename( filePath, '.sno' );
-    var actualPath = path.join( TMP_DIR, name + '.actual' );
-    var combined = '--- stdout ---\n' + run.stdout +
-        '--- stderr ---\n' + run.stderr +
-        '--- exit ' + run.status + ' ---\n';
+    const name = path.basename( filePath, '.sno' );
+    const actualPath = path.join( TMP_DIR, name + '.actual' );
+    const combined = '--- stdout ---\n' + run.stdout +
+          '--- stderr ---\n' + run.stderr +
+          '--- exit ' + run.status + ' ---\n';
     fs.writeFileSync( actualPath, combined );
     return actualPath;
 }
 
 // Returns { ok: bool, message: string|null }.
 function checkAgainstExpect( header, run ) {
-    var combined = run.stdout + run.stderr;
-    var marker = findErrorMarker( combined );
+    const combined = run.stdout + run.stderr;
+    const marker = findErrorMarker( combined );
 
     if ( header.match === 'error' ) {
         // The mocha runner accepts either an error marker OR a non-zero exit
@@ -130,7 +131,7 @@ function checkAgainstExpect( header, run ) {
             return { ok: false, message: 'expected an error, none observed (exit 0, no marker)' };
         }
         if ( header.expect !== null ) {
-            var needle = trimTrailingNewlines( header.expect );
+            const needle = trimTrailingNewlines( header.expect );
             if ( combined.indexOf( needle ) === -1 ) {
                 return { ok: false, message: 'expected substring not found in error output: ' +
                     JSON.stringify( needle ) };
@@ -147,7 +148,7 @@ function checkAgainstExpect( header, run ) {
     }
 
     if ( header.match === 'substring' ) {
-        var sub = trimTrailingNewlines( header.expect );
+        const sub = trimTrailingNewlines( header.expect );
         if ( run.stdout.indexOf( sub ) === -1 ) {
             return { ok: false, message: 'expected substring not found in stdout: ' +
                 JSON.stringify( sub ) };
@@ -156,8 +157,8 @@ function checkAgainstExpect( header, run ) {
     }
 
     // exact: CSNOBOL4 -b output IS the data section, no banner extraction.
-    var actual = trimTrailingNewlines( run.stdout );
-    var expect = trimTrailingNewlines( header.expect );
+    const actual = trimTrailingNewlines( run.stdout );
+    const expect = trimTrailingNewlines( header.expect );
     if ( actual !== expect ) {
         return { ok: false, message:
             'stdout did not match @expect\n--- expected ---\n' + expect +
@@ -170,9 +171,9 @@ function formatExpectBlock( expectStr ) {
     // The fixture parser appends a trailing '\n' to single-line @expect and
     // block @expect alike, so the canonical "no trailing blank" form is just
     // the payload split by '\n' with the final empty element dropped.
-    var stripped = expectStr.replace( /\n+$/, '' );
-    var lines = stripped.split( '\n' );
-    var out = [ '* @expect >>>' ];
+    const stripped = expectStr.replace( /\n+$/, '' );
+    const lines = stripped.split( '\n' );
+    const out = [ '* @expect >>>' ];
     lines.forEach( function ( l ) {
         out.push( l === '' ? '*' : '* ' + l );
     } );
@@ -181,22 +182,22 @@ function formatExpectBlock( expectStr ) {
 }
 
 function rewriteExpect( filePath, newExpect ) {
-    var raw = fs.readFileSync( filePath, 'utf8' );
-    var lines = raw.split( '\n' );
-    var expectStart = -1, expectEnd = -1;
-    for ( var i = 0; i < lines.length; i++ ) {
-        var line = lines[ i ];
+    const raw = fs.readFileSync( filePath, 'utf8' );
+    const lines = raw.split( '\n' );
+    let expectStart = -1, expectEnd = -1;
+    for ( let i = 0; i < lines.length; i++ ) {
+        const line = lines[ i ];
         if ( line.charAt( 0 ) !== '*' ) {
             break;
         }
-        var m = /^\* @(\w+)(\s.*)?$/.exec( line );
+        const m = /^\* @(\w+)(\s.*)?$/.exec( line );
         if ( !m || m[ 1 ] !== 'expect' ) {
             continue;
         }
-        var rest = ( m[ 2 ] || '' ).replace( /^\s+/, '' );
+        const rest = ( m[ 2 ] || '' ).replace( /^\s+/, '' );
         expectStart = i;
         if ( rest === '>>>' ) {
-            for ( var j = i + 1; j < lines.length; j++ ) {
+            for ( let j = i + 1; j < lines.length; j++ ) {
                 if ( lines[ j ] === '* <<<' ) {
                     expectEnd = j;
                     break;
@@ -214,28 +215,28 @@ function rewriteExpect( filePath, newExpect ) {
     if ( expectStart === -1 ) {
         throw new Error( filePath + ': no @expect directive to update' );
     }
-    var formatted = formatExpectBlock( newExpect );
-    var before = lines.slice( 0, expectStart );
-    var after = lines.slice( expectEnd + 1 );
+    const formatted = formatExpectBlock( newExpect );
+    const before = lines.slice( 0, expectStart );
+    const after = lines.slice( expectEnd + 1 );
     fs.writeFileSync( filePath, before.concat( formatted, after ).join( '\n' ) );
 }
 
 function checkOne( filePath, opts ) {
     opts = opts || {};
-    var header;
+    let header;
     try {
         header = fixture.parseHeader( filePath );
     } catch ( e ) {
         return { ok: false, title: path.basename( filePath ), message: 'parse error: ' + e.message };
     }
-    var warnings = semanticOptionWarnings( header.options );
-    var run;
+    const warnings = semanticOptionWarnings( header.options );
+    let run;
     try {
         run = runUnderCsnobol4( filePath, header );
     } catch ( e ) {
         return { ok: false, title: header.title, message: e.message, warnings: warnings };
     }
-    var result = checkAgainstExpect( header, run );
+    const result = checkAgainstExpect( header, run );
 
     if ( opts.update && !result.ok ) {
         // Only `exact` mode has a single canonical answer we can write back.
@@ -250,7 +251,7 @@ function checkOne( filePath, opts ) {
                 updateSkipped: '@match ' + header.match + ' is not auto-updatable'
             };
         }
-        var marker = findErrorMarker( run.stdout + run.stderr );
+        const marker = findErrorMarker( run.stdout + run.stderr );
         if ( marker !== null || run.status !== 0 ) {
             return {
                 ok: false, title: header.title, warnings: warnings,
@@ -270,7 +271,7 @@ function checkOne( filePath, opts ) {
         return { ok: true, title: header.title, warnings: warnings, updated: true };
     }
 
-    var actualPath = result.ok ? null : dumpActual( filePath, run );
+    const actualPath = result.ok ? null : dumpActual( filePath, run );
     return {
         ok: result.ok,
         title: header.title,
@@ -288,12 +289,12 @@ function resolveFixtureArgs( args ) {
         if ( fs.existsSync( a ) ) {
             return path.resolve( a );
         }
-        var candidate = path.join( fixture.PROGRAMS_DIR, a );
+        const candidate = path.join( fixture.PROGRAMS_DIR, a );
         if ( fs.existsSync( candidate ) ) {
             return candidate;
         }
         if ( !/\.sno$/.test( a ) ) {
-            var withExt = path.join( fixture.PROGRAMS_DIR, a + '.sno' );
+            const withExt = path.join( fixture.PROGRAMS_DIR, a + '.sno' );
             if ( fs.existsSync( withExt ) ) {
                 return withExt;
             }
@@ -329,8 +330,8 @@ function main( argv ) {
         printHelp();
         return 0;
     }
-    var update = false;
-    var positional = [];
+    let update = false;
+    const positional = [];
     argv.forEach( function ( a ) {
         if ( a === '--update' ) {
             update = true;
@@ -340,7 +341,7 @@ function main( argv ) {
             positional.push( a );
         }
     } );
-    var files;
+    let files;
     try {
         files = resolveFixtureArgs( positional );
     } catch ( e ) {
@@ -351,10 +352,10 @@ function main( argv ) {
         process.stderr.write( 'no fixtures to check\n' );
         return 2;
     }
-    var passed = 0, failed = 0, updated = 0;
+    let passed = 0, failed = 0, updated = 0;
     files.forEach( function ( filePath ) {
-        var rel = path.relative( ROOT, filePath );
-        var r = checkOne( filePath, { update: update } );
+        const rel = path.relative( ROOT, filePath );
+        const r = checkOne( filePath, { update: update } );
         if ( r.warnings && r.warnings.length ) {
             process.stdout.write( 'WARN ' + rel + ': @options affects semantics (' +
                 r.warnings.join( ', ' ) + '); CSNOBOL4 ignores these\n' );
@@ -380,7 +381,7 @@ function main( argv ) {
                 path.relative( ROOT, r.actualPath ) + '\n' );
         }
     } );
-    var summary = passed + ' passed, ' + failed + ' failed';
+    let summary = passed + ' passed, ' + failed + ' failed';
     if ( update ) {
         summary += ', ' + updated + ' updated';
     }

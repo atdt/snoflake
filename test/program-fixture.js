@@ -9,51 +9,51 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-var __dirname = path.dirname( fileURLToPath( import.meta.url ) );
-var PROGRAMS_DIR = path.join( __dirname, 'programs' );
+const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
+      PROGRAMS_DIR = path.join( __dirname, 'programs' );
 
-var VALID_MATCH_MODES = [ 'exact', 'substring', 'error' ];
+const VALID_MATCH_MODES = [ 'exact', 'substring', 'error' ];
 
 function parseHeader( filePath ) {
-    var raw = fs.readFileSync( filePath, 'utf8' );
-    var lines = raw.split( '\n' );
-    var header = {
-        title: null,
-        options: {},
-        input: null,
-        expect: null,
-        match: 'exact',
-        attribution: null
+    const raw = fs.readFileSync( filePath, 'utf8' );
+    const lines = raw.split( '\n' );
+    const header = {
+          title: null,
+          options: {},
+          input: null,
+          expect: null,
+          match: 'exact',
+          attribution: null
     };
-    var seen = {};
-    var i;
+    const seen = {};
+    let i;
 
     for ( i = 0; i < lines.length; i++ ) {
-        var line = lines[ i ];
+        const line = lines[ i ];
         if ( line.charAt( 0 ) !== '*' ) {
             break;
         }
-        var m = /^\* @(\w+)(\s.*)?$/.exec( line );
+        const m = /^\* @(\w+)(\s.*)?$/.exec( line );
         if ( !m ) {
             continue;
         }
-        var key = m[ 1 ];
-        var rest = ( m[ 2 ] || '' ).replace( /^\s+/, '' );
+        const key = m[ 1 ];
+        const rest = ( m[ 2 ] || '' ).replace( /^\s+/, '' );
 
         if ( seen[ key ] ) {
             throw new Error( filePath + ':' + ( i + 1 ) + ': duplicate @' + key );
         }
         seen[ key ] = true;
 
-        var value;
-        var isBlock;
+        let value;
+        let isBlock;
         if ( rest === '>>>' ) {
             isBlock = true;
-            var blockStart = i;
-            var blockLines = [];
+            const blockStart = i;
+            const blockLines = [];
             i++;
             while ( i < lines.length ) {
-                var bl = lines[ i ];
+                const bl = lines[ i ];
                 if ( bl === '* <<<' ) {
                     break;
                 }
@@ -104,7 +104,7 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         if ( isBlock ) {
             throw new Error( filePath + ': @options must be single-line' );
         }
-        var parsed;
+        let parsed;
         try {
             parsed = JSON.parse( value );
         } catch ( e ) {

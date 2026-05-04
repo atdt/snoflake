@@ -2,6 +2,7 @@
 "use strict";
 
 import SNOBOL from '../js/snobol.js';
+import process from "node:process";
 
 function optionValue( value ) {
     if ( value === undefined ) {

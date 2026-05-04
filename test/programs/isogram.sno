@@ -1,4 +1,4 @@
-* @title isogrammatic word extraction
+* @title Isogrammatic word extraction
 * @attribution https://github.com/OLIMEX/WPC/blob/21614bb7dae6c60e8c14cd9c2ab1ccc32d458d55/ISSUE-4/SOLUTION-21/wpc4.sno (ported to vanilla 3.11)
 * @input >>>
 * This is a test file for the isogram program.

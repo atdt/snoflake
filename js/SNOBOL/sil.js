@@ -4,7 +4,6 @@ import SNOBOL from './base.js';
 import assert from 'node:assert';
 
 const D = 3,
-      S = 2 * D,
       CPD = 3;  // Characters per descriptor
 
 const sil = {};
@@ -37,12 +36,17 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     FRSGPT.addr += size;
 }
 
-SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, carriageControl ) {
+SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, unit, carriageControl ) {
+    // TODO: route by unit.  Today all output goes to stdout.  Per the SIL
+    // spec, OUTPUT (UNITO) and PUNCH (UNITP) are distinct destinations, and
+    // user programs may associate other unit numbers with files.  When that
+    // is implemented, dispatch on `unit` here; for now, surface unexpected
+    // units so silently-misrouted output is never invisible.
+    if ( unit !== this.$( 'UNITO' ) ) {
+        this.log( 'printLinePrinterRecord: unit %s not implemented; writing to stdout', unit );
+    }
     const stdout = this.stdout;
     record.split( '\n' ).forEach( function ( line ) {
-        let control,
-            content;
-
         if ( line.length === 0 ) {
             stdout.write( '' );
             return;
@@ -53,8 +57,8 @@ SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, carriageControl 
             return;
         }
 
-        control = line.charAt( 0 );
-        content = line.slice( 1 ).replace( /\u0000+/g, '' );
+        const control = line.charAt( 0 );
+        const content = line.slice( 1 ).replace( /\u0000+/g, '' );
 
         // SNOBOL4 inherited FORTRAN-style carriage control from line printers:
         // the first character of each record is not text, but spacing
@@ -76,14 +80,11 @@ SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, carriageControl 
 };
 
 function formatHasLeadingCarriageControl( fmt ) {
-    let i = 0,
-        digits,
-        code;
-
     if ( !fmt ) {
         return false;
     }
 
+    let i = 0;
     if ( fmt.charAt( i ) === '(' ) {
         i++;
     }
@@ -92,12 +93,12 @@ function formatHasLeadingCarriageControl( fmt ) {
         i++;
     }
 
-    digits = /^(\d+)/.exec( fmt.slice( i ) );
+    const digits = /^(\d+)/.exec( fmt.slice( i ) );
     if ( digits ) {
         i += digits[1].length;
     }
 
-    code = fmt.charAt( i );
+    const code = fmt.charAt( i );
     return code === 'H' || code === 'X' || code === '"' || code === "'";
 }
 
@@ -1305,9 +1306,9 @@ sil.ENDEX = function ( $DESCR ) {
 // numbers.
 sil.ENFILE = function ( $DESCR ) {
     // write end of file
-    const DESCR = this.d( $DESCR );
-
-    // fs.closeSync( DESCR.addr );
+    const DESCR = this.d( $DESCR ),
+          f = new SNOBOL.File( this, DESCR.addr, fileRole.call( this, DESCR.addr ) );
+    f.close();
 };
 
 //     EQU is used to assign, at assembly time, the value of N
@@ -1821,7 +1822,6 @@ sil.INSERT = function ( $DESCR1, $DESCR2 ) {
         A3_LSON = this.d( A3 + LSON ),
         A4 = A3_LSON.addr,
         F4 = A3_LSON.flags,
-        V4 = A3_LSON.value,
 
         A2_CODE = this.d( A2 + CODE ),
         I = A2_CODE.value,
@@ -2893,7 +2893,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     }
 
     ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
-    this.printLinePrinterRecord( SNOBOL.str.format( fmt, ARGs ) );
+    this.printLinePrinterRecord( SNOBOL.str.format( fmt, ARGs ), DESCR.addr );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3788,11 +3788,10 @@ sil.SELBRA = function ( $DESCR, LOCI ) {
     // select branch point
     const DESCR = this.d( $DESCR ),
           I = DESCR.addr;
-    let N;
 
     assert( Array.isArray( LOCI ) );
 
-    N = LOCI.length;
+    const N = LOCI.length;
     assert( I >= 1 && I <= N + 1 )
     if ( I !== N + 1 ) {
         this.jmp( LOCI[ I - 1 ] );
@@ -4261,6 +4260,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     item = SNOBOL.str.decode( item );
     this.printLinePrinterRecord(
         SNOBOL.str.format( fmt, item ),
+        I,
         formatHasLeadingCarriageControl( fmt )
     );
     this.d( $DESCR1 ).addr = 1;
@@ -4295,14 +4295,13 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
           DESCR = this.d( $DESCR ),
           I = DESCR.addr,
           file = new SNOBOL.File( this, I, fileRole.call( this, I ) );
-    let record, words;
 
     if ( !file ) {
         // invalid file descriptor
         return this.jmp( ERROR );
     }
 
-    record = file.readRecord( SPEC.length );
+    const record = file.readRecord( SPEC.length );
     if ( record.eof ) {
         DESCR.addr = 0;
         // Avoid jumping to ourselves on EOF, which would loop forever.
@@ -4312,7 +4311,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    words = record.text;
+    const words = record.text;
     for ( let p = 0; p < words.length; p++ ) {
         this.mem[ SPEC.addr + SPEC.offset + p ] = words.codePointAt( p ) || 0;
     }
@@ -4781,7 +4780,7 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     DESCR1.flags = DESCR3.flags;
     DESCR1.value = DESCR3.value;
 
-    DESCR2.addr  = N * D,
+    DESCR2.addr  = N * D;
     DESCR2.flags = 0;
     DESCR2.value = 0;
 };
