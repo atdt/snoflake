@@ -59,11 +59,7 @@ SNOBOL.D = 3;
 SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
 
     if ( this.debug ) {
-        if ( comment ) {
-            comment = '// ' + comment;
-        } else {
-            comment = '';
-        }
+        comment = comment ? '// ' + comment : '';
         const code = ( macro + '(' + getArgs( argsCallback ) + ')' ).padEnd( 70, ' ' );
         console.log( '[%s] [%s] %s %s',
             SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
