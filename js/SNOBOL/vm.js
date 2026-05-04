@@ -123,7 +123,6 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
         loc = this.resolve( loc );
     }
     if ( typeof loc === 'number' ) {
-        if (loc === 6) console.log("JUMPED TO 6", new Error().stack);
         this.instructionPointer = loc;
         this.instructionPointerChanged = true;
     }
