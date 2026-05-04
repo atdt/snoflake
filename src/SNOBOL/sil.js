@@ -1,7 +1,12 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import assert from 'node:assert';
+
+function assert( condition ) {
+    if ( !condition ) {
+        throw new Error( 'Assertion failed' );
+    }
+}
 
 const D = 3,
       CPD = 3;  // Characters per descriptor

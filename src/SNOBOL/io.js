@@ -1,7 +1,6 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import fs from 'node:fs';
 
 // I/O adapters that decouple the runtime from Node-specific globals so the
 // VM can be embedded in non-Node hosts (browsers, web workers, test
@@ -32,6 +31,16 @@ SNOBOL.io = {
         write( line ) { console.error( line ); }
     },
     nodeLoader: {
-        load( path ) { return fs.readFileSync( path ); }
+        load( path ) {
+            const fs = globalThis.process &&
+                globalThis.process.getBuiltinModule &&
+                globalThis.process.getBuiltinModule( 'fs' );
+
+            if ( !fs ) {
+                throw new Error( 'No file loader configured for this host' );
+            }
+
+            return fs.readFileSync( path );
+        }
     }
 };

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Snoflake Demo</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <main class="shell">
+        <header>
+            <div>
+                <h1>Snoflake</h1>
+                <p>A browser-hosted SNOBOL4 macro implementation. Edit the source and input, run it, and inspect the VM output directly on the page.</p>
+            </div>
+            <div class="actions">
+                <button id="run" type="button">Run</button>
+                <button id="reset" class="secondary" type="button">Reset</button>
+            </div>
+        </header>
+
+        <section class="workspace" aria-label="Snoflake browser demo">
+            <div class="pane">
+                <div class="pane-header">Source</div>
+                <textarea id="source" spellcheck="false" aria-label="SNOBOL source"></textarea>
+            </div>
+            <div class="pane input-pane">
+                <div class="pane-header">Input</div>
+                <textarea id="input" spellcheck="false" aria-label="SNOBOL input"></textarea>
+            </div>
+            <div class="pane">
+                <div class="pane-header">
+                    <span>Output</span>
+                    <span id="status" class="status">Ready</span>
+                </div>
+                <pre id="output" aria-live="polite"></pre>
+            </div>
+        </section>
+    </main>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>

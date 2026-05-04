@@ -1,7 +1,28 @@
 "use strict";
 
 import SNOBOL from './base.js';
-import { Buffer } from "node:buffer";
+
+const textDecoder = new TextDecoder( 'utf-8' );
+
+function emptyBytes() {
+    return new Uint8Array( 0 );
+}
+
+function sourceBytes( content ) {
+    if ( typeof content === 'string' ) {
+        return new TextEncoder().encode( content );
+    }
+
+    if ( content instanceof Uint8Array ) {
+        return content;
+    }
+
+    throw new TypeError( 'Loader must return a string or Uint8Array' );
+}
+
+function decodeBytes( bytes ) {
+    return textDecoder.decode( bytes );
+}
 
 SNOBOL.File = class File {
     constructor( vm, unitNum, role = 'source' ) {
@@ -25,7 +46,7 @@ SNOBOL.File = class File {
 
     close() {
         if ( this.buf === null ) {
-            this.buf = Buffer.alloc( 0 );
+            this.buf = emptyBytes();
         }
         this.pos = this.buf.length;
     }
@@ -39,9 +60,9 @@ SNOBOL.File = class File {
 
         if ( this.buf === null ) {
             if ( !this.path && this.role === 'input' ) {
-                this.buf = Buffer.alloc( 0 );
+                this.buf = emptyBytes();
             } else if ( this.path ) {
-                this.buf = this.vm.loader.load( this.path );
+                this.buf = sourceBytes( this.vm.loader.load( this.path ) );
             } else {
                 throw new Error( 'No source file configured' );
             }
@@ -66,7 +87,7 @@ SNOBOL.File = class File {
         const record = this.buf.slice( this.pos, end );
         this.pos = next;
 
-        const str = record.toString( 'utf-8' );
+        const str = decodeBytes( record );
         if ( str.length > length ) {
             return { eof: false, text: str.slice( 0, length ) };
         }
