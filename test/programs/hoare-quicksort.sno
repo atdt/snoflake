@@ -1,0 +1,112 @@
+* @title Hoare quicksort orders sample words lexically
+* @attribution Michael G. Shafto, Artificial Intelligence Programming in SNOBOL4, HSORT.SNO; ported from SNOBOL4+ by replacing two-pass redirected input, APPLY(.LLE), and LPAD with v3.11 equivalents
+* @input >>>
+* ROTTING
+* ROLLS
+* PATROL
+* DANCING
+* CURVED
+* CURLING
+* PALED
+* NOBLEST
+* LEAVING
+* LEANING
+* LEAN
+* KNIFE
+* KISSES
+* DOGS
+* DENTED
+* REALLY
+* PRETTIEST
+* PLYING
+* PLAY
+* BATHES
+* BASH
+* BASES
+* <<<
+* @expect >>>
+*     1.   BASES
+*     2.   BASH
+*     3.   BATHES
+*     4.   CURLING
+*     5.   CURVED
+*     6.   DANCING
+*     7.   DENTED
+*     8.   DOGS
+*     9.   KISSES
+*    10.   KNIFE
+*    11.   LEAN
+*    12.   LEANING
+*    13.   LEAVING
+*    14.   NOBLEST
+*    15.   PALED
+*    16.   PATROL
+*    17.   PLAY
+*    18.   PLYING
+*    19.   PRETTIEST
+*    20.   REALLY
+*    21.   ROLLS
+*    22.   ROTTING
+* <<<
+* HSORT.SNO v3.11 fixture port.
+*
+* The original SNOBOL4+ sample sorts with P = .LLE via APPLY(P,V1,V2),
+* counts redirected input with ?INPUT, rewinds unit 5, and prints with LPAD.
+* This v3.11 port keeps Hoare's partitioning algorithm but specializes the
+* demonstration to lexical ascending order, reads input once into a TABLE,
+* and supplies the small padding function locally.
+*
+ DEFINE('HSORT(A,I,N)J,K,C')
+ DEFINE('HSORT.KO(V1,V2)')
+ DEFINE('HSORT.OK(V1,V2)')
+ DEFINE('HSORT.SWAP(I1,I2)T')
+ DEFINE('PAD5(N)')                         :(HSORT.END)
+*
+HSORT
+      GT(N - I,  1)                        :S(HSORT1)
+      GE(I, N)                             :S(RETURN)
+      (HSORT.KO(A<I>,A<N>)   HSORT.SWAP(I,N))
+         :(RETURN)
+*
+HSORT1
+      C = A<(I + N) / 2>
+      J = I - 1
+      K = N + 1
+*
+HSORT2   J = J + 1
+      HSORT.OK(C,A<J>)                     :F(HSORT2)
+HSORT3   K = K - 1
+      HSORT.OK(A<K>,C)                     :F(HSORT3)
+*
+      (LT(J,K)    HSORT.SWAP(J,K))         :S(HSORT2)
+*
+      HSORT(A, I, K)
+      HSORT(A, K + 1, N)                   :(RETURN)
+*
+HSORT.SWAP  T = A<I1> ; A<I1> = A<I2> ; A<I2> = T     :(RETURN)
+*
+HSORT.OK      LGT(V1,V2)                   :S(FRETURN)F(RETURN)
+*
+HSORT.KO      LGT(V1,V2)                   :S(RETURN)F(FRETURN)
+*
+PAD5          PAD5 = DUPL(' ', 5 - SIZE(N)) N           :(RETURN)
+*
+HSORT.END
+*
+      &TRIM = 1
+      A = TABLE()
+      N = 0
+READ
+      LINE = INPUT                         :F(SORT)
+      N = N + 1
+      A<N> = LINE                          :(READ)
+*
+SORT
+      HSORT(A,1,N)
+*
+      I = 0
+OUTPUT.LOOP
+      I = LT(I,N) I + 1                    :F(OUTPUT.LOOP.END)
+      OUTPUT = PAD5(I) ".   " A<I>         :(OUTPUT.LOOP)
+OUTPUT.LOOP.END
+END
