@@ -5,14 +5,14 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./js/snobol.js"
+    ".": "./src/snobol.js"
   },
   "bin": {
     "snoflake": "./bin/snoflake.js"
   },
   "files": [
     "bin/",
-    "js/",
+    "src/",
     "README.md"
   ],
   "repository": {

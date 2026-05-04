@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import SNOBOL from '../js/snobol.js';
+import SNOBOL from '../src/snobol.js';
 import { parseHeader, loadCases } from './program-fixture.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );

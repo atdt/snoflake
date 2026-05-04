@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 
-import SNOBOL from '../js/snobol.js';
+import SNOBOL from '../src/snobol.js';
 import process from "node:process";
 
 function optionValue( value ) {

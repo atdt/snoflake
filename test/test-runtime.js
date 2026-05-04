@@ -4,7 +4,7 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import SNOBOL from '../js/snobol.js';
+import SNOBOL from '../src/snobol.js';
 import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );

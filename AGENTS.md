@@ -11,8 +11,8 @@ crystal-clear, beautiful, simple, and well-documented.
 ## Repository Structure
 
 - `bin/snoflake.js`: CLI entry point for running a SNOBOL source file.
-- `src/`: SIL parser grammar (`sil.peg`) and translator (`translate.js`) that
-  emit `js/SNOBOL/snobol.sil.js`.
+- `translator/`: SIL parser grammar (`sil.peg`) and translator (`translate.js`)
+  that emit `src/SNOBOL/snobol.sil.js`.
 - `external/`: Upstream SIL and syntax-table sources.
   - `v311.sil`: Untouched historical reference source.
   - `v311-snoflake.sil`: Snoflake's working SIL input for translation. Began
@@ -22,7 +22,7 @@ crystal-clear, beautiful, simple, and well-documented.
     baseline or port modern CSNOBOL4 features wholesale. See
     `SIL-CHANGES.md`.
   - `syntax.tbl`: Historical syntax-table source.
-- `js/`: Runtime.
+- `src/`: Runtime.
   - `snobol.js`: Runtime assembly and entry point.
   - `SNOBOL/sil.js`: JS implementations of SIL macros (authoritative spec).
   - `SNOBOL/snobol.sil.js`: Generated translation (regenerate via `make translate`).
@@ -36,10 +36,10 @@ crystal-clear, beautiful, simple, and well-documented.
 
 ### Source of truth
 
-- The macro comment blocks in `js/SNOBOL/sil.js` are the canonical local
+- The macro comment blocks in `src/SNOBOL/sil.js` are the canonical local
   spec. When tests or guesses disagree with those comments, trust the
   comments until you have strong evidence.
-- Do not hand-edit `js/SNOBOL/snobol.sil.js`. Regenerate it with
+- Do not hand-edit `src/SNOBOL/snobol.sil.js`. Regenerate it with
   `make translate` when the translator or SIL input changes.
 - `make translate` reads `external/v311-snoflake.sil`. Keep
   `external/v311.sil` as the historical baseline and compare against it when
@@ -72,7 +72,7 @@ crystal-clear, beautiful, simple, and well-documented.
 - `npx mocha test/test-programs.js`: run only the program-level tests.
 - `npx mocha test/test-sil.js`: run a specific unit test file.
 - `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
-- `make translate`: regenerate `js/SNOBOL/snobol.sil.js`.
+- `make translate`: regenerate `src/SNOBOL/snobol.sil.js`.
 - `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
 
 ### Sample debug commands

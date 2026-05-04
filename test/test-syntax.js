@@ -2,7 +2,7 @@
 // match. Tests auto-generated from the table in section 4.1 of S4D58.
 
 import assert from 'node:assert';
-import SNOBOL from '../js/snobol.js';
+import SNOBOL from '../src/snobol.js';
 
 describe( 'Character Classes', function () {
     it( 'ALPHANUMERIC (digit and letter)', function () {

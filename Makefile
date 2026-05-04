@@ -16,7 +16,7 @@ test-bun:
 test-all: test-node test-deno test-bun
 
 translate:
-	@node ./src/translate.js >| ./js/SNOBOL/snobol.sil.js
+	@node ./translator/translate.js >| ./src/SNOBOL/snobol.sil.js
 
 run:
 	@node ./bin/snoflake.js --debug

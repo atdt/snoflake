@@ -14,9 +14,9 @@ wholesale.
   for local fixes used by `make translate`.
 - `external/snobol4-v311.sil`: Phil Budne's CSNOBOL4 version, with later bug
   fixes, portability work, extensions, and non-original behavior.
-- `js/SNOBOL/sil.js`: canonical local macro semantics for this JavaScript port.
+- `src/SNOBOL/sil.js`: canonical local macro semantics for this JavaScript port.
   Its comment blocks remain the first local spec to check.
-- `js/SNOBOL/snobol.sil.js`: generated output from `external/v311-snoflake.sil`.
+- `src/SNOBOL/snobol.sil.js`: generated output from `external/v311-snoflake.sil`.
   Do not hand-edit it.
 
 ## How To Use This Reference
@@ -30,15 +30,15 @@ Consult this file when:
 
 Do not use this file to:
 - replace `external/v311.sil`, `external/v311-snoflake.sil`, or
-  `js/SNOBOL/snobol.sil.js` wholesale;
+  `src/SNOBOL/snobol.sil.js` wholesale;
 - import CSNOBOL4 extensions such as SPITBOL/BLOCKS features as bug fixes;
-- override `js/SNOBOL/sil.js` comments without direct evidence.
+- override `src/SNOBOL/sil.js` comments without direct evidence.
 
 Before porting any SIL fix:
 1. Reproduce the failure with a minimal SNOBOL program or macro-level test.
 2. Verify descriptor/specifier state with targeted probes.
 3. Compare `external/v311.sil`, `external/snobol4-v311.sil`, and
-   `js/SNOBOL/sil.js` for the exact macro/procedure involved.
+   `src/SNOBOL/sil.js` for the exact macro/procedure involved.
 4. Decide whether the fix belongs in JavaScript runtime representation,
    translator behavior, `external/v311-snoflake.sil`, or a macro
    implementation.
