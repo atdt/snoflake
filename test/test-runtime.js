@@ -141,7 +141,7 @@ describe( 'SNOBOL Program Execution', function () {
             encoding: 'utf8'
         } );
 
-        assert( output.includes( '\nPOSITIONAL\n' ) );
+        assert.equal( output, 'POSITIONAL\n' );
         assert( !output.includes( 'ERR_INVALID_ARG_TYPE' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );

@@ -21,9 +21,6 @@ const ERROR_MARKERS = [
       'Execution error'
 ];
 
-const DATA_BANNER = 'NO ERRORS DETECTED IN SOURCE PROGRAM',
-      DATA_EPILOGUE = 'NORMAL TERMINATION AT LEVEL';
-
 function captureWriter() {
     const lines = [];
     return {
@@ -32,10 +29,6 @@ function captureWriter() {
     };
 }
 
-// Mirror the CLI's stdout shape: each writer.write(line) corresponds to one
-// console.log(line) in the CLI, which appends '\n'. Rejoining with '\n' and
-// adding a trailing '\n' reproduces the byte stream the subprocess used to
-// produce, so extractDataSection's anchor logic still works unchanged.
 function joinLines( lines ) {
     return lines.length === 0 ? '' : lines.join( '\n' ) + '\n';
 }
@@ -47,32 +40,6 @@ function findErrorMarker( output ) {
         }
     }
     return null;
-}
-
-function extractDataSection( output ) {
-    const bannerIdx = output.indexOf( DATA_BANNER );
-    if ( bannerIdx === -1 ) {
-        return null;
-    }
-    let start = bannerIdx + DATA_BANNER.length;
-    // Runtime emits "<banner>\n\n" before the data. Skip exactly those two
-    // newlines so a leading blank line in the program output is preserved.
-    if ( output.charAt( start ) !== '\n' ) {
-        return null;
-    }
-    start++;
-    if ( output.charAt( start ) !== '\n' ) {
-        return null;
-    }
-    start++;
-    // Anchor on the LAST occurrence of the epilogue so a program that
-    // happens to print "NORMAL TERMINATION AT LEVEL" itself does not
-    // truncate the data section.
-    const epilogueIdx = output.lastIndexOf( DATA_EPILOGUE );
-    if ( epilogueIdx === -1 || epilogueIdx < start ) {
-        return null;
-    }
-    return output.slice( start, epilogueIdx );
 }
 
 function trimTrailingNewlines( s ) {
@@ -147,11 +114,7 @@ function assertProgram( filePath, header, output ) {
     }
 
     // exact
-    const section = extractDataSection( output );
-    if ( section === null ) {
-        fail( filePath, output, 'could not locate data section between banner and epilogue' );
-    }
-    const actual = trimTrailingNewlines( section );
+    const actual = trimTrailingNewlines( output );
     const expect = trimTrailingNewlines( header.expect );
     if ( actual !== expect ) {
         fail( filePath, output,

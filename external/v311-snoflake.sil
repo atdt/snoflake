@@ -1,9 +1,14 @@
-*      This is snoflake's working SIL input.  It started as a direct copy of
-*      external/v311.sil, the historical SNOBOL4 3.11 SIL source, but may
-*      contain carefully documented local fixes needed by this JavaScript port.
-*      Keep edits narrow.  Annotate each change with why it is needed, what
-*      invariant it preserves, and any source attribution, especially when
-*      porting a fix from Phil Budne's CSNOBOL4 SIL.
+*      Snoflake's working SIL, derived from v311.sil with fixes lifted
+*      from Phil Budne's CSNOBOL4 (https://www.regressive.org/snobol4/csnobol4/).
+*      Ported changes carry Budne's original [PLBnn] revision tags:
+*
+*        [PLB1,21,57] — CARDSZ=1024, SEQSIZ=0: allow input lines past 72
+*                       columns by widening the card buffer and dropping
+*                       the fixed sequence field.
+*        [PLB12]      — BANRCL / STATCL switches gate the startup banner,
+*                       success message, termination footer, and stats
+*                       summary.  Off by default; exposed via VM options
+*                       (-b / -s on the CLI).
 *
        TITLE   'Table of Contents'
 *
@@ -313,8 +318,10 @@ T      EQU     5		   TABLE
        TITLE   'Program Initialization'
 BEGIN  INIT    ,		   Initialize system
        ISTACK  ,		   Initialize stack
+       AEQLC   BANRCL,0,,NOBANR    Skip banner if zero		[PLB12]
        OUTPUT  OUTPUT,TITLEF	   Title listing
        OUTPUT  OUTPUT,SOURCF	   Print attribution
+NOBANR LHERE			   Join initialization		[PLB12]
        MSTIME  TIMECL		   Time in compiler
        RCALL   SCBSCL,BLOCK,OCALIM Allocate block for object code
        MOVD    OCSVCL,SCBSCL	   Save object code pointer
@@ -392,7 +399,8 @@ XLAEND AEQLC   ESAICL,0,,XLATSC    Were there any compilation errors?
        OUTPUT  OUTPUT,ERRCF	   Print message of errors
        BRANCH  XLATND
 *_
-XLATSC OUTPUT  OUTPUT,SUCCF	   Print message of no errors
+XLATSC AEQLC   BANRCL,0,,XLATND    Suppress message if no banner [PLB12]
+       OUTPUT  OUTPUT,SUCCF	   Print message of no errors
 XLATND SETAC   UNIT,0		   Reset input unit
        SETAC   LPTR,0		   Reset last label pointer
        SETAC   OCLIM,0		   Reset limit on object code
@@ -5100,7 +5108,8 @@ GENVIX RCALL   XPTR,GNVARI,XPTR,RTXNAM
 *				   Generate variable from integer
 *_
        TITLE   'Termination'
-END    OUTPUT  OUTPUT,NRMEND,(LVLCL)
+END    AEQLC   BANRCL,0,,FTLEN2    Skip message if banner off	[PLB12]
+       OUTPUT  OUTPUT,NRMEND,(LVLCL)
 *				   End procedure
        OUTPUT  OUTPUT,LASTSF,(STNOCL)
 *				   Print status
@@ -5137,7 +5146,8 @@ DMPNO  OUTPUT  OUTPUT,INCGCF	   Print disclaimer
        BRANCH  END1		   Join end game
 *_
 DMPK   RCALL   ,DMK		   Dump keywords
-END1   OUTPUT  OUTPUT,STATHD	   Print statistics title
+END1   AEQLC   STATCL,0,,ENDALL    Skip stats if suppressed	[PLB12]
+       OUTPUT  OUTPUT,STATHD	   Print statistics title
        OUTPUT  OUTPUT,CMTIME,(TIMECL)
 *				   Print compilation time
        OUTPUT  OUTPUT,INTIME,(ETMCL)
@@ -5455,6 +5465,8 @@ TIMECL DESCR   0,0,0		   Millisecond time
 *      SWITCHES
 *
 ALCL   DESCR   0,0,0		   Entry point switch for ARG(F,N)
+BANRCL DESCR   0,0,0		   Display startup banner	[PLB12]
+STATCL DESCR   0,0,0		   Display statistics		[PLB12]
 ARRMRK DESCR   0,0,0		   Prototype end switch for ARRAY(P,V)
 CUTNO  DESCR   0,0,0						E3.2.2
 CNSLCL DESCR   0,0,0		   Label redefinition switch

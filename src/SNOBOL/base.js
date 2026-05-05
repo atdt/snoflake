@@ -5,6 +5,10 @@ const DEFAULT_OPTIONS = {
     watch: [],
     // Fold SNOBOL source names and labels to uppercase during compilation.
     caseFold: true,
+    // Snoflake suppresses the SNOBOL4 startup banner, success/termination
+    // messages, and statistics summary by default. Toggle via -b / -s.
+    banner: false,
+    statistics: false,
 };
 
 const SNOBOL = {

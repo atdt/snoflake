@@ -124,6 +124,22 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     }
 };
 
+// Bind host-controlled SIL switches to vm.options. The descriptors are
+// assembled with their default values; flipping them here lets the host
+// suppress or enable startup banner, statistics, and listing without
+// touching the SIL source.
+function applyHostOutputOptions( vm ) {
+    if ( Object.hasOwn( vm.symbols, 'LISTCL' ) ) {
+        vm.d( 'LISTCL' ).addr = vm.options.listing ? 1 : 0;
+    }
+    if ( Object.hasOwn( vm.symbols, 'BANRCL' ) ) {
+        vm.d( 'BANRCL' ).addr = vm.options.banner ? 1 : 0;
+    }
+    if ( Object.hasOwn( vm.symbols, 'STATCL' ) ) {
+        vm.d( 'STATCL' ).addr = vm.options.statistics ? 1 : 0;
+    }
+}
+
 SNOBOL.VM.prototype.run = function ( program ) {
     let loc, stmt, label, macro;
 
@@ -207,6 +223,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
     this.debug = savedDebug;
+
+    applyHostOutputOptions( this );
 
     while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
         loc = this.instructionPointer;

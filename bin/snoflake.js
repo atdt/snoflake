@@ -26,6 +26,14 @@ const vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
         p.caseFold = false;
         return p;
     }
+    if ( c === '-b' ) {
+        p.banner = true;
+        return p;
+    }
+    if ( c === '-s' ) {
+        p.statistics = true;
+        return p;
+    }
     if ( m ) {
         const k = m[1];
         const v = optionValue( m[2] );

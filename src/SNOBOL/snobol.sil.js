@@ -146,11 +146,15 @@ SNOBOL.interp = function (vm) {
     return [null];
   }, "Initialize system"], [null, "ISTACK", function () {
     return [null];
-  }, "Initialize stack"], [null, "OUTPUT", function () {
+  }, "Initialize stack"], [null, "AEQLC", function () {
+    return [vm.$("BANRCL"), 0, null, vm.$("NOBANR")];
+  }, "Skip banner if zero\t\t[PLB12]"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("TITLEF")];
   }, "Title listing"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("SOURCF")];
-  }, "Print attribution"], [null, "MSTIME", function () {
+  }, "Print attribution"], ["NOBANR", "LHERE", function () {
+    return [vm.$("J")];
+  }, "oin initialization\t\t[PLB12]"], [null, "MSTIME", function () {
     return [vm.$("TIMECL")];
   }, "Time in compiler"], [null, "RCALL", function () {
     return [vm.$("SCBSCL"), vm.$("BLOCK"), vm.$("OCALIM")];
@@ -274,7 +278,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("OUTPUT"), vm.$("ERRCF")];
   }, "Print message of errors"], [null, "BRANCH", function () {
     return [vm.$("XLATND")];
-  }, ""], ["XLATSC", "OUTPUT", function () {
+  }, ""], ["XLATSC", "AEQLC", function () {
+    return [vm.$("BANRCL"), 0, null, vm.$("XLATND")];
+  }, "Suppress message if no banner [PLB12]"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("SUCCF")];
   }, "Print message of no errors"], ["XLATND", "SETAC", function () {
     return [vm.$("UNIT"), 0];
@@ -7090,7 +7096,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("XPTR"), vm.$("GNVARI"), vm.$("XPTR"), vm.$("RTXNAM")];
   }, "Generate variable from integer"], [null, "TITLE", function () {
     return ["Termination"];
-  }, ""], ["END", "OUTPUT", function () {
+  }, ""], ["END", "AEQLC", function () {
+    return [vm.$("BANRCL"), 0, null, vm.$("FTLEN2")];
+  }, "Skip message if banner off\t[PLB12]"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("NRMEND"), [vm.$("LVLCL")]];
   }, "End procedure"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("LASTSF"), [vm.$("STNOCL")]];
@@ -7148,7 +7156,9 @@ SNOBOL.interp = function (vm) {
     return [vm.$("END1")];
   }, "Join end game"], ["DMPK", "RCALL", function () {
     return [null, vm.$("DMK")];
-  }, "Dump keywords"], ["END1", "OUTPUT", function () {
+  }, "Dump keywords"], ["END1", "AEQLC", function () {
+    return [vm.$("STATCL"), 0, null, vm.$("ENDALL")];
+  }, "Skip stats if suppressed\t[PLB12]"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("STATHD")];
   }, "Print statistics title"], [null, "OUTPUT", function () {
     return [vm.$("OUTPUT"), vm.$("CMTIME"), [vm.$("TIMECL")]];
@@ -7652,7 +7662,11 @@ SNOBOL.interp = function (vm) {
     return [0, 0, 0];
   }, "Millisecond time"], ["ALCL", "DESCR", function () {
     return [0, 0, 0];
-  }, "Entry point switch for ARG(F,N)"], ["ARRMRK", "DESCR", function () {
+  }, "Entry point switch for ARG(F,N)"], ["BANRCL", "DESCR", function () {
+    return [0, 0, 0];
+  }, "Display startup banner\t[PLB12]"], ["STATCL", "DESCR", function () {
+    return [0, 0, 0];
+  }, "Display statistics\t\t[PLB12]"], ["ARRMRK", "DESCR", function () {
     return [0, 0, 0];
   }, "Prototype end switch for ARRAY(P,V)"], ["CUTNO", "DESCR", function () {
     return [0, 0, 0];
