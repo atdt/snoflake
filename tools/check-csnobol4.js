@@ -17,9 +17,9 @@
 // Exit code is 0 if every checked fixture matched, 1 otherwise.
 //
 // Limitations:
-// - @options runtime flags (caseFold, debug, etc.) are not translated to
-//   CSNOBOL4 invocation flags. A warning is printed for fixtures whose
-//   options likely affect execution semantics.
+// - @options runtime flags are translated to CSNOBOL4 invocation flags
+//   when an equivalent exists (see csnobol4FlagsForOptions). A warning
+//   is printed for options whose semantics CSNOBOL4 cannot honor.
 // - The data-section banner extraction used by the mocha runner does not
 //   apply: CSNOBOL4 with -b prints program output verbatim (no banner, no
 //   "NORMAL TERMINATION" epilogue).
@@ -49,7 +49,20 @@ const ERROR_MARKERS = [
 // Options that almost certainly change observable behavior under Snoflake but
 // have no straightforward CSNOBOL4 equivalent. Fixtures that set any of
 // these get a warning so the operator knows the comparison is best-effort.
-const SEMANTIC_OPTION_KEYS = [ 'caseFold', 'debug', 'watch' ];
+const SEMANTIC_OPTION_KEYS = [ 'debug', 'watch' ];
+
+// Translate fixture @options into CSNOBOL4 command-line flags. Only options
+// with a clean CSNOBOL4 equivalent appear here; everything else falls into
+// SEMANTIC_OPTION_KEYS and produces a WARN.
+function csnobol4FlagsForOptions( opts ) {
+    const flags = [];
+    // -f toggles identifier folding; CSNOBOL4 defaults to folding ON, matching
+    // Snoflake, so caseFold:false maps to a single -f to turn it off.
+    if ( opts.caseFold === false ) {
+        flags.push( '-f' );
+    }
+    return flags;
+}
 
 function trimTrailingNewlines( s ) {
     return s.replace( /\n+$/, '' );
@@ -78,7 +91,8 @@ function runUnderCsnobol4( filePath, header ) {
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
     // Cap wall-clock and output size so a runaway fixture does not hang the
     // helper or trip ENOBUFS on stdout.
-    const result = childProcess.spawnSync( SNOBOL4_BIN, [ '-b', filePath ], {
+    const args = [ '-b' ].concat( csnobol4FlagsForOptions( header.options ), [ filePath ] );
+    const result = childProcess.spawnSync( SNOBOL4_BIN, args, {
           cwd: ROOT,
           input: inputBuf,
           encoding: 'utf8',
