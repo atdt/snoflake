@@ -80,10 +80,7 @@ VM.prototype.ptr = function ( addr ) {
     return this.alloc( 1, addr );
 }
 
-SNOBOL.VM.prototype.define = function ( symbol, value ) {
-    if ( symbol === 'DESCR' && value !== 3 ) {
-        throw new Error(`symbol=${symbol}, value=${value}`);
-    }
+VM.prototype.define = function ( symbol, value ) {
     if ( typeof value === 'string' ) {
         this.symbols[ symbol ] = this.mem.length;
         for ( let i = 0; i < value.length; i++ ) {
@@ -116,7 +113,3 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
 
     throw new ReferenceError( key );
 };
-
-
-// End of mem.js logic
-
