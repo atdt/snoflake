@@ -2,7 +2,8 @@
   "name": "snoflake",
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "license": "BSD-2-Clause",
   "type": "module",
   "exports": {
     ".": "./src/snobol.js"
@@ -13,7 +14,9 @@
   "files": [
     "bin/",
     "src/",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "LICENSE-CSNOBOL4"
   ],
   "repository": {
     "type": "git",

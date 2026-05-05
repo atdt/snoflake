@@ -1,50 +1,78 @@
 Snoflake
 ==========
-**Snoflake** is a GPL-licensed JavaScript runtime for the [SNOBOL][0] (_StriNg
-Oriented and symBOlic Language_) programming language, developed between 1962
-and 1967 at AT&T Bell Laboratories by David J. Farber, Ralph E. Griswold and
-Ivan P. Polonsky.
+**Snoflake** is a BSD-licensed JavaScript implementation of [SNOBOL4][0]
+(_StriNg Oriented and symBOlic Language_), the string-processing language
+developed between 1962 and 1967 at AT&T Bell Laboratories by David J. Farber,
+Ralph E. Griswold and Ivan P. Polonsky.
 
 SNOBOL is highly distinct and excels at string manipulation and
 pattern-matching. SNOBOL patterns may be recursive and are available as a
 first-class data type.
 
-To aid porting, an implementation of SNOBOL4 was provided in assembler code for
-a virtual machine that was designed expressly for that purpose (a first, as far
-as I know). 
+Snoflake is a port of the macro implementation of SNOBOL4. It tracks the
+SNOBOL4 version 3.11 SIL source and is a working, usable implementation of
+the language.
 
-**Snoflake** is a port of the macro implementation of SNOBOL4. It is
-currently only about 75% complete and is not yet usable.
+Usage
+-----
+Snoflake can be used three ways: as a command-line interpreter, as a
+JavaScript library, and in the browser.
 
-Compatibility
--------------
-**Snoflake** is designed to run in both browser and standalone environments.
+### Command line
 
-Status
-------
-It doesn't completely work yet, but getting close.
+Install from npm and run a SNOBOL program:
+
+```
+npm install -g snoflake
+snoflake hello.sno
+```
+
+### Library
+
+Snoflake is a standard ES module:
+
+```js
+import SNOBOL from 'snoflake';
+
+const vm = new SNOBOL.VM( { file: 'hello.sno' } );
+vm.reset();
+vm.run( SNOBOL.interp( vm ) );
+```
+
+The `VM` constructor accepts options for selecting the source file, input
+file, output streams, and a custom `loader` for resolving file reads. See
+[`bin/snoflake.js`](bin/snoflake.js) for the CLI's use of the API and
+[`demo/run-snoflake.js`](demo/run-snoflake.js) for an in-memory example.
+
+### Browser
+
+Snoflake runs unmodified in the browser. The bundled demo loads
+`src/snobol.js` directly as an ES module and captures output through custom
+writers. To try it locally:
+
+```
+npm run demo
+```
+
+Then open the URL it prints. The demo source under [`demo/`](demo/) is the
+shortest path to embedding Snoflake in a web page.
 
 License
 -------
-Copyright (C) 2012-2022 [Ori Livneh][1]
+Copyright (c) 2012-2026 [Ori Livneh][1]
 
-This program is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation; either version 2 of the License, or (at your option) any later
-version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the [GNU General Public License][2] for more details.
+Snoflake is distributed under the BSD 2-Clause License; see [LICENSE](LICENSE)
+for the full text.
 
 Acknowledgments
 ---------------
-This project incorporates several surgical bug fixes from [CSNOBOL4][3], Phil
+This project incorporates several surgical bug fixes from [CSNOBOL4][2], Phil
 Budne's free port of the original SNOBOL4 macro implementation to C. We are
 deeply grateful to Phil Budne for his extensive work in maintaining and
-improving the SNOBOL4 SIL source over several decades.
+improving the SNOBOL4 SIL source over several decades. The ported changes are
+tagged inline with their original `[PLBnn]` revision markers; see
+[LICENSE-CSNOBOL4](LICENSE-CSNOBOL4) for CSNOBOL4's BSD 2-Clause license.
 
 [0]: http://en.wikipedia.org/wiki/SNOBOL
 [1]: mailto:ori.livneh@gmail.com
-[2]: http://www.gnu.org/licenses/gpl-2.0.html
-[3]: https://github.com/philbudne/csnobol4
+[2]: https://github.com/philbudne/csnobol4
