@@ -204,8 +204,6 @@ SNOBOL.VM.prototype.run = function ( program ) {
         }
     }
 
-    this.loca2Ptr = this.symbols.LOCA2;
-
     for (
         this.instructionPointer = 0;
         this.instructionPointer < program.length;
@@ -230,10 +228,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
         loc = this.instructionPointer;
         stmt = program[ loc ];
         [ label, macro ] = stmt;
-        if ( loc === this.loca2Ptr ) {
-            this.instructionPointerChanged = false;
-            SNOBOL.sil._fastLOCA2.call( this );
-        } else if ( !ASSEMBLY_MACROS_SET.has( macro ) ) {
+        if ( !ASSEMBLY_MACROS_SET.has( macro ) ) {
             this.instructionPointerChanged = false;
             this.exec( ...stmt );
         }
@@ -302,5 +297,4 @@ SNOBOL.VM.prototype.reset = function () {
     this.OSTACK = { addr: 0 };
     this.CSTACK_DESCRIPTOR = new RegDescriptor( this, 'CSTACK' );
     this.OSTACK_DESCRIPTOR = new RegDescriptor( this, 'OSTACK' );
-    this.loca2Ptr = undefined;
 };

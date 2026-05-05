@@ -202,60 +202,6 @@ function stackPusher( dataType ) {
     };
 }
 
-// Native equivalent of the LOCA2 lookup loop in GENVAR/GNVARI.  It preserves
-// the loop's descriptor side effects and returns to the same SIL labels, but
-// avoids spending one VM dispatch per chain instruction while interning strings.
-sil._fastLOCA2 = function () {
-    const BUKPTR = this.d( 'BUKPTR' ),
-          LSTPTR = this.d( 'LSTPTR' ),
-          EQUVCL = this.d( 'EQUVCL' ),
-          SPECR1 = this.s( 'SPECR1' ),
-          SPECR2 = this.s( 'SPECR2' ),
-          LNKFLD = this.$( 'LNKFLD' ),
-          target = EQUVCL.value,
-          loca2 = this.$( 'LOCA2' ),
-          seen = Object.create( null );
-    let link,
-        currentValue;
-
-    for (;;) {
-        LSTPTR.read( BUKPTR );
-
-        link = this.d( BUKPTR.addr + LNKFLD );
-        BUKPTR.addr = link.addr;
-
-        if ( BUKPTR.addr === 0 ) {
-            this.jmp( this.$( 'LOCA5' ) );
-            return;
-        }
-        if ( seen[ BUKPTR.addr ] ) {
-            throw new Error(
-                'Object-store chain cycle in LOCA2 at ' + BUKPTR.addr +
-                ' while locating "' + SPECR1.specified + '"'
-            );
-        }
-        seen[ BUKPTR.addr ] = true;
-
-        currentValue = this.d( BUKPTR.addr + LNKFLD ).value;
-        if ( currentValue > target ) {
-            this.jmp( this.$( 'LOCA5' ) );
-            return;
-        }
-        if ( currentValue < target ) {
-            continue;
-        }
-
-        sil.LOCSP.call( this, this.$( 'SPECR2' ), this.$( 'BUKPTR' ) );
-        if ( SPECR1.specified === SPECR2.specified ) {
-            // +6 is the matched-key continuation in the LOCA2 expansion.
-            this.instructionPointer = loca2 + 6;
-            this.instructionPointerChanged = true;
-            return;
-        }
-    }
-};
-
-
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
 // being considered as signed integers.  If A1 >  A2,  transfer
