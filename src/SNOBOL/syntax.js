@@ -2,13 +2,12 @@
 
 import SNOBOL from './base.js';
 
-// 0x7F is just the ASCII range; it should really be
-// 0x10000, but we get crashes.
-const CHAR_MAX = 0x7F;
+// &ALPHABET holds every byte value of the host character set, matching
+// CSNOBOL4 and the original IBM/360 ALPHSZ = 256.
 const D = 3;
 let ALPHA = '';
 
-for ( let i = 1; i <= CHAR_MAX; i++ ) {
+for ( let i = 0; i < 256; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
@@ -29,7 +28,7 @@ SNOBOL.programSymbols = {
     FNC     : 1 << 1,
     MARK    : 1 << 2,
     PTR     : 1 << 3,
-    STTL    : 1 << 4, 
+    STTL    : 1 << 4,
     TTL     : 1 << 5,
 
     UNITI   : 5,
