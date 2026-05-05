@@ -5336,11 +5336,11 @@ SNOBOL.interp = function (vm) {
     return [vm.$("IOSP"), vm.$("IO3PTR"), vm.$("FAIL"), vm.$("COMP5")];
   }, "Perform read"], [null, "AEQLC", function () {
     return [vm.$("TRIMCL"), 0, null, vm.$("PUTIN1")];
-  }, "Check &INPUT"], [null, "TRIMSP", function () {
+  }, "Check &TRIM"], [null, "TRIMSP", function () {
     return [vm.$("IOSP"), vm.$("IOSP")];
-  }, "Trim string"], [null, "GETLG", function () {
+  }, "Trim string"], ["PUTIN1", "GETLG", function () {
     return [vm.$("IO1PTR"), vm.$("IOSP")];
-  }, "Get length"], ["PUTIN1", "ACOMP", function () {
+  }, "Get length\t\t\t[PLB19]"], [null, "ACOMP", function () {
     return [vm.$("IO1PTR"), vm.$("MLENCL"), vm.$("INTR8")];
   }, "E3.9.2"], [null, "VEQLC", function () {
     return [vm.$("IO2PTR"), vm.$("K"), null, vm.$("PUTIN3")];

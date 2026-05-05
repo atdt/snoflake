@@ -9,6 +9,10 @@
 *                       success message, termination footer, and stats
 *                       summary.  Off by default; exposed via VM options
 *                       (-b / -s on the CLI).
+*        [PLB19]      — In PUTIN, GETLG runs unconditionally at PUTIN1
+*                       so RAW = INPUT reports the actual line length
+*                       even when &TRIM = 0, instead of inheriting
+*                       DFLSIZ from the caller.
 *
        TITLE   'Table of Contents'
 *
@@ -3895,10 +3899,10 @@ PUTIN  PROC    ,		   Input procedure
        INCRA   RSTAT,1		   Increment count of reads
        STREAD  IOSP,IO3PTR,FAIL,COMP5
 *				   Perform read
-       AEQLC   TRIMCL,0,,PUTIN1    Check &INPUT
+       AEQLC   TRIMCL,0,,PUTIN1    Check &TRIM
        TRIMSP  IOSP,IOSP	   Trim string
-       GETLG   IO1PTR,IOSP	   Get length
-PUTIN1 ACOMP   IO1PTR,MLENCL,INTR8				E3.9.2
+PUTIN1 GETLG   IO1PTR,IOSP	   Get length			[PLB19]
+       ACOMP   IO1PTR,MLENCL,INTR8				E3.9.2
        VEQLC   IO2PTR,K,,PUTIN3    CHECK FOR KEYWORD		E3.10.2
        RCALL   IO1PTR,GNVARS,IO1PTR				E3.9.2
 *				   Form variable for string
