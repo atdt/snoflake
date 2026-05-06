@@ -140,6 +140,29 @@ function applyHostOutputOptions( vm ) {
     }
 }
 
+// Each entry returns the value its label should bind to. Side effects
+// (recording a deferred pointer, emitting storage) happen here too. A
+// macro absent from this table is treated as an executable instruction:
+// its label, if any, binds to the instruction's own index.
+const ASSEMBLERS = {
+    // DESCR and SPEC reserve a slot now and run their argument expressions
+    // later in fixupData, once forward references are resolvable.
+    DESCR: ( vm, ip, _stmt, ptrs ) => ( ptrs[ ip ] = vm.d().ptr ),
+    SPEC:  ( vm, ip, _stmt, ptrs ) => ( ptrs[ ip ] = vm.s().ptr ),
+
+    // Locationless markers: the label aliases the next located statement,
+    // which may be data (vm.mem.length) or an executable instruction.
+    LHERE: ( vm, ip, _stmt, _ptrs, program ) => locationAtHere( vm, program, ip ),
+    PROC:  ( vm, ip, _stmt, _ptrs, program ) => nextLocatedStatement( program, ip ),
+
+    // Storage emitters: the label points at the first emitted cell.
+    STRING: ( vm, _ip, stmt ) => { const ptr = vm.mem.length; vm.exec( ...stmt ); return ptr; },
+
+    // Compile-time expression: the result of exec is the label's value.
+    EQU: ( vm, _ip, stmt ) => vm.exec( ...stmt ),
+};
+ASSEMBLERS.FORMAT = ASSEMBLERS.BUFFER = ASSEMBLERS.ARRAY = ASSEMBLERS.STRING;
+
 // Pass 1: walk the program binding labels and assembling data. DESCR and
 // SPEC are pre-allocated but not executed here, because their argument
 // expressions may reference symbols that later statements define.
@@ -155,44 +178,12 @@ function assemble( vm, program ) {
     ) {
         const stmt = program[ vm.instructionPointer ];
         const [ label, macro ] = stmt;
-        switch ( macro ) {
-            case 'DESCR':
-                dataAssemblyPtrs[ vm.instructionPointer ] = vm.d().ptr;
-                if ( label ) {
-                    vm.define( label, dataAssemblyPtrs[ vm.instructionPointer ] );
-                }
-                break;
-            case 'SPEC':
-                dataAssemblyPtrs[ vm.instructionPointer ] = vm.s().ptr;
-                if ( label ) {
-                    vm.define( label, dataAssemblyPtrs[ vm.instructionPointer ] );
-                }
-                break;
-            case 'LHERE':
-                if ( label ) {
-                    vm.define( label, locationAtHere( vm, program, vm.instructionPointer ) );
-                }
-                break;
-            case 'PROC':
-                if ( label ) {
-                    vm.define( label, nextLocatedStatement( program, vm.instructionPointer ) );
-                }
-                break;
-            case 'STRING':
-            case 'FORMAT':
-            case 'BUFFER':
-            case 'ARRAY':
-                vm.define( label, vm.mem.length );
-                vm.exec( ...stmt );
-                break;
-            case 'EQU':
-                vm.define( label, vm.exec( ...stmt ) );
-                break;
-            default:
-                if ( label ) {
-                    vm.define( label, vm.instructionPointer );
-                }
-                break;
+        const assembler = ASSEMBLERS[ macro ];
+        const value = assembler
+            ? assembler( vm, vm.instructionPointer, stmt, dataAssemblyPtrs, program )
+            : vm.instructionPointer;
+        if ( label ) {
+            vm.define( label, value );
         }
     }
 
