@@ -2364,7 +2364,7 @@ sil.LVALUE = function ( $DESCR1, $DESCR2 ) {
 
     do {
         node1 = this.d( start + offset + 6 );
-        node2 = node1.next();
+        node2 = this.d( node1.ptr + D );
         offset = node1.addr;
         if ( node2.addr < least ) {
             least = node2.addr;

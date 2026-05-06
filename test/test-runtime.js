@@ -170,12 +170,6 @@ describe( 'Descriptor Datatype', function () {
         assert.deepEqual( keys.sort(), fields );
     } );
 
-    it( 'next', function () {
-        const desc = this.vm.d(),
-              next = this.vm.d();
-        assert.equal( next.ptr, desc.next().ptr );
-    } );
-
     it( 'init', function () {
         const orig = this.vm.d(),
               copy = this.vm.d( orig.ptr );
@@ -254,12 +248,6 @@ describe( 'Specifier Datatype', function () {
             keys.push( key );
         }
         assert.deepEqual( keys.sort(), fields );
-    } );
-
-    it( 'next', function () {
-        const spec = new SNOBOL.Specifier( this.vm ),
-              next = new SNOBOL.Specifier( this.vm );
-        assert.equal( next.ptr, spec.next().ptr );
     } );
 
     it( 'init', function () {

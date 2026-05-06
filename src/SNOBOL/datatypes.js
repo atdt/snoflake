@@ -50,16 +50,6 @@ class Descriptor {
         return true;
     }
 
-    // Get next aligned data structure
-    next() {
-        return new this.constructor( this.vm, this.ptr + this.width );
-    }
-
-    // Get prev aligned data structure
-    prev() {
-        return new this.constructor( this.vm, this.ptr - this.width );
-    }
-
     // Read (copy) the content of another instance into self
     read( src ) {
         for ( let i = 0; i < this.width; i++ ) {
