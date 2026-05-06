@@ -168,7 +168,7 @@ additive
 }
 
 multiplicative
-  = head:primary tail:( operator:"*" term:primary { return { operator: operator, term: term }; } )*
+  = head:unary tail:( operator:"*" term:unary { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
         return {
@@ -179,6 +179,21 @@ multiplicative
         };
     }, head );
 }
+
+unary
+  = operator:[+-] argument:unary
+{
+    if ( operator === '+' ) {
+        return argument;
+    }
+    return {
+        type: 'UnaryExpression',
+        operator: operator,
+        argument: argument,
+        prefix: true
+    };
+}
+  / primary
 
 primary
   = integer / name

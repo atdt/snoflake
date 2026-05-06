@@ -3591,8 +3591,8 @@ SNOBOL.interp = function (vm) {
   }, "Check &FULLSCAN"], [null, "MOVD", function () {
     return [vm.$("TVAL"), vm.$("ZEROCL")];
   }, ""], [null, "GETAC", function () {
-    return [vm.$("TVAL"), vm.$("PDLPTR")];
-  }, "-2*DESCR Get old cursor position"], [null, "GETLG", function () {
+    return [vm.$("TVAL"), vm.$("PDLPTR"), -2 * vm.$("DESCR")];
+  }, "Get old cursor position"], [null, "GETLG", function () {
     return [vm.$("TMVAL"), vm.$("TXSP")];
   }, "Get current cursor position"], [null, "ACOMP", function () {
     return [vm.$("TVAL"), vm.$("TMVAL"), vm.$("TSCOK"), null, vm.$("TSCOK")];
@@ -3609,8 +3609,8 @@ SNOBOL.interp = function (vm) {
   }, ""], [null, "MOVD", function () {
     return [vm.$("TVAL"), vm.$("ZEROCL")];
   }, ""], [null, "GETAC", function () {
-    return [vm.$("TVAL"), vm.$("PDLPTR")];
-  }, "-2*DESCR Get old cursor position"], [null, "BRANCH", function () {
+    return [vm.$("TVAL"), vm.$("PDLPTR"), -2 * vm.$("DESCR")];
+  }, "Get old cursor position"], [null, "BRANCH", function () {
     return [vm.$("ONAR1")];
   }, "Join processing"], ["FARB", "PROC", function () {
     return [null];
