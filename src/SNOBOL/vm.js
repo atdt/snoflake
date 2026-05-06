@@ -146,15 +146,15 @@ function applyHostOutputOptions( vm ) {
 // its label, if any, binds to the instruction's own index.
 const ASSEMBLERS = {
     // DESCR and SPEC reserve a slot now and run their argument expressions
-    // later in fixupData, once forward references are resolvable.
-    DESCR: ( vm, ip, stmt, dataFixups ) => {
+    // later, once forward references are resolvable.
+    DESCR: ( vm, ip, stmt, deferredData ) => {
         const ptr = vm.d().ptr;
-        dataFixups.push( { ip, ptr, stmt } );
+        deferredData.push( { ip, ptr, stmt } );
         return ptr;
     },
-    SPEC: ( vm, ip, stmt, dataFixups ) => {
+    SPEC: ( vm, ip, stmt, deferredData ) => {
         const ptr = vm.s().ptr;
-        dataFixups.push( { ip, ptr, stmt } );
+        deferredData.push( { ip, ptr, stmt } );
         return ptr;
     },
 
@@ -174,9 +174,9 @@ ASSEMBLERS.FORMAT = ASSEMBLERS.BUFFER = ASSEMBLERS.ARRAY = ASSEMBLERS.STRING;
 // Pass 1: walk the program binding labels and assembling data. DESCR and
 // SPEC are pre-allocated but not executed here, because their argument
 // expressions may reference symbols that later statements define.
-// Returns the deferred descriptor/specifier initializers for fixupData.
+// Returns the deferred descriptor/specifier initializers.
 function assemble( vm, program ) {
-    const dataFixups = [];
+    const deferredData = [];
 
     for (
         vm.instructionPointer = 0;
@@ -187,23 +187,28 @@ function assemble( vm, program ) {
         const [ label, macro ] = stmt;
         const assembler = ASSEMBLERS[ macro ];
         const value = assembler
-            ? assembler( vm, vm.instructionPointer, stmt, dataFixups, program )
+            ? assembler( vm, vm.instructionPointer, stmt, deferredData, program )
             : vm.instructionPointer;
         if ( label ) {
             vm.define( label, value );
         }
     }
 
-    return dataFixups;
+    return deferredData;
 }
 
-// Data fixup: now that every label is bound, initialize only the DESCR and
-// SPEC records reserved in pass 1 so their argument expressions resolve
-// against the final symbol table.
-function fixupData( vm, dataFixups ) {
-    for ( const fixup of dataFixups ) {
-        vm.instructionPointer = fixup.ip;
-        vm.exec( fixup.ptr, fixup.stmt[ 1 ], fixup.stmt[ 2 ], fixup.stmt[ 3 ] );
+// Now that every label is bound, initialize only the DESCR and SPEC records
+// reserved during assembly so their argument expressions resolve against the
+// final symbol table.
+function initData( vm, deferredData ) {
+    for ( const data of deferredData ) {
+        vm.instructionPointer = data.ip;
+        vm.exec(
+            data.ptr,
+            data.stmt[ 1 ],
+            data.stmt[ 2 ],
+            data.stmt[ 3 ]
+        );
     }
 }
 
@@ -233,8 +238,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
     // Assembly is silent; only the execution pass should produce a trace.
     const savedDebug = this.debug;
     this.debug = false;
-    const dataFixups = assemble( this, program );
-    fixupData( this, dataFixups );
+    const deferredData = assemble( this, program );
+    initData( this, deferredData );
     this.debug = savedDebug;
 
     this.instructionPointer = 0;
