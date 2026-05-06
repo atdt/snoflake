@@ -2,8 +2,6 @@
 
 import SNOBOL from './base.js';
 
-const DECODE_CHUNK_SIZE = 16384;
-
 function pad( str, width, align, padChar ) {
         if ( str.length >= width ) {
                 return str;
@@ -46,8 +44,8 @@ SNOBOL.str = {
         }
 
         let decoded = '';
-        for ( let i = 0; i < end; i += DECODE_CHUNK_SIZE ) {
-            decoded += String.fromCharCode( ...encoded.slice( i, Math.min( i + DECODE_CHUNK_SIZE, end ) ) );
+        for ( let i = 0; i < end; i++ ) {
+            decoded += String.fromCharCode( encoded[ i ] );
         }
         return decoded;
     },
