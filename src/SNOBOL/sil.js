@@ -1478,12 +1478,7 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         DESCR3 = this.d( $DESCR3 ),
         A3 = DESCR3.addr,
 
-        target = A2 + A3;
-    if ( target < 0 || target + D > this.memPtr ) {
-        DESCR1.update( 0, 0, 0 );
-        return;
-    }
-    const DESCR_indirect = this.d( target );
+        DESCR_indirect = this.d( A2 + A3 );
     DESCR1.read( DESCR_indirect );
 };
 
@@ -1582,11 +1577,8 @@ sil.GETLTH = function ( $DESCR1, $DESCR2 ) {
 sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
     // get size
     const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
-    if ( DESCR2.addr < 0 || DESCR2.addr + D > this.memPtr ) {
-        DESCR1.addr = 0; DESCR1.flags = 0; DESCR1.value = 0; return;
-    }
-    const DESCR_indirect = this.d( DESCR2.addr );
+          DESCR2 = this.d( $DESCR2 ),
+          DESCR_indirect = this.d( DESCR2.addr );
 
     DESCR1.addr  = DESCR_indirect.value;
     DESCR1.flags = 0;
@@ -3041,25 +3033,12 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
     const DESCR1 = this.d( $DESCR1 ),
           A1 = DESCR1.addr,
           DESCR2 = this.d( $DESCR2 ),
-          PTR = this.$( 'PTR' ),
           A2 = DESCR2.addr;
-    // When A1 is zero, fall back to DESCR1's own slot as the base, the
-    // same way PUTD does, so the write lands on the slot rather than 0+N.
-    let base = A1 + N;
-    if ( A1 === 0 && DESCR1.ptr !== undefined ) {
-        base = DESCR1.ptr + N;
-        if ( this.debug ) {
-            this.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
-        }
-    }
 
-    const target = this.d( base );
+    const target = this.d( A1 + N );
     target.addr = A2;
-    if ( DESCR2.flags & PTR ) {
-        target.flags |= PTR;
-    }
     if ( this.debug ) {
-        this.log('PUTAC write', base, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
+        this.log('PUTAC write', A1 + N, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
     }
 };
 
@@ -3086,20 +3065,7 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
           DESCR2 = this.d( $DESCR2 ),
           DESCR3 = this.d( $DESCR3 );
 
-    // Normal spec behavior: write to A1 + A2.
-    // However, when A1 is zero and DESCR1 refers to a concrete
-    // descriptor slot (e.g., a list entry just read via GETD), then
-    // the intended target is the slot itself at DESCR1.ptr + A2.
-    let base = DESCR1.addr;
-    if ( base === 0 && typeof DESCR1.ptr === 'number' ) {
-        base = DESCR1.ptr;
-    }
-    const target = base + DESCR2.addr;
-
-    if ( this.debug ) {
-        this.log('PUTD target=%s (base=%s A1=%s A2=%s)', target, base, DESCR1.addr, DESCR2.addr);
-    }
-    this.d( target ).read( DESCR3 );
+    this.d( DESCR1.addr + DESCR2.addr ).read( DESCR3 );
 };
 
 //     PUTDC  is used to put a descriptor at a location with a
@@ -3860,11 +3826,7 @@ sil.SETF = function ( $DESCR, FLAG ) {
 sil.SETFI = function ( $DESCR, FLAG ) {
     // set flag indirect
     const DESCR = this.d( $DESCR );
-    const addr = DESCR.addr;
-    if ( addr < 0 || addr + D > this.memPtr ) {
-        return; // out-of-range; no-op
-    }
-    sil.SETF.call( this, addr, FLAG );
+    sil.SETF.call( this, DESCR.addr, FLAG );
 };
 
 //     SETLC is used to set the length of  a  specifier  to  a
@@ -4666,11 +4628,7 @@ sil.TESTF = function ( $DESCR, FLAG, FLOC, SLOC ) {
 sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
     // test flag indirect
     const DESCR = this.d( $DESCR );
-    const addr = DESCR.addr;
-    if ( addr < 0 || addr + D > this.memPtr ) {
-        return this.jmp( FLOC );
-    }
-    sil.TESTF.call( this, addr, FLAG, FLOC, SLOC );
+    sil.TESTF.call( this, DESCR.addr, FLAG, FLOC, SLOC );
 };
 
 //     TITLE is used at assembly time to  title  the  assembly
@@ -4730,7 +4688,6 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 
     for ( N = 0; ; N++ ) {
         if ( ( A - ( N * D ) ) < 0 ) {
-            // Graceful fallback: treat as no TTL found; return current A and N=0
             DESCR1.addr  = A;
             DESCR1.flags = DESCR3.flags;
             DESCR1.value = DESCR3.value;
@@ -4741,7 +4698,6 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         }
         const cur = A - ( N * D );
         if ( cur < 0 || cur + D > this.memPtr ) {
-            // Graceful fallback as above
             DESCR1.addr  = A;
             DESCR1.flags = DESCR3.flags;
             DESCR1.value = DESCR3.value;
