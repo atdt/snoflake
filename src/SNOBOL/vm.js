@@ -141,14 +141,22 @@ function applyHostOutputOptions( vm ) {
 }
 
 // Each entry returns the value its label should bind to. Side effects
-// (recording a deferred pointer, emitting storage) happen here too. A
+// (recording a deferred initializer, emitting storage) happen here too. A
 // macro absent from this table is treated as an executable instruction:
 // its label, if any, binds to the instruction's own index.
 const ASSEMBLERS = {
     // DESCR and SPEC reserve a slot now and run their argument expressions
     // later in fixupData, once forward references are resolvable.
-    DESCR: ( vm, ip, _stmt, ptrs ) => ( ptrs[ ip ] = vm.d().ptr ),
-    SPEC:  ( vm, ip, _stmt, ptrs ) => ( ptrs[ ip ] = vm.s().ptr ),
+    DESCR: ( vm, ip, stmt, dataFixups ) => {
+        const ptr = vm.d().ptr;
+        dataFixups.push( { ip, ptr, stmt } );
+        return ptr;
+    },
+    SPEC: ( vm, ip, stmt, dataFixups ) => {
+        const ptr = vm.s().ptr;
+        dataFixups.push( { ip, ptr, stmt } );
+        return ptr;
+    },
 
     // Locationless markers: the label aliases the next located statement,
     // which may be data (vm.mem.length) or an executable instruction.
@@ -166,10 +174,9 @@ ASSEMBLERS.FORMAT = ASSEMBLERS.BUFFER = ASSEMBLERS.ARRAY = ASSEMBLERS.STRING;
 // Pass 1: walk the program binding labels and assembling data. DESCR and
 // SPEC are pre-allocated but not executed here, because their argument
 // expressions may reference symbols that later statements define.
-// Returns a map from instruction index to the descriptor/specifier pointer
-// reserved for that statement, for the fixup pass to consume.
+// Returns the deferred descriptor/specifier initializers for fixupData.
 function assemble( vm, program ) {
-    const dataAssemblyPtrs = Object.create( null );
+    const dataFixups = [];
 
     for (
         vm.instructionPointer = 0;
@@ -180,35 +187,27 @@ function assemble( vm, program ) {
         const [ label, macro ] = stmt;
         const assembler = ASSEMBLERS[ macro ];
         const value = assembler
-            ? assembler( vm, vm.instructionPointer, stmt, dataAssemblyPtrs, program )
+            ? assembler( vm, vm.instructionPointer, stmt, dataFixups, program )
             : vm.instructionPointer;
         if ( label ) {
             vm.define( label, value );
         }
     }
 
-    return dataAssemblyPtrs;
+    return dataFixups;
 }
 
-// Pass 2: now that every label is bound, run DESCR and SPEC at the pointers
-// reserved in pass 1 so their argument expressions resolve against the
-// final symbol table.
-function fixupData( vm, program, dataAssemblyPtrs ) {
-    for (
-        vm.instructionPointer = 0;
-        vm.instructionPointer < program.length;
-        vm.instructionPointer++
-    ) {
-        const stmt = program[ vm.instructionPointer ];
-        const macro = stmt[ 1 ];
-        if ( macro === 'DESCR' || macro === 'SPEC' ) {
-            const ptr = dataAssemblyPtrs[ vm.instructionPointer ];
-            vm.exec( ptr, macro, stmt[ 2 ], stmt[ 3 ] );
-        }
+// Data fixup: now that every label is bound, initialize only the DESCR and
+// SPEC records reserved in pass 1 so their argument expressions resolve
+// against the final symbol table.
+function fixupData( vm, dataFixups ) {
+    for ( const fixup of dataFixups ) {
+        vm.instructionPointer = fixup.ip;
+        vm.exec( fixup.ptr, fixup.stmt[ 1 ], fixup.stmt[ 2 ], fixup.stmt[ 3 ] );
     }
 }
 
-// Pass 3: execute. Assembly macros are skipped — their work was done above.
+// Execution pass: assembly macros are skipped — their work was done above.
 // A statement that does not branch advances the instruction pointer by one.
 function interpret( vm, program ) {
     while ( vm.instructionPointer >= 0 && vm.instructionPointer < program.length ) {
@@ -234,8 +233,8 @@ SNOBOL.VM.prototype.run = function ( program ) {
     // Assembly is silent; only the execution pass should produce a trace.
     const savedDebug = this.debug;
     this.debug = false;
-    const dataAssemblyPtrs = assemble( this, program );
-    fixupData( this, program, dataAssemblyPtrs );
+    const dataFixups = assemble( this, program );
+    fixupData( this, dataFixups );
     this.debug = savedDebug;
 
     this.instructionPointer = 0;
