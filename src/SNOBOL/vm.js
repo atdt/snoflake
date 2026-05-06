@@ -140,105 +140,117 @@ function applyHostOutputOptions( vm ) {
     }
 }
 
-SNOBOL.VM.prototype.run = function ( program ) {
-    let loc, stmt, label, macro;
-
-    for ( const sym in SNOBOL.programSymbols ) {
-        this.define( sym, SNOBOL.programSymbols[sym] );
-    }
-
-    SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
-
-    const savedDebug = this.debug;
-    this.debug = false;
+// Pass 1: walk the program binding labels and assembling data. DESCR and
+// SPEC are pre-allocated but not executed here, because their argument
+// expressions may reference symbols that later statements define.
+// Returns a map from instruction index to the descriptor/specifier pointer
+// reserved for that statement, for the fixup pass to consume.
+function assemble( vm, program ) {
     const dataAssemblyPtrs = Object.create( null );
 
     for (
-        this.instructionPointer = 0;
-        this.instructionPointer < program.length;
-        this.instructionPointer++
+        vm.instructionPointer = 0;
+        vm.instructionPointer < program.length;
+        vm.instructionPointer++
     ) {
-        stmt = program[ this.instructionPointer ];
-        [ label, macro ] = stmt;
+        const stmt = program[ vm.instructionPointer ];
+        const [ label, macro ] = stmt;
         switch ( macro ) {
-            // We pre-allocate data for DESCR and SPEC instructions, but we
-            // don't execute them yet, because their arguments may refer to
-            // program symbols that are not yet bound.
             case 'DESCR':
-                dataAssemblyPtrs[ this.instructionPointer ] = this.d().ptr;
+                dataAssemblyPtrs[ vm.instructionPointer ] = vm.d().ptr;
                 if ( label ) {
-                    this.define( label, dataAssemblyPtrs[ this.instructionPointer ] );
+                    vm.define( label, dataAssemblyPtrs[ vm.instructionPointer ] );
                 }
                 break;
             case 'SPEC':
-                dataAssemblyPtrs[ this.instructionPointer ] = this.s().ptr;
+                dataAssemblyPtrs[ vm.instructionPointer ] = vm.s().ptr;
                 if ( label ) {
-                    this.define( label, dataAssemblyPtrs[ this.instructionPointer ] );
+                    vm.define( label, dataAssemblyPtrs[ vm.instructionPointer ] );
                 }
                 break;
             case 'LHERE':
                 if ( label ) {
-                    this.define( label, locationAtHere( this, program, this.instructionPointer ) );
+                    vm.define( label, locationAtHere( vm, program, vm.instructionPointer ) );
                 }
                 break;
             case 'PROC':
                 if ( label ) {
-                    this.define( label, nextLocatedStatement( program, this.instructionPointer ) );
+                    vm.define( label, nextLocatedStatement( program, vm.instructionPointer ) );
                 }
                 break;
             case 'STRING':
             case 'FORMAT':
             case 'BUFFER':
             case 'ARRAY':
-                this.define( label, this.mem.length );
-                this.exec( ...stmt );
+                vm.define( label, vm.mem.length );
+                vm.exec( ...stmt );
                 break;
             case 'EQU':
-                this.define( label, this.exec( ...stmt ) );
+                vm.define( label, vm.exec( ...stmt ) );
                 break;
             default:
                 if ( label ) {
-                    this.define( label, this.instructionPointer );
+                    vm.define( label, vm.instructionPointer );
                 }
                 break;
         }
     }
 
+    return dataAssemblyPtrs;
+}
+
+// Pass 2: now that every label is bound, run DESCR and SPEC at the pointers
+// reserved in pass 1 so their argument expressions resolve against the
+// final symbol table.
+function fixupData( vm, program, dataAssemblyPtrs ) {
     for (
-        this.instructionPointer = 0;
-        this.instructionPointer < program.length;
-        this.instructionPointer++
+        vm.instructionPointer = 0;
+        vm.instructionPointer < program.length;
+        vm.instructionPointer++
     ) {
-        stmt = program[ this.instructionPointer ];
-        [ label, macro ] = stmt;
+        const stmt = program[ vm.instructionPointer ];
+        const macro = stmt[ 1 ];
         if ( macro === 'DESCR' || macro === 'SPEC' ) {
-            label = dataAssemblyPtrs[ this.instructionPointer ];
-            stmt = [ label, macro, stmt[ 2 ], stmt[ 3 ] ];
-            this.exec( ...stmt );
+            const ptr = dataAssemblyPtrs[ vm.instructionPointer ];
+            vm.exec( ptr, macro, stmt[ 2 ], stmt[ 3 ] );
         }
     }
+}
+
+// Pass 3: execute. Assembly macros are skipped — their work was done above.
+// A statement that does not branch advances the instruction pointer by one.
+function interpret( vm, program ) {
+    while ( vm.instructionPointer >= 0 && vm.instructionPointer < program.length ) {
+        const loc = vm.instructionPointer;
+        const stmt = program[ loc ];
+        const macro = stmt[ 1 ];
+        if ( !ASSEMBLY_MACROS_SET.has( macro ) ) {
+            vm.instructionPointerChanged = false;
+            vm.exec( ...stmt );
+        }
+        if ( !vm.instructionPointerChanged && vm.instructionPointer === loc ) {
+            vm.instructionPointer++;
+        }
+    }
+}
+
+SNOBOL.VM.prototype.run = function ( program ) {
+    for ( const sym in SNOBOL.programSymbols ) {
+        this.define( sym, SNOBOL.programSymbols[sym] );
+    }
+    SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
+
+    // Assembly is silent; only the execution pass should produce a trace.
+    const savedDebug = this.debug;
+    this.debug = false;
+    const dataAssemblyPtrs = assemble( this, program );
+    fixupData( this, program, dataAssemblyPtrs );
+    this.debug = savedDebug;
 
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
-    this.debug = savedDebug;
-
     applyHostOutputOptions( this );
-
-    while ( this.instructionPointer >= 0 && this.instructionPointer < program.length ) {
-        loc = this.instructionPointer;
-        stmt = program[ loc ];
-        [ label, macro ] = stmt;
-        if ( !ASSEMBLY_MACROS_SET.has( macro ) ) {
-            this.instructionPointerChanged = false;
-            this.exec( ...stmt );
-        }
-
-        // If the procedure did not update the instruction pointer,
-        // fall through to the next instruction.
-        if ( !this.instructionPointerChanged && this.instructionPointer === loc ) {
-            this.instructionPointer++;
-        }
-    }
+    interpret( this, program );
 
     return !( this.instructionPointer < 0 );
 };
