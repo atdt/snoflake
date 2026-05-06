@@ -25,11 +25,14 @@ SNOBOL.programSymbols = {
     SPEC    : 6,
     SIZLIM  : 0x7FFFFFFF,
 
-    FNC     : 1 << 1,
-    MARK    : 1 << 2,
-    PTR     : 1 << 3,
-    STTL    : 1 << 4,
-    TTL     : 1 << 5,
+    // Match CSNOBOL4's machine parameters in include/snotypes.h. Keeping PTR
+    // out of the low bit positions prevents SPEC length fields from being
+    // mistaken for pointer flags when resident static blocks are scanned.
+    FNC     : 0o01,
+    TTL     : 0o02,
+    STTL    : 0o04,
+    MARK    : 0o10,
+    PTR     : 0o20,
 
     UNITI   : 5,
     UNITO   : 6,

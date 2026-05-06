@@ -4687,24 +4687,9 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         N;
 
     for ( N = 0; ; N++ ) {
-        if ( ( A - ( N * D ) ) < 0 ) {
-            DESCR1.addr  = A;
-            DESCR1.flags = DESCR3.flags;
-            DESCR1.value = DESCR3.value;
-            DESCR2.addr  = 0;
-            DESCR2.flags = 0;
-            DESCR2.value = 0;
-            return;
-        }
         const cur = A - ( N * D );
         if ( cur < 0 || cur + D > this.memPtr ) {
-            DESCR1.addr  = A;
-            DESCR1.flags = DESCR3.flags;
-            DESCR1.value = DESCR3.value;
-            DESCR2.addr  = 0;
-            DESCR2.flags = 0;
-            DESCR2.value = 0;
-            return;
+            throw new RangeError( `TOP could not find a title descriptor before address ${A}` );
         }
         DESCR_indirect = this.d( cur );
         if ( DESCR_indirect.flags & TTL ) {

@@ -1972,7 +1972,7 @@ describe( 'Miscellaneous Macros', function () {
               d2 = this.vm.d(),
               d3 = this.vm.d(),
               block = [],
-              TTL = 1 << 4;
+              TTL = this.vm.$( 'TTL' );
         this.vm.define( 'TTL', TTL );
         for ( let i = 0; i < 10; i++ ) {
             block.push(this.vm.d());
@@ -1992,6 +1992,22 @@ describe( 'Miscellaneous Macros', function () {
         assert.equal( d2.addr, 0 );
         assert.deepEqual( d1.raw(), [ block.at( -1 ).ptr, 123, 456 ] );
         assert.equal( d3.addr - d2.addr, d1.addr );
+    } );
+
+    it( 'TOP throws if no title descriptor is found', function () {
+        const d1 = this.vm.d(),
+              d2 = this.vm.d(),
+              d3 = this.vm.d(),
+              block = [];
+        this.vm.define( 'TTL', this.vm.$( 'TTL' ) );
+        for ( let i = 0; i < 3; i++ ) {
+            block.push( this.vm.d() );
+        }
+
+        d3.addr = block.at( -1 ).ptr;
+        assert.throws( function () {
+            sil.TOP.call( this.vm, d1, d2, d3 );
+        }.bind( this ), RangeError );
     } );
 
     it( 'VARID', function () {
