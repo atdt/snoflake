@@ -2,17 +2,17 @@
 
 import SNOBOL from './base.js';
 
-// These macros belong to the memory-location counter.  Most emit storage;
-// EQU does not, but it is commonly used at data boundaries for size
-// expressions such as END-START.
+// These assembly-time statements bind labels in the memory address space.
+// Most emit storage. EQU is included because SIL uses it in size expressions
+// such as END-START.
 const MEMORY_LOCATION_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
     'EQU', 'FORMAT', 'REAL',
     'SPEC', 'STRING'
 ];
 
-// These assembly markers do not occupy either address space.  A label on one
-// aliases the next located statement.
+// These assembly markers occupy neither memory nor executable code. A label
+// on one aliases the next statement that does.
 const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 
 function getArgs( f ) {
@@ -22,11 +22,9 @@ function getArgs( f ) {
         .replace( /(vm\.\$\("|"\))/g, '' );
 }
 
-// SIL labels live in one textual namespace, but they do not all name the
-// same kind of address.  Data labels are offsets in vm.mem; control labels
-// are indexes in the translated instruction stream.  Keeping those address
-// spaces separate lets LOC operands be the direct branch targets described by
-// the macro comments, instead of memory cells that point at branch targets.
+// Starting at a marker that occupies no memory and emits no instruction
+// (LHERE/PROC/TITLE), skip any more such markers and return the source index
+// of the next statement with a real memory or instruction location.
 function nextLocatedStatement( program, index ) {
     let next = index + 1;
 
@@ -44,9 +42,8 @@ function locationAtHere( vm, program, index, nextInstruction ) {
     const next = nextLocatedStatement( program, index );
     const macro = next < program.length && program[ next ][ 1 ];
 
-    // LHERE is EQU *: it names the current location counter.  If the next
-    // real statement belongs to assembled data, that counter is vm.mem.length;
-    // otherwise it is the next executable instruction.
+    // LHERE/PROC mean "the current location". The active counter is memory
+    // when the next located statement is data, and code otherwise.
     return MEMORY_LOCATION_MACROS.includes( macro )
         ? vm.mem.length
         : nextInstruction;
@@ -107,12 +104,11 @@ SNOBOL.VM.prototype.log = function ( ...args ) {
 };
 
 SNOBOL.VM.prototype.jmp = function ( loc ) {
-    // `loc` will be undefined when a procedure takes an optional
-    // location argument which the caller omitted. In such cases
-    // execution should fall through to the next instruction.
+    // Omitted optional branch operands arrive as undefined. SIL specifies
+    // fall-through in that case.
     //
-    // Some hand-written macro helpers still branch to fixed system labels
-    // by name; translated SIL operands arrive here already resolved.
+    // A few hand-written macro helpers still branch to fixed system labels
+    // by name. Translated SIL operands are already resolved.
     if ( typeof loc === 'string' ) {
         loc = this.resolve( loc );
     }
@@ -122,10 +118,9 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     }
 };
 
-// Bind host-controlled SIL switches to vm.options. The descriptors are
-// assembled with their default values; flipping them here lets the host
-// suppress or enable startup banner, statistics, and listing without
-// touching the SIL source.
+// Host options override a few assembled SIL switches after data initialization.
+// This keeps the historical SIL constants intact while giving the JS host
+// control over banner, listing, and statistics output.
 function applyHostOutputOptions( vm ) {
     if ( Object.hasOwn( vm.symbols, 'LISTCL' ) ) {
         vm.d( 'LISTCL' ).addr = vm.options.listing ? 1 : 0;
@@ -138,84 +133,79 @@ function applyHostOutputOptions( vm ) {
     }
 }
 
-// Each entry returns the value its label should bind to. Side effects
-// (recording a deferred initializer, emitting storage) happen here too.
-const ASSEMBLERS = {
-    // DESCR and SPEC reserve a slot now and run their argument expressions
-    // later, once forward references are resolvable.
-    DESCR: ( vm, stmt, state ) => {
-        const ptr = vm.d().ptr;
-        state.deferredData.push( { ip: state.sourceIndex, ptr, stmt } );
-        return ptr;
-    },
-    SPEC: ( vm, stmt, state ) => {
-        const ptr = vm.s().ptr;
-        state.deferredData.push( { ip: state.sourceIndex, ptr, stmt } );
-        return ptr;
-    },
+function reserveDeferredData( vm, stmt, sourceIndex, deferredData ) {
+    const macro = stmt[ 1 ],
+          ptr = macro === 'SPEC' ? vm.s().ptr : vm.d().ptr;
 
-    // Locationless markers: the label aliases the next located statement,
-    // which may be data (vm.mem.length) or an executable instruction.
-    LHERE: ( vm, _stmt, state ) => locationAtHere(
-        vm,
-        state.program,
-        state.sourceIndex,
-        state.instructions.length
-    ),
-    PROC: ( vm, _stmt, state ) => locationAtHere(
-        vm,
-        state.program,
-        state.sourceIndex,
-        state.instructions.length
-    ),
+    // Reserve the cell now so later labels see the right memory layout. Fill
+    // it after forward labels have been defined.
+    deferredData.push( { ip: sourceIndex, ptr, stmt } );
+    return ptr;
+}
 
-    // Storage emitters: the label points at the first emitted cell.
-    STRING: ( vm, stmt ) => { const ptr = vm.mem.length; vm.exec( ...stmt ); return ptr; },
+function emitStorage( vm, stmt ) {
+    const ptr = vm.mem.length;
+    vm.exec( ...stmt );
+    return ptr;
+}
 
-    // Compile-time expression: the result of exec is the label's value.
-    EQU: ( vm, stmt ) => vm.exec( ...stmt ),
-};
-ASSEMBLERS.FORMAT = ASSEMBLERS.BUFFER = ASSEMBLERS.ARRAY = ASSEMBLERS.STRING;
+// Assemble one statement from the memory side of SIL and return the memory
+// value its label should name. DESCR/SPEC reserve space here, but wait to
+// fill their fields until forward labels have been defined.
+function assembleData( vm, stmt, sourceIndex, deferredData ) {
+    const macro = stmt[ 1 ];
 
-// Load the mixed SIL listing into the VM. Data records are assembled into
-// vm.mem; executable records are copied into a compact instruction stream.
-// Labels keep their SIL address-space split: data labels are memory offsets,
-// and control labels are instruction indexes.
+    if ( macro === 'DESCR' || macro === 'SPEC' ) {
+        return reserveDeferredData( vm, stmt, sourceIndex, deferredData );
+    }
+    if ( macro === 'EQU' ) {
+        return vm.exec( ...stmt );
+    }
+    return emitStorage( vm, stmt );
+}
+
+// Load the mixed SIL listing into two address spaces: assembled data in
+// vm.mem, and executable statements in a compact instruction stream.
 function load( vm, program ) {
     const instructions = [],
-          deferredData = [],
-          state = { program, instructions, deferredData, sourceIndex: 0 };
+          deferredData = [];
 
     for (
         vm.instructionPointer = 0;
         vm.instructionPointer < program.length;
         vm.instructionPointer++
     ) {
-        state.sourceIndex = vm.instructionPointer;
+        const sourceIndex = vm.instructionPointer;
         const stmt = program[ vm.instructionPointer ];
         const [ label, macro ] = stmt;
-        const assembler = ASSEMBLERS[ macro ];
-        if ( assembler ) {
+
+        if ( LOCATIONLESS_MACROS.includes( macro ) ) {
             if ( label ) {
-                vm.define( label, assembler( vm, stmt, state ) );
-            } else {
-                assembler( vm, stmt, state );
+                vm.define( label, locationAtHere( vm, program, sourceIndex, instructions.length ) );
             }
-        } else {
-            if ( label ) {
-                vm.define( label, instructions.length );
-            }
-            instructions.push( stmt );
+            continue;
         }
+
+        if ( MEMORY_LOCATION_MACROS.includes( macro ) ) {
+            const value = assembleData( vm, stmt, sourceIndex, deferredData );
+            if ( label ) {
+                vm.define( label, value );
+            }
+            continue;
+        }
+
+        if ( label ) {
+            vm.define( label, instructions.length );
+        }
+        instructions.push( stmt );
     }
 
     initData( vm, deferredData );
     return instructions;
 }
 
-// Now that every label is bound, initialize only the DESCR and SPEC records
-// reserved during assembly so their argument expressions resolve against the
-// final symbol table.
+// Initialize the reserved DESCR/SPEC cells after forward labels are defined,
+// so label operands resolve normally.
 function initData( vm, deferredData ) {
     for ( const data of deferredData ) {
         vm.instructionPointer = data.ip;
@@ -228,7 +218,8 @@ function initData( vm, deferredData ) {
     }
 }
 
-// A statement that does not branch advances the instruction pointer by one.
+// Branching macros update instructionPointer themselves. Everything else
+// falls through to the next compact instruction.
 function interpret( vm, instructions ) {
     while ( vm.instructionPointer >= 0 && vm.instructionPointer < instructions.length ) {
         const loc = vm.instructionPointer;
@@ -246,7 +237,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
     }
     SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
 
-    // Assembly is silent; only the execution pass should produce a trace.
+    // Assembly is silent. Debug output should show executed SIL.
     const savedDebug = this.debug;
     this.debug = false;
     const instructions = load( this, program );
@@ -263,7 +254,7 @@ SNOBOL.VM.prototype.run = function ( program ) {
 // Stack pointer pseudo-descriptor: lets `vm.d('CSTACK')` and `vm.d('OSTACK')`
 // be used wherever a Descriptor is expected, while delegating addr reads/writes
 // to the live stack object. Other slots are inert.
-class RegDescriptor {
+class RegisterDescriptor {
     constructor( vm, name ) {
         this.name = name;
         this.width = 3;
@@ -312,6 +303,6 @@ SNOBOL.VM.prototype.reset = function () {
     // to avoid accidental overwrites by program macros.
     this.CSTACK = { addr: 0 };
     this.OSTACK = { addr: 0 };
-    this.CSTACK_DESCRIPTOR = new RegDescriptor( this, 'CSTACK' );
-    this.OSTACK_DESCRIPTOR = new RegDescriptor( this, 'OSTACK' );
+    this.CSTACK_DESCRIPTOR = new RegisterDescriptor( this, 'CSTACK' );
+    this.OSTACK_DESCRIPTOR = new RegisterDescriptor( this, 'OSTACK' );
 };
