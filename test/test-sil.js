@@ -71,7 +71,9 @@ describe( 'Assembly Control Macros', function () {
             [ null,  'END',    mkargs( this.vm ) ]
         ] );
 
-        assert.equal( this.vm.resolve( 'LBL' ), 4 );
+        // BUFFER and DESCR assemble data, but do not occupy runtime
+        // instruction slots.
+        assert.equal( this.vm.resolve( 'LBL' ), 2 );
         assert.equal( this.vm.d( 'DS' ).addr, 22 );
     } );
 

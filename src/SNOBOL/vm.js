@@ -13,9 +13,7 @@ const MEMORY_LOCATION_MACROS = [
 
 // These assembly markers do not occupy either address space.  A label on one
 // aliases the next located statement.
-const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ],
-      ASSEMBLY_MACROS = MEMORY_LOCATION_MACROS.concat( LOCATIONLESS_MACROS ),
-      ASSEMBLY_MACROS_SET = new Set( ASSEMBLY_MACROS );
+const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 
 function getArgs( f ) {
     return f
@@ -42,7 +40,7 @@ function nextLocatedStatement( program, index ) {
     return next;
 }
 
-function locationAtHere( vm, program, index ) {
+function locationAtHere( vm, program, index, nextInstruction ) {
     const next = nextLocatedStatement( program, index );
     const macro = next < program.length && program[ next ][ 1 ];
 
@@ -51,7 +49,7 @@ function locationAtHere( vm, program, index ) {
     // otherwise it is the next executable instruction.
     return MEMORY_LOCATION_MACROS.includes( macro )
         ? vm.mem.length
-        : next;
+        : nextInstruction;
 }
 
 SNOBOL.D = 3;
@@ -141,60 +139,78 @@ function applyHostOutputOptions( vm ) {
 }
 
 // Each entry returns the value its label should bind to. Side effects
-// (recording a deferred initializer, emitting storage) happen here too. A
-// macro absent from this table is treated as an executable instruction:
-// its label, if any, binds to the instruction's own index.
+// (recording a deferred initializer, emitting storage) happen here too.
 const ASSEMBLERS = {
     // DESCR and SPEC reserve a slot now and run their argument expressions
     // later, once forward references are resolvable.
-    DESCR: ( vm, ip, stmt, deferredData ) => {
+    DESCR: ( vm, stmt, state ) => {
         const ptr = vm.d().ptr;
-        deferredData.push( { ip, ptr, stmt } );
+        state.deferredData.push( { ip: state.sourceIndex, ptr, stmt } );
         return ptr;
     },
-    SPEC: ( vm, ip, stmt, deferredData ) => {
+    SPEC: ( vm, stmt, state ) => {
         const ptr = vm.s().ptr;
-        deferredData.push( { ip, ptr, stmt } );
+        state.deferredData.push( { ip: state.sourceIndex, ptr, stmt } );
         return ptr;
     },
 
     // Locationless markers: the label aliases the next located statement,
     // which may be data (vm.mem.length) or an executable instruction.
-    LHERE: ( vm, ip, _stmt, _ptrs, program ) => locationAtHere( vm, program, ip ),
-    PROC:  ( vm, ip, _stmt, _ptrs, program ) => nextLocatedStatement( program, ip ),
+    LHERE: ( vm, _stmt, state ) => locationAtHere(
+        vm,
+        state.program,
+        state.sourceIndex,
+        state.instructions.length
+    ),
+    PROC: ( vm, _stmt, state ) => locationAtHere(
+        vm,
+        state.program,
+        state.sourceIndex,
+        state.instructions.length
+    ),
 
     // Storage emitters: the label points at the first emitted cell.
-    STRING: ( vm, _ip, stmt ) => { const ptr = vm.mem.length; vm.exec( ...stmt ); return ptr; },
+    STRING: ( vm, stmt ) => { const ptr = vm.mem.length; vm.exec( ...stmt ); return ptr; },
 
     // Compile-time expression: the result of exec is the label's value.
-    EQU: ( vm, _ip, stmt ) => vm.exec( ...stmt ),
+    EQU: ( vm, stmt ) => vm.exec( ...stmt ),
 };
 ASSEMBLERS.FORMAT = ASSEMBLERS.BUFFER = ASSEMBLERS.ARRAY = ASSEMBLERS.STRING;
 
-// Pass 1: walk the program binding labels and assembling data. DESCR and
-// SPEC are pre-allocated but not executed here, because their argument
-// expressions may reference symbols that later statements define.
-// Returns the deferred descriptor/specifier initializers.
-function assemble( vm, program ) {
-    const deferredData = [];
+// Load the mixed SIL listing into the VM. Data records are assembled into
+// vm.mem; executable records are copied into a compact instruction stream.
+// Labels keep their SIL address-space split: data labels are memory offsets,
+// and control labels are instruction indexes.
+function load( vm, program ) {
+    const instructions = [],
+          deferredData = [],
+          state = { program, instructions, deferredData, sourceIndex: 0 };
 
     for (
         vm.instructionPointer = 0;
         vm.instructionPointer < program.length;
         vm.instructionPointer++
     ) {
+        state.sourceIndex = vm.instructionPointer;
         const stmt = program[ vm.instructionPointer ];
         const [ label, macro ] = stmt;
         const assembler = ASSEMBLERS[ macro ];
-        const value = assembler
-            ? assembler( vm, vm.instructionPointer, stmt, deferredData, program )
-            : vm.instructionPointer;
-        if ( label ) {
-            vm.define( label, value );
+        if ( assembler ) {
+            if ( label ) {
+                vm.define( label, assembler( vm, stmt, state ) );
+            } else {
+                assembler( vm, stmt, state );
+            }
+        } else {
+            if ( label ) {
+                vm.define( label, instructions.length );
+            }
+            instructions.push( stmt );
         }
     }
 
-    return deferredData;
+    initData( vm, deferredData );
+    return instructions;
 }
 
 // Now that every label is bound, initialize only the DESCR and SPEC records
@@ -212,17 +228,12 @@ function initData( vm, deferredData ) {
     }
 }
 
-// Execution pass: assembly macros are skipped — their work was done above.
 // A statement that does not branch advances the instruction pointer by one.
-function interpret( vm, program ) {
-    while ( vm.instructionPointer >= 0 && vm.instructionPointer < program.length ) {
+function interpret( vm, instructions ) {
+    while ( vm.instructionPointer >= 0 && vm.instructionPointer < instructions.length ) {
         const loc = vm.instructionPointer;
-        const stmt = program[ loc ];
-        const macro = stmt[ 1 ];
-        if ( !ASSEMBLY_MACROS_SET.has( macro ) ) {
-            vm.instructionPointerChanged = false;
-            vm.exec( ...stmt );
-        }
+        vm.instructionPointerChanged = false;
+        vm.exec( ...instructions[ loc ] );
         if ( !vm.instructionPointerChanged && vm.instructionPointer === loc ) {
             vm.instructionPointer++;
         }
@@ -238,14 +249,13 @@ SNOBOL.VM.prototype.run = function ( program ) {
     // Assembly is silent; only the execution pass should produce a trace.
     const savedDebug = this.debug;
     this.debug = false;
-    const deferredData = assemble( this, program );
-    initData( this, deferredData );
+    const instructions = load( this, program );
     this.debug = savedDebug;
 
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
     applyHostOutputOptions( this );
-    interpret( this, program );
+    interpret( this, instructions );
 
     return !( this.instructionPointer < 0 );
 };
