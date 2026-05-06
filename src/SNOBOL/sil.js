@@ -48,7 +48,9 @@ SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, unit, carriageCo
     // is implemented, dispatch on `unit` here; for now, surface unexpected
     // units so silently-misrouted output is never invisible.
     if ( unit !== this.$( 'UNITO' ) ) {
-        this.log( 'printLinePrinterRecord: unit %s not implemented; writing to stdout', unit );
+        if ( this.debug ) {
+            this.log( 'printLinePrinterRecord: unit %s not implemented; writing to stdout', unit );
+        }
     }
     const stdout = this.stdout;
     record.split( '\n' ).forEach( function ( line ) {
@@ -165,9 +167,11 @@ function stackPopper( dataType ) {
         for ( let i = 0; i < ARGs.length; i++ ) {
             dst = this[ dataType ]( ARGs[i] );
             if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
-                this.log('UNDERFLOW %s: ip=%s, CSTACK=%s, STACK=%s, width=%s',
-                    dataType.toUpperCase(), this.instructionPointer,
-                    this.CSTACK.addr, STACK_BASE, dst.width);
+                if ( this.debug ) {
+                    this.log('UNDERFLOW %s: ip=%s, CSTACK=%s, STACK=%s, width=%s',
+                        dataType.toUpperCase(), this.instructionPointer,
+                        this.CSTACK.addr, STACK_BASE, dst.width);
+                }
                 throw new RangeError( 'Stack underflow' );
             }
             // Pop: read from current top (base is CSTACK.addr - (width - D)), then move pointer down
@@ -1375,7 +1379,9 @@ sil.GETAC = function ( $DESCR1, $DESCR2, N ) {
           A = DESCR_indirect.addr;
 
     DESCR1.addr = A;
-    this.log('GETAC', $DESCR1, 'from', $DESCR2, 'N', N, 'A2', A2, '->', A, 'flags', DESCR_indirect.flags);
+    if ( this.debug ) {
+        this.log('GETAC', $DESCR1, 'from', $DESCR2, 'N', N, 'A2', A2, '->', A, 'flags', DESCR_indirect.flags);
+    }
 };
 
 //     GETBAL  is  used to get the specification of a balanced
@@ -1865,7 +1871,9 @@ sil.ISTACK = function () {
     // initialize stack
     this.OSTACK.addr = 0;
     this.CSTACK.addr = this.$( 'STACK' );
-    this.log('ISTACK set CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    if ( this.debug ) {
+        this.log('ISTACK set CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    }
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -1989,7 +1997,9 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
         }
     }
 
-    this.log('LEXCMP', '[' + STR1 + '] vs [' + STR2 + ']', 'len1=' + STR1.length, 'len2=' + STR2.length, '→', branch === undefined ? '(fall-through)' : branch);
+    if ( this.debug ) {
+        this.log('LEXCMP', '[' + STR1 + '] vs [' + STR2 + ']', 'len1=' + STR1.length, 'len2=' + STR2.length, '→', branch === undefined ? '(fall-through)' : branch);
+    }
 
     this.jmp( branch );
 };
@@ -3038,7 +3048,9 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
     let base = A1 + N;
     if ( A1 === 0 && DESCR1.ptr !== undefined ) {
         base = DESCR1.ptr + N;
-        this.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
+        if ( this.debug ) {
+            this.log('PUTAC fallback', DESCR1.ptr, N, '→', base, 'addr=', A2);
+        }
     }
 
     const target = this.d( base );
@@ -3046,7 +3058,9 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
     if ( DESCR2.flags & PTR ) {
         target.flags |= PTR;
     }
-    this.log('PUTAC write', base, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
+    if ( this.debug ) {
+        this.log('PUTAC write', base, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
+    }
 };
 
 //     PUTD is used to put a descriptor.
@@ -3082,7 +3096,9 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     }
     const target = base + DESCR2.addr;
 
-    this.log('PUTD target=%s (base=%s A1=%s A2=%s)', target, base, DESCR1.addr, DESCR2.addr);
+    if ( this.debug ) {
+        this.log('PUTD target=%s (base=%s A1=%s A2=%s)', target, base, DESCR1.addr, DESCR2.addr);
+    }
     this.d( target ).read( DESCR3 );
 };
 
@@ -3178,7 +3194,9 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 
     const target = this.d( DESCR1.addr + N );
     target.value = DESCR2.value;
-    this.log('PUTVC', $DESCR1, 'N', N, 'value', DESCR2.value, 'dst', target.raw());
+    if ( this.debug ) {
+        this.log('PUTVC', $DESCR1, 'N', N, 'value', DESCR2.value, 'dst', target.raw());
+    }
 };
 
 //     RCALL  is  used  to perform a recursive call.  DESCR is
@@ -3289,7 +3307,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         $LOCs = [ $LOCs ];
     }
 
-    this.log('RCALL enter: CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    if ( this.debug ) {
+        this.log('RCALL enter: CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
+    }
     // Do not write at A; only store A0 at A+D and LOC at A+2D as descriptors.
 
     // The old stack pointer (A0) is saved on the stack.
@@ -3300,18 +3320,24 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // The current stack pointer becomes the old stack pointer.
     // Old stack pointer becomes current
     this.OSTACK.addr = this.CSTACK.addr;
-    this.log('RCALL after save: OSTACK=%s', this.OSTACK.addr);
+    if ( this.debug ) {
+        this.log('RCALL after save: OSTACK=%s', this.OSTACK.addr);
+    }
 
     // A new current stack pointer is generated.
     this.CSTACK.addr += D;
-    this.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
+    if ( this.debug ) {
+        this.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
+    }
 
     // The translated runtime carries the return continuation in callbacks,
     // but still reserves the SIL LOC descriptor slot so the stack frame shape
     // remains A+(2+N)*D with zeroed descriptor flags.
     this.d( this.CSTACK.addr + D ).update( 0 );
     this.CSTACK.addr += D;
-    this.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
+    if ( this.debug ) {
+        this.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
+    }
 
 
     // The return location LOC is saved on the stack so that the return can be
@@ -3328,11 +3354,15 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
 
         const A = this.OSTACK.addr;
-        this.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
+        if ( this.debug ) {
+            this.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
+        }
         // Restore CSTACK to A and OSTACK to saved A0 (at A+D)
         this.CSTACK.addr = this.OSTACK.addr;
         this.OSTACK.addr = this.d( A + D ).addr;
-        this.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
+        if ( this.debug ) {
+            this.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
+        }
 
         if ( typeof N === 'number' ) {
             const idx = N - 1;
@@ -3357,7 +3387,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     } );
 
     sil.PUSH.call( this, $DESCRs.reverse() );
-    this.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
+    if ( this.debug ) {
+        this.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
+    }
     if ( this.debug ) {
         try {
             this.log('RCALL jmp ->', $PROC, '->', typeof $PROC === 'number' ? this.mem[ $PROC ] : '(not number)');
@@ -4649,7 +4681,9 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
 // perform no operation.
 sil.TITLE = function ( MSG ) {
     // title assembly listing
-    this.log( MSG );
+    if ( this.debug ) {
+        this.log( MSG );
+    }
 };
 
 sil.DBG = sil.TITLE; // nonstandard ;)
