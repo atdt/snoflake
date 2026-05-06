@@ -5,9 +5,10 @@ import SNOBOL from './base.js';
 // &ALPHABET holds every byte value of the host character set, matching
 // CSNOBOL4 and the original IBM/360 ALPHSZ = 256.
 const D = 3;
+const BYTE_VALUES = 256;
 let ALPHA = '';
 
-for ( let i = 0; i < 256; i++ ) {
+for ( let i = 0; i < BYTE_VALUES; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
@@ -92,13 +93,19 @@ const characterClasses = {
     ELSE         : /.*/,
 };
 
+function characterCode( char ) {
+    return typeof char === 'number' ? char : char.charCodeAt( 0 );
+}
+
+// STREAM asks this matcher about every scanned character, so compile the
+// documented regular-expression classes into byte lookup tables once.
 const characterClassBitsets = {};
 for ( const name in characterClasses ) {
     if ( name === 'ELSE' ) {
         continue;
     }
 
-    const bitset = new Uint8Array( 256 ),
+    const bitset = new Uint8Array( BYTE_VALUES ),
           pattern = characterClasses[ name ];
 
     for ( let code = 0; code < bitset.length; code++ ) {
@@ -113,7 +120,7 @@ SNOBOL.match = function ( characterClass, char ) {
         return true;
     }
 
-    const code = typeof char === 'number' ? char : char.charCodeAt( 0 ),
+    const code = characterCode( char ),
           bitset = characterClassBitsets[ characterClass ];
 
     if ( bitset ) {

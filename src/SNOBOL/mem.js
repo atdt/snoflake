@@ -70,8 +70,8 @@ VM.prototype.setReal = function ( ptr, value ) {
     this.f32[ ptr ] = f32[ 0 ];
 };
 
-// SIL storage is word-addressed. These views share one resizable buffer so a
-// descriptor field can be read as unsigned, signed, or float without copying.
+// SIL storage is word-addressed. These length-tracking views share one
+// resizable buffer so a field can be read as unsigned, signed, or float.
 VM.prototype.refreshMemoryViews = function () {
     this.mem = new Uint32Array( this.buffer );
     this.i32 = new Int32Array( this.buffer );
@@ -86,7 +86,6 @@ VM.prototype.grow = function ( minWords ) {
     }
 
     this.buffer.resize( wordsToBytes( words ) );
-    this.refreshMemoryViews();
 };
 
 VM.prototype.resetMemory = function () {

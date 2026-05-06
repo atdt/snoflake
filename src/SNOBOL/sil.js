@@ -4368,6 +4368,15 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     let tableName = SNOBOL.tableNames[ TABLE ],
         table = SNOBOL.syntaxTables[ tableName ],
         P = 0;
+    // P and TI are STREAM's names from the macro spec: P is the last PUT
+    // value seen, and TI is the table action for the current character.
+
+    function selectTable( name ) {
+        const selected = SNOBOL.syntaxTables[ name ];
+        assert( selected !== undefined );
+        tableName = name;
+        table = selected;
+    }
 
     function maybeFoldToken( length ) {
         if ( !this.options.caseFold || !isFoldableStreamTable( tableName ) ) {
@@ -4385,8 +4394,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
     const start = A + O;
     for ( let I = 1; I <= L; I++ ) {
-        const J = I,
-              ch = this.mem[ start + I - 1 ];
+        const ch = this.mem[ start + I - 1 ];
         let TI = 'RUNOUT';
 
         for ( let t = 0; t < table.length; t++ ) {
@@ -4411,17 +4419,17 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         case 'STOPSH':
             STYPE.addr = P;
-            SPEC1.update( A, F, V, O, J - 1 );
-            maybeFoldToken.call( this, J - 1 );
-            SPEC2.update( A, F, V, O + J - 1, L - J + 1 );
+            SPEC1.update( A, F, V, O, I - 1 );
+            maybeFoldToken.call( this, I - 1 );
+            SPEC2.update( A, F, V, O + I - 1, L - I + 1 );
             this.jmp( SLOC );
             return;
 
         case 'STOP':
             STYPE.addr = P;
-            SPEC1.update( A, F, V, O, J );
-            maybeFoldToken.call( this, J );
-            SPEC2.update( A, F, V, O + J, L - J );
+            SPEC1.update( A, F, V, O, I );
+            maybeFoldToken.call( this, I );
+            SPEC2.update( A, F, V, O + I, L - I );
             this.jmp( SLOC );
             return;
 
@@ -4440,9 +4448,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         default:
             // GOTO
-            tableName = TI;
-            table = SNOBOL.syntaxTables[ TI ];
-            assert( table !== undefined );
+            selectTable( TI );
         }
     }
 

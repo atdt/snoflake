@@ -2,6 +2,8 @@
 
 import SNOBOL from './base.js';
 
+const DECODE_CHUNK_SIZE = 16384;
+
 function pad( str, width, align, padChar ) {
         if ( str.length >= width ) {
                 return str;
@@ -28,9 +30,8 @@ SNOBOL.str = {
             encoded[ i ] = str.charCodeAt( i );
         }
 
-        // Strings are stored in whole descriptors, which have a width of
-        // three UTF-16 code points, so pad to the nearest multiple of three
-        // with Unicode Noncharacter U+FFFF.
+        // Strings are stored in whole descriptors, so pad to the nearest
+        // descriptor boundary with zero code units.
         while ( encoded.length % 3 ) {
             encoded.push( 0 );
         }
@@ -45,8 +46,8 @@ SNOBOL.str = {
         }
 
         let decoded = '';
-        for ( let i = 0; i < end; i += 16384 ) {
-            decoded += String.fromCharCode( ...encoded.slice( i, Math.min( i + 16384, end ) ) );
+        for ( let i = 0; i < end; i += DECODE_CHUNK_SIZE ) {
+            decoded += String.fromCharCode( ...encoded.slice( i, Math.min( i + DECODE_CHUNK_SIZE, end ) ) );
         }
         return decoded;
     },
