@@ -11,8 +11,9 @@ function pad( str, width, align, padChar ) {
                 padChar = ' ';
         }
 
-        const padding = new Array( width - str.length + 1 ).join( padChar );
-        return align === 'left' ? str + padding : padding + str;
+        return align === 'left'
+                ? str.padEnd( width, padChar )
+                : str.padStart( width, padChar );
 }
 
 SNOBOL.str = {
@@ -20,9 +21,12 @@ SNOBOL.str = {
     pad: pad,
 
     encode: function ( s ) {
-        const encoded = s.toString().split( '' ).map( function ( ch ) {
-            return ch.charCodeAt( 0 );
-        } );
+        const str = s.toString(),
+              encoded = new Array( str.length );
+
+        for ( let i = 0; i < str.length; i++ ) {
+            encoded[ i ] = str.charCodeAt( i );
+        }
 
         // Strings are stored in whole descriptors, which have a width of
         // three UTF-16 code points, so pad to the nearest multiple of three
@@ -35,13 +39,16 @@ SNOBOL.str = {
     },
 
     decode: function ( encoded ) {
-        while ( encoded[ encoded.length -1 ] === 0 ) {
-            encoded.pop();
+        let end = encoded.length;
+        while ( encoded[ end - 1 ] === 0 ) {
+            end--;
         }
 
-        return encoded.map( function ( charCode ) {
-            return String.fromCharCode( charCode );
-        } ).join( '' );
+        let decoded = '';
+        for ( let i = 0; i < end; i += 16384 ) {
+            decoded += String.fromCharCode( ...encoded.slice( i, Math.min( i + 16384, end ) ) );
+        }
+        return decoded;
     },
 
     // An implementation of Jenkins's one-at-a-time hash
@@ -60,7 +67,7 @@ SNOBOL.str = {
     },
 
     repeat: function ( str, count ) {
-        return new Array( count + 1 ).join( str );
+        return str.repeat( count );
     },
 
     format: function ( template, data ) {

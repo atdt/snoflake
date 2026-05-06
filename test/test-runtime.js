@@ -43,6 +43,12 @@ describe( 'String Encoding', function () {
     it( 'decode', function () {
         assert.deepEqual( SNOBOL.str.decode( [ 2361, 2366, 2351 ] ), 'हाय' );
     } );
+
+    it( 'decode ignores descriptor padding without mutating input', function () {
+        const encoded = [ 97, 98, 0 ];
+        assert.equal( SNOBOL.str.decode( encoded ), 'ab' );
+        assert.deepEqual( encoded, [ 97, 98, 0 ] );
+    } );
 } );
 
 describe( 'Typed Setters', function () {
