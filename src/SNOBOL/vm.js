@@ -45,7 +45,7 @@ function locationAtHere( vm, program, index, nextInstruction ) {
     // LHERE/PROC mean "the current location". The active counter is memory
     // when the next located statement is data, and code otherwise.
     return MEMORY_LOCATION_MACROS.includes( macro )
-        ? vm.mem.length
+        ? vm.memPtr
         : nextInstruction;
 }
 
@@ -144,7 +144,7 @@ function reserveDeferredData( vm, stmt, sourceIndex, deferredData ) {
 }
 
 function emitStorage( vm, stmt ) {
-    const ptr = vm.mem.length;
+    const ptr = vm.memPtr;
     vm.exec( ...stmt );
     return ptr;
 }
@@ -295,7 +295,7 @@ SNOBOL.VM.prototype.s = function ( ptr ) {
 SNOBOL.VM.prototype.reset = function () {
     this.instructionPointer = null;
     this.symbols = {};
-    this.mem = [];
+    this.resetMemory();
     this.callbacks = [];
     this.units = {};
     this.INTSPC_BUFFER = null;

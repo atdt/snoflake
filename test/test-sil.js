@@ -88,9 +88,9 @@ describe( 'Macros that Assemble Data', function () {
     } );
 
     it( 'ARRAY', function () {
-        const allocated = this.vm.mem.length;
+        const allocated = this.vm.memPtr;
         sil.ARRAY.call( this.vm, 18 );
-        assert.equal( this.vm.mem.length, allocated + ( 18 * 3 ) );
+        assert.equal( this.vm.memPtr, allocated + ( 18 * 3 ) );
     } );
 
     it( 'BUFFER', function () {
@@ -561,7 +561,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
               d2 = this.vm.d(),
               d3 = this.vm.d();
         this.vm.alloc( 99 );
-        d2.addr = this.vm.mem.length - 3;
+        d2.addr = this.vm.memPtr - 3;
         for ( let i = 0; i < 10; i++ ) {
             this.vm.d().update( i, i, i );
         }
@@ -1596,15 +1596,15 @@ describe( 'Input and Output Macros', function () {
         try {
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( this.vm.instructionPointer, 3 );
-            assert.equal( this.vm.mem.slice( ptr, ptr + 2 ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + 2 ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), '..' );
-            assert.equal( this.vm.mem.slice( ptr + 2, ptr + 10 ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr + 2, ptr + 10 ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), 'END     ' );
 
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
-            assert.equal( this.vm.mem.slice( ptr + 2, ptr + 10 ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr + 2, ptr + 10 ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), '12345678' );
 
@@ -1645,14 +1645,14 @@ describe( 'Input and Output Macros', function () {
         try {
             this.vm.currentLabel = 'XLATRN';
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
-            assert.equal( this.vm.mem.slice( ptr, ptr + 6 ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + 6 ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), 'SOURCE' );
 
             this.vm.currentLabel = null;
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( spec.length, 4 );
-            assert.equal( this.vm.mem.slice( ptr, ptr + spec.length ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + spec.length ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), 'DATA' );
         } finally {
@@ -1678,7 +1678,7 @@ describe( 'Input and Output Macros', function () {
         try {
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( spec.length, 6 );
-            assert.equal( this.vm.mem.slice( ptr, ptr + spec.length ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + spec.length ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), 'ABC   ' );
         } finally {
@@ -1708,7 +1708,7 @@ describe( 'Input and Output Macros', function () {
             spec.length = 8;
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( spec.length, 4 );
-            assert.equal( this.vm.mem.slice( ptr, ptr + spec.length ).map( function ( c ) {
+            assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + spec.length ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), 'NEXT' );
         } finally {
@@ -1885,11 +1885,11 @@ describe( 'Miscellaneous Macros', function () {
 
         DESCR2.addr = this.vm.alloc( values.length * step );
         while ( values.length ) {
-            this.vm.mem.splice(
-                DESCR2.addr + offset, step,
-                values.length === 1 ? 0 : offset + step, 0, 0,
-                values.pop(), 0, 0
-            );
+            const value = values.pop();
+            this.vm.mem.set( [
+                values.length === 0 ? 0 : offset + step, 0, 0,
+                value, 0, 0
+            ], DESCR2.addr + offset );
             offset += step;
         }
 

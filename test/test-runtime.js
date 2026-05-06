@@ -124,10 +124,22 @@ describe( 'Memory Management', function () {
     } );
 
     it( 'alloc', function () {
-        const vm = new SNOBOL.VM(), 
+        const vm = new SNOBOL.VM(),
               ptr = vm.alloc( 3 );
-        assert.deepEqual( vm.mem.length, ptr + 3 );
-        assert.deepEqual( vm.mem.slice(-3), [ 0, 0, 0 ] );
+        assert.deepEqual( vm.memPtr, ptr + 3 );
+        assert.deepEqual( Array.from( vm.mem.slice( vm.memPtr - 3, vm.memPtr ) ), [ 0, 0, 0 ] );
+    } );
+
+    it( 'grows without losing allocated data', function () {
+        const vm = new SNOBOL.VM();
+        vm.memPtr = vm.mem.length - 1;
+
+        const first = vm.alloc( 1, 123 ),
+              second = vm.alloc( 2, 7 );
+
+        assert.equal( vm.mem[ first ], 123 );
+        assert.deepEqual( Array.from( vm.mem.slice( second, second + 2 ) ), [ 7, 7 ] );
+        assert.equal( vm.memPtr, second + 2 );
     } );
 } );
 

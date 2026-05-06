@@ -736,12 +736,8 @@ sil.BRANIC = function ( $DESCR, N ) {
 // blank (not zero) when program execution begins.
 sil.BUFFER = function ( N ) {
     // assemble buffer of blank characters
-    const ptr = this.mem.length;
     const BLANK = ' '.charCodeAt( 0 );
-    for ( let i = 0; i < N; i++ ) {
-        this.mem.push( BLANK );
-    }
-    return ptr;
+    return this.alloc( N, BLANK );
 };
 
 //     CHKVAL is used to compare an integer to the length of a
@@ -1477,7 +1473,7 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
         A3 = DESCR3.addr,
 
         target = A2 + A3;
-    if ( target < 0 || target + D > this.mem.length ) {
+    if ( target < 0 || target + D > this.memPtr ) {
         DESCR1.update( 0, 0, 0 );
         return;
     }
@@ -1581,7 +1577,7 @@ sil.GETSIZ = function ( $DESCR1, $DESCR2 ) {
     // get size
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 );
-    if ( DESCR2.addr < 0 || DESCR2.addr + D > this.mem.length ) {
+    if ( DESCR2.addr < 0 || DESCR2.addr + D > this.memPtr ) {
         DESCR1.addr = 0; DESCR1.flags = 0; DESCR1.value = 0; return;
     }
     const DESCR_indirect = this.d( DESCR2.addr );
@@ -3833,7 +3829,7 @@ sil.SETFI = function ( $DESCR, FLAG ) {
     // set flag indirect
     const DESCR = this.d( $DESCR );
     const addr = DESCR.addr;
-    if ( addr < 0 || addr + D > this.mem.length ) {
+    if ( addr < 0 || addr + D > this.memPtr ) {
         return; // out-of-range; no-op
     }
     sil.SETF.call( this, addr, FLAG );
@@ -4640,7 +4636,7 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
     // test flag indirect
     const DESCR = this.d( $DESCR );
     const addr = DESCR.addr;
-    if ( addr < 0 || addr + D > this.mem.length ) {
+    if ( addr < 0 || addr + D > this.memPtr ) {
         return this.jmp( FLOC );
     }
     sil.TESTF.call( this, addr, FLAG, FLOC, SLOC );
@@ -4711,7 +4707,7 @@ sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
             return;
         }
         const cur = A - ( N * D );
-        if ( cur < 0 || cur + D > this.mem.length ) {
+        if ( cur < 0 || cur + D > this.memPtr ) {
             // Graceful fallback as above
             DESCR1.addr  = A;
             DESCR1.flags = DESCR3.flags;
