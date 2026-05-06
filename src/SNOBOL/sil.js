@@ -4359,30 +4359,21 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // stream for token
     const SPEC1 = this.s( $SPEC1 ),
           SPEC2 = this.s( $SPEC2 ),
-          STYPE = this.d( 'STYPE' ), // Descriptor return by STREAM
-          str = SPEC2.specified;
-    let I,  // The 1-based string index of the current character, between 1 and L)
-        J,  // J is the smallest value of I for which TI is STOP or STOPSH
-        ch, // The current character
-        TI, // TI is what to do next (STOPSH, CONTIN, etc. or a table to GOTO)
-        t,  // The table row (rule) index that we are currently applying
-        tableName;
+          STYPE = this.d( 'STYPE' ); // Descriptor return by STREAM
 
-    let P = 0;
     const A = SPEC2.addr,
           F = SPEC2.flags,
           V = SPEC2.value,
           O = SPEC2.offset,
           L = SPEC2.length;
 
-    this.log( 'STREAM start', TABLE, JSON.stringify( str ) );
-
-    function getTableById( id ) {
-        return SNOBOL.syntaxTables[ SNOBOL.tableNames[ id ] ];
+    if ( this.debug ) {
+        this.log( 'STREAM start', TABLE, JSON.stringify( SPEC2.specified ) );
     }
 
-    tableName = SNOBOL.tableNames[ TABLE ];
-    let table = getTableById( TABLE );
+    let tableName = SNOBOL.tableNames[ TABLE ],
+        table = SNOBOL.syntaxTables[ tableName ],
+        P = 0;
 
     function maybeFoldToken( length ) {
         if ( !this.options.caseFold || !isFoldableStreamTable( tableName ) ) {
@@ -4398,22 +4389,28 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    for ( I = 1; I <= str.length; I++ ) {
-        J = I;
-        ch = str.charAt( I - 1 );
-        TI = 'RUNOUT';
-        for ( t = 0; t < table.length; t++ ) {
-            if ( SNOBOL.match( table[t][0], ch ) ) {
+    const start = A + O;
+    for ( let I = 1; I <= L; I++ ) {
+        const J = I,
+              ch = this.mem[ start + I - 1 ];
+        let TI = 'RUNOUT';
+
+        for ( let t = 0; t < table.length; t++ ) {
+            const row = table[ t ];
+            if ( SNOBOL.match( row[ 0 ], ch ) ) {
                 // if table specifies a value to PUT(), assign it to P
-                if ( table[t][1] !== null ) {
-                    P = this.$( table[t][1] );
+                if ( row[ 1 ] !== null ) {
+                    P = this.$( row[ 1 ] );
                 }
-                TI = table[t][2];
+                TI = row[ 2 ];
                 break;
             }
         }
 
-        this.log( 'TI = %s', TI );
+        if ( this.debug ) {
+            this.log( 'TI = %s', TI );
+        }
+
         switch ( TI ) {
         case 'CONTIN':
             continue;
@@ -4449,13 +4446,15 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         default:
             // GOTO
-            assert( TI in SNOBOL.syntaxTables );
             tableName = TI;
             table = SNOBOL.syntaxTables[ TI ];
+            assert( table !== undefined );
         }
     }
 
-    this.log( 'STREAM runout TI', TI, 'SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
+    if ( this.debug ) {
+        this.log( 'STREAM runout SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
+    }
     STYPE.addr = P;
     SPEC1.update( A, F, V, O, L );
     maybeFoldToken.call( this, L );
