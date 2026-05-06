@@ -89,12 +89,41 @@ const characterClasses = {
     ELSE         : /.*/,
 };
 
-SNOBOL.match = function ( characterClass, char ) {
-    if ( characterClasses[ characterClass ] ) {
-        return characterClasses[ characterClass ].test( char );
+const characterClassBitsets = {};
+for ( const name in characterClasses ) {
+    if ( name === 'ELSE' ) {
+        continue;
     }
 
-    return characterClass === char;
+    const bitset = new Uint8Array( 256 ),
+          pattern = characterClasses[ name ];
+
+    for ( let code = 0; code < bitset.length; code++ ) {
+        bitset[ code ] = pattern.test( String.fromCharCode( code ) ) ? 1 : 0;
+    }
+
+    characterClassBitsets[ name ] = bitset;
+}
+
+SNOBOL.match = function ( characterClass, char ) {
+    if ( characterClass === 'ELSE' ) {
+        return true;
+    }
+
+    const code = typeof char === 'number' ? char : char.charCodeAt( 0 ),
+          bitset = characterClassBitsets[ characterClass ];
+
+    if ( bitset ) {
+        return code >= 0 && code < bitset.length && bitset[ code ] === 1;
+    }
+
+    if ( typeof characterClass === 'number' ) {
+        return characterClass === code;
+    }
+
+    return characterClass.length === 1
+        ? characterClass.charCodeAt( 0 ) === code
+        : characterClass === char;
 };
 
 SNOBOL.syntaxTables = {

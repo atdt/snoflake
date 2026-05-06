@@ -389,4 +389,11 @@ describe( 'Character Classes', function () {
             );
         }
     } );
+
+    it( 'accepts numeric character codes', function () {
+        assert.equal( SNOBOL.match( 'LETTER', 'A'.charCodeAt( 0 ) ), true );
+        assert.equal( SNOBOL.match( 'LETTER', '1'.charCodeAt( 0 ) ), false );
+        assert.equal( SNOBOL.match( ';', ';'.charCodeAt( 0 ) ), true );
+        assert.equal( SNOBOL.match( ';', ','.charCodeAt( 0 ) ), false );
+    } );
 } );
