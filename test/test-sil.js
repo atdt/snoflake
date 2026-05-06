@@ -1628,9 +1628,9 @@ describe( 'Input and Output Macros', function () {
               inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-' + process.pid + '.txt' ),
               unit = this.vm.d(),
               spec = this.vm.s(),
-              eof = this.vm.ptr( 1 ),
-              error = this.vm.ptr( 2 ),
-              success = this.vm.ptr( 3 ),
+              eof = this.vm.alloc( 1, 1 ),
+              error = this.vm.alloc( 1, 2 ),
+              success = this.vm.alloc( 1, 3 ),
               ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( sourceFile, 'SOURCE\n' );
@@ -1663,9 +1663,9 @@ describe( 'Input and Output Macros', function () {
         const inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-blanks-' + process.pid + '.txt' ),
               unit = this.vm.d(),
               spec = this.vm.s(),
-              eof = this.vm.ptr( 1 ),
-              error = this.vm.ptr( 2 ),
-              success = this.vm.ptr( 3 ),
+              eof = this.vm.alloc( 1, 1 ),
+              error = this.vm.alloc( 1, 2 ),
+              success = this.vm.alloc( 1, 3 ),
               ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( inputFile, 'ABC   \n' );
@@ -1688,9 +1688,9 @@ describe( 'Input and Output Macros', function () {
         const inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-empty-' + process.pid + '.txt' ),
               unit = this.vm.d(),
               spec = this.vm.s(),
-              eof = this.vm.ptr( 1 ),
-              error = this.vm.ptr( 2 ),
-              success = this.vm.ptr( 3 ),
+              eof = this.vm.alloc( 1, 1 ),
+              error = this.vm.alloc( 1, 2 ),
+              success = this.vm.alloc( 1, 3 ),
               ptr = this.vm.alloc( 8, '.'.charCodeAt( 0 ) );
 
         fs.writeFileSync( inputFile, '\nNEXT\n' );

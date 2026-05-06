@@ -9,9 +9,9 @@ const buf = new ArrayBuffer( 4 ),
       u32 = new Uint32Array( buf );
 
 
-SNOBOL.isInt32 = function isInteger( v ) {
-    i32[0] = v;
-    return i32[0] === v;
+SNOBOL.isInt32 = function isInteger( value ) {
+    i32[0] = value;
+    return i32[0] === value;
 };
 
 function nearlyEqual( a, b ) {
@@ -20,11 +20,10 @@ function nearlyEqual( a, b ) {
 
 // Tests whether v survives the round-trip through 32-bit IEEE 754, using the
 // same tolerance as the typed setter so callers and setters agree on what
-// counts as overflow. Real-arithmetic SIL macros use this to branch to FLOC
-// before the assignment, instead of catching the setter's RangeError.
-SNOBOL.isFloat32 = function isFloat32( v ) {
-    f32[0] = v;
-    return nearlyEqual( f32[0], v );
+// counts as overflow.
+SNOBOL.isFloat32 = function isFloat32( value ) {
+    f32[0] = value;
+    return nearlyEqual( f32[0], value );
 };
 
 function typedGetter( typedArray ) {
@@ -75,12 +74,10 @@ VM.prototype.specify = function ( str, $SPEC ) {
     return SPEC.ptr;
 }
 
-// Convenience function for allocating a pointer, pointing to addr.
-VM.prototype.ptr = function ( addr ) {
-    return this.alloc( 1, addr );
-}
-
 VM.prototype.define = function ( symbol, value ) {
+    if ( symbol === 'DESCR' && value !== 3 ) {
+        throw new Error(`symbol=${symbol}, value=${value}`);
+    }
     if ( typeof value === 'string' ) {
         this.symbols[ symbol ] = this.mem.length;
         for ( let i = 0; i < value.length; i++ ) {
@@ -98,9 +95,9 @@ VM.prototype.$ = VM.prototype.resolve = function ( key ) {
         return val;
     }
 
-    // STREAM table indicators are SIL macro constants, not labels.  The
-    // translator currently represents all bare operands as vm.$(...), so keep
-    // these documented CLERTB/PLUGTB KEY values as literal control actions.
+    // These four names are STREAM's indicator values, not symbols.
+    // The name itself is the value: STREAM stores it in a table entry
+    // and later switches on the string.
     if ( key === 'CONTIN' || key === 'ERROR' || key === 'STOP' || key === 'STOPSH' ) {
         return key;
     }

@@ -193,7 +193,7 @@ describe( 'Descriptor Datatype', function () {
         d.addr = -123;
         assert.equal( d.addr, -123 );
         d.raddr = 6.1;
-        assert.equal( Math.floor(d.raddr), 6 );
+        assert.equal( Math.floor( d.raddr ), 6 );
         d.flags = 666;
         assert.equal( d.flags, 666 );
         d.value = 777;
