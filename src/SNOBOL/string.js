@@ -21,17 +21,13 @@ SNOBOL.str = {
     pad: pad,
 
     encode: function ( s ) {
-        const str = s.toString(),
-              encoded = new Array( str.length );
+        const str = s.toString();
+        const len = str.length;
+        const paddedLen = len + ( len % 3 === 0 ? 0 : 3 - ( len % 3 ) );
+        const encoded = new Uint32Array( paddedLen );
 
-        for ( let i = 0; i < str.length; i++ ) {
+        for ( let i = 0; i < len; i++ ) {
             encoded[ i ] = str.charCodeAt( i );
-        }
-
-        // Strings are stored in whole descriptors, so pad to the nearest
-        // descriptor boundary with zero code units.
-        while ( encoded.length % 3 ) {
-            encoded.push( 0 );
         }
 
         return encoded;
@@ -39,7 +35,7 @@ SNOBOL.str = {
 
     decode: function ( encoded ) {
         let end = encoded.length;
-        while ( encoded[ end - 1 ] === 0 ) {
+        while ( end > 0 && encoded[ end - 1 ] === 0 ) {
             end--;
         }
 

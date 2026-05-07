@@ -37,11 +37,22 @@ function mkargs( vm ) {
 
 describe( 'String Encoding', function () {
     it( 'encode', function () {
-        assert.deepEqual( SNOBOL.str.encode( 'हाय' ), [ 2361, 2366, 2351 ] );
+        const encoded = SNOBOL.str.encode( 'हाय' );
+        assert( encoded instanceof Uint32Array );
+        assert.deepEqual( Array.from( encoded ), [ 2361, 2366, 2351 ] );
+    } );
+
+    it( 'encode pads to descriptor boundaries', function () {
+        assert.deepEqual( Array.from( SNOBOL.str.encode( 'ab' ) ), [ 97, 98, 0 ] );
     } );
 
     it( 'decode', function () {
         assert.deepEqual( SNOBOL.str.decode( [ 2361, 2366, 2351 ] ), 'हाय' );
+    } );
+
+    it( 'decode preserves raw UTF-16 code units', function () {
+        assert.equal( SNOBOL.str.decode( [ 0xFEFF, 65 ] ), '\uFEFFA' );
+        assert.equal( SNOBOL.str.decode( [ 0xD800 ] ), '\uD800' );
     } );
 
     it( 'decode ignores descriptor padding without mutating input', function () {
