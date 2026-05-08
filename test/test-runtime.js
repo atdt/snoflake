@@ -383,10 +383,9 @@ describe( 'Program Execution', function () {
     it( 'loads an assembled image without invoking the assembler', function () {
         const assemble = SNOBOL.assemble,
               image = {
-                  format: 1,
                   symbols: { DS: 0 },
                   memPtr: 3,
-                  mem: [ 0, 0, 0 ],
+                  memInit: [ [ 1, 7 ], [ 2, 9 ] ],
                   instructions: [
                       [ null, 'SETAC', [ 0, 31 ], '' ],
                       [ null, 'END', [], '' ]
@@ -404,5 +403,7 @@ describe( 'Program Execution', function () {
         }
 
         assert.equal( this.vm.d( 'DS' ).addr, 31 );
+        assert.equal( this.vm.d( 'DS' ).flags, 7 );
+        assert.equal( this.vm.d( 'DS' ).value, 9 );
     } );
 } );

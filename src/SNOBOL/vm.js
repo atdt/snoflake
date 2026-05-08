@@ -2,6 +2,8 @@
 
 import SNOBOL from './base.js';
 
+const IMAGE_MEMORY = Symbol( 'SNOBOL.image.memory' );
+
 function getArgs( f ) {
     if ( typeof f === 'function' ) {
         return f
@@ -124,6 +126,23 @@ function bindInstruction( instruction ) {
     return instruction.concat( SNOBOL.sil[ instruction[ 1 ] ] );
 }
 
+function imageMemory( image ) {
+    if ( image[ IMAGE_MEMORY ] !== undefined ) {
+        return image[ IMAGE_MEMORY ];
+    }
+    if ( !Array.isArray( image.memInit ) ) {
+        throw new Error( 'Malformed SNOBOL image' );
+    }
+
+    const memory = new Uint32Array( image.memPtr );
+    for ( const [ ptr, value ] of image.memInit ) {
+        memory[ ptr ] = value;
+    }
+
+    image[ IMAGE_MEMORY ] = memory;
+    return memory;
+}
+
 SNOBOL.VM.prototype.seedHostSymbols = function () {
     for ( const sym in SNOBOL.programSymbols ) {
         if ( !Object.hasOwn( this.symbols, sym ) ) {
@@ -138,15 +157,16 @@ SNOBOL.VM.prototype.seedHostSymbols = function () {
 };
 
 SNOBOL.VM.prototype.loadImage = function ( image ) {
+    const memory = imageMemory( image );
     this.symbols = { ...image.symbols };
     this.memPtr = image.memPtr;
-    if ( image.mem.length > this.mem.length ) {
-        this.grow( image.mem.length );
+    if ( memory.length > this.mem.length ) {
+        this.grow( memory.length );
     }
-    this.mem.fill( 0, 0, this.memPtr );
-    this.mem.set( image.mem, 0 );
-    // Keep the generated image as plain data. Bind macro implementations only
-    // on the loaded instruction stream so dispatch avoids a name lookup.
+    this.mem.set( memory, 0 );
+
+    // The image is sparse on disk; each imported image caches one dense memory
+    // template. Instruction binding still happens on the per-VM stream.
     return image.instructions.map( bindInstruction );
 };
 

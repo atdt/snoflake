@@ -106,6 +106,19 @@ function compactInstruction( vm, stmt ) {
     ];
 }
 
+function nonzeroMemory( vm ) {
+    const mem = [];
+
+    for ( let ptr = 0; ptr < vm.memPtr; ptr++ ) {
+        const value = vm.mem[ ptr ];
+        if ( value !== 0 ) {
+            mem.push( [ ptr, value ] );
+        }
+    }
+
+    return mem;
+}
+
 // Load the mixed SIL listing into two address spaces: assembled data in
 // vm.mem, and executable statements in a compact instruction stream.
 function assembleListing( vm, program ) {
@@ -157,10 +170,9 @@ SNOBOL.assemble = function ( vm, program ) {
         const instructions = assembleListing( vm, program );
 
         return {
-            format: 1,
             symbols: { ...vm.symbols },
             memPtr: vm.memPtr,
-            mem: Array.from( vm.mem.slice( 0, vm.memPtr ) ),
+            memInit: nonzeroMemory( vm ),
             instructions
         };
     } finally {
