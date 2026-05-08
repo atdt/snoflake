@@ -379,4 +379,30 @@ describe( 'Program Execution', function () {
         assert.equal( this.vm.resolve( 'A' ), 11 );
         assert.equal( this.vm.resolve( 'B' ), 17 );
     } );
+
+    it( 'loads an assembled image without invoking the assembler', function () {
+        const assemble = SNOBOL.assemble,
+              image = {
+                  format: 1,
+                  symbols: { DS: 0 },
+                  memPtr: 3,
+                  mem: [ 0, 0, 0 ],
+                  instructions: [
+                      [ null, 'SETAC', [ 0, 31 ], '' ],
+                      [ null, 'END', [], '' ]
+                  ]
+              };
+
+        SNOBOL.assemble = function () {
+            throw new Error( 'unexpected runtime assembly' );
+        };
+
+        try {
+            this.vm.run( image );
+        } finally {
+            SNOBOL.assemble = assemble;
+        }
+
+        assert.equal( this.vm.d( 'DS' ).addr, 31 );
+    } );
 } );

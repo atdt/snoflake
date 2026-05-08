@@ -3352,7 +3352,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
     } );
 
-    sil.PUSH.call( this, $DESCRs.reverse() );
+    sil.PUSH.call( this, $DESCRs.slice().reverse() );
     if ( this.debug ) {
         this.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
     }

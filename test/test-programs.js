@@ -59,9 +59,8 @@ function runProgram( filePath, header ) {
     const stdout = captureWriter();
     const stderr = captureWriter();
     const vm = new SNOBOL.VM( { ...opts, stdout: stdout, stderr: stderr } );
-    vm.reset();
     try {
-        vm.run( SNOBOL.interp( vm ) );
+        vm.run();
     } catch ( e ) {
         // Treat thrown runtime errors as recognized error output so the
         // assertion logic ('Execution error' marker) can react instead of

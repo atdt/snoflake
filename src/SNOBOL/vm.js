@@ -2,56 +2,23 @@
 
 import SNOBOL from './base.js';
 
-// These assembly-time statements bind labels in the memory address space.
-// Most emit storage. EQU is included because SIL uses it in size expressions
-// such as END-START.
-const MEMORY_LOCATION_MACROS = [
-    'ARRAY', 'BUFFER', 'DESCR',
-    'EQU', 'FORMAT', 'REAL',
-    'SPEC', 'STRING'
-];
-
-// These assembly markers occupy neither memory nor executable code. A label
-// on one aliases the next statement that does.
-const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-
 function getArgs( f ) {
-    return f
-        .toString()
-        .replace( /([\s\S]+return \[|\];[\s\S]+)/g, '' )
-        .replace( /(vm\.\$\("|"\))/g, '' );
-}
-
-// Starting at a marker that occupies no memory and emits no instruction
-// (LHERE/PROC/TITLE), skip any more such markers and return the source index
-// of the next statement with a real memory or instruction location.
-function nextLocatedStatement( program, index ) {
-    let next = index + 1;
-
-    while (
-        next < program.length &&
-        LOCATIONLESS_MACROS.includes( program[ next ][ 1 ] )
-    ) {
-        next++;
+    if ( typeof f === 'function' ) {
+        return f
+            .toString()
+            .replace( /([\s\S]+return \[|\];[\s\S]+)/g, '' )
+            .replace( /(vm\.\$\("|"\))/g, '' );
     }
-
-    return next;
+    return JSON.stringify( f );
 }
 
-function locationAtHere( vm, program, index, nextInstruction ) {
-    const next = nextLocatedStatement( program, index );
-    const macro = next < program.length && program[ next ][ 1 ];
-
-    // LHERE/PROC mean "the current location". The active counter is memory
-    // when the next located statement is data, and code otherwise.
-    return MEMORY_LOCATION_MACROS.includes( macro )
-        ? vm.memPtr
-        : nextInstruction;
+function execArgs( vm, args ) {
+    return typeof args === 'function' ? args.call( vm ) : args;
 }
 
 SNOBOL.D = 3;
 
-SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
+SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment, implementation ) {
 
     if ( this.debug ) {
         comment = comment ? '// ' + comment : '';
@@ -64,10 +31,13 @@ SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment ) {
         );
     }
 
-    const args = argsCallback.call( this );
+    const args = execArgs( this, argsCallback );
 
     this.currentLabel = label;
-    const returnValue = SNOBOL.sil[ macro ].call( this, ...args );
+    const macroImplementation = implementation === undefined
+        ? SNOBOL.sil[ macro ]
+        : implementation;
+    const returnValue = macroImplementation.call( this, ...args );
 
     const watch = this.options.watch;
     if ( watch && watch.length > 0 ) {
@@ -133,91 +103,6 @@ function applyHostOutputOptions( vm ) {
     }
 }
 
-function reserveDeferredData( vm, stmt, sourceIndex, deferredData ) {
-    const macro = stmt[ 1 ],
-          ptr = macro === 'SPEC' ? vm.s().ptr : vm.d().ptr;
-
-    // Reserve the cell now so later labels see the right memory layout. Fill
-    // it after forward labels have been defined.
-    deferredData.push( { ip: sourceIndex, ptr, stmt } );
-    return ptr;
-}
-
-function emitStorage( vm, stmt ) {
-    const ptr = vm.memPtr;
-    vm.exec( ...stmt );
-    return ptr;
-}
-
-// Assemble one statement from the memory side of SIL and return the memory
-// value its label should name. DESCR/SPEC reserve space here, but wait to
-// fill their fields until forward labels have been defined.
-function assembleData( vm, stmt, sourceIndex, deferredData ) {
-    const macro = stmt[ 1 ];
-
-    if ( macro === 'DESCR' || macro === 'SPEC' ) {
-        return reserveDeferredData( vm, stmt, sourceIndex, deferredData );
-    }
-    if ( macro === 'EQU' ) {
-        return vm.exec( ...stmt );
-    }
-    return emitStorage( vm, stmt );
-}
-
-// Load the mixed SIL listing into two address spaces: assembled data in
-// vm.mem, and executable statements in a compact instruction stream.
-function load( vm, program ) {
-    const instructions = [],
-          deferredData = [];
-
-    for (
-        vm.instructionPointer = 0;
-        vm.instructionPointer < program.length;
-        vm.instructionPointer++
-    ) {
-        const sourceIndex = vm.instructionPointer;
-        const stmt = program[ vm.instructionPointer ];
-        const [ label, macro ] = stmt;
-
-        if ( LOCATIONLESS_MACROS.includes( macro ) ) {
-            if ( label ) {
-                vm.define( label, locationAtHere( vm, program, sourceIndex, instructions.length ) );
-            }
-            continue;
-        }
-
-        if ( MEMORY_LOCATION_MACROS.includes( macro ) ) {
-            const value = assembleData( vm, stmt, sourceIndex, deferredData );
-            if ( label ) {
-                vm.define( label, value );
-            }
-            continue;
-        }
-
-        if ( label ) {
-            vm.define( label, instructions.length );
-        }
-        instructions.push( stmt );
-    }
-
-    initData( vm, deferredData );
-    return instructions;
-}
-
-// Initialize the reserved DESCR/SPEC cells after forward labels are defined,
-// so label operands resolve normally.
-function initData( vm, deferredData ) {
-    for ( const data of deferredData ) {
-        vm.instructionPointer = data.ip;
-        vm.exec(
-            data.ptr,
-            data.stmt[ 1 ],
-            data.stmt[ 2 ],
-            data.stmt[ 3 ]
-        );
-    }
-}
-
 // Branching macros update instructionPointer themselves. Everything else
 // falls through to the next compact instruction.
 function interpret( vm, instructions ) {
@@ -231,17 +116,49 @@ function interpret( vm, instructions ) {
     }
 }
 
-SNOBOL.VM.prototype.run = function ( program ) {
-    for ( const sym in SNOBOL.programSymbols ) {
-        this.define( sym, SNOBOL.programSymbols[sym] );
-    }
-    SNOBOL.tableNames.forEach( (table, idx) => this.define( table, idx ) );
+function isImage( program ) {
+    return program && Array.isArray( program.instructions );
+}
 
-    // Assembly is silent. Debug output should show executed SIL.
-    const savedDebug = this.debug;
-    this.debug = false;
-    const instructions = load( this, program );
-    this.debug = savedDebug;
+function bindInstruction( instruction ) {
+    return instruction.concat( SNOBOL.sil[ instruction[ 1 ] ] );
+}
+
+SNOBOL.VM.prototype.seedHostSymbols = function () {
+    for ( const sym in SNOBOL.programSymbols ) {
+        if ( !Object.hasOwn( this.symbols, sym ) ) {
+            this.define( sym, SNOBOL.programSymbols[ sym ] );
+        }
+    }
+    SNOBOL.tableNames.forEach( ( table, idx ) => {
+        if ( !Object.hasOwn( this.symbols, table ) ) {
+            this.define( table, idx );
+        }
+    } );
+};
+
+SNOBOL.VM.prototype.loadImage = function ( image ) {
+    this.symbols = { ...image.symbols };
+    this.memPtr = image.memPtr;
+    if ( image.mem.length > this.mem.length ) {
+        this.grow( image.mem.length );
+    }
+    this.mem.fill( 0, 0, this.memPtr );
+    this.mem.set( image.mem, 0 );
+    // Keep the generated image as plain data. Bind macro implementations only
+    // on the loaded instruction stream so dispatch avoids a name lookup.
+    return image.instructions.map( bindInstruction );
+};
+
+SNOBOL.VM.prototype.run = function ( program = SNOBOL.image ) {
+    let instructions;
+
+    if ( isImage( program ) ) {
+        this.reset();
+        instructions = this.loadImage( program );
+    } else {
+        instructions = SNOBOL.assemble( this, program ).instructions.map( bindInstruction );
+    }
 
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;

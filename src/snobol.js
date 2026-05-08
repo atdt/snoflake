@@ -8,6 +8,7 @@ import './SNOBOL/io.js';
 import './SNOBOL/file.js';
 import './SNOBOL/vm.js';
 import './SNOBOL/sil.js';
+import './SNOBOL/assemble.js';
 import './SNOBOL/snobol.sil.js';
 
 export default SNOBOL;

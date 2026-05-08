@@ -1,12 +1,24 @@
 // Translates the SIL source code into JavaScript.
-// The PEG grammar generates an ESTree-compatible AST.
-// Currently, we use astring (https://github.com/davidbonnet/astring) to
-// generate the JavaScript code from the AST, but escodegen works just as well.
+// The PEG grammar generates an ESTree-compatible AST for the source-level SIL
+// listing.  Translation evaluates that listing once, assembles it, and emits a
+// runtime image with resolved symbols, initialized memory, and executable
+// instructions.
 import peggy from 'peggy';
 import fs from 'node:fs';
 import { generate as astringGenerate } from 'astring';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
+import SNOBOL from '../src/SNOBOL/base.js';
+
+import '../src/SNOBOL/string.js';
+import '../src/SNOBOL/mem.js';
+import '../src/SNOBOL/syntax.js';
+import '../src/SNOBOL/datatypes.js';
+import '../src/SNOBOL/io.js';
+import '../src/SNOBOL/file.js';
+import '../src/SNOBOL/vm.js';
+import '../src/SNOBOL/sil.js';
+import '../src/SNOBOL/assemble.js';
 
 const __dirname = dirname( fileURLToPath( import.meta.url ) );
 const source = __dirname + '/../external/v311-snoflake.sil',
@@ -19,6 +31,12 @@ const source = __dirname + '/../external/v311-snoflake.sil',
 	"// Source: external/v311-snoflake.sil\n" +
 	"import SNOBOL from './base.js';\n"
       ),
-      code = prolog + astringGenerate( ast ).trim();
+      sourceListing = astringGenerate( ast ).trim();
 
-console.log( code );
+Function( 'SNOBOL', sourceListing )( SNOBOL );
+
+const vm = new SNOBOL.VM(),
+      image = SNOBOL.assemble( vm, SNOBOL.interp( vm ) ),
+      code = prolog + 'SNOBOL.image = ' + JSON.stringify( image, null, 2 ) + ';\n';
+
+process.stdout.write( code );

@@ -42,8 +42,7 @@ export function runSnoflake( source, options = {} ) {
           } );
 
     try {
-        vm.reset();
-        vm.run( SNOBOL.interp( vm ) );
+        vm.run();
     } catch ( e ) {
         stderr.write( 'Execution error: ' + ( e && e.message || e ) );
     }
