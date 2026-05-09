@@ -10,20 +10,6 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 } );
 
 //
-// Scaffolds
-//
-
-// Build a SIL operand callback. Numbers pass through; strings are
-// resolved against the assembler's vm at call time (so forward labels
-// work and the test doesn't need to predict storage addresses).
-function mkargs( ...args ) {
-    return function ( vm ) {
-        return args.map( arg => typeof arg === 'string' ? vm.$( arg ) : arg );
-    };
-}
-
-
-//
 // Test Cases
 //
 
@@ -41,16 +27,16 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'EQU', function () {
-        this.vm.run( SNOBOL.assemble( [ [ 'A', 'EQU', mkargs( 12 ) ] ] ) );
+        this.vm.run( SNOBOL.assemble( [ [ 'A', 'EQU', [ 12 ] ] ] ) );
         assert.equal( this.vm.resolve('A'), 12 );
     } );
 
     it( 'LHERE', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'A',  'LHERE', mkargs() ],
-            [ null, 'DESCR', mkargs() ],
-            [ 'B',  'LHERE', mkargs() ],
-            [ null, 'DESCR', mkargs() ]
+            [ 'A',  'LHERE', [] ],
+            [ null, 'DESCR', [] ],
+            [ 'B',  'LHERE', [] ],
+            [ null, 'DESCR', [] ]
         ] ) );
         assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), this.vm.$( 'DESCR' ) );
         assert.deepEqual( this.vm.d( 'A' ).raw(), [ 0, 0, 0 ] );
@@ -59,12 +45,12 @@ describe( 'Assembly Control Macros', function () {
 
     it( 'keeps executable labels in the instruction stream', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'PAD', 'BUFFER', mkargs( 10 ) ],
-            [ 'DS',  'DESCR',  mkargs() ],
-            [ null,  'BRANCH', mkargs( 'LBL' ) ],
-            [ null,  'SETAC',  mkargs( 'DS', 11 ) ],
-            [ 'LBL', 'SETAC',  mkargs( 'DS', 22 ) ],
-            [ null,  'END',    mkargs() ]
+            [ 'PAD', 'BUFFER', [ 10 ] ],
+            [ 'DS',  'DESCR',  [] ],
+            [ null,  'BRANCH', [ { sym: 'LBL' } ] ],
+            [ null,  'SETAC',  [ { sym: 'DS' }, 11 ] ],
+            [ 'LBL', 'SETAC',  [ { sym: 'DS' }, 22 ] ],
+            [ null,  'END',    [] ]
         ] ) );
 
         // BUFFER and DESCR assemble data, but do not occupy runtime
@@ -75,10 +61,10 @@ describe( 'Assembly Control Macros', function () {
 
     it( 'resolves forward labels in assembled descriptor data', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'DS',     'DESCR', mkargs( 'VALUE' ) ],
-            [ 'SP',     'SPEC',  mkargs( 'VALUE', 0, 0, 0, 0 ) ],
-            [ 'VALUE',  'EQU',   mkargs( 123 ) ],
-            [ null,     'END',   mkargs() ]
+            [ 'DS',     'DESCR', [ { sym: 'VALUE' } ] ],
+            [ 'SP',     'SPEC',  [ { sym: 'VALUE' }, 0, 0, 0, 0 ] ],
+            [ 'VALUE',  'EQU',   [ 123 ] ],
+            [ null,     'END',   [] ]
         ] ) );
 
         assert.equal( this.vm.d( 'DS' ).addr, 123 );
@@ -137,12 +123,12 @@ describe( 'Branch Macros', function () {
 
     it( 'BRANCH', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'DS', 'DESCR',  mkargs() ] ,
-            [ null,  'SETAC',  mkargs( 'DS', 22 ) ] ,
-            [ null, 'BRANCH', mkargs( 'LBL' ) ],
-            [ null, 'SETAC',  mkargs( 'DS', 33 ) ],
-            [ 'LBL',  'LHERE',  mkargs() ],
-            [ null, 'END',    mkargs() ]
+            [ 'DS', 'DESCR',  [] ] ,
+            [ null,  'SETAC',  [ { sym: 'DS' }, 22 ] ] ,
+            [ null, 'BRANCH', [ { sym: 'LBL' } ] ],
+            [ null, 'SETAC',  [ { sym: 'DS' }, 33 ] ],
+            [ 'LBL',  'LHERE',  [] ],
+            [ null, 'END',    [] ]
         ] ) );
         assert.equal( this.vm.d( 'DS' ).addr, 22 );
     } );

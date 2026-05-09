@@ -8,12 +8,47 @@ const LABEL = 0,
       COMMENT = 3,
       SPECIFIER_SIZE = 2 * SNOBOL.D;
 
-// SIL operands are emitted as `function (vm) { return [...]; }` so that
-// vm.$('LABEL') resolves after forward labels have been bound. Invoke the
-// callback against this assembly's scratch vm to get a plain array.
+function resolveExpression( vm, operand ) {
+    if ( Object.hasOwn( operand, 'sym' ) ) {
+        return vm.$( operand.sym );
+    }
+
+    if ( operand.op === 'neg' ) {
+        return -resolveOperand( vm, operand.value );
+    }
+
+    const left = resolveOperand( vm, operand.left ),
+          right = resolveOperand( vm, operand.right );
+
+    switch ( operand.op ) {
+    case '+':
+        return left + right;
+    case '-':
+        return left - right;
+    case '*':
+        return left * right;
+    default:
+        throw new Error( 'Unknown SIL operand operator: ' + operand.op );
+    }
+}
+
+function resolveOperand( vm, operand ) {
+    if ( Array.isArray( operand ) ) {
+        return operand.map( item => resolveOperand( vm, item ) );
+    }
+
+    if ( operand && typeof operand === 'object' ) {
+        return resolveExpression( vm, operand );
+    }
+
+    return operand;
+}
+
+// SIL operands are parsed as data: literals pass through, `{sym}` resolves
+// after labels are bound, and arithmetic nodes evaluate against the same
+// symbol table.
 function argsFor( vm, stmt ) {
-    const args = stmt[ OPERANDS ];
-    return typeof args === 'function' ? args( vm ) : args;
+    return stmt[ OPERANDS ].map( operand => resolveOperand( vm, operand ) );
 }
 
 function encodedLength( value ) {

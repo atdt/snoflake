@@ -1,89 +1,18 @@
 // Peggy grammar for SIL (SNOBOL Implementation Language)
-// Translates SIL to an ESTree-compatible AST.
+// Translates SIL to the assembler's source listing.
 // (C) Copyright 2012 by Ori Livneh
 // Licensed under GPLv2
 
 {
-    var labels = {},
-        line = 0;
-
-    /**
-     * Construct an anonymous function `function (vm) { return value; }`.
-     * The vm parameter lets the assembler resolve symbol references late,
-     * after labels are bound, against any vm it picks.
-     */
-    function enclose( value ) {
-        return {
-            type: 'FunctionExpression',
-            params: [ { type: 'Identifier', name: 'vm' } ],
-            body: {
-                type: 'BlockStatement',
-                body: [{
-                    type: 'ReturnStatement',
-                    argument: value,
-                }]
-            }
-        };
-    }
-
-    /**
-     * Wrap `identifier` with an invocation of `vm.resolve`.
-     * e.g. 'SOMENAME' -> vm.$( 'SOMENAME' )
-     */
-    function resolve( identifier ) {
-        return {
-            type: 'CallExpression',
-            callee: {
-                type: 'MemberExpression',
-                object: { type: 'Identifier', name: 'vm' },
-                property: { type: 'Identifier', name: '$' },
-            },
-            arguments: [ { type: 'Literal', value: identifier } ],
-        };
+    function expr( operator, left, right ) {
+        return { op: operator, left: left, right: right };
     }
 }
 
 program
   = statements:statement+ end
 {
-    return {
-        type: 'Program',
-        body: [
-            {
-                type: 'ExpressionStatement',
-                expression: {
-                    type: 'AssignmentExpression',
-                    operator: '=',
-                    left: {
-                        type: 'MemberExpression',
-                        computed: false,
-                        object: {
-                            type: 'Identifier',
-                            name: 'SNOBOL'
-                        },
-                        property: {
-                           type: 'Identifier',
-                           name: 'interp'
-                        }
-                    },
-                    right: {
-                        type: 'FunctionExpression',
-                        params: [],
-                        body: {
-                            type: 'BlockStatement',
-                            body: [ {
-                                type: 'ReturnStatement',
-                                argument: {
-                                type: 'ArrayExpression',
-                                elements: statements
-                                }
-                            } ]
-                        },
-                    }
-                }
-            }
-        ],
-    };
+    return statements;
 }
 
 
@@ -98,10 +27,7 @@ statement "statement"
     comment:comment1?
     '\n'
 {
-    return {
-        type: 'ArrayExpression',
-        elements: [ label, oper, operands, comment ]
-    };
+    return [ label, oper, operands, comment ];
 }
 
 
@@ -114,19 +40,13 @@ comment1 "trailing comment"
     if ( tail ) {
         head = head + ' ' + tail;
     }
-    return {
-        type: 'Literal',
-        value: head.trim()
-    };
+    return head.trim();
 }
 
 comment2 "multi-line comment"
   = lines:( '*' comment:[^\n]* '\n' { return comment.join( '' ); } )+
 {
-    return {
-        type: 'Literal',
-        value: lines.join( '\n' )
-    };
+    return lines.join( '\n' );
 }
 
 operands "operands"
@@ -136,16 +56,14 @@ operands "operands"
     for ( var i = 0, max = tail.length; i < max; i++ ) {
         result.push( tail[i][1] );
     }
-    return enclose( { type: 'ArrayExpression', elements: result } );
+    return result;
 }
 
 variable
   = list
   / literal
   / expr
-  / name
-  / integer
-  / &( ',' ) { return { type: 'Literal', value: null }; }
+  / &( ',' ) { return null; }
 
 
 expr "expression"
@@ -155,12 +73,7 @@ additive
   = head:multiplicative tail:( operator:[+-] term:multiplicative { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
-        return {
-            type: 'BinaryExpression',
-            operator: node.operator,
-            left: left,
-            right: node.term
-        };
+        return expr( node.operator, left, node.term );
     }, head );
 }
 
@@ -168,12 +81,7 @@ multiplicative
   = head:unary tail:( operator:"*" term:unary { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
-        return {
-            type: 'BinaryExpression',
-            operator: node.operator,
-            left: left,
-            right: node.term
-        };
+        return expr( node.operator, left, node.term );
     }, head );
 }
 
@@ -183,12 +91,7 @@ unary
     if ( operator === '+' ) {
         return argument;
     }
-    return {
-        type: 'UnaryExpression',
-        operator: operator,
-        argument: argument,
-        prefix: true
-    };
+    return { op: 'neg', value: argument };
 }
   / primary
 
@@ -199,18 +102,17 @@ literal "literal"
   = "'" literal:[^']* "'"
 {
     literal = literal.join( '' );
-    return { type: 'Literal', value: literal };
+    return literal;
 }
 
 integer "integer"
   = digits:[0-9]+
 {
-    var num = parseInt( digits.join( '' ), 10 );
-    return { type: 'Literal', value: num };
+    return parseInt( digits.join( '' ), 10 );
 }
 
 list "list operand"
-  = '(' head:variable tail:( ',' v:variable? { return v === null ? { type: 'Literal', value: null } : v;  } )* ')'
+  = '(' head:variable tail:( ',' v:variable? { return v; } )* ')'
 {
     var result = [];
 
@@ -219,7 +121,7 @@ list "list operand"
         result = tail;
     }
 
-    return { type: 'ArrayExpression', elements: result };
+    return result;
 }
 
 blank
@@ -229,27 +131,20 @@ blank
 label "label"
 = label:( head:[A-Z] tail:[A-Z0-9]* { return head + tail.join( '' ); } )?
 {
-    if ( label !== null ) {
-        labels[ label ] = line++;
-        return { type: 'Literal', value: label };
-    } else {
-        line++;
-        return { type: 'Literal', value: null };
-    }
+    return label;
 }
 
 name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var name = head + tail.join( '' );
-    return resolve( name );
+    return { sym: name };
 }
 
 macro "macro"
   = head:[A-Z] tail:[A-Z0-9]*
 {
-    var macro = head + tail.join( '' );
-    return { type: 'Literal', value: macro };
+    return head + tail.join( '' );
 }
 
 end

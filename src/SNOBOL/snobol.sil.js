@@ -4,10 +4,6 @@
 import SNOBOL from './base.js';
 SNOBOL.image = {
   "symbols": {
-    "ALPHA": 0,
-    "AMPST": 256,
-    "COLSTR": 257,
-    "QTSTR": 259,
     "ALPHSZ": 256,
     "CPA": 1,
     "DESCR": 3,
@@ -52,6 +48,14 @@ SNOBOL.image = {
     "VARATB": 22,
     "VARBTB": 23,
     "VARTB": 24,
+    "CONTIN": "CONTIN",
+    "ERROR": "ERROR",
+    "STOP": "STOP",
+    "STOPSH": "STOPSH",
+    "ALPHA": 0,
+    "AMPST": 256,
+    "COLSTR": 257,
+    "QTSTR": 259,
     "ATTRIB": 6,
     "LNKFLD": 9,
     "BCDFLD": 12,

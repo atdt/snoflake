@@ -13,22 +13,6 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
     globalThis[k] = SNOBOL[k];
 } );
 
-
-// 
-// Scaffolds
-//
-
-
-// Build a SIL operand callback. Numbers pass through; strings are
-// resolved against the assembler's vm at call time (so forward labels
-// work and the test doesn't need to predict storage addresses).
-function mkargs( ...args ) {
-    return function ( vm ) {
-        return args.map( arg => typeof arg === 'string' ? vm.$( arg ) : arg );
-    };
-}
-
-
 //
 // Test Cases
 //
@@ -370,9 +354,9 @@ describe( 'Program Execution', function () {
 
     it( 'run', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'A',  'EQU', mkargs( 11 ) ],
-            [ 'B',  'EQU', mkargs( 17 ) ],
-            [ null, 'END', mkargs() ],
+            [ 'A',  'EQU', [ 11 ] ],
+            [ 'B',  'EQU', [ 17 ] ],
+            [ null, 'END', [] ],
         ] ) );
         assert.equal( this.vm.resolve( 'A' ), 11 );
         assert.equal( this.vm.resolve( 'B' ), 17 );
