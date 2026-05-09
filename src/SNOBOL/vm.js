@@ -91,7 +91,7 @@ function seedConstants( vm ) {
 // is the byte-for-byte assembled snapshot -- host string constants and SIL
 // data declarations both live in it -- so loading is a copy.
 SNOBOL.VM.prototype.loadImage = function ( image ) {
-    if ( !ArrayBuffer.isView( image.memory ) ) {
+    if ( !image || !ArrayBuffer.isView( image.memory ) ) {
         throw new Error( 'Malformed SNOBOL image' );
     }
 
@@ -103,7 +103,7 @@ SNOBOL.VM.prototype.loadImage = function ( image ) {
     this.memPtr = image.memory.length;
 };
 
-SNOBOL.VM.prototype.run = function ( image = SNOBOL.image ) {
+SNOBOL.VM.prototype.run = function ( image ) {
     this.reset();
     this.loadImage( image );
 

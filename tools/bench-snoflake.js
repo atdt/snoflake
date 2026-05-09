@@ -237,7 +237,7 @@ function runVm( SNOBOL, fixture ) {
           } );
 
     try {
-        vm.run( SNOBOL.image || SNOBOL.assemble( SNOBOL.interp() ) );
+        vm.run( SNOBOL.defaultImage );
     } catch ( e ) {
         stderr.write( 'Execution error: ' + ( e && e.stack || e ) );
     }
@@ -450,4 +450,3 @@ main().catch( function ( e ) {
     console.error( e && e.stack || e );
     process.exitCode = 1;
 } );
-

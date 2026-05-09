@@ -42,7 +42,7 @@ export function runSnoflake( source, options = {} ) {
           } );
 
     try {
-        vm.run();
+        vm.run( SNOBOL.defaultImage );
     } catch ( e ) {
         stderr.write( 'Execution error: ' + ( e && e.message || e ) );
     }

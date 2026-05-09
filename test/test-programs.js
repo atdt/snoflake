@@ -60,7 +60,7 @@ function runProgram( filePath, header ) {
     const stderr = captureWriter();
     const vm = new SNOBOL.VM( { ...opts, stdout: stdout, stderr: stderr } );
     try {
-        vm.run();
+        vm.run( SNOBOL.defaultImage );
     } catch ( e ) {
         // Treat thrown runtime errors as recognized error output so the
         // assertion logic ('Execution error' marker) can react instead of

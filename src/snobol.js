@@ -9,8 +9,9 @@ import './SNOBOL/file.js';
 import './SNOBOL/vm.js';
 import './SNOBOL/sil.js';
 import './SNOBOL/assemble.js';
-import image from './SNOBOL/snobol.sil.js';
+import defaultImage from './SNOBOL/snobol.sil.js';
 
-SNOBOL.image = image;
+SNOBOL.defaultImage = defaultImage;
 
+export { defaultImage };
 export default SNOBOL;
