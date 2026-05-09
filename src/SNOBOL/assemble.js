@@ -2,25 +2,20 @@
 
 import SNOBOL from './base.js';
 
-// These assembly-time statements bind labels in the memory address space.
-// Most emit storage. EQU is included because SIL uses it in size expressions
-// such as END-START.
-const MEMORY_LOCATION_MACROS = [
-    'ARRAY', 'BUFFER', 'DESCR',
-    'EQU', 'FORMAT', 'REAL',
-    'SPEC', 'STRING'
-];
-
-// These assembly markers occupy neither memory nor executable code. A label
-// on one aliases the next statement that does.
-const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-
-// Data macros that lay out memory at load time. EQU only defines a symbolic
-// constant, so it is captured in the image's symbol table rather than replayed.
+// Data macros lay out memory at load time. EQU joins them in
+// MEMORY_LOCATION_MACROS because SIL uses it in size expressions like
+// END-START — its label binds at the assembly cursor — but it contributes
+// only to the symbol table, not to memory layout, so it isn't replayed.
 const DATA_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
     'FORMAT', 'REAL', 'SPEC', 'STRING'
 ];
+
+const MEMORY_LOCATION_MACROS = [ ...DATA_MACROS, 'EQU' ];
+
+// Markers that occupy neither memory nor executable code. A label on one
+// aliases the next statement that does.
+const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 
 // SIL operands are emitted as a callback so vm.$('LABEL') resolves at
 // execution time, after forward labels have been bound. Resolving the
@@ -57,18 +52,20 @@ function locationAtHere( vm, program, index, nextInstruction ) {
         : nextInstruction;
 }
 
-function reserveDeferredData( vm, stmt, sourceIndex, deferredData ) {
-    const macro = stmt[ 1 ],
-          ptr = macro === 'SPEC' ? vm.s().ptr : vm.d().ptr;
+// Run a SIL statement through vm.exec, resolving its operand callback first.
+// `label` defaults to the statement's own label, but initData overrides it
+// with the deferred cell's ptr so DESCR/SPEC fill that exact cell.
+function execStatement( vm, stmt, label = stmt[ 0 ] ) {
+    return vm.exec( label, stmt[ 1 ], argsFor( vm, stmt ), stmt[ 3 ] );
+}
+
+function reserveDeferredData( vm, stmt, deferredData ) {
+    const ptr = stmt[ 1 ] === 'SPEC' ? vm.s().ptr : vm.d().ptr;
 
     // Reserve the cell now so later labels see the right memory layout. Fill
     // it after forward labels have been defined.
-    deferredData.push( { ip: sourceIndex, ptr, stmt } );
+    deferredData.push( { ptr, stmt } );
     return ptr;
-}
-
-function execStatement( vm, stmt ) {
-    return vm.exec( stmt[ 0 ], stmt[ 1 ], argsFor( vm, stmt ), stmt[ 3 ] );
 }
 
 function emitStorage( vm, stmt ) {
@@ -80,11 +77,11 @@ function emitStorage( vm, stmt ) {
 // Assemble one statement from the memory side of SIL and return the memory
 // value its label should name. DESCR/SPEC reserve space here, but wait to
 // fill their fields until forward labels have been defined.
-function assembleData( vm, stmt, sourceIndex, deferredData ) {
+function assembleData( vm, stmt, deferredData ) {
     const macro = stmt[ 1 ];
 
     if ( macro === 'DESCR' || macro === 'SPEC' ) {
-        return reserveDeferredData( vm, stmt, sourceIndex, deferredData );
+        return reserveDeferredData( vm, stmt, deferredData );
     }
     if ( macro === 'EQU' ) {
         return execStatement( vm, stmt );
@@ -92,24 +89,13 @@ function assembleData( vm, stmt, sourceIndex, deferredData ) {
     return emitStorage( vm, stmt );
 }
 
-// Initialize the reserved DESCR/SPEC cells after forward labels are defined,
-// so label operands resolve normally. The original label has been replaced
-// with the reserved ptr so that `this.d( this.currentLabel )` inside the
-// macro resolves to the cell we set aside.
+// Initialize the reserved DESCR/SPEC cells now that forward labels are
+// defined. Passing the reserved ptr as the label makes the macro fill that
+// exact cell instead of allocating a fresh one.
 function initData( vm, deferredData ) {
-    for ( const data of deferredData ) {
-        vm.instructionPointer = data.ip;
-        vm.exec( data.ptr, data.stmt[ 1 ], argsFor( vm, data.stmt ), data.stmt[ 3 ] );
+    for ( const { ptr, stmt } of deferredData ) {
+        execStatement( vm, stmt, ptr );
     }
-}
-
-function compactInstruction( vm, stmt ) {
-    return [
-        stmt[ 0 ],
-        stmt[ 1 ],
-        argsFor( vm, stmt ),
-        stmt[ 3 ] || ''
-    ];
 }
 
 // After full assembly, capture every data-emitting statement with operands
@@ -142,24 +128,19 @@ function assembleListing( vm, program ) {
     const instructions = [],
           deferredData = [];
 
-    for (
-        vm.instructionPointer = 0;
-        vm.instructionPointer < program.length;
-        vm.instructionPointer++
-    ) {
-        const sourceIndex = vm.instructionPointer,
-              stmt = program[ sourceIndex ],
+    for ( let i = 0; i < program.length; i++ ) {
+        const stmt = program[ i ],
               [ label, macro ] = stmt;
 
         if ( LOCATIONLESS_MACROS.includes( macro ) ) {
             if ( label ) {
-                vm.define( label, locationAtHere( vm, program, sourceIndex, instructions.length ) );
+                vm.define( label, locationAtHere( vm, program, i, instructions.length ) );
             }
             continue;
         }
 
         if ( MEMORY_LOCATION_MACROS.includes( macro ) ) {
-            const value = assembleData( vm, stmt, sourceIndex, deferredData );
+            const value = assembleData( vm, stmt, deferredData );
             if ( label ) {
                 vm.define( label, value );
             }
@@ -174,7 +155,9 @@ function assembleListing( vm, program ) {
 
     initData( vm, deferredData );
     return {
-        instructions: instructions.map( stmt => compactInstruction( vm, stmt ) ),
+        instructions: instructions.map( stmt => [
+            stmt[ 0 ], stmt[ 1 ], argsFor( vm, stmt ), stmt[ 3 ] || ''
+        ] ),
         data: captureData( vm, program )
     };
 }
