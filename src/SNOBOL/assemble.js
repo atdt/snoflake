@@ -63,12 +63,6 @@ function markerLocation( vm, program, index, nextInstruction ) {
         : nextInstruction;
 }
 
-// Dispatch a SIL macro at assembly time -- used for EQU (which yields a
-// constant) and the storage-replay pass (which writes into reserved memory).
-function runMacro( vm, stmt ) {
-    return SNOBOL.sil[ stmt[ MACRO ] ].apply( vm, argsFor( vm, stmt ) );
-}
-
 function reserveStorage( vm, stmt ) {
     const ptr = vm.memPtr,
           macro = stmt[ MACRO ];
@@ -105,7 +99,7 @@ function emitInstruction( instructions, stmt ) {
 
 function storageOrConstantLocation( vm, stmt ) {
     return stmt[ MACRO ] === 'EQU'
-        ? runMacro( vm, stmt )
+        ? SNOBOL.sil.EQU.apply( vm, argsFor( vm, stmt ) )
         : reserveStorage( vm, stmt );
 }
 
@@ -129,32 +123,26 @@ function bindLabel( vm, label, location ) {
     }
 }
 
-function imageStatement( vm, stmt, label = stmt[ LABEL ] ) {
+function imageStatement( vm, stmt ) {
     return [
-        label,
+        stmt[ LABEL ],
         stmt[ MACRO ],
         argsFor( vm, stmt ),
         stmt[ COMMENT ] || ''
     ];
 }
 
-function imageDataStatements( vm, program ) {
-    // The loader replays data macros in source order with no label binding,
-    // so labels here are documentation rather than directives.
-    return program
-        .filter( stmt => STORAGE_MACROS.has( stmt[ MACRO ] ) )
-        .map( stmt => imageStatement( vm, stmt, stmt[ LABEL ] || null ) );
-}
-
-function initializeReservedStorage( vm, dataStart, dataEnd, data ) {
+function initializeReservedStorage( vm, program, dataStart, dataEnd ) {
     // Now that all labels are bound, replay storage macros from the start of
-    // the reserved data region to initialize those exact addresses.
+    // the reserved data region so relocatable operands resolve into the same
+    // cells reserved during the first pass.
     vm.memPtr = dataStart;
     try {
-        for ( const stmt of data ) {
-            SNOBOL.sil[ stmt[ MACRO ] ].apply( vm, stmt[ OPERANDS ] );
+        for ( const stmt of program ) {
+            if ( STORAGE_MACROS.has( stmt[ MACRO ] ) ) {
+                SNOBOL.sil[ stmt[ MACRO ] ].apply( vm, argsFor( vm, stmt ) );
+            }
         }
-
         if ( vm.memPtr !== dataEnd ) {
             throw new Error( 'Data replay changed assembled storage size' );
         }
@@ -164,9 +152,9 @@ function initializeReservedStorage( vm, dataStart, dataEnd, data ) {
     }
 }
 
-// Walk the SIL listing once: bind labels, reserve storage, and produce a
-// resolved instruction stream. Memory content is serialized as data statements
-// rather than a byte image.
+// Walk the SIL listing twice: first to bind labels and reserve storage,
+// then to populate the reserved cells with operand-resolved values.
+// Returns a resolved instruction stream. The caller snapshots vm.mem.
 function assembleListing( vm, program ) {
     const instructions = [],
           dataStart = vm.memPtr;
@@ -177,24 +165,18 @@ function assembleListing( vm, program ) {
         bindLabel( vm, stmt[ LABEL ], location );
     }
 
-    const dataEnd = vm.memPtr,
-          data = imageDataStatements( vm, program );
+    initializeReservedStorage( vm, program, dataStart, vm.memPtr );
 
-    initializeReservedStorage( vm, dataStart, dataEnd, data );
-
-    return {
-        instructions: instructions.map( stmt => imageStatement( vm, stmt ) ),
-        data
-    };
+    return instructions.map( stmt => imageStatement( vm, stmt ) );
 }
 
 SNOBOL.assemble = function ( vm, program ) {
     vm.seedHostSymbols();
-    const { instructions, data } = assembleListing( vm, program );
+    const instructions = assembleListing( vm, program );
 
     return {
         symbols: { ...vm.symbols },
-        data,
+        memory: vm.mem.slice( 0, vm.memPtr ),
         instructions
     };
 };

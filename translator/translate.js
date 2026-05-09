@@ -25,23 +25,35 @@ function indent( text, spaces ) {
     return text.split( '\n' ).map( line => prefix + line ).join( '\n' );
 }
 
-// One statement per line keeps the data and instruction sections shaped
-// like a SIL listing: each line is a resolved declaration or instruction.
-function serializeStatements( statements ) {
-    return statements
+// One instruction per line preserves the SIL-listing feel of the
+// instruction section: each line reads as a resolved macro call.
+function serializeInstructions( instructions ) {
+    return instructions
         .map( stmt => '    ' + JSON.stringify( stmt ) )
         .join( ',\n' );
+}
+
+// The memory snapshot is the assembled byte image. Wrap to fit a typical
+// editor window without producing one giant unreadable line.
+function serializeMemory( memory ) {
+    const cellsPerLine = 16,
+          lines = [];
+    for ( let i = 0; i < memory.length; i += cellsPerLine ) {
+        const chunk = Array.from( memory.subarray( i, i + cellsPerLine ) );
+        lines.push( '    ' + chunk.join( ',' ) );
+    }
+    return lines.join( ',\n' );
 }
 
 function serializeImage( image ) {
     return [
         'SNOBOL.image = {',
         '  "symbols": ' + indent( JSON.stringify( image.symbols, null, 2 ), 2 ).trimStart() + ',',
-        '  "data": [',
-        serializeStatements( image.data ),
-        '  ],',
+        '  "memory": new Uint32Array([',
+        serializeMemory( image.memory ),
+        '  ]),',
         '  "instructions": [',
-        serializeStatements( image.instructions ),
+        serializeInstructions( image.instructions ),
         '  ]',
         '};',
         ''

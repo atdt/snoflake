@@ -2,8 +2,6 @@
 
 import SNOBOL from './base.js';
 
-const IMAGE_MEMORY = Symbol( 'SNOBOL.image.memory' );
-
 SNOBOL.D = 3;
 
 SNOBOL.VM.prototype.jmp = function ( loc ) {
@@ -79,58 +77,20 @@ SNOBOL.VM.prototype.seedHostSymbols = function () {
     } );
 };
 
-// Allocate raw byte buffers for host-supplied string constants (ALPHA,
-// AMPST, COLSTR, QTSTR). These sit at the start of memory ahead of any SIL
-// data statement; they're a property of the host environment, not the SIL
-// source, so the loader writes them before replaying image.data.
-function allocateHostStrings( vm ) {
-    for ( const sym in SNOBOL.programSymbols ) {
-        const value = SNOBOL.programSymbols[ sym ];
-        if ( typeof value === 'string' ) {
-            const ptr = vm.alloc( value.length ),
-                  encoded = SNOBOL.str.encode( value );
-            vm.mem.set( encoded.subarray( 0, value.length ), ptr );
-        }
-    }
-}
-
-// Replay the image's data statements against this VM. Each storage macro
-// allocates at memPtr in source order, reproducing the layout captured by
-// the translator. The label in each entry is documentation only.
-function replayDataStatements( vm, data ) {
-    for ( const stmt of data ) {
-        SNOBOL.sil[ stmt[ 1 ] ].apply( vm, stmt[ 2 ] );
-    }
-}
-
-// Hydrate the VM's symbols and memory from an image. Subsequent VMs that
-// share the same image object reuse a cached memory snapshot to skip the
-// data-statement replay.
+// Hydrate the VM's symbols and memory from an image. The image's `memory`
+// is the byte-for-byte assembled snapshot -- host string constants and SIL
+// data declarations both live in it -- so loading is a copy.
 SNOBOL.VM.prototype.loadImage = function ( image ) {
-    if ( !Array.isArray( image.data ) ) {
+    if ( !ArrayBuffer.isView( image.memory ) ) {
         throw new Error( 'Malformed SNOBOL image' );
     }
 
     this.symbols = { ...image.symbols };
-
-    const cached = image[ IMAGE_MEMORY ];
-    if ( cached !== undefined ) {
-        if ( cached.template.length > this.mem.length ) {
-            this.grow( cached.template.length );
-        }
-        this.mem.set( cached.template, 0 );
-        this.memPtr = cached.memPtr;
-    } else {
-        this.memPtr = 0;
-        allocateHostStrings( this );
-        replayDataStatements( this, image.data );
-        // Snapshot the assembled memory so subsequent VMs sharing this
-        // image skip the replay and just copy a typed array.
-        image[ IMAGE_MEMORY ] = {
-            template: this.mem.slice( 0, this.memPtr ),
-            memPtr: this.memPtr
-        };
+    if ( image.memory.length > this.mem.length ) {
+        this.grow( image.memory.length );
     }
+    this.mem.set( image.memory, 0 );
+    this.memPtr = image.memory.length;
 };
 
 SNOBOL.VM.prototype.run = function ( program = SNOBOL.image ) {

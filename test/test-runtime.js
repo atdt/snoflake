@@ -381,23 +381,18 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'loads an assembled image without invoking the assembler', function () {
-        // Host string constants are allocated at the start of memory before
-        // image.data is replayed. The single DESCR entry below lands right
-        // after those allocations.
-        const hostStringSize = Object.values( SNOBOL.programSymbols )
-            .filter( v => typeof v === 'string' )
-            .reduce( ( sum, s ) => sum + s.length, 0 );
-        const assemble = SNOBOL.assemble,
-              image = {
-                  symbols: { DS: hostStringSize },
-                  data: [
-                      [ 'DS', 'DESCR', [ 31, 7, 9 ], 'descriptor under test' ]
-                  ],
-                  instructions: [
-                      [ null, 'END', [], '' ]
-                  ]
-              };
+        // The image carries memory as a byte snapshot; loading is a copy,
+        // not a replay. Stash a single descriptor (31, 7, 9) at offset 0
+        // and bind 'DS' to it.
+        const image = {
+            symbols: { DS: 0 },
+            memory: new Uint32Array( [ 31, 7, 9 ] ),
+            instructions: [
+                [ null, 'END', [], '' ]
+            ]
+        };
 
+        const assemble = SNOBOL.assemble;
         SNOBOL.assemble = function () {
             throw new Error( 'unexpected runtime assembly' );
         };
