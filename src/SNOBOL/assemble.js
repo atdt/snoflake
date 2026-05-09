@@ -206,11 +206,8 @@ function assembleListing( vm, program ) {
 // drive macros directly against an empty memory layout don't pay for
 // strings they don't reference.
 function allocateHostStrings( vm ) {
-    for ( const name in SNOBOL.programSymbols ) {
-        const value = SNOBOL.programSymbols[ name ];
-        if ( typeof value === 'string' ) {
-            vm.define( name, value );
-        }
+    for ( const name in SNOBOL.hostStrings ) {
+        vm.define( name, SNOBOL.hostStrings[ name ] );
     }
 }
 

@@ -67,17 +67,14 @@ function interpret( vm, instructions ) {
 const STREAM_ACTIONS = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
 
 // Bind the host environment's *constants* into the symbol table: PARMS-style
-// numeric values from programSymbols, syntax-table indices, and the STREAM
+// numeric values from SNOBOL.constants, syntax-table indices, and the STREAM
 // dispatch tags. No memory is touched -- ALPHA and the other host strings
 // are allocated separately by SNOBOL.assemble. This runs on every reset so
 // a fresh VM can drive macros that look up TTL/STACK/UNITI/&c. directly,
 // without needing to first walk the assembler.
 function seedConstants( vm ) {
-    for ( const name in SNOBOL.programSymbols ) {
-        const value = SNOBOL.programSymbols[ name ];
-        if ( typeof value === 'number' ) {
-            vm.symbols[ name ] = value;
-        }
+    for ( const name in SNOBOL.constants ) {
+        vm.symbols[ name ] = SNOBOL.constants[ name ];
     }
     SNOBOL.tableNames.forEach( ( name, idx ) => {
         vm.symbols[ name ] = idx;

@@ -783,7 +783,7 @@ sil.CLERTB = function ( TABLE, KEY ) {
     // clear syntax table
     const tableName = syntaxTableName( TABLE );
     let table = syntaxTable( TABLE );
-    const chars = SNOBOL.programSymbols.ALPHA;
+    const chars = SNOBOL.hostStrings.ALPHA;
 
     if ( tableName ) {
         table = SNOBOL.syntaxTables[ tableName ] = chars

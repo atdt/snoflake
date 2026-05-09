@@ -1323,7 +1323,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         try {
             sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'ERROR' );
 
-            assert( SNOBOL.syntaxTables.SNABTB.length >= SNOBOL.programSymbols.ALPHSZ );
+            assert( SNOBOL.syntaxTables.SNABTB.length >= SNOBOL.constants.ALPHSZ );
             assert( SNOBOL.syntaxTables.SNABTB.every( function ( entry ) {
                 return entry[2] === 'ERROR';
             } ) );

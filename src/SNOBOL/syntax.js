@@ -12,14 +12,14 @@ for ( let i = 0; i < BYTE_VALUES; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
-SNOBOL.programSymbols = {
-    // MDATA
+SNOBOL.hostStrings = {
     ALPHA   : ALPHA,
     AMPST   : '&',
     COLSTR  : ': ',
     QTSTR   : "'",
+};
 
-    // PARMS
+SNOBOL.constants = {
     ALPHSZ  : ALPHA.length,
     CPA     : 1,
     DESCR   : 3,
