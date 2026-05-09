@@ -71,18 +71,20 @@ SNOBOL.VM.prototype.jmp = function ( loc ) {
     }
 };
 
-// Host options override a few assembled SIL switches after data initialization.
-// This keeps the historical SIL constants intact while giving the JS host
-// control over banner, listing, and statistics output.
+// Host options override a few assembled SIL switches after data
+// initialization. This keeps the historical SIL constants intact while
+// giving the JS host control over banner, listing, and statistics output.
+const HOST_OUTPUT_OPTIONS = [
+    [ 'LISTCL', 'listing' ],
+    [ 'BANRCL', 'banner' ],
+    [ 'STATCL', 'statistics' ],
+];
+
 function applyHostOutputOptions( vm ) {
-    if ( Object.hasOwn( vm.symbols, 'LISTCL' ) ) {
-        vm.d( 'LISTCL' ).addr = vm.options.listing ? 1 : 0;
-    }
-    if ( Object.hasOwn( vm.symbols, 'BANRCL' ) ) {
-        vm.d( 'BANRCL' ).addr = vm.options.banner ? 1 : 0;
-    }
-    if ( Object.hasOwn( vm.symbols, 'STATCL' ) ) {
-        vm.d( 'STATCL' ).addr = vm.options.statistics ? 1 : 0;
+    for ( const [ symbol, option ] of HOST_OUTPUT_OPTIONS ) {
+        if ( Object.hasOwn( vm.symbols, symbol ) ) {
+            vm.d( symbol ).addr = vm.options[ option ] ? 1 : 0;
+        }
     }
 }
 
