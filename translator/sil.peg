@@ -3,12 +3,6 @@
 // (C) Copyright 2012 by Ori Livneh
 // Licensed under GPLv2
 
-{
-    function expr( operator, left, right ) {
-        return { op: operator, left: left, right: right };
-    }
-}
-
 program
   = statements:statement+ end
 {
@@ -73,7 +67,7 @@ additive
   = head:multiplicative tail:( operator:[+-] term:multiplicative { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
-        return expr( node.operator, left, node.term );
+        return { operator: node.operator, operands: [ left, node.term ] };
     }, head );
 }
 
@@ -81,7 +75,7 @@ multiplicative
   = head:unary tail:( operator:"*" term:unary { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
-        return expr( node.operator, left, node.term );
+        return { operator: node.operator, operands: [ left, node.term ] };
     }, head );
 }
 
@@ -91,7 +85,7 @@ unary
     if ( operator === '+' ) {
         return argument;
     }
-    return { op: 'neg', value: argument };
+    return { negate: argument };
 }
   / primary
 
@@ -138,7 +132,7 @@ name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var name = head + tail.join( '' );
-    return { sym: name };
+    return { symbol: name };
 }
 
 macro "macro"

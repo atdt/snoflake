@@ -47,9 +47,9 @@ describe( 'Assembly Control Macros', function () {
         this.vm.run( SNOBOL.assemble( [
             [ 'PAD', 'BUFFER', [ 10 ] ],
             [ 'DS',  'DESCR',  [] ],
-            [ null,  'BRANCH', [ { sym: 'LBL' } ] ],
-            [ null,  'SETAC',  [ { sym: 'DS' }, 11 ] ],
-            [ 'LBL', 'SETAC',  [ { sym: 'DS' }, 22 ] ],
+            [ null,  'BRANCH', [ { symbol: 'LBL' } ] ],
+            [ null,  'SETAC',  [ { symbol: 'DS' }, 11 ] ],
+            [ 'LBL', 'SETAC',  [ { symbol: 'DS' }, 22 ] ],
             [ null,  'END',    [] ]
         ] ) );
 
@@ -61,8 +61,8 @@ describe( 'Assembly Control Macros', function () {
 
     it( 'resolves forward labels in assembled descriptor data', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'DS',     'DESCR', [ { sym: 'VALUE' } ] ],
-            [ 'SP',     'SPEC',  [ { sym: 'VALUE' }, 0, 0, 0, 0 ] ],
+            [ 'DS',     'DESCR', [ { symbol: 'VALUE' } ] ],
+            [ 'SP',     'SPEC',  [ { symbol: 'VALUE' }, 0, 0, 0, 0 ] ],
             [ 'VALUE',  'EQU',   [ 123 ] ],
             [ null,     'END',   [] ]
         ] ) );
@@ -124,9 +124,9 @@ describe( 'Branch Macros', function () {
     it( 'BRANCH', function () {
         this.vm.run( SNOBOL.assemble( [
             [ 'DS', 'DESCR',  [] ] ,
-            [ null,  'SETAC',  [ { sym: 'DS' }, 22 ] ] ,
-            [ null, 'BRANCH', [ { sym: 'LBL' } ] ],
-            [ null, 'SETAC',  [ { sym: 'DS' }, 33 ] ],
+            [ null,  'SETAC',  [ { symbol: 'DS' }, 22 ] ] ,
+            [ null, 'BRANCH', [ { symbol: 'LBL' } ] ],
+            [ null, 'SETAC',  [ { symbol: 'DS' }, 33 ] ],
             [ 'LBL',  'LHERE',  [] ],
             [ null, 'END',    [] ]
         ] ) );

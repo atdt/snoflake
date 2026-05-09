@@ -8,19 +8,11 @@ const LABEL = 0,
       COMMENT = 3,
       SPECIFIER_SIZE = 2 * SNOBOL.D;
 
-function resolveExpression( vm, operand ) {
-    if ( Object.hasOwn( operand, 'sym' ) ) {
-        return vm.$( operand.sym );
-    }
+function resolveBinaryOperand( vm, operand ) {
+    const left = resolveOperand( vm, operand.operands[ 0 ] ),
+          right = resolveOperand( vm, operand.operands[ 1 ] );
 
-    if ( operand.op === 'neg' ) {
-        return -resolveOperand( vm, operand.value );
-    }
-
-    const left = resolveOperand( vm, operand.left ),
-          right = resolveOperand( vm, operand.right );
-
-    switch ( operand.op ) {
+    switch ( operand.operator ) {
     case '+':
         return left + right;
     case '-':
@@ -28,7 +20,7 @@ function resolveExpression( vm, operand ) {
     case '*':
         return left * right;
     default:
-        throw new Error( 'Unknown SIL operand operator: ' + operand.op );
+        throw new Error( 'Unknown SIL operand operator: ' + operand.operator );
     }
 }
 
@@ -38,15 +30,23 @@ function resolveOperand( vm, operand ) {
     }
 
     if ( operand && typeof operand === 'object' ) {
-        return resolveExpression( vm, operand );
+        if ( Object.hasOwn( operand, 'symbol' ) ) {
+            return vm.$( operand.symbol );
+        }
+        if ( Object.hasOwn( operand, 'negate' ) ) {
+            return -resolveOperand( vm, operand.negate );
+        }
+        if ( Object.hasOwn( operand, 'operator' ) ) {
+            return resolveBinaryOperand( vm, operand );
+        }
+        throw new Error( 'Unknown SIL operand: ' + JSON.stringify( operand ) );
     }
 
     return operand;
 }
 
-// SIL operands are parsed as data: literals pass through, `{sym}` resolves
-// after labels are bound, and arithmetic nodes evaluate against the same
-// symbol table.
+// SIL operands are parsed as data. Assembly is where symbols can finally
+// resolve, because forward labels have been bound by then.
 function argsFor( vm, stmt ) {
     return stmt[ OPERANDS ].map( operand => resolveOperand( vm, operand ) );
 }
