@@ -4,36 +4,23 @@ import SNOBOL from './base.js';
 
 const IMAGE_MEMORY = Symbol( 'SNOBOL.image.memory' );
 
-function getArgs( f ) {
-    if ( typeof f === 'function' ) {
-        return f
-            .toString()
-            .replace( /([\s\S]+return \[|\];[\s\S]+)/g, '' )
-            .replace( /(vm\.\$\("|"\))/g, '' );
-    }
-    return JSON.stringify( f );
-}
-
-function execArgs( vm, args ) {
-    return typeof args === 'function' ? args.call( vm ) : args;
-}
-
 SNOBOL.D = 3;
 
-SNOBOL.VM.prototype.exec = function ( label, macro, argsCallback, comment, implementation ) {
+// `args` is always a plain array: the assembler resolves the late-binding
+// arg callbacks before calling exec, and runtime instructions carry resolved
+// arrays directly.
+SNOBOL.VM.prototype.exec = function ( label, macro, args, comment, implementation ) {
 
     if ( this.debug ) {
-        comment = comment ? '// ' + comment : '';
-        const code = ( macro + '(' + getArgs( argsCallback ) + ')' ).padEnd( 70, ' ' );
+        const trailer = comment ? '// ' + comment : '';
+        const code = ( macro + '(' + JSON.stringify( args ) + ')' ).padEnd( 70, ' ' );
         console.log( '[%s] [%s] %s %s',
             SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
             SNOBOL.str.pad( label || '', 6 ),
             code,
-            comment
+            trailer
         );
     }
-
-    const args = execArgs( this, argsCallback );
 
     this.currentLabel = label;
     const macroImplementation = implementation === undefined

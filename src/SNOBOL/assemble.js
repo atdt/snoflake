@@ -22,6 +22,9 @@ const DATA_MACROS = [
     'FORMAT', 'REAL', 'SPEC', 'STRING'
 ];
 
+// SIL operands are emitted as a callback so vm.$('LABEL') resolves at
+// execution time, after forward labels have been bound. Resolving the
+// callback here gives us the plain array form vm.exec consumes.
 function argsFor( vm, stmt ) {
     const args = stmt[ 2 ];
     return typeof args === 'function' ? args.call( vm ) : args;
@@ -64,13 +67,13 @@ function reserveDeferredData( vm, stmt, sourceIndex, deferredData ) {
     return ptr;
 }
 
-function execAssemblyMacro( vm, label, macro, args, comment ) {
-    return vm.exec( label, macro, args, comment );
+function execStatement( vm, stmt ) {
+    return vm.exec( stmt[ 0 ], stmt[ 1 ], argsFor( vm, stmt ), stmt[ 3 ] );
 }
 
 function emitStorage( vm, stmt ) {
     const ptr = vm.memPtr;
-    execAssemblyMacro( vm, ...stmt );
+    execStatement( vm, stmt );
     return ptr;
 }
 
@@ -84,23 +87,19 @@ function assembleData( vm, stmt, sourceIndex, deferredData ) {
         return reserveDeferredData( vm, stmt, sourceIndex, deferredData );
     }
     if ( macro === 'EQU' ) {
-        return execAssemblyMacro( vm, ...stmt );
+        return execStatement( vm, stmt );
     }
     return emitStorage( vm, stmt );
 }
 
 // Initialize the reserved DESCR/SPEC cells after forward labels are defined,
-// so label operands resolve normally.
+// so label operands resolve normally. The original label has been replaced
+// with the reserved ptr so that `this.d( this.currentLabel )` inside the
+// macro resolves to the cell we set aside.
 function initData( vm, deferredData ) {
     for ( const data of deferredData ) {
         vm.instructionPointer = data.ip;
-        execAssemblyMacro(
-            vm,
-            data.ptr,
-            data.stmt[ 1 ],
-            data.stmt[ 2 ],
-            data.stmt[ 3 ]
-        );
+        vm.exec( data.ptr, data.stmt[ 1 ], argsFor( vm, data.stmt ), data.stmt[ 3 ] );
     }
 }
 
