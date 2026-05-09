@@ -1944,42 +1944,17 @@ sil.LEQLC = function ( $SPEC, N, NELOC, EQLOC ) {
 // equality usually can be performed more efficiently than  the
 // general test.
 sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
-    // lexical comparison of strings
-    const SPEC1 = this.s( $SPEC1 ),
-          SPEC2 = this.s( $SPEC2 ),
-          STR1 = SPEC1.specified,
-          STR2 = SPEC2.specified;
-    let branch,
-        compared = false;
-
-    // Compare character-by-character so behaviour matches the macro spec.
-    const len = Math.min( STR1.length, STR2.length );
-    for ( let i = 0; i < len; i++ ) {
-        const diff = STR1.charCodeAt( i ) - STR2.charCodeAt( i );
-        if ( diff < 0 ) {
-            branch = LTLOC;
-            compared = true;
-            break;
-        }
-        if ( diff > 0 ) {
-            branch = GTLOC;
-            compared = true;
-            break;
-        }
-    }
-
-    if ( !compared ) {
-        if ( STR1.length < STR2.length ) {
-            branch = LTLOC;
-        } else if ( STR1.length > STR2.length ) {
-            branch = GTLOC;
-        } else {
-            branch = EQLOC;
-        }
-    }
+    // JS string comparison is UTF-16 code-unit lex order, identical to the
+    // charCodeAt-by-charCodeAt order the spec describes.
+    const STR1 = this.s( $SPEC1 ).specified,
+          STR2 = this.s( $SPEC2 ).specified,
+          branch = STR1 < STR2 ? LTLOC
+                 : STR1 > STR2 ? GTLOC
+                 : EQLOC;
 
     if ( this.debug ) {
-        this.log('LEXCMP', '[' + STR1 + '] vs [' + STR2 + ']', 'len1=' + STR1.length, 'len2=' + STR2.length, '→', branch === undefined ? '(fall-through)' : branch);
+        this.log( 'LEXCMP [%s] vs [%s] → %s', STR1, STR2,
+            branch === undefined ? '(fall-through)' : branch );
     }
 
     this.jmp( branch );
