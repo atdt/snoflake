@@ -3267,47 +3267,27 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // The return location LOC is saved on the stack so that the return can be
     // properly made.
     this.callbacks.push( function ( $DESCR_SRC, N ) {
-        let DESCR_SRC;
-
-        if ( $DESCR_SRC !== undefined ) {
-            DESCR_SRC = this.d( $DESCR_SRC );
-        }
-
-        if ( DESCR && DESCR_SRC ) {
-            DESCR.read( DESCR_SRC );
+        if ( DESCR && $DESCR_SRC !== undefined ) {
+            DESCR.read( this.d( $DESCR_SRC ) );
         }
 
         const A = this.OSTACK.addr;
         if ( this.debug ) {
             this.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
         }
-        // Restore CSTACK to A and OSTACK to saved A0 (at A+D)
+        // Restore CSTACK to A and OSTACK to saved A0 (at A+D).
         this.CSTACK.addr = this.OSTACK.addr;
         this.OSTACK.addr = this.d( A + D ).addr;
         if ( this.debug ) {
             this.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
         }
 
-        if ( typeof N === 'number' ) {
-            const idx = N - 1;
-            if ( idx >= 0 && $LOCs && $LOCs[ idx ] !== undefined ) {
-                const locPtr = $LOCs[ idx ];
-                if ( typeof locPtr === 'number' ) {
-                    this.instructionPointer = locPtr;
-                    this.instructionPointerChanged = true;
-                } else {
-                    // If a label pointer wasn't provided, fall through
-                    this.instructionPointer = retLoc + 1;
-                    this.instructionPointerChanged = true;
-                }
-            } else {
-                this.instructionPointer = retLoc + 1;
-                this.instructionPointerChanged = true;
-            }
-        } else {
-            this.instructionPointer = retLoc + 1;
-            this.instructionPointerChanged = true;
-        }
+        // N picks the matching labeled return; missing N, missing slot, or
+        // a non-numeric slot all fall through to the instruction after RCALL.
+        this.instructionPointer = ( typeof N === 'number' && typeof $LOCs?.[ N - 1 ] === 'number' )
+            ? $LOCs[ N - 1 ]
+            : retLoc + 1;
+        this.instructionPointerChanged = true;
     } );
 
     sil.PUSH.call( this, $DESCRs.slice().reverse() );
