@@ -30,10 +30,10 @@ class Descriptor {
     get value()    { return this.vm.getUint( this.ptr + 2 ); }
     set value( n ) { this.vm.setUint( this.ptr + 2, n ); }
 
-    update( ...args ) {
-        this.addr = args.length ? args.shift() : 0;
-        this.flags = args.length ? args.shift() : 0;
-        this.value = args.length ? args.shift() : 0;
+    update( addr = 0, flags = 0, value = 0 ) {
+        this.addr = addr;
+        this.flags = flags;
+        this.value = value;
         return this;
     }
 
@@ -103,12 +103,10 @@ class Specifier extends Descriptor {
         return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
     }
 
-    update( ...args ) {
-        this.addr = args.length ? args.shift() : 0;
-        this.flags = args.length ? args.shift() : 0;
-        this.value = args.length ? args.shift() : 0;
-        this.offset = args.length ? args.shift() : 0;
-        this.length = args.length ? args.shift() : 0;
+    update( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {
+        super.update( addr, flags, value );
+        this.offset = offset;
+        this.length = length;
         return this;
     }
 }
