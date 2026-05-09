@@ -170,12 +170,26 @@ function assembleListing( vm, program ) {
     return instructions.map( stmt => imageStatement( vm, stmt ) );
 }
 
+// MDATA host strings (ALPHA, AMPST, COLSTR, QTSTR) live at the start of
+// memory in the assembled image. Allocating them here -- rather than as
+// part of vm.reset -- keeps a fresh runtime VM byte-empty: tests that
+// drive macros directly against an empty memory layout don't pay for
+// strings they don't reference.
+function allocateHostStrings( vm ) {
+    for ( const name in SNOBOL.programSymbols ) {
+        const value = SNOBOL.programSymbols[ name ];
+        if ( typeof value === 'string' ) {
+            vm.define( name, value );
+        }
+    }
+}
+
 // Assembly is a pure function from a SIL listing to an image. It runs on
 // a throwaway scratch VM whose mem/symbols become the snapshot shipped to
 // the runtime; the caller never sees that scratch state.
 SNOBOL.assemble = function ( program ) {
     const vm = new SNOBOL.VM();
-    vm.seedHostSymbols();
+    allocateHostStrings( vm );
     const instructions = assembleListing( vm, program );
 
     return {

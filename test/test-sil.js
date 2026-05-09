@@ -447,8 +447,8 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
 
     it( 'ISTACK', function () {
         sil.ISTACK.call( this.vm );
-        assert.equal( this.vm.d( 'OSTACK' ).addr, 0 );
-        assert.equal( this.vm.d( 'CSTACK' ).addr, this.vm.$( 'STACK' ) );
+        assert.equal( this.vm.OSTACK.addr, 0 );
+        assert.equal( this.vm.CSTACK.addr, this.vm.$( 'STACK' ) );
     } );
 
     it( 'POP', function () {
@@ -477,7 +477,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
 
     it( 'PSTACK', function () {
         const d = this.vm.d();
-        this.vm.d( 'CSTACK' ).addr = 123;
+        this.vm.CSTACK.addr = 123;
         sil.PSTACK.call( this.vm, d );
         assert.deepEqual( d.raw(), [ 120, 0, 0 ] );
     } );
@@ -1333,7 +1333,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         const original = SNOBOL.syntaxTables.SNABTB;
 
         try {
-            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), this.vm.$( 'ERROR' ) );
+            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'ERROR' );
 
             assert( SNOBOL.syntaxTables.SNABTB.length >= SNOBOL.programSymbols.ALPHSZ );
             assert( SNOBOL.syntaxTables.SNABTB.every( function ( entry ) {
@@ -1350,8 +1350,8 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         let table;
 
         try {
-            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), this.vm.$( 'ERROR' ) );
-            sil.PLUGTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), this.vm.$( 'STOP' ), spec );
+            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'ERROR' );
+            sil.PLUGTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'STOP', spec );
             table = SNOBOL.syntaxTables.SNABTB;
 
             assert.equal( table.find( function ( entry ) {

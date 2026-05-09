@@ -60,18 +60,32 @@ function interpret( vm, instructions ) {
     }
 }
 
-SNOBOL.VM.prototype.seedHostSymbols = function () {
-    for ( const sym in SNOBOL.programSymbols ) {
-        if ( !Object.hasOwn( this.symbols, sym ) ) {
-            this.define( sym, SNOBOL.programSymbols[ sym ] );
+// STREAM uses these strings as dispatch tags for syntax-table actions
+// (see syntax.js's syntaxTables). The SIL listing also references them as
+// operand names (e.g. CLERTB SNABTB,ERROR), so they need to resolve to
+// themselves through vm.$().
+const STREAM_ACTIONS = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
+
+// Bind the host environment's *constants* into the symbol table: PARMS-style
+// numeric values from programSymbols, syntax-table indices, and the STREAM
+// dispatch tags. No memory is touched -- ALPHA and the other host strings
+// are allocated separately by SNOBOL.assemble. This runs on every reset so
+// a fresh VM can drive macros that look up TTL/STACK/UNITI/&c. directly,
+// without needing to first walk the assembler.
+function seedConstants( vm ) {
+    for ( const name in SNOBOL.programSymbols ) {
+        const value = SNOBOL.programSymbols[ name ];
+        if ( typeof value === 'number' ) {
+            vm.symbols[ name ] = value;
         }
     }
-    SNOBOL.tableNames.forEach( ( table, idx ) => {
-        if ( !Object.hasOwn( this.symbols, table ) ) {
-            this.define( table, idx );
-        }
+    SNOBOL.tableNames.forEach( ( name, idx ) => {
+        vm.symbols[ name ] = idx;
     } );
-};
+    for ( const action of STREAM_ACTIONS ) {
+        vm.symbols[ action ] = action;
+    }
+}
 
 // Hydrate the VM's symbols and memory from an image. The image's `memory`
 // is the byte-for-byte assembled snapshot -- host string constants and SIL
@@ -101,39 +115,10 @@ SNOBOL.VM.prototype.run = function ( image = SNOBOL.image ) {
     return !( this.instructionPointer < 0 );
 };
 
-// Stack pointer pseudo-descriptor: lets `vm.d('CSTACK')` and `vm.d('OSTACK')`
-// be used wherever a Descriptor is expected, while delegating addr reads/writes
-// to the live stack object. Other slots are inert.
-class RegisterDescriptor {
-    constructor( vm, name ) {
-        this.name = name;
-        this.width = 3;
-        this._target = name === 'CSTACK' ? vm.CSTACK : vm.OSTACK;
-    }
-
-    get addr()     { return this._target.addr; }
-    set addr( v )  { this._target.addr = v; }
-    get flags()    { return 0; }
-    set flags( v ) { /* ignore */ }
-    get value()    { return 0; }
-    set value( v ) { /* ignore */ }
-
-    toString() {
-        return '<' + this.name + ' A=' + this._target.addr + '>';
-    }
-}
-
 SNOBOL.VM.prototype.d = function ( ptr ) {
-    if ( ptr instanceof SNOBOL.Descriptor ) {
-        return ptr;
-    }
-    if ( ptr === 'CSTACK' ) {
-        return this.CSTACK_DESCRIPTOR;
-    }
-    if ( ptr === 'OSTACK' ) {
-        return this.OSTACK_DESCRIPTOR;
-    }
-    return new SNOBOL.Descriptor( this, ptr );
+    return ptr instanceof SNOBOL.Descriptor
+        ? ptr
+        : new SNOBOL.Descriptor( this, ptr );
 };
 
 SNOBOL.VM.prototype.s = function ( ptr ) {
@@ -153,6 +138,5 @@ SNOBOL.VM.prototype.reset = function () {
     // to avoid accidental overwrites by program macros.
     this.CSTACK = { addr: 0 };
     this.OSTACK = { addr: 0 };
-    this.CSTACK_DESCRIPTOR = new RegisterDescriptor( this, 'CSTACK' );
-    this.OSTACK_DESCRIPTOR = new RegisterDescriptor( this, 'OSTACK' );
+    seedConstants( this );
 };

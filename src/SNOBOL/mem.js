@@ -133,24 +133,8 @@ VM.prototype.define = function ( symbol, value ) {
 }
 
 VM.prototype.$ = VM.prototype.resolve = function ( key ) {
-    const val = this.symbols[ key ];
-
-    if ( val !== undefined ) {
-        return val;
+    if ( Object.hasOwn( this.symbols, key ) ) {
+        return this.symbols[ key ];
     }
-
-    // These four names are STREAM's indicator values, not symbols.
-    // The name itself is the value: STREAM stores it in a table entry
-    // and later switches on the string.
-    if ( key === 'CONTIN' || key === 'ERROR' || key === 'STOP' || key === 'STOPSH' ) {
-        return key;
-    }
-
-    // Fallback to programSymbols to support direct macro testing
-    // without running the generated SIL to bind symbols into memory.
-    if ( SNOBOL.programSymbols && Object.hasOwn( SNOBOL.programSymbols, key ) ) {
-        return SNOBOL.programSymbols[ key ];
-    }
-
     throw new ReferenceError( key );
 };
