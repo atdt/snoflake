@@ -37,32 +37,27 @@ class Descriptor {
         return this;
     }
 
-    // Test two instances for equality
     isEqualTo( other ) {
         if ( this.width !== other.width ) {
             return false;
         }
+        const mem = this.vm.mem;
         for ( let i = 0; i < this.width; i++ ) {
-            if ( this.vm.mem[ this.ptr + i ] !== this.vm.mem[ other.ptr + i ] ) {
+            if ( mem[ this.ptr + i ] !== mem[ other.ptr + i ] ) {
                 return false;
             }
         }
         return true;
     }
 
-    // Read (copy) the content of another instance into self
+    // Copy another instance's storage over our own. copyWithin handles
+    // overlap correctly per the typed-array spec.
     read( src ) {
-        for ( let i = 0; i < this.width; i++ ) {
-            this.vm.mem[ this.ptr + i ] = this.vm.mem[ src.ptr + i ];
-        }
+        this.vm.mem.copyWithin( this.ptr, src.ptr, src.ptr + this.width );
     }
 
     raw() {
-        const r = [];
-        for ( let i = 0; i < this.rawLength; i++ ) {
-            r.push( this.vm.mem[ this.ptr + i ] );
-        }
-        return r;
+        return Array.from( this.vm.mem.subarray( this.ptr, this.ptr + this.rawLength ) );
     }
 
     toString() {
