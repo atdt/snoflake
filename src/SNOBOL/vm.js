@@ -6,16 +6,6 @@ const IMAGE_MEMORY = Symbol( 'SNOBOL.image.memory' );
 
 SNOBOL.D = 3;
 
-// `args` is always a plain array; the assembler resolves the late-binding
-// arg callbacks before calling exec, and runtime instructions carry
-// resolved arrays directly. `impl` is the pre-bound macro implementation
-// (run() appends it once per instruction); when absent (assembly path) we
-// fall back to a SNOBOL.sil[macro] lookup.
-SNOBOL.VM.prototype.exec = function ( label, macro, args, comment, impl ) {
-    this.currentLabel = label;
-    return ( impl || SNOBOL.sil[ macro ] ).call( this, ...args );
-};
-
 SNOBOL.VM.prototype.jmp = function ( loc ) {
     // Omitted optional branch operands arrive as undefined (or null from the
     // PEG grammar's empty-list-slot rule); SIL specifies fall-through.
@@ -42,13 +32,30 @@ function applyHostOutputOptions( vm ) {
     }
 }
 
+// Compile each [label, macro, args, ...] image entry into a thunk that
+// dispatches to the resolved sil implementation. The thunk also stamps
+// vm.currentLabel, which sil.js's fileRole reads when routing I/O.
+// Doing the lookup once per program rather than once per dispatch is
+// worth 10-20% on CPU-heavy fixtures (kalah, n-queens, recognizer).
+function compileInstructions( vm, instructions ) {
+    return instructions.map( stmt => {
+        const label = stmt[ 0 ],
+              impl = SNOBOL.sil[ stmt[ 1 ] ],
+              args = stmt[ 2 ];
+        return function () {
+            vm.currentLabel = label;
+            impl.apply( vm, args );
+        };
+    } );
+}
+
 // Branching macros update instructionPointer themselves. Everything else
 // falls through to the next compact instruction.
 function interpret( vm, instructions ) {
     while ( vm.instructionPointer >= 0 && vm.instructionPointer < instructions.length ) {
         const loc = vm.instructionPointer;
         vm.instructionPointerChanged = false;
-        vm.exec( ...instructions[ loc ] );
+        instructions[ loc ]();
         if ( !vm.instructionPointerChanged && vm.instructionPointer === loc ) {
             vm.instructionPointer++;
         }
@@ -136,18 +143,10 @@ SNOBOL.VM.prototype.run = function ( program = SNOBOL.image ) {
         assembled = SNOBOL.assemble( this, program );
     }
 
-    // The image stores 4-tuples [label, macro, args, comment]; runtime
-    // dispatch wants the macro impl too, so append it here. Looking up
-    // SNOBOL.sil[macro] once per program rather than once per dispatch
-    // is worth 10-20% on CPU-heavy fixtures (kalah, n-queens, recognizer).
-    const instructions = assembled.instructions.map( stmt =>
-        [ ...stmt, SNOBOL.sil[ stmt[ 1 ] ] ]
-    );
-
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
     applyHostOutputOptions( this );
-    interpret( this, instructions );
+    interpret( this, compileInstructions( this, assembled.instructions ) );
 
     return !( this.instructionPointer < 0 );
 };

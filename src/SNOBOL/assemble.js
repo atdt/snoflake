@@ -8,9 +8,9 @@ const LABEL = 0,
       COMMENT = 3,
       SPECIFIER_SIZE = 2 * SNOBOL.D;
 
-// SIL operands are emitted as a callback so vm.$('LABEL') resolves at
-// execution time, after forward labels have been bound. Resolving the
-// callback here gives us the plain array form vm.exec consumes.
+// SIL operands are emitted as a callback so vm.$('LABEL') resolves after
+// forward labels have been bound. Resolving the callback here gives the
+// plain array form the runtime dispatches against.
 function argsFor( vm, stmt ) {
     const args = stmt[ OPERANDS ];
     return typeof args === 'function' ? args.call( vm ) : args;
@@ -63,9 +63,10 @@ function markerLocation( vm, program, index, nextInstruction ) {
         : nextInstruction;
 }
 
-// Run a SIL statement through vm.exec, resolving its operand callback first.
-function execStatement( vm, stmt, label = stmt[ LABEL ] ) {
-    return vm.exec( label, stmt[ MACRO ], argsFor( vm, stmt ), stmt[ COMMENT ] );
+// Dispatch a SIL macro at assembly time -- used for EQU (which yields a
+// constant) and the storage-replay pass (which writes into reserved memory).
+function runMacro( vm, stmt ) {
+    return SNOBOL.sil[ stmt[ MACRO ] ].apply( vm, argsFor( vm, stmt ) );
 }
 
 function reserveStorage( vm, stmt ) {
@@ -104,7 +105,7 @@ function emitInstruction( instructions, stmt ) {
 
 function storageOrConstantLocation( vm, stmt ) {
     return stmt[ MACRO ] === 'EQU'
-        ? execStatement( vm, stmt )
+        ? runMacro( vm, stmt )
         : reserveStorage( vm, stmt );
 }
 
@@ -151,7 +152,7 @@ function initializeReservedStorage( vm, dataStart, dataEnd, data ) {
     vm.memPtr = dataStart;
     try {
         for ( const stmt of data ) {
-            execStatement( vm, stmt, undefined );
+            SNOBOL.sil[ stmt[ MACRO ] ].apply( vm, stmt[ OPERANDS ] );
         }
 
         if ( vm.memPtr !== dataEnd ) {
