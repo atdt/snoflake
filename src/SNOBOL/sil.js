@@ -1372,9 +1372,6 @@ sil.GETAC = function ( $DESCR1, $DESCR2, N ) {
           A = DESCR_indirect.addr;
 
     DESCR1.addr = A;
-    if ( this.debug ) {
-        this.log('GETAC', $DESCR1, 'from', $DESCR2, 'N', N, 'A2', A2, '->', A, 'flags', DESCR_indirect.flags);
-    }
 };
 
 //     GETBAL  is  used to get the specification of a balanced
@@ -1849,12 +1846,8 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 // the first descriptor of the system stack.
 // 2.  See also PSTACK, RCALL, and RRTURN.
 sil.ISTACK = function () {
-    // initialize stack
     this.OSTACK.addr = 0;
     this.CSTACK.addr = this.$( 'STACK' );
-    if ( this.debug ) {
-        this.log('ISTACK set CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
-    }
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2993,11 +2986,7 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
           DESCR2 = this.d( $DESCR2 ),
           A2 = DESCR2.addr;
 
-    const target = this.d( A1 + N );
-    target.addr = A2;
-    if ( this.debug ) {
-        this.log('PUTAC write', A1 + N, 'A2', A2, 'src', DESCR2.raw(), 'dst', target.raw());
-    }
+    this.d( A1 + N ).addr = A2;
 };
 
 //     PUTD is used to put a descriptor.
@@ -3116,11 +3105,7 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 );
 
-    const target = this.d( DESCR1.addr + N );
-    target.value = DESCR2.value;
-    if ( this.debug ) {
-        this.log('PUTVC', $DESCR1, 'N', N, 'value', DESCR2.value, 'dst', target.raw());
-    }
+    this.d( DESCR1.addr + N ).value = DESCR2.value;
 };
 
 //     RCALL  is  used  to perform a recursive call.  DESCR is
@@ -3231,56 +3216,27 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         $LOCs = [ $LOCs ];
     }
 
-    if ( this.debug ) {
-        this.log('RCALL enter: CSTACK=%s OSTACK=%s STACK=%s', this.CSTACK.addr, this.OSTACK.addr, this.$('STACK'));
-    }
-    // Do not write at A; only store A0 at A+D and LOC at A+2D as descriptors.
-
-    // The old stack pointer (A0) is saved on the stack.
-    // sil.PUSH
-    // Store A0 at A+D with flags/value cleared
+    // Save the old stack pointer (A0) at A+D; flags and value cleared so
+    // the slot reads as a plain descriptor.
     this.d( this.CSTACK.addr + D ).update( this.OSTACK.addr, 0, 0 );
-
-    // The current stack pointer becomes the old stack pointer.
-    // Old stack pointer becomes current
     this.OSTACK.addr = this.CSTACK.addr;
-    if ( this.debug ) {
-        this.log('RCALL after save: OSTACK=%s', this.OSTACK.addr);
-    }
-
-    // A new current stack pointer is generated.
     this.CSTACK.addr += D;
-    if ( this.debug ) {
-        this.log('RCALL after +D: CSTACK=%s', this.CSTACK.addr);
-    }
 
     // The translated runtime carries the return continuation in callbacks,
     // but still reserves the SIL LOC descriptor slot so the stack frame shape
     // remains A+(2+N)*D with zeroed descriptor flags.
     this.d( this.CSTACK.addr + D ).update( 0 );
     this.CSTACK.addr += D;
-    if ( this.debug ) {
-        this.log('RCALL after +2D: CSTACK=%s', this.CSTACK.addr);
-    }
 
-
-    // The return location LOC is saved on the stack so that the return can be
-    // properly made.
     this.callbacks.push( function ( $DESCR_SRC, N ) {
         if ( DESCR && $DESCR_SRC !== undefined ) {
             DESCR.read( this.d( $DESCR_SRC ) );
         }
 
-        const A = this.OSTACK.addr;
-        if ( this.debug ) {
-            this.log('RRTURN cb: before restore CSTACK=%s OSTACK=%s A=%s', this.CSTACK.addr, this.OSTACK.addr, A);
-        }
         // Restore CSTACK to A and OSTACK to saved A0 (at A+D).
+        const A = this.OSTACK.addr;
         this.CSTACK.addr = this.OSTACK.addr;
         this.OSTACK.addr = this.d( A + D ).addr;
-        if ( this.debug ) {
-            this.log('RRTURN cb: after restore CSTACK=%s OSTACK=%s', this.CSTACK.addr, this.OSTACK.addr);
-        }
 
         // N picks the matching labeled return; missing N, missing slot, or
         // a non-numeric slot all fall through to the instruction after RCALL.
@@ -3291,16 +3247,6 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     } );
 
     sil.PUSH.call( this, $DESCRs.slice().reverse() );
-    if ( this.debug ) {
-        this.log('RCALL after args: CSTACK=%s', this.CSTACK.addr);
-    }
-    if ( this.debug ) {
-        try {
-            this.log('RCALL jmp ->', $PROC, '->', typeof $PROC === 'number' ? this.mem[ $PROC ] : '(not number)');
-        } catch ( e ) {
-            this.log('RCALL jmp inspect failed', e);
-        }
-    }
     this.jmp( $PROC );
 };
 
