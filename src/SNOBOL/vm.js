@@ -6,12 +6,12 @@ const IMAGE_MEMORY = Symbol( 'SNOBOL.image.memory' );
 
 SNOBOL.D = 3;
 
-// `args` is always a plain array: the assembler resolves the late-binding
-// arg callbacks before calling exec, and runtime instructions carry resolved
-// arrays directly. The runtime path also pre-binds `implementation` via
-// bindInstruction so the dispatch loop avoids a per-instruction hash lookup
-// of SNOBOL.sil[macro]; the assembly path passes undefined and falls back.
-SNOBOL.VM.prototype.exec = function ( label, macro, args, comment, implementation ) {
+// `args` is always a plain array; the assembler resolves the late-binding
+// arg callbacks before calling exec, and runtime instructions carry
+// resolved arrays directly. `impl` is the pre-bound macro implementation
+// (run() appends it once per instruction); when absent (assembly path) we
+// fall back to a SNOBOL.sil[macro] lookup.
+SNOBOL.VM.prototype.exec = function ( label, macro, args, comment, impl ) {
 
     if ( this.debug ) {
         const trailer = comment ? '// ' + comment : '';
@@ -25,7 +25,7 @@ SNOBOL.VM.prototype.exec = function ( label, macro, args, comment, implementatio
     }
 
     this.currentLabel = label;
-    const returnValue = ( implementation || SNOBOL.sil[ macro ] ).call( this, ...args );
+    const returnValue = ( impl || SNOBOL.sil[ macro ] ).call( this, ...args );
 
     const watch = this.options.watch;
     if ( watch && watch.length > 0 ) {
@@ -104,13 +104,6 @@ function isImage( program ) {
     return program && Array.isArray( program.instructions );
 }
 
-// Pre-bind each instruction's macro implementation as a fifth tuple slot so
-// the interpret loop skips a SNOBOL.sil[macro] lookup per dispatch. Worth
-// 10-20% on CPU-heavy fixtures (kalah, n-queens, syntactic-recognizer).
-function bindInstruction( instruction ) {
-    return instruction.concat( SNOBOL.sil[ instruction[ 1 ] ] );
-}
-
 SNOBOL.VM.prototype.seedHostSymbols = function () {
     for ( const sym in SNOBOL.programSymbols ) {
         if ( !Object.hasOwn( this.symbols, sym ) ) {
@@ -151,6 +144,9 @@ function replayDataStatements( vm, data ) {
     }
 }
 
+// Hydrate the VM's symbols and memory from an image. Subsequent VMs that
+// share the same image object reuse a cached memory snapshot to skip the
+// data-statement replay.
 SNOBOL.VM.prototype.loadImage = function ( image ) {
     if ( !Array.isArray( image.data ) ) {
         throw new Error( 'Malformed SNOBOL image' );
@@ -176,19 +172,25 @@ SNOBOL.VM.prototype.loadImage = function ( image ) {
             memPtr: this.memPtr
         };
     }
-
-    return image.instructions.map( bindInstruction );
 };
 
 SNOBOL.VM.prototype.run = function ( program = SNOBOL.image ) {
-    let instructions;
-
+    let assembled;
     if ( isImage( program ) ) {
         this.reset();
-        instructions = this.loadImage( program );
+        this.loadImage( program );
+        assembled = program;
     } else {
-        instructions = SNOBOL.assemble( this, program ).instructions.map( bindInstruction );
+        assembled = SNOBOL.assemble( this, program );
     }
+
+    // The image stores 4-tuples [label, macro, args, comment]; runtime
+    // dispatch wants the macro impl too, so append it here. Looking up
+    // SNOBOL.sil[macro] once per program rather than once per dispatch
+    // is worth 10-20% on CPU-heavy fixtures (kalah, n-queens, recognizer).
+    const instructions = assembled.instructions.map( stmt =>
+        [ ...stmt, SNOBOL.sil[ stmt[ 1 ] ] ]
+    );
 
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
