@@ -15,6 +15,13 @@ const MEMORY_LOCATION_MACROS = [
 // on one aliases the next statement that does.
 const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 
+// Data macros that lay out memory at load time. EQU only defines a symbolic
+// constant, so it is captured in the image's symbol table rather than replayed.
+const DATA_MACROS = [
+    'ARRAY', 'BUFFER', 'DESCR',
+    'FORMAT', 'REAL', 'SPEC', 'STRING'
+];
+
 function argsFor( vm, stmt ) {
     const args = stmt[ 2 ];
     return typeof args === 'function' ? args.call( vm ) : args;
@@ -106,21 +113,32 @@ function compactInstruction( vm, stmt ) {
     ];
 }
 
-function nonzeroMemory( vm ) {
-    const mem = [];
+// After full assembly, capture every data-emitting statement with operands
+// resolved. The label is preserved as documentation: the loader replays in
+// source order with no label binding, so each macro allocates fresh and
+// addresses match the symbol table built during assembly.
+function captureData( vm, program ) {
+    const data = [];
 
-    for ( let ptr = 0; ptr < vm.memPtr; ptr++ ) {
-        const value = vm.mem[ ptr ];
-        if ( value !== 0 ) {
-            mem.push( [ ptr, value ] );
+    for ( let i = 0; i < program.length; i++ ) {
+        const stmt = program[ i ];
+        if ( DATA_MACROS.includes( stmt[ 1 ] ) ) {
+            data.push( [
+                stmt[ 0 ] || null,
+                stmt[ 1 ],
+                argsFor( vm, stmt ),
+                stmt[ 3 ] || ''
+            ] );
         }
     }
 
-    return mem;
+    return data;
 }
 
-// Load the mixed SIL listing into two address spaces: assembled data in
-// vm.mem, and executable statements in a compact instruction stream.
+// Walk the SIL listing once: bind labels, execute storage macros to grow
+// memPtr correctly, and produce a resolved instruction stream. Memory
+// content is recovered separately from `captureData` so the image carries
+// data statements rather than a byte image.
 function assembleListing( vm, program ) {
     const instructions = [],
           deferredData = [];
@@ -156,7 +174,10 @@ function assembleListing( vm, program ) {
     }
 
     initData( vm, deferredData );
-    return instructions.map( stmt => compactInstruction( vm, stmt ) );
+    return {
+        instructions: instructions.map( stmt => compactInstruction( vm, stmt ) ),
+        data: captureData( vm, program )
+    };
 }
 
 SNOBOL.assemble = function ( vm, program ) {
@@ -167,12 +188,11 @@ SNOBOL.assemble = function ( vm, program ) {
     vm.debug = false;
 
     try {
-        const instructions = assembleListing( vm, program );
+        const { instructions, data } = assembleListing( vm, program );
 
         return {
             symbols: { ...vm.symbols },
-            memPtr: vm.memPtr,
-            memInit: nonzeroMemory( vm ),
+            data,
             instructions
         };
     } finally {

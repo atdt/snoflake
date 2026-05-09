@@ -126,23 +126,6 @@ function bindInstruction( instruction ) {
     return instruction.concat( SNOBOL.sil[ instruction[ 1 ] ] );
 }
 
-function imageMemory( image ) {
-    if ( image[ IMAGE_MEMORY ] !== undefined ) {
-        return image[ IMAGE_MEMORY ];
-    }
-    if ( !Array.isArray( image.memInit ) ) {
-        throw new Error( 'Malformed SNOBOL image' );
-    }
-
-    const memory = new Uint32Array( image.memPtr );
-    for ( const [ ptr, value ] of image.memInit ) {
-        memory[ ptr ] = value;
-    }
-
-    image[ IMAGE_MEMORY ] = memory;
-    return memory;
-}
-
 SNOBOL.VM.prototype.seedHostSymbols = function () {
     for ( const sym in SNOBOL.programSymbols ) {
         if ( !Object.hasOwn( this.symbols, sym ) ) {
@@ -156,17 +139,60 @@ SNOBOL.VM.prototype.seedHostSymbols = function () {
     } );
 };
 
-SNOBOL.VM.prototype.loadImage = function ( image ) {
-    const memory = imageMemory( image );
-    this.symbols = { ...image.symbols };
-    this.memPtr = image.memPtr;
-    if ( memory.length > this.mem.length ) {
-        this.grow( memory.length );
+// Allocate raw byte buffers for host-supplied string constants (ALPHA,
+// AMPST, COLSTR, QTSTR). These sit at the start of memory ahead of any SIL
+// data statement; they're a property of the host environment, not the SIL
+// source, so the loader writes them before replaying image.data.
+function allocateHostStrings( vm ) {
+    for ( const sym in SNOBOL.programSymbols ) {
+        const value = SNOBOL.programSymbols[ sym ];
+        if ( typeof value === 'string' ) {
+            const ptr = vm.alloc( value.length );
+            for ( let i = 0; i < value.length; i++ ) {
+                vm.mem[ ptr + i ] = value.charCodeAt( i );
+            }
+        }
     }
-    this.mem.set( memory, 0 );
+}
 
-    // The image is sparse on disk; each imported image caches one dense memory
-    // template. Instruction binding still happens on the per-VM stream.
+// Replay the image's data statements against this VM. Each storage macro
+// allocates at memPtr in source order, reproducing the layout captured by
+// the translator. The label in each entry is documentation only; passing
+// undefined as currentLabel forces DESCR/SPEC to allocate fresh instead of
+// resolving the label back to its address.
+function replayDataStatements( vm, data ) {
+    for ( const stmt of data ) {
+        vm.currentLabel = undefined;
+        SNOBOL.sil[ stmt[ 1 ] ].apply( vm, stmt[ 2 ] );
+    }
+}
+
+SNOBOL.VM.prototype.loadImage = function ( image ) {
+    if ( !Array.isArray( image.data ) ) {
+        throw new Error( 'Malformed SNOBOL image' );
+    }
+
+    this.symbols = { ...image.symbols };
+
+    const cached = image[ IMAGE_MEMORY ];
+    if ( cached !== undefined ) {
+        if ( cached.template.length > this.mem.length ) {
+            this.grow( cached.template.length );
+        }
+        this.mem.set( cached.template, 0 );
+        this.memPtr = cached.memPtr;
+    } else {
+        this.memPtr = 0;
+        allocateHostStrings( this );
+        replayDataStatements( this, image.data );
+        // Snapshot the assembled memory so subsequent VMs sharing this
+        // image skip the replay and just copy a typed array.
+        image[ IMAGE_MEMORY ] = {
+            template: this.mem.slice( 0, this.memPtr ),
+            memPtr: this.memPtr
+        };
+    }
+
     return image.instructions.map( bindInstruction );
 };
 

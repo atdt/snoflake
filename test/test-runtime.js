@@ -381,13 +381,19 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'loads an assembled image without invoking the assembler', function () {
+        // Host string constants are allocated at the start of memory before
+        // image.data is replayed. The single DESCR entry below lands right
+        // after those allocations.
+        const hostStringSize = Object.values( SNOBOL.programSymbols )
+            .filter( v => typeof v === 'string' )
+            .reduce( ( sum, s ) => sum + s.length, 0 );
         const assemble = SNOBOL.assemble,
               image = {
-                  symbols: { DS: 0 },
-                  memPtr: 3,
-                  memInit: [ [ 1, 7 ], [ 2, 9 ] ],
+                  symbols: { DS: hostStringSize },
+                  data: [
+                      [ 'DS', 'DESCR', [ 31, 7, 9 ], 'descriptor under test' ]
+                  ],
                   instructions: [
-                      [ null, 'SETAC', [ 0, 31 ], '' ],
                       [ null, 'END', [], '' ]
                   ]
               };
