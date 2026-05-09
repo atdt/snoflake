@@ -2533,21 +2533,13 @@ sil.MOVA = function ( $DESCR1, $DESCR2 ) {
 // from which the move is made. This only occurs when A1 is less
 // than A2. Care must be taken to handle this case correctly.
 sil.MOVBLK = function ( $DESCR1, $DESCR2, $DESCR3 ) {
-    // move block of descriptors
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 ),
-          dst = DESCR1.addr + D,
-          src = DESCR2.addr + D,
-          n = DESCR3.addr;
+    const dst = this.d( $DESCR1 ).addr + D,
+          src = this.d( $DESCR2 ).addr + D,
+          n = this.d( $DESCR3 ).addr;
 
-    // The doc-block notes that overlap is only possible when A1 < A2, in
-    // which case the source lives at higher addresses than the destination
-    // and a forward copy reads each source cell before any later write can
-    // reach it.
-    for ( let i = 0; i < n; i++ ) {
-        this.mem[ dst + i ] = this.mem[ src + i ];
-    }
+    // copyWithin handles the A1 < A2 overlap case (per spec) — no manual
+    // direction selection needed.
+    this.mem.copyWithin( dst, src, src + n );
 };
 
 //     MOVD is used to move (copy) a descriptor from one loca-
@@ -4907,14 +4899,13 @@ sil.VEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 // Programming Notes:
 // 1.  I is always positive.
 sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
-    // zero block
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          last = DESCR1.addr + DESCR2.addr;
+    // I+1 descriptors at A, A+D, ..., A+D*I — D*(I+1) cells starting at A.
+    // Zero is the same bit pattern across the int/uint/float views, so a
+    // raw mem.fill clears all three fields of every descriptor.
+    const start = this.d( $DESCR1 ).addr,
+          end = start + this.d( $DESCR2 ).addr + D;
 
-    for ( let ptr = DESCR1.addr; ptr <= last; ptr += D ) {
-        this.d( ptr ).update( 0, 0, 0 );
-    }
+    this.mem.fill( 0, start, end );
 };
 
 SNOBOL.sil = sil;
