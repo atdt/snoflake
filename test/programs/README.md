@@ -65,7 +65,7 @@ Validation enforced by the runner:
   supported way to feed runtime `INPUT(...)` reads, which keeps tests
   hermetic.
 
-Other recognized keys (`caseFold`, `debug`, `watch`, …) are passed through to
+Other recognized keys (`caseFold`, …) are passed through to
 `SNOBOL.VM(options)` exactly as `snoflake` does today.
 
 ### `@input`
@@ -266,7 +266,7 @@ node tools/check-csnobol4.js --update FIX    # rewrite @expect with CSNOBOL4 std
 
 `--update` only rewrites `@match exact` fixtures whose CSNOBOL4 run did not
 error; `substring` and `error` fixtures are left untouched with a skip note.
-`@options` runtime flags (`caseFold`, `debug`, …) are not translated to
+`@options` runtime flags (`caseFold`, …) are not translated to
 CSNOBOL4 invocation flags — fixtures that set them get a `WARN` line so
 disagreements are not mis-attributed. Mismatched runs are dumped to
 `tmp/check-csnobol4/<name>.actual`. Override the binary with `SNOBOL4=<path>`.

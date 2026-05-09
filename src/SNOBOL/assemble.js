@@ -189,20 +189,11 @@ function assembleListing( vm, program ) {
 
 SNOBOL.assemble = function ( vm, program ) {
     vm.seedHostSymbols();
+    const { instructions, data } = assembleListing( vm, program );
 
-    // Assembly is silent. Debug output should show executed SIL.
-    const savedDebug = vm.debug;
-    vm.debug = false;
-
-    try {
-        const { instructions, data } = assembleListing( vm, program );
-
-        return {
-            symbols: { ...vm.symbols },
-            data,
-            instructions
-        };
-    } finally {
-        vm.debug = savedDebug;
-    }
+    return {
+        symbols: { ...vm.symbols },
+        data,
+        instructions
+    };
 };

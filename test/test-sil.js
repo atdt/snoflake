@@ -507,7 +507,6 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
     } );
 
     it( 'SPOP', function () {
-        this.vm.debug = true;
         const s1 = this.vm.s(),
               s2 = this.vm.s(),
               s3 = this.vm.s(),

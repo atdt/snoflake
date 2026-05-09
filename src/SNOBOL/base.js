@@ -1,8 +1,6 @@
 "use strict";
 
 const DEFAULT_OPTIONS = {
-    debug: false,
-    watch: [],
     // Fold SNOBOL source names and labels to uppercase during compilation.
     caseFold: true,
     // Snoflake suppresses the SNOBOL4 startup banner, success/termination
@@ -14,7 +12,6 @@ const DEFAULT_OPTIONS = {
 const SNOBOL = {
     VM: function ( options ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
-        this.debug = !!this.options.debug;
         // I/O adapters: defaults target Node (console + node:fs) but a host
         // may inject its own writers and loader to redirect program output
         // or supply pre-loaded sources. See src/SNOBOL/io.js.

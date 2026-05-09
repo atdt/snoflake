@@ -42,13 +42,7 @@ SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, unit, carriageCo
     // TODO: route by unit.  Today all output goes to stdout.  Per the SIL
     // spec, OUTPUT (UNITO) and PUNCH (UNITP) are distinct destinations, and
     // user programs may associate other unit numbers with files.  When that
-    // is implemented, dispatch on `unit` here; for now, surface unexpected
-    // units so silently-misrouted output is never invisible.
-    if ( unit !== this.$( 'UNITO' ) ) {
-        if ( this.debug ) {
-            this.log( 'printLinePrinterRecord: unit %s not implemented; writing to stdout', unit );
-        }
-    }
+    // is implemented, dispatch on `unit` here.
     const stdout = this.stdout;
     record.split( '\n' ).forEach( function ( line ) {
         if ( line.length === 0 ) {
@@ -169,11 +163,6 @@ function stackPopper( dataType ) {
         for ( let i = 0; i < ARGs.length; i++ ) {
             dst = this[ dataType ]( ARGs[i] );
             if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
-                if ( this.debug ) {
-                    this.log('UNDERFLOW %s: ip=%s, CSTACK=%s, STACK=%s, width=%s',
-                        dataType.toUpperCase(), this.instructionPointer,
-                        this.CSTACK.addr, STACK_BASE, dst.width);
-                }
                 throw new RangeError( 'Stack underflow' );
             }
             // Pop: read from current top (base is CSTACK.addr - (width - D)), then move pointer down
@@ -1944,11 +1933,6 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
           branch = STR1 < STR2 ? LTLOC
                  : STR1 > STR2 ? GTLOC
                  : EQLOC;
-
-    if ( this.debug ) {
-        this.log( 'LEXCMP [%s] vs [%s] → %s', STR1, STR2,
-            branch === undefined ? '(fall-through)' : branch );
-    }
 
     this.jmp( branch );
 };
@@ -4235,10 +4219,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           O = SPEC2.offset,
           L = SPEC2.length;
 
-    if ( this.debug ) {
-        this.log( 'STREAM start', TABLE, JSON.stringify( SPEC2.specified ) );
-    }
-
     let tableName = SNOBOL.tableNames[ TABLE ],
         table = SNOBOL.syntaxTables[ tableName ],
         P = 0;
@@ -4283,10 +4263,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             }
         }
 
-        if ( this.debug ) {
-            this.log( 'TI = %s', TI );
-        }
-
         switch ( TI ) {
         case 'CONTIN':
             continue;
@@ -4326,9 +4302,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    if ( this.debug ) {
-        this.log( 'STREAM runout SPEC1', SPEC1.raw(), 'SPEC2', SPEC2.raw() );
-    }
     STYPE.addr = P;
     SPEC1.update( A, F, V, O, L );
     maybeFoldToken.call( this, L );
@@ -4517,11 +4490,8 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
 // Programming Notes:
 // 1.  TITLE need not be implemented as such.   It  may  simply
 // perform no operation.
-sil.TITLE = function ( MSG ) {
+sil.TITLE = function () {
     // title assembly listing
-    if ( this.debug ) {
-        this.log( MSG );
-    }
 };
 
 sil.DBG = sil.TITLE; // nonstandard ;)

@@ -12,53 +12,8 @@ SNOBOL.D = 3;
 // (run() appends it once per instruction); when absent (assembly path) we
 // fall back to a SNOBOL.sil[macro] lookup.
 SNOBOL.VM.prototype.exec = function ( label, macro, args, comment, impl ) {
-
-    if ( this.debug ) {
-        const trailer = comment ? '// ' + comment : '';
-        const code = ( macro + '(' + JSON.stringify( args ) + ')' ).padEnd( 70, ' ' );
-        console.log( '[%s] [%s] %s %s',
-            SNOBOL.str.pad( '' + this.instructionPointer, 4 ),
-            SNOBOL.str.pad( label || '', 6 ),
-            code,
-            trailer
-        );
-    }
-
     this.currentLabel = label;
-    const returnValue = ( impl || SNOBOL.sil[ macro ] ).call( this, ...args );
-
-    const watch = this.options.watch;
-    if ( watch && watch.length > 0 ) {
-        watch.forEach( function ( variable ) {
-            let value;
-
-            if ( variable === 'CSTACK' || variable === 'OSTACK' ) {
-                value = this[ variable ].addr;
-            } else {
-                value = Object.hasOwn( this.symbols, variable ) ? this.symbols[ variable ] : 'UNDEF';
-            }
-            console.log(
-                '→ %s: %s',
-                SNOBOL.str.pad( variable, 6, 'left' ),
-                value
-            );
-        }, this );
-    }
-
-    if ( typeof returnValue === 'boolean' ) {
-        // Normalize boolean to exit code and do not terminate the process abruptly
-        this.exitCode = returnValue ? 0 : 1;
-        return returnValue;
-    }
-
-    return returnValue;
-};
-
-
-SNOBOL.VM.prototype.log = function ( ...args ) {
-    if ( this.debug ) {
-        console.log( ...args );
-    }
+    return ( impl || SNOBOL.sil[ macro ] ).call( this, ...args );
 };
 
 SNOBOL.VM.prototype.jmp = function ( loc ) {
