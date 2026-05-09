@@ -3,18 +3,20 @@
 import SNOBOL from './base.js';
 
 // Macros that emit memory at load time.
-const DATA_MACROS = [
+const DATA_MACROS = new Set( [
     'ARRAY', 'BUFFER', 'DESCR',
     'FORMAT', 'REAL', 'SPEC', 'STRING'
-];
+] );
 
 // EQU also binds its label to the assembly cursor, but defines a symbolic
 // constant rather than emitting storage, so the loader doesn't replay it.
-const MEMORY_LOCATION_MACROS = [ ...DATA_MACROS, 'EQU' ];
+const MEMORY_LOCATION_MACROS = new Set( [ ...DATA_MACROS, 'EQU' ] );
 
 // Markers that occupy neither memory nor executable code. A label on one
 // aliases the next statement that does.
-const LOCATIONLESS_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
+const LOCATIONLESS_MACROS = new Set( [ 'LHERE', 'PROC', 'TITLE' ] );
+
+const SPECIFIER_SIZE = 2 * SNOBOL.D;
 
 // SIL operands are emitted as a callback so vm.$('LABEL') resolves at
 // execution time, after forward labels have been bound. Resolving the
@@ -32,7 +34,7 @@ function nextLocatedStatement( program, index ) {
 
     while (
         next < program.length &&
-        LOCATIONLESS_MACROS.includes( program[ next ][ 1 ] )
+        LOCATIONLESS_MACROS.has( program[ next ][ 1 ] )
     ) {
         next++;
     }
@@ -46,118 +48,134 @@ function locationAtHere( vm, program, index, nextInstruction ) {
 
     // LHERE/PROC mean "the current location". The active counter is memory
     // when the next located statement is data, and code otherwise.
-    return MEMORY_LOCATION_MACROS.includes( macro )
+    return MEMORY_LOCATION_MACROS.has( macro )
         ? vm.memPtr
         : nextInstruction;
 }
 
 // Run a SIL statement through vm.exec, resolving its operand callback first.
-// `label` defaults to the statement's own label, but initData overrides it
-// with the deferred cell's ptr so DESCR/SPEC fill that exact cell.
 function execStatement( vm, stmt, label = stmt[ 0 ] ) {
     return vm.exec( label, stmt[ 1 ], argsFor( vm, stmt ), stmt[ 3 ] );
 }
 
-function reserveDeferredData( vm, stmt, deferredData ) {
-    const ptr = stmt[ 1 ] === 'SPEC' ? vm.s().ptr : vm.d().ptr;
-
-    // Reserve the cell now so later labels see the right memory layout. Fill
-    // it after forward labels have been defined.
-    deferredData.push( { ptr, stmt } );
-    return ptr;
+function encodedLength( value ) {
+    return SNOBOL.str.encode( value ).length;
 }
 
-function emitStorage( vm, stmt ) {
-    const ptr = vm.memPtr;
-    execStatement( vm, stmt );
-    return ptr;
-}
-
-// Assemble one statement from the memory side of SIL and return the memory
-// value its label should name. DESCR/SPEC reserve space here, but wait to
-// fill their fields until forward labels have been defined.
-function assembleData( vm, stmt, deferredData ) {
+function storageSize( vm, stmt ) {
     const macro = stmt[ 1 ];
 
-    if ( macro === 'DESCR' || macro === 'SPEC' ) {
-        return reserveDeferredData( vm, stmt, deferredData );
+    switch ( macro ) {
+    case 'DESCR':
+        return SNOBOL.D;
+    case 'SPEC':
+        return SPECIFIER_SIZE;
     }
-    if ( macro === 'EQU' ) {
-        return execStatement( vm, stmt );
+
+    const args = argsFor( vm, stmt );
+
+    switch ( macro ) {
+    case 'ARRAY':
+        return args[ 0 ] * SNOBOL.D;
+    case 'BUFFER':
+        return args[ 0 ];
+    case 'FORMAT':
+    case 'STRING':
+        return SPECIFIER_SIZE + encodedLength( args[ 0 ] );
+    default:
+        throw new Error( 'Unknown storage macro: ' + macro );
     }
-    return emitStorage( vm, stmt );
 }
 
-// Initialize the reserved DESCR/SPEC cells now that forward labels are
-// defined. Passing the reserved ptr as the label makes the macro fill that
-// exact cell instead of allocating a fresh one.
-function initData( vm, deferredData ) {
-    for ( const { ptr, stmt } of deferredData ) {
-        execStatement( vm, stmt, ptr );
+function reserveStorage( vm, stmt ) {
+    const ptr = vm.memPtr;
+    vm.alloc( storageSize( vm, stmt ) );
+    return ptr;
+}
+
+function emitInstruction( instructions, stmt ) {
+    const location = instructions.length;
+    instructions.push( stmt );
+    return location;
+}
+
+function memoryLocation( vm, stmt ) {
+    return stmt[ 1 ] === 'EQU'
+        ? execStatement( vm, stmt )
+        : reserveStorage( vm, stmt );
+}
+
+function statementLocation( vm, program, instructions, stmt, index ) {
+    const macro = stmt[ 1 ];
+
+    if ( LOCATIONLESS_MACROS.has( macro ) ) {
+        return locationAtHere( vm, program, index, instructions.length );
+    }
+
+    if ( MEMORY_LOCATION_MACROS.has( macro ) ) {
+        return memoryLocation( vm, stmt );
+    }
+
+    return emitInstruction( instructions, stmt );
+}
+
+function bindLabel( vm, label, location ) {
+    if ( label ) {
+        vm.define( label, location );
     }
 }
 
-// After full assembly, capture every data-emitting statement with operands
-// resolved. The label is preserved as documentation: the loader replays in
-// source order with no label binding, so each macro allocates fresh and
-// addresses match the symbol table built during assembly.
-function captureData( vm, program ) {
-    const data = [];
-
-    for ( let i = 0; i < program.length; i++ ) {
-        const stmt = program[ i ];
-        if ( DATA_MACROS.includes( stmt[ 1 ] ) ) {
-            data.push( [
-                stmt[ 0 ] || null,
-                stmt[ 1 ],
-                argsFor( vm, stmt ),
-                stmt[ 3 ] || ''
-            ] );
-        }
-    }
-
-    return data;
+function imageStatement( vm, stmt, label = stmt[ 0 ] ) {
+    return [
+        label,
+        stmt[ 1 ],
+        argsFor( vm, stmt ),
+        stmt[ 3 ] || ''
+    ];
 }
 
-// Walk the SIL listing once: bind labels, execute storage macros to grow
-// memPtr correctly, and produce a resolved instruction stream. Memory
-// content is recovered separately from `captureData` so the image carries
-// data statements rather than a byte image.
+function dataStatements( vm, program ) {
+    // The loader replays data macros in source order with no label binding,
+    // so labels here are documentation rather than directives.
+    return program
+        .filter( stmt => DATA_MACROS.has( stmt[ 1 ] ) )
+        .map( stmt => imageStatement( vm, stmt, stmt[ 0 ] || null ) );
+}
+
+function initializeData( vm, dataStart, dataEnd, data ) {
+    // Now that all labels are bound, replay storage macros from the start of
+    // the reserved data region to initialize those exact addresses.
+    vm.memPtr = dataStart;
+    for ( const stmt of data ) {
+        execStatement( vm, stmt, undefined );
+    }
+
+    if ( vm.memPtr !== dataEnd ) {
+        throw new Error( 'Data replay changed assembled storage size' );
+    }
+}
+
+// Walk the SIL listing once: bind labels, reserve storage, and produce a
+// resolved instruction stream. Memory content is serialized as data statements
+// rather than a byte image.
 function assembleListing( vm, program ) {
     const instructions = [],
-          deferredData = [];
+          dataStart = vm.memPtr;
 
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ],
-              [ label, macro ] = stmt;
-
-        if ( LOCATIONLESS_MACROS.includes( macro ) ) {
-            if ( label ) {
-                vm.define( label, locationAtHere( vm, program, i, instructions.length ) );
-            }
-            continue;
-        }
-
-        if ( MEMORY_LOCATION_MACROS.includes( macro ) ) {
-            const value = assembleData( vm, stmt, deferredData );
-            if ( label ) {
-                vm.define( label, value );
-            }
-            continue;
-        }
-
-        if ( label ) {
-            vm.define( label, instructions.length );
-        }
-        instructions.push( stmt );
+              location = statementLocation( vm, program, instructions, stmt, i );
+        bindLabel( vm, stmt[ 0 ], location );
     }
 
-    initData( vm, deferredData );
+    const dataEnd = vm.memPtr,
+          data = dataStatements( vm, program );
+
+    initializeData( vm, dataStart, dataEnd, data );
+
     return {
-        instructions: instructions.map( stmt => [
-            stmt[ 0 ], stmt[ 1 ], argsFor( vm, stmt ), stmt[ 3 ] || ''
-        ] ),
-        data: captureData( vm, program )
+        instructions: instructions.map( stmt => imageStatement( vm, stmt ) ),
+        data
     };
 }
 

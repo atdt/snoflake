@@ -77,6 +77,18 @@ describe( 'Assembly Control Macros', function () {
         assert.equal( this.vm.d( 'DS' ).addr, 22 );
     } );
 
+    it( 'resolves forward labels in assembled descriptor data', function () {
+        this.vm.run( [
+            [ 'DS',     'DESCR', mkargs( this.vm, 'VALUE' ) ],
+            [ 'SP',     'SPEC',  mkargs( this.vm, 'VALUE', 0, 0, 0, 0 ) ],
+            [ 'VALUE',  'EQU',   mkargs( this.vm, 123 ) ],
+            [ null,     'END',   mkargs( this.vm ) ]
+        ] );
+
+        assert.equal( this.vm.d( 'DS' ).addr, 123 );
+        assert.equal( this.vm.s( 'SP' ).addr, 123 );
+    } );
+
     it( 'TITLE', function () {
         assert( sil.TITLE );
     } );

@@ -134,12 +134,9 @@ function allocateHostStrings( vm ) {
 
 // Replay the image's data statements against this VM. Each storage macro
 // allocates at memPtr in source order, reproducing the layout captured by
-// the translator. The label in each entry is documentation only; passing
-// undefined as currentLabel forces DESCR/SPEC to allocate fresh instead of
-// resolving the label back to its address.
+// the translator. The label in each entry is documentation only.
 function replayDataStatements( vm, data ) {
     for ( const stmt of data ) {
-        vm.currentLabel = undefined;
         SNOBOL.sil[ stmt[ 1 ] ].apply( vm, stmt[ 2 ] );
     }
 }
