@@ -2,15 +2,14 @@
 
 import SNOBOL from './base.js';
 
-// Data macros lay out memory at load time. EQU joins them in
-// MEMORY_LOCATION_MACROS because SIL uses it in size expressions like
-// END-START — its label binds at the assembly cursor — but it contributes
-// only to the symbol table, not to memory layout, so it isn't replayed.
+// Macros that emit memory at load time.
 const DATA_MACROS = [
     'ARRAY', 'BUFFER', 'DESCR',
     'FORMAT', 'REAL', 'SPEC', 'STRING'
 ];
 
+// EQU also binds its label to the assembly cursor, but defines a symbolic
+// constant rather than emitting storage, so the loader doesn't replay it.
 const MEMORY_LOCATION_MACROS = [ ...DATA_MACROS, 'EQU' ];
 
 // Markers that occupy neither memory nor executable code. A label on one
