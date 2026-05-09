@@ -19,14 +19,12 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 //
 
 
-function mkargs( vm ) {
-    // Construct a deferred operands object
-    const args = [].slice.call( arguments, 1 );
-
-    return function () { // stub
-        return args.map( function ( arg ) {
-            return typeof arg === 'number' ? arg : vm.resolve( arg );
-        } );
+// Build a SIL operand callback. Numbers pass through; strings are
+// resolved against the assembler's vm at call time (so forward labels
+// work and the test doesn't need to predict storage addresses).
+function mkargs( ...args ) {
+    return function ( vm ) {
+        return args.map( arg => typeof arg === 'string' ? vm.$( arg ) : arg );
     };
 }
 
@@ -371,10 +369,10 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'run', function () {
-        this.vm.run( SNOBOL.assemble( this.vm, [
-            [ 'A',  'EQU', mkargs( this.vm, 11 ) ],
-            [ 'B',  'EQU', mkargs( this.vm, 17 ) ],
-            [ null, 'END', mkargs( this.vm ) ],
+        this.vm.run( SNOBOL.assemble( [
+            [ 'A',  'EQU', mkargs( 11 ) ],
+            [ 'B',  'EQU', mkargs( 17 ) ],
+            [ null, 'END', mkargs() ],
         ] ) );
         assert.equal( this.vm.resolve( 'A' ), 11 );
         assert.equal( this.vm.resolve( 'B' ), 17 );

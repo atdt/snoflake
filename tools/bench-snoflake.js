@@ -237,12 +237,7 @@ function runVm( SNOBOL, fixture ) {
           } );
 
     try {
-        if ( SNOBOL.image ) {
-            vm.run();
-        } else {
-            vm.reset();
-            vm.run( SNOBOL.interp( vm ) );
-        }
+        vm.run( SNOBOL.image || SNOBOL.assemble( SNOBOL.interp() ) );
     } catch ( e ) {
         stderr.write( 'Execution error: ' + ( e && e.stack || e ) );
     }

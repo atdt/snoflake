@@ -77,8 +77,7 @@ const source = __dirname + '/../external/v311-snoflake.sil',
 
 Function( 'SNOBOL', sourceListing )( SNOBOL );
 
-const vm = new SNOBOL.VM(),
-      image = SNOBOL.assemble( vm, SNOBOL.interp( vm ) ),
+const image = SNOBOL.assemble( SNOBOL.interp() ),
       code = prolog + serializeImage( image );
 
 process.stdout.write( code );

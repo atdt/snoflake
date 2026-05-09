@@ -8,12 +8,12 @@ const LABEL = 0,
       COMMENT = 3,
       SPECIFIER_SIZE = 2 * SNOBOL.D;
 
-// SIL operands are emitted as a callback so vm.$('LABEL') resolves after
-// forward labels have been bound. Resolving the callback here gives the
-// plain array form the runtime dispatches against.
+// SIL operands are emitted as `function (vm) { return [...]; }` so that
+// vm.$('LABEL') resolves after forward labels have been bound. Invoke the
+// callback against this assembly's scratch vm to get a plain array.
 function argsFor( vm, stmt ) {
     const args = stmt[ OPERANDS ];
-    return typeof args === 'function' ? args.call( vm ) : args;
+    return typeof args === 'function' ? args( vm ) : args;
 }
 
 function encodedLength( value ) {
@@ -170,7 +170,11 @@ function assembleListing( vm, program ) {
     return instructions.map( stmt => imageStatement( vm, stmt ) );
 }
 
-SNOBOL.assemble = function ( vm, program ) {
+// Assembly is a pure function from a SIL listing to an image. It runs on
+// a throwaway scratch VM whose mem/symbols become the snapshot shipped to
+// the runtime; the caller never sees that scratch state.
+SNOBOL.assemble = function ( program ) {
+    const vm = new SNOBOL.VM();
     vm.seedHostSymbols();
     const instructions = assembleListing( vm, program );
 

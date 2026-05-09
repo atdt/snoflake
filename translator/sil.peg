@@ -8,13 +8,14 @@
         line = 0;
 
     /**
-     * Construct an anonymous function that takes no parameters
-     * and returns `value`. Used to make identifiers bind late.
+     * Construct an anonymous function `function (vm) { return value; }`.
+     * The vm parameter lets the assembler resolve symbol references late,
+     * after labels are bound, against any vm it picks.
      */
     function enclose( value ) {
         return {
             type: 'FunctionExpression',
-            params: [],
+            params: [ { type: 'Identifier', name: 'vm' } ],
             body: {
                 type: 'BlockStatement',
                 body: [{
@@ -45,10 +46,6 @@
 program
   = statements:statement+ end
 {
-    var params = [ 'vm' ],
-        body   = [ [ 'return', [ 'array', statements ] ] ],
-        func   = [ 'defun', null, params, body ];
-
     return {
         type: 'Program',
         body: [
@@ -71,7 +68,7 @@ program
                     },
                     right: {
                         type: 'FunctionExpression',
-                        params: [{ type: 'Identifier', name: 'vm' }],
+                        params: [],
                         body: {
                             type: 'BlockStatement',
                             body: [ {

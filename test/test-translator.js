@@ -16,7 +16,7 @@ function operandsFor( source, symbols ) {
           vm = { $: function ( name ) { return symbols[ name ]; } };
 
     Function( 'SNOBOL', code )( SNOBOL );
-    return SNOBOL.interp( vm )[ 0 ][ 2 ]();
+    return SNOBOL.interp()[ 0 ][ 2 ]( vm );
 }
 
 describe( 'SIL translator', function () {
