@@ -354,9 +354,9 @@ describe( 'Program Execution', function () {
 
     it( 'run', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'A',  'EQU', [ 11 ] ],
-            [ 'B',  'EQU', [ 17 ] ],
-            [ null, 'END', [] ],
+            { label: 'A',  macro: 'EQU', operands: [ 11 ] },
+            { label: 'B',  macro: 'EQU', operands: [ 17 ] },
+            { label: null, macro: 'END', operands: [] },
         ] ) );
         assert.equal( this.vm.resolve( 'A' ), 11 );
         assert.equal( this.vm.resolve( 'B' ), 17 );

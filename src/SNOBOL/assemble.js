@@ -2,11 +2,7 @@
 
 import SNOBOL from './base.js';
 
-const LABEL = 0,
-      MACRO = 1,
-      OPERANDS = 2,
-      COMMENT = 3,
-      SPECIFIER_SIZE = 2 * SNOBOL.D;
+const SPECIFIER_SIZE = 2 * SNOBOL.D;
 
 function resolveBinaryOperand( vm, operand ) {
     const left = resolveOperand( vm, operand.operands[ 0 ] ),
@@ -48,7 +44,7 @@ function resolveOperand( vm, operand ) {
 // SIL operands are parsed as data. Assembly is where symbols can finally
 // resolve, because forward labels have been bound by then.
 function argsFor( vm, stmt ) {
-    return stmt[ OPERANDS ].map( operand => resolveOperand( vm, operand ) );
+    return stmt.operands.map( operand => resolveOperand( vm, operand ) );
 }
 
 function encodedLength( value ) {
@@ -79,7 +75,7 @@ function nextLocatedStatement( program, index ) {
 
     while (
         next < program.length &&
-        LOCATIONLESS_MACROS.has( program[ next ][ MACRO ] )
+        LOCATIONLESS_MACROS.has( program[ next ].macro )
     ) {
         next++;
     }
@@ -89,7 +85,7 @@ function nextLocatedStatement( program, index ) {
 
 function markerLocation( vm, program, index, nextInstruction ) {
     const next = nextLocatedStatement( program, index );
-    const macro = next < program.length && program[ next ][ MACRO ];
+    const macro = next < program.length && program[ next ].macro;
 
     // LHERE/PROC mean "the current location". The active counter is memory
     // when the next located statement is storage, and code otherwise.
@@ -100,7 +96,7 @@ function markerLocation( vm, program, index, nextInstruction ) {
 
 function reserveStorage( vm, stmt ) {
     const ptr = vm.memPtr,
-          macro = stmt[ MACRO ];
+          macro = stmt.macro;
 
     switch ( macro ) {
     case 'ARRAY':
@@ -133,13 +129,13 @@ function emitInstruction( instructions, stmt ) {
 }
 
 function storageOrConstantLocation( vm, stmt ) {
-    return stmt[ MACRO ] === 'EQU'
+    return stmt.macro === 'EQU'
         ? SNOBOL.sil.EQU.apply( vm, argsFor( vm, stmt ) )
         : reserveStorage( vm, stmt );
 }
 
 function statementLocation( vm, program, instructions, stmt, index ) {
-    const macro = stmt[ MACRO ];
+    const macro = stmt.macro;
 
     if ( LOCATIONLESS_MACROS.has( macro ) ) {
         return markerLocation( vm, program, index, instructions.length );
@@ -160,10 +156,10 @@ function bindLabel( vm, label, location ) {
 
 function imageStatement( vm, stmt ) {
     return [
-        stmt[ LABEL ],
-        stmt[ MACRO ],
+        stmt.label,
+        stmt.macro,
         argsFor( vm, stmt ),
-        stmt[ COMMENT ] || ''
+        stmt.comment || ''
     ];
 }
 
@@ -174,8 +170,8 @@ function initializeReservedStorage( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     try {
         for ( const stmt of program ) {
-            if ( STORAGE_MACROS.has( stmt[ MACRO ] ) ) {
-                SNOBOL.sil[ stmt[ MACRO ] ].apply( vm, argsFor( vm, stmt ) );
+            if ( STORAGE_MACROS.has( stmt.macro ) ) {
+                SNOBOL.sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
             }
         }
         if ( vm.memPtr !== dataEnd ) {
@@ -197,7 +193,7 @@ function assembleListing( vm, program ) {
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ],
               location = statementLocation( vm, program, instructions, stmt, i );
-        bindLabel( vm, stmt[ LABEL ], location );
+        bindLabel( vm, stmt.label, location );
     }
 
     initializeReservedStorage( vm, program, dataStart, vm.memPtr );

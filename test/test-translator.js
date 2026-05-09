@@ -13,15 +13,12 @@ describe( 'SIL translator', function () {
     it( 'parses symbol operands as data', function () {
         const listing = parser.parse( '       GETAC   TVAL,PDLPTR\n END\n' );
 
-        assert.deepEqual( listing[ 0 ], [
-            null,
-            'GETAC',
-            [
-                { symbol: 'TVAL' },
-                { symbol: 'PDLPTR' }
-            ],
-            ''
-        ] );
+        assert.deepEqual( listing[ 0 ], {
+            label: null,
+            macro: 'GETAC',
+            operands: [ { symbol: 'TVAL' }, { symbol: 'PDLPTR' } ],
+            comment: ''
+        } );
     } );
 
     it( 'assembles parsed operand expressions', function () {

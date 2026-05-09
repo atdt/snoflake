@@ -27,16 +27,18 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'EQU', function () {
-        this.vm.run( SNOBOL.assemble( [ [ 'A', 'EQU', [ 12 ] ] ] ) );
+        this.vm.run( SNOBOL.assemble( [
+            { label: 'A', macro: 'EQU', operands: [ 12 ] }
+        ] ) );
         assert.equal( this.vm.resolve('A'), 12 );
     } );
 
     it( 'LHERE', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'A',  'LHERE', [] ],
-            [ null, 'DESCR', [] ],
-            [ 'B',  'LHERE', [] ],
-            [ null, 'DESCR', [] ]
+            { label: 'A',  macro: 'LHERE', operands: [] },
+            { label: null, macro: 'DESCR', operands: [] },
+            { label: 'B',  macro: 'LHERE', operands: [] },
+            { label: null, macro: 'DESCR', operands: [] }
         ] ) );
         assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), this.vm.$( 'DESCR' ) );
         assert.deepEqual( this.vm.d( 'A' ).raw(), [ 0, 0, 0 ] );
@@ -45,12 +47,12 @@ describe( 'Assembly Control Macros', function () {
 
     it( 'keeps executable labels in the instruction stream', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'PAD', 'BUFFER', [ 10 ] ],
-            [ 'DS',  'DESCR',  [] ],
-            [ null,  'BRANCH', [ { symbol: 'LBL' } ] ],
-            [ null,  'SETAC',  [ { symbol: 'DS' }, 11 ] ],
-            [ 'LBL', 'SETAC',  [ { symbol: 'DS' }, 22 ] ],
-            [ null,  'END',    [] ]
+            { label: 'PAD', macro: 'BUFFER', operands: [ 10 ] },
+            { label: 'DS',  macro: 'DESCR',  operands: [] },
+            { label: null,  macro: 'BRANCH', operands: [ { symbol: 'LBL' } ] },
+            { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 11 ] },
+            { label: 'LBL', macro: 'SETAC',  operands: [ { symbol: 'DS' }, 22 ] },
+            { label: null,  macro: 'END',    operands: [] }
         ] ) );
 
         // BUFFER and DESCR assemble data, but do not occupy runtime
@@ -61,10 +63,10 @@ describe( 'Assembly Control Macros', function () {
 
     it( 'resolves forward labels in assembled descriptor data', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'DS',     'DESCR', [ { symbol: 'VALUE' } ] ],
-            [ 'SP',     'SPEC',  [ { symbol: 'VALUE' }, 0, 0, 0, 0 ] ],
-            [ 'VALUE',  'EQU',   [ 123 ] ],
-            [ null,     'END',   [] ]
+            { label: 'DS',    macro: 'DESCR', operands: [ { symbol: 'VALUE' } ] },
+            { label: 'SP',    macro: 'SPEC',  operands: [ { symbol: 'VALUE' }, 0, 0, 0, 0 ] },
+            { label: 'VALUE', macro: 'EQU',   operands: [ 123 ] },
+            { label: null,    macro: 'END',   operands: [] }
         ] ) );
 
         assert.equal( this.vm.d( 'DS' ).addr, 123 );
@@ -123,12 +125,12 @@ describe( 'Branch Macros', function () {
 
     it( 'BRANCH', function () {
         this.vm.run( SNOBOL.assemble( [
-            [ 'DS', 'DESCR',  [] ] ,
-            [ null,  'SETAC',  [ { symbol: 'DS' }, 22 ] ] ,
-            [ null, 'BRANCH', [ { symbol: 'LBL' } ] ],
-            [ null, 'SETAC',  [ { symbol: 'DS' }, 33 ] ],
-            [ 'LBL',  'LHERE',  [] ],
-            [ null, 'END',    [] ]
+            { label: 'DS',  macro: 'DESCR',  operands: [] },
+            { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 22 ] },
+            { label: null,  macro: 'BRANCH', operands: [ { symbol: 'LBL' } ] },
+            { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 33 ] },
+            { label: 'LBL', macro: 'LHERE',  operands: [] },
+            { label: null,  macro: 'END',    operands: [] }
         ] ) );
         assert.equal( this.vm.d( 'DS' ).addr, 22 );
     } );

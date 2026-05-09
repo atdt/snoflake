@@ -14,14 +14,19 @@ statement "statement"
   = comment2* 
     label:label
     blank
-    oper:macro
+    macro:macro
     blank
     operands:operands
     blank?
     comment:comment1?
     '\n'
 {
-    return [ label, oper, operands, comment ];
+    return {
+        label,
+        macro,
+        operands,
+        comment: comment || ''
+    };
 }
 
 
