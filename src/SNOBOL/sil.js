@@ -150,51 +150,12 @@ function isFoldableStreamTable( tableName ) {
         tableName === 'VARBTB';
 }
 
-function stackPopper( dataType ) {
-    return function ( ARGs ) {
-        let src, dst, arg;
-
-        if ( !Array.isArray( ARGs ) ) {
-            ARGs = [ ARGs ];
-        }
-        const A = this.CSTACK.addr;
-        const STACK_BASE = this.$( 'STACK' );
-
-        for ( let i = 0; i < ARGs.length; i++ ) {
-            dst = this[ dataType ]( ARGs[i] );
-            if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
-                throw new RangeError( 'Stack underflow' );
-            }
-            // Pop: read from current top (base is CSTACK.addr - (width - D)), then move pointer down
-            src = this[ dataType ]( this.CSTACK.addr - (dst.width - D) );
-            this.CSTACK.addr -= dst.width;
-            dst.read( src );
-        }
-    }
-}
-
-function stackPusher( dataType ) {
-    return function ( ARGs ) {
-        let src, dst;
-
-        if ( !Array.isArray( ARGs ) ) {
-            ARGs = [ ARGs ];
-        }
-
-        for ( let i = 0; i < ARGs.length; i++ ) {
-            src = this[ dataType ]( ARGs[i] );
-            const STACK_BASE = this.$( 'STACK' );
-            const STSIZE = this.$( 'STSIZE' );
-            // Check overflow for pre-increment position
-            if ( this.CSTACK.addr + src.width > STACK_BASE + ( D * STSIZE ) ) {
-                throw new RangeError( 'Stack overflow' );
-            }
-            // Push: advance pointer, then write at new top (base is CSTACK.addr - (width - D))
-            this.CSTACK.addr += src.width;
-            dst = this[ dataType ]( this.CSTACK.addr - (src.width - D) );
-            dst.read( src );
-        }
-    };
+// SIL stack convention: CSTACK points D cells past the start of the most
+// recent entry. For a descriptor (width D), that's the entry's last cell.
+// For a specifier (width 2D), it's the cell D past the start. So a freshly
+// pushed entry of width W lives at [CSTACK_new - (W-D), CSTACK_new + D).
+function asArray( ARGs ) {
+    return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
 }
 
 //     ACOMP is used to compare  the  address  fields  of  two
@@ -2875,7 +2836,17 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
 // diagnostic  message  indicating  an error may be obtained by
 // transferring to the program location INTR10 if the condition
 // is detected.
-sil.POP = stackPopper( 'd' );
+sil.POP = function ( DESCRs ) {
+    const STACK_BASE = this.$( 'STACK' );
+    for ( const arg of asArray( DESCRs ) ) {
+        const dst = this.d( arg );
+        if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
+            throw new RangeError( 'Stack underflow' );
+        }
+        dst.read( this.d( this.CSTACK.addr ) );
+        this.CSTACK.addr -= dst.width;
+    }
+};
 
 //     PROC is used to identify a procedure entry point.  LOC2
 // may be omitted, in which case LOC1 is the primary  procedure
@@ -2946,7 +2917,17 @@ sil.PSTACK = function ( $DESCR ) {
 // Transfer  should be made to the program location OVER, which
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
-sil.PUSH = stackPusher( 'd' );
+sil.PUSH = function ( DESCRs ) {
+    const STACK_TOP = this.$( 'STACK' ) + D * this.$( 'STSIZE' );
+    for ( const arg of asArray( DESCRs ) ) {
+        const src = this.d( arg );
+        if ( this.CSTACK.addr + src.width > STACK_TOP ) {
+            throw new RangeError( 'Stack overflow' );
+        }
+        this.CSTACK.addr += src.width;
+        this.d( this.CSTACK.addr ).read( src );
+    }
+};
 
 //     PUTAC is used to put an address field into a descriptor
 // located at a constant offset.
@@ -3929,7 +3910,17 @@ sil.SPEC = function ( A, F, V, O, L ) {
 // termination  for  this error may be obtained by transferring
 // to the program location INTR10 if the condition is detected.
 // 2.  See also POP, SPUSH, and PUSH.
-sil.SPOP = stackPopper( 's' );
+sil.SPOP = function ( SPECs ) {
+    const STACK_BASE = this.$( 'STACK' );
+    for ( const arg of asArray( SPECs ) ) {
+        const dst = this.s( arg );
+        if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
+            throw new RangeError( 'Stack underflow' );
+        }
+        dst.read( this.s( this.CSTACK.addr - ( dst.width - D ) ) );
+        this.CSTACK.addr -= dst.width;
+    }
+};
 
 //     SPREAL  is  used  to  convert a specified string into a
 // real number.  R(S) is a signed real  number  resulting  from
@@ -4007,7 +3998,17 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 // Transfer should be made to the program location OVER,  which
 // will result in an appropriate error termination.
 // 2.  See also PUSH, POP, and SPOP.
-sil.SPUSH = stackPusher( 's' );
+sil.SPUSH = function ( SPECs ) {
+    const STACK_TOP = this.$( 'STACK' ) + D * this.$( 'STSIZE' );
+    for ( const arg of asArray( SPECs ) ) {
+        const src = this.s( arg );
+        if ( this.CSTACK.addr + src.width > STACK_TOP ) {
+            throw new RangeError( 'Stack overflow' );
+        }
+        this.CSTACK.addr += src.width;
+        this.s( this.CSTACK.addr - ( src.width - D ) ).read( src );
+    }
+};
 
 //     STPRNT is used to print a string.  The string C11...C1L
 // is printed on the file associated with unit reference number
