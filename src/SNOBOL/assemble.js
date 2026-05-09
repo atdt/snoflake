@@ -158,8 +158,7 @@ function imageStatement( vm, stmt ) {
     return [
         stmt.label,
         stmt.macro,
-        argsFor( vm, stmt ),
-        stmt.comment || ''
+        argsFor( vm, stmt )
     ];
 }
 

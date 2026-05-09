@@ -370,7 +370,7 @@ describe( 'Program Execution', function () {
             symbols: { DS: 0 },
             memory: new Uint32Array( [ 31, 7, 9 ] ),
             instructions: [
-                [ null, 'END', [], '' ]
+                [ null, 'END', [] ]
             ]
         };
 

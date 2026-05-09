@@ -16,8 +16,7 @@ describe( 'SIL translator', function () {
         assert.deepEqual( listing[ 0 ], {
             label: null,
             macro: 'GETAC',
-            operands: [ { symbol: 'TVAL' }, { symbol: 'PDLPTR' } ],
-            comment: ''
+            operands: [ { symbol: 'TVAL' }, { symbol: 'PDLPTR' } ]
         } );
     } );
 

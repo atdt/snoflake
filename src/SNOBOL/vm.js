@@ -30,7 +30,7 @@ function applyHostOutputOptions( vm ) {
     }
 }
 
-// Compile each [label, macro, args, ...] image entry into a thunk that
+// Compile each [label, macro, args] image entry into a thunk that
 // dispatches to the resolved sil implementation. The thunk also stamps
 // vm.currentLabel, which sil.js's fileRole reads when routing I/O.
 // Doing the lookup once per program rather than once per dispatch is

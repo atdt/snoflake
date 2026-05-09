@@ -24,8 +24,7 @@ statement "statement"
     return {
         label,
         macro,
-        operands,
-        comment: comment || ''
+        operands
     };
 }
 
