@@ -130,6 +130,11 @@ function fileRole( unitNum ) {
     return 'source';
 }
 
+function openFile( vm, $DESCR ) {
+    const unitNum = vm.d( $DESCR ).addr;
+    return new SNOBOL.File( vm, unitNum, fileRole.call( vm, unitNum ) );
+}
+
 function foldAsciiUpperString( str ) {
     return str.replace( /[a-z]/g, function ( ch ) {
         return String.fromCharCode( ch.charCodeAt( 0 ) - 32 );
@@ -676,9 +681,7 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 // 2.  Refer to Section 2.1 for a discussion of unit  reference
 // numbers.
 sil.BKSPCE = function ( $DESCR ) {
-    // backspace record
-    const DESCR = this.d( $DESCR ),
-          file = new SNOBOL.File( this, DESCR.addr, fileRole.call( this, DESCR.addr ) );
+    const file = openFile( this, $DESCR );
 
     if ( file.pos > 0 ) {
         file.pos--;
@@ -1249,10 +1252,7 @@ sil.ENDEX = function ( $DESCR ) {
 // 2.  Refer  to Section 2.1 for a discussion of unit reference
 // numbers.
 sil.ENFILE = function ( $DESCR ) {
-    // write end of file
-    const DESCR = this.d( $DESCR ),
-          f = new SNOBOL.File( this, DESCR.addr, fileRole.call( this, DESCR.addr ) );
-    f.close();
+    openFile( this, $DESCR ).close();
 };
 
 //     EQU is used to assign, at assembly time, the value of N
@@ -3451,11 +3451,7 @@ sil.RESETF = function ( $DESCR, FLAG ) {
 // numbers.
 // 2.  See also BKSPCE and ENFILE.
 sil.REWIND = function ( $DESCR ) {
-    // rewind file
-    const DESCR = this.d( $DESCR ),
-          f = new SNOBOL.File( this, DESCR.addr, fileRole.call( this, DESCR.addr ) );
-
-    f.seek( 0 );
+    openFile( this, $DESCR ).seek( 0 );
 };
 
 //     RLINT is used to convert a real number to  an  integer.
@@ -4189,16 +4185,9 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 // followed.
 // 2.  See also STPRNT.
 sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
-    // string read
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
-          I = DESCR.addr,
-          file = new SNOBOL.File( this, I, fileRole.call( this, I ) );
-
-    if ( !file ) {
-        // invalid file descriptor
-        return this.jmp( ERROR );
-    }
+          file = openFile( this, DESCR );
 
     const record = file.readRecord( SPEC.length );
     if ( record.eof ) {
