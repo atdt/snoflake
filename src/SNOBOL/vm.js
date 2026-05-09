@@ -60,10 +60,6 @@ function interpret( vm, instructions ) {
     }
 }
 
-function isImage( program ) {
-    return program && Array.isArray( program.instructions );
-}
-
 SNOBOL.VM.prototype.seedHostSymbols = function () {
     for ( const sym in SNOBOL.programSymbols ) {
         if ( !Object.hasOwn( this.symbols, sym ) ) {
@@ -93,20 +89,14 @@ SNOBOL.VM.prototype.loadImage = function ( image ) {
     this.memPtr = image.memory.length;
 };
 
-SNOBOL.VM.prototype.run = function ( program = SNOBOL.image ) {
-    let assembled;
-    if ( isImage( program ) ) {
-        this.reset();
-        this.loadImage( program );
-        assembled = program;
-    } else {
-        assembled = SNOBOL.assemble( this, program );
-    }
+SNOBOL.VM.prototype.run = function ( image = SNOBOL.image ) {
+    this.reset();
+    this.loadImage( image );
 
     this.instructionPointer = 0;
     this.instructionPointerChanged = false;
     applyHostOutputOptions( this );
-    interpret( this, compileInstructions( this, assembled.instructions ) );
+    interpret( this, compileInstructions( this, image.instructions ) );
 
     return !( this.instructionPointer < 0 );
 };

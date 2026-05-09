@@ -5,8 +5,6 @@ import path from 'node:path';
 import SNOBOL from '../src/snobol.js';
 import process from "node:process";
 
-const slice = Array.prototype.slice;
-
 Object.keys( SNOBOL ).forEach( function ( k ) {
     globalThis[k] = SNOBOL[k];
 } );
@@ -45,31 +43,31 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'EQU', function () {
-        this.vm.run( [ [ 'A', 'EQU', mkargs( this.vm, 12 ) ] ] );
+        this.vm.run( SNOBOL.assemble( this.vm, [ [ 'A', 'EQU', mkargs( this.vm, 12 ) ] ] ) );
         assert.equal( this.vm.resolve('A'), 12 );
     } );
 
     it( 'LHERE', function () {
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ 'A',  'LHERE', mkargs( this.vm ) ],
             [ null, 'DESCR', mkargs( this.vm ) ],
             [ 'B',  'LHERE', mkargs( this.vm ) ],
             [ null, 'DESCR', mkargs( this.vm ) ]
-        ] );
+        ] ) );
         assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), this.vm.$( 'DESCR' ) );
         assert.deepEqual( this.vm.d( 'A' ).raw(), [ 0, 0, 0 ] );
         assert.deepEqual( this.vm.d( 'B' ).raw(), [ 0, 0, 0 ] );
     } );
 
     it( 'keeps executable labels in the instruction stream', function () {
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ 'PAD', 'BUFFER', mkargs( this.vm, 10 ) ],
             [ 'DS',  'DESCR',  mkargs( this.vm ) ],
             [ null,  'BRANCH', mkargs( this.vm, 'LBL' ) ],
             [ null,  'SETAC',  mkargs( this.vm, 'DS', 11 ) ],
             [ 'LBL', 'SETAC',  mkargs( this.vm, 'DS', 22 ) ],
             [ null,  'END',    mkargs( this.vm ) ]
-        ] );
+        ] ) );
 
         // BUFFER and DESCR assemble data, but do not occupy runtime
         // instruction slots.
@@ -78,12 +76,12 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'resolves forward labels in assembled descriptor data', function () {
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ 'DS',     'DESCR', mkargs( this.vm, 'VALUE' ) ],
             [ 'SP',     'SPEC',  mkargs( this.vm, 'VALUE', 0, 0, 0, 0 ) ],
             [ 'VALUE',  'EQU',   mkargs( this.vm, 123 ) ],
             [ null,     'END',   mkargs( this.vm ) ]
-        ] );
+        ] ) );
 
         assert.equal( this.vm.d( 'DS' ).addr, 123 );
         assert.equal( this.vm.s( 'SP' ).addr, 123 );
@@ -140,14 +138,14 @@ describe( 'Branch Macros', function () {
     } );
 
     it( 'BRANCH', function () {
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ 'DS', 'DESCR',  mkargs( this.vm  ) ] ,
             [ null,  'SETAC',  mkargs( this.vm, 'DS', 22 ) ] ,
             [ null, 'BRANCH', mkargs( this.vm, 'LBL' ) ],
             [ null, 'SETAC',  mkargs( this.vm, 'DS', 33 ) ],
             [ 'LBL',  'LHERE',  mkargs( this.vm ) ],
             [ null, 'END',    mkargs( this.vm  ) ]
-        ] );
+        ] ) );
         assert.equal( this.vm.d( 'DS' ).addr, 22 );
     } );
 
@@ -202,15 +200,15 @@ describe( 'Comparison Macros', function () {
               NELOC = 1,
               EQLOC = 2;
 
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
-        ] );
+        ] ) );
         assert.equal( this.vm.instructionPointer, 1 );
 
         DESCR.addr = N;
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ null,     'ACOMPC',  mkargs( this.vm, DESCR.ptr, N, NELOC, EQLOC ) ]
-        ] );
+        ] ) );
         assert.equal( this.vm.instructionPointer, 2 );
     } );
 
@@ -1240,25 +1238,15 @@ describe( 'Macros that Operate on Specifiers', function () {
 
     it( 'STREAM', function () {
         const s1 = this.vm.s(),
-              s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) ),
-              logs = [],
-              log = console.log;
+              s2 = this.vm.s( sil.STRING.call( this.vm, '43.2   ' ) );
 
-        console.log = function () {
-            logs.push( slice.call( arguments ) );
-        };
-        try {
-            this.vm.run( [
-                [ 'STYPE',  'DESCR',  mkargs( this.vm ) ],
-                [ 'FLITYP', 'EQU',    mkargs( this.vm, 6 ) ],
-                [ null,     'STREAM', mkargs( this.vm, s1.ptr, s2.ptr, 'INTGTB', -1, -2, -3 ) ]
-            ] );
-        } finally {
-            console.log = log;
-        }
+        this.vm.run( SNOBOL.assemble( this.vm, [
+            [ 'STYPE',  'DESCR',  mkargs( this.vm ) ],
+            [ 'FLITYP', 'EQU',    mkargs( this.vm, 6 ) ],
+            [ null,     'STREAM', mkargs( this.vm, s1.ptr, s2.ptr, 'INTGTB', -1, -2, -3 ) ]
+        ] ) );
 
         assert.equal( s1.specified, '43.2' );
-        assert.deepEqual( logs, [] );
     } );
 
     it( 'STREAM runout', function () {

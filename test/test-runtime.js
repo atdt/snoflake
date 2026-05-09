@@ -371,11 +371,11 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'run', function () {
-        this.vm.run( [
+        this.vm.run( SNOBOL.assemble( this.vm, [
             [ 'A',  'EQU', mkargs( this.vm, 11 ) ],
             [ 'B',  'EQU', mkargs( this.vm, 17 ) ],
             [ null, 'END', mkargs( this.vm ) ],
-        ] );
+        ] ) );
         assert.equal( this.vm.resolve( 'A' ), 11 );
         assert.equal( this.vm.resolve( 'B' ), 17 );
     } );
