@@ -237,7 +237,7 @@ function runVm( SNOBOL, fixture ) {
           } );
 
     try {
-        vm.run( SNOBOL.defaultImage );
+        vm.run( SNOBOL.image );
     } catch ( e ) {
         stderr.write( 'Execution error: ' + ( e && e.stack || e ) );
     }

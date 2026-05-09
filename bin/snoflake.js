@@ -46,5 +46,5 @@ const vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
     return p;
 }, {} ) );
 
-vm.run( SNOBOL.defaultImage );
+vm.run( SNOBOL.image );
 process.exitCode = vm.exitCode;

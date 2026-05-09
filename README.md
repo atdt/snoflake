@@ -35,7 +35,7 @@ Snoflake is a standard ES module:
 import SNOBOL from 'snoflake';
 
 const vm = new SNOBOL.VM( { file: 'hello.sno' } );
-vm.run( SNOBOL.defaultImage );
+vm.run( SNOBOL.image );
 ```
 
 The `VM` constructor accepts options for selecting the source file, input
