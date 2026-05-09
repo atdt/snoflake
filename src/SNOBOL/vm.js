@@ -76,14 +76,8 @@ SNOBOL.VM.prototype.log = function ( ...args ) {
 };
 
 SNOBOL.VM.prototype.jmp = function ( loc ) {
-    // Omitted optional branch operands arrive as undefined. SIL specifies
-    // fall-through in that case.
-    //
-    // A few hand-written macro helpers still branch to fixed system labels
-    // by name. Translated SIL operands are already resolved.
-    if ( typeof loc === 'string' ) {
-        loc = this.resolve( loc );
-    }
+    // Omitted optional branch operands arrive as undefined (or null from the
+    // PEG grammar's empty-list-slot rule); SIL specifies fall-through.
     if ( typeof loc === 'number' ) {
         this.instructionPointer = loc;
         this.instructionPointerChanged = true;

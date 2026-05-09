@@ -2039,8 +2039,9 @@ sil.LHERE = function () {
 // case, LINK should branch to INTR10.
 // 3.  See also LOAD and UNLOAD.
 sil.LINK = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, FLOC, SLOC ) {
-    // link to external function
-    this.jmp( 'INTR10' );  // Program error
+    // External function linkage isn't supported — branch to INTR10 per
+    // programming note 2.
+    this.jmp( this.$( 'INTR10' ) );
 };
 
 //     LINKOR  links  through `or' (alternative) fields of
@@ -2116,8 +2117,9 @@ sil.LINKOR = function ( $DESCR1, $DESCR2 ) {
 // specified by C21...C2L2.
 // 4.  See also LINK and UNLOAD.
 sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, FLOC, SLOC ) {
-    // load external function
-    this.jmp( 'UNDF' );  // Not implemented
+    // External function linkage isn't supported — branch to UNDF per
+    // programming note 2.
+    this.jmp( this.$( 'UNDF' ) );
 };
 
 //     LOCAPT is used to locate the `type' descriptor of a
