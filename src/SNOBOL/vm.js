@@ -128,10 +128,9 @@ function allocateHostStrings( vm ) {
     for ( const sym in SNOBOL.programSymbols ) {
         const value = SNOBOL.programSymbols[ sym ];
         if ( typeof value === 'string' ) {
-            const ptr = vm.alloc( value.length );
-            for ( let i = 0; i < value.length; i++ ) {
-                vm.mem[ ptr + i ] = value.charCodeAt( i );
-            }
+            const ptr = vm.alloc( value.length ),
+                  encoded = SNOBOL.str.encode( value );
+            vm.mem.set( encoded.subarray( 0, value.length ), ptr );
         }
     }
 }

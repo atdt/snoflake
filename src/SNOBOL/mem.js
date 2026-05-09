@@ -122,15 +122,11 @@ VM.prototype.specify = function ( str, $SPEC ) {
 }
 
 VM.prototype.define = function ( symbol, value ) {
-    if ( symbol === 'DESCR' && value !== 3 ) {
-        throw new Error(`symbol=${symbol}, value=${value}`);
-    }
     if ( typeof value === 'string' ) {
-        const ptr = this.alloc( value.length );
+        const ptr = this.alloc( value.length ),
+              encoded = SNOBOL.str.encode( value );
         this.symbols[ symbol ] = ptr;
-        for ( let i = 0; i < value.length; i++ ) {
-            this.mem[ ptr + i ] = value.charCodeAt( i );
-        }
+        this.mem.set( encoded.subarray( 0, value.length ), ptr );
     } else {
         this.symbols[ symbol ] = value;
     }

@@ -25,7 +25,6 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
           ptr = FRSGPT.addr,
           size = D + ( D * ( 3 + Math.floor( ( len - 1 ) / CPD + 1 ) ) ),
           encoded = SNOBOL.str.encode( str );
-    let i;
 
     DESCR.update( ptr, vm.$( 'PTR' ), vm.$( 'S' ) );
     vm.d( ptr ).update( ptr, vm.$( 'TTL' ) + vm.$( 'STTL' ), len );
@@ -33,9 +32,7 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     vm.d( ptr + vm.$( 'ATTRIB' ) ).update( 0, 0, 0 );
     vm.d( ptr + vm.$( 'LNKFLD' ) ).update( bin.addr, 0, M );
 
-    for ( i = 0; i < encoded.length; i++ ) {
-        vm.mem[ ptr + vm.$( 'BCDFLD' ) + i ] = encoded[ i ];
-    }
+    vm.mem.set( encoded, ptr + vm.$( 'BCDFLD' ) );
 
     bin.addr = ptr;
     FRSGPT.addr += size;
@@ -601,13 +598,9 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
           STR2 = SPEC2.specified;
 
     const combined = STR1 + STR2,
-          encoded = SNOBOL.str.encode( combined ),
-          base = A1 + O1;
+          encoded = SNOBOL.str.encode( combined );
 
-    for ( let i = 0; i < encoded.length; i++ ) {
-        this.mem[ base + i ] = encoded[ i ];
-    }
-
+    this.mem.set( encoded, A1 + O1 );
     SPEC1.length = combined.length;
 };
 
@@ -1831,20 +1824,16 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     // convert integer to specifier
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
-          I = DESCR.addr,
-          I_str = I.toString(),
-          I_enc = SNOBOL.str.encode( I_str );
-    let idx;
+          I_str = DESCR.addr.toString(),
+          encoded = SNOBOL.str.encode( I_str );
 
     if ( this.INTSPC_BUFFER === null ) {
         this.INTSPC_BUFFER = this.alloc( 255 );
     }
 
-    assert( I_enc.length <= 255 );
+    assert( encoded.length <= 255 );
     SPEC.update( this.INTSPC_BUFFER, 0, 0, 0, I_str.length );
-    for ( idx = 0; idx < I_enc.length; idx++ ) {
-        this.mem[ SPEC.addr + SPEC.offset + idx ] = I_enc[ idx ];
-    }
+    this.mem.set( encoded, SPEC.addr + SPEC.offset );
 };
 
 //     ISTACK is used to initialize the system stack.
@@ -4254,13 +4243,14 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    const words = record.text;
-    for ( let p = 0; p < words.length; p++ ) {
-        this.mem[ SPEC.addr + SPEC.offset + p ] = words.codePointAt( p ) || 0;
-    }
+    // record.text length is bounded by the buffer size (SPEC.length), so
+    // trim the encoder's pad cells to avoid writing past the buffer.
+    const text = record.text,
+          encoded = SNOBOL.str.encode( text );
+    this.mem.set( encoded.subarray( 0, text.length ), SPEC.addr + SPEC.offset );
 
     if ( file.role === 'input' ) {
-        SPEC.length = words.length;
+        SPEC.length = text.length;
     }
 
     return this.jmp( SLOC );
