@@ -1,7 +1,6 @@
 "use strict";
 
 import { D } from './datatypes.js';
-import { File } from './file.js';
 import { str } from './string.js';
 import { constants, hostStrings, match, syntaxTables, tableNames } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
@@ -64,35 +63,6 @@ function formatHasLeadingCarriageControl( fmt ) {
 
     const code = fmt.charAt( i );
     return code === 'H' || code === 'X' || code === '"' || code === "'";
-}
-
-function sourceReadLabel( label ) {
-    return label === 'XLATRN' || label === 'DIAGRN' || label === 'FORRUR';
-}
-
-function fileRole( unitNum ) {
-    let inputUnit;
-
-    try {
-        inputUnit = this.$( 'UNITI' );
-    } catch ( e ) {
-        inputUnit = null;
-    }
-
-    // Historical SNOBOL talks about numbered I/O units; this JavaScript port
-    // also uses unit 5 for source-card reads while compiling the program.
-    // Keep those compiler reads on --file, and let runtime INPUT use --input
-    // when the caller supplies a separate data file.
-    if ( this.options.input && unitNum === inputUnit && !sourceReadLabel( this.currentLabel ) ) {
-        return 'input';
-    }
-
-    return 'source';
-}
-
-function openFile( vm, $DESCR ) {
-    const unitNum = vm.d( $DESCR ).addr;
-    return new File( vm, unitNum, fileRole.call( vm, unitNum ) );
 }
 
 function foldAsciiUpperString( str ) {
@@ -597,14 +567,10 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 // 2.  Refer to Section 2.1 for a discussion of unit  reference
 // numbers.
 sil.BKSPCE = function ( $DESCR ) {
-    const file = openFile( this, $DESCR );
-
-    if ( file.pos > 0 ) {
-        file.pos--;
-        while ( file.pos > 0 && file.src.charAt( file.pos ) !== '\u001F' ) {
-            file.pos--;
-        }
-    }
+    // No-op stub. BKSPCE backs up one record on a unit; the SIL compiler
+    // never invokes this in practice and the historical card-deck record
+    // model doesn't fit Snoflake's stream-based file abstraction. Wire a
+    // real implementation when an actual caller appears.
 };
 
 //     BRANCH  is used to alter the flow of program control by
@@ -1168,7 +1134,7 @@ sil.ENDEX = function ( $DESCR ) {
 // 2.  Refer  to Section 2.1 for a discussion of unit reference
 // numbers.
 sil.ENFILE = function ( $DESCR ) {
-    openFile( this, $DESCR ).close();
+    this.openUnit( this.d( $DESCR ).addr ).close();
 };
 
 //     EQU is used to assign, at assembly time, the value of N
@@ -3308,7 +3274,7 @@ sil.RESETF = function ( $DESCR, FLAG ) {
 // numbers.
 // 2.  See also BKSPCE and ENFILE.
 sil.REWIND = function ( $DESCR ) {
-    openFile( this, $DESCR ).seek( 0 );
+    this.openUnit( this.d( $DESCR ).addr ).rewind();
 };
 
 //     RLINT is used to convert a real number to  an  integer.
@@ -4064,7 +4030,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
-          file = openFile( this, DESCR );
+          file = this.openUnit( DESCR.addr );
 
     const record = file.readRecord( SPEC.length );
     if ( record.eof ) {
@@ -4076,13 +4042,16 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    // record.text length is bounded by the buffer size (SPEC.length), so
-    // trim the encoder's pad cells to avoid writing past the buffer.
+    // record.text length is bounded by SPEC.length so str.encode's trailing
+    // pad cells stay outside the buffer.
     const text = record.text,
           encoded = str.encode( text );
     this.mem.set( encoded.subarray( 0, text.length ), SPEC.addr + SPEC.offset );
 
-    if ( file.role === 'input' ) {
+    // Stream-mode segments report the actual record length back through
+    // SPEC.length; card-mode (padded) reads keep SPEC.length at the buffer
+    // width, so the caller continues to see fixed-column records.
+    if ( !record.padded ) {
         SPEC.length = text.length;
     }
 

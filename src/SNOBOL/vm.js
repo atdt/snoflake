@@ -1,6 +1,7 @@
 "use strict";
 
 import { Descriptor, Specifier } from './datatypes.js';
+import { File, bufferedReader } from './file.js';
 import { nodeStdout, nodeStderr, nodeLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
@@ -196,6 +197,30 @@ export class VM {
         return ptr instanceof Specifier ? ptr : new Specifier( this, ptr );
     }
 
+    // Resolve a SIL unit number to its backing File, building it on first
+    // access. Snoflake gives each unit a stream of one or more byte
+    // segments: the SIL source program (`--file`, card-padded) followed by
+    // optional runtime input (`--input`, length-preserving) on UNITI.
+    // An interactive stdin segment will plug in here when added.
+    openUnit( unitNum ) {
+        if ( this.units[ unitNum ] ) return this.units[ unitNum ];
+
+        const segments = [];
+        if ( this.options.file ) {
+            segments.push( {
+                reader: bufferedReader( loadBytes( this, this.options.file ) ),
+                padReads: true,
+            } );
+        }
+        if ( this.options.input && unitNum === this.symbols.UNITI ) {
+            segments.push( {
+                reader: bufferedReader( loadBytes( this, this.options.input ) ),
+                padReads: false,
+            } );
+        }
+        return this.units[ unitNum ] = new File( segments );
+    }
+
     jmp( loc ) {
         // Omitted optional branch operands arrive as undefined (or null from the
         // PEG grammar's empty-list-slot rule); SIL specifies fall-through.
@@ -300,20 +325,27 @@ function applyHostOutputOptions( vm ) {
 }
 
 // Compile each [label, macro, args] image entry into a thunk that
-// dispatches to the resolved sil implementation. The thunk also stamps
-// vm.currentLabel, which sil.js's fileRole reads when routing I/O.
-// Doing the lookup once per program rather than once per dispatch is
-// worth 10-20% on CPU-heavy fixtures (kalah, n-queens, recognizer).
+// dispatches to the resolved sil implementation. Resolving the macro
+// once per program rather than once per dispatch is worth 10-20% on
+// CPU-heavy fixtures (kalah, n-queens, recognizer).
 function compileInstructions( vm, instructions ) {
     return instructions.map( stmt => {
-        const label = stmt[ 0 ],
-              impl = sil[ stmt[ 1 ] ],
+        const impl = sil[ stmt[ 1 ] ],
               args = stmt[ 2 ];
         return function () {
-            vm.currentLabel = label;
             impl.apply( vm, args );
         };
     } );
+}
+
+// Coerce loader output to a Uint8Array view. The Node loader returns a
+// Buffer (already a Uint8Array); browser/test loaders may return a plain
+// Uint8Array or a string.
+function loadBytes( vm, path ) {
+    const content = vm.loader.load( path );
+    if ( typeof content === 'string' ) return new TextEncoder().encode( content );
+    if ( content instanceof Uint8Array ) return content;
+    throw new TypeError( 'Loader must return a string or Uint8Array' );
 }
 
 // Branching macros update instructionPointer themselves. Everything else

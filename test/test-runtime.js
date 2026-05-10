@@ -157,12 +157,9 @@ describe( 'SNOBOL Program Execution', function () {
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
     } );
 
-    it( 'treats a missing runtime input file as EOF', function () {
-        const vm = new SNOBOL.VM( {
-                  file: path.join( __dirname, '..', 'tmp', 'unused-source.sno' )
-              } ),
-              file = new SNOBOL.File( vm, 5, 'input' );
-        assert.equal( file.read( 80 ), '' );
+    it( 'returns EOF when no input streams are configured', function () {
+        const vm = new SNOBOL.VM();
+        assert.equal( vm.openUnit( 5 ).read( 80 ), '' );
     } );
 } );
 

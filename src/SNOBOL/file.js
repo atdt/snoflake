@@ -4,106 +4,79 @@ import { str } from './string.js';
 
 const textDecoder = new TextDecoder( 'utf-8' );
 
-function emptyBytes() {
-    return new Uint8Array( 0 );
+// LineReader interface (duck-typed):
+//
+//     readLine() -> Uint8Array | null   // null at EOF
+//     rewind?()                         // optional; absent on streaming sources
+//     drain?()                          // optional; signals "no more lines"
+//
+// `bufferedReader` is the only implementation today; an interactive stdin
+// reader will follow the same shape when interactive mode lands.
+export function bufferedReader( bytes ) {
+    let pos = 0;
+    return {
+        readLine() {
+            if ( pos >= bytes.length ) return null;
+            let end = bytes.indexOf( 10, pos );
+            let next;
+            if ( end === -1 ) { end = bytes.length; next = end; }
+            else { next = end + 1; }
+            // Trim a trailing CR on CRLF line endings.
+            if ( end > pos && bytes[ end - 1 ] === 13 ) end--;
+            const line = bytes.slice( pos, end );
+            pos = next;
+            return line;
+        },
+        rewind() { pos = 0; },
+        drain() { pos = bytes.length; },
+    };
 }
 
-function sourceBytes( content ) {
-    if ( typeof content === 'string' ) {
-        return new TextEncoder().encode( content );
-    }
-
-    if ( content instanceof Uint8Array ) {
-        return content;
-    }
-
-    throw new TypeError( 'Loader must return a string or Uint8Array' );
-}
-
-function decodeBytes( bytes ) {
-    return textDecoder.decode( bytes );
-}
-
+// A File is one logical input unit. It composes one or more segments, read
+// in order. Each segment carries its own padding policy: card-formatted
+// segments (the SIL source file) right-pad each record to the requested
+// length; stream segments (a host-supplied --input file, eventually stdin)
+// preserve the actual record length so callers can detect short lines.
 export class File {
-    constructor( vm, unitNum, role = 'source' ) {
-        const key = role + ':' + unitNum;
-
-        if ( vm.units[ key ] !== undefined ) {
-            return vm.units[ key ];
-        }
-
-        this.vm = vm;
-        this.unitNum = unitNum;
-        this.role = role;
-        this.path = role === 'input' ?
-            vm.options.input :
-            vm.options.file;
-        this.pos = 0;
-        this.fd = null;
-        this.buf = null;
-        vm.units[ key ] = this;
-    }
-
-    close() {
-        if ( this.buf === null ) {
-            this.buf = emptyBytes();
-        }
-        this.pos = this.buf.length;
-    }
-
-    seek( pos ) {
-        this.pos = pos;
+    constructor( segments ) {
+        this.segments = segments;
+        this.idx = 0;
     }
 
     readRecord( length ) {
-        let end, next;
-
-        if ( this.buf === null ) {
-            if ( !this.path && this.role === 'input' ) {
-                this.buf = emptyBytes();
-            } else if ( this.path ) {
-                this.buf = sourceBytes( this.vm.loader.load( this.path ) );
-            } else {
-                throw new Error( 'No source file configured' );
+        while ( this.idx < this.segments.length ) {
+            const { reader, padReads } = this.segments[ this.idx ];
+            const line = reader.readLine();
+            if ( line !== null ) {
+                let text = textDecoder.decode( line );
+                if ( text.length > length ) {
+                    return { eof: false, text: text.slice( 0, length ), padded: false };
+                }
+                if ( padReads ) {
+                    return { eof: false, text: str.pad( text, length, 'left' ), padded: true };
+                }
+                return { eof: false, text, padded: false };
             }
+            this.idx++;
         }
-
-        if ( this.pos >= this.buf.length ) {
-            return { eof: true, text: '' };
-        }
-
-        end = this.buf.indexOf( 10, this.pos );
-        if ( end === -1 ) {
-            end = this.buf.length;
-            next = end;
-        } else {
-            next = end + 1;
-        }
-
-        if ( end > this.pos && this.buf[ end - 1 ] === 13 ) {
-            end--;
-        }
-
-        const record = this.buf.slice( this.pos, end );
-        this.pos = next;
-
-        const text = decodeBytes( record );
-        if ( text.length > length ) {
-            return { eof: false, text: text.slice( 0, length ) };
-        }
-
-        if ( this.role === 'input' ) {
-            return { eof: false, text };
-        }
-
-        return { eof: false, text: str.pad( text, length, 'left' ) };
+        return { eof: true, text: '', padded: false };
     }
 
     read( length ) {
         return this.readRecord( length ).text;
     }
 
-    write( a /* ... */ ) {
-        this.vm.stdout.write( a );
+    rewind() {
+        this.idx = 0;
+        for ( const { reader } of this.segments ) {
+            reader.rewind?.();
+        }
+    }
+
+    close() {
+        for ( const { reader } of this.segments ) {
+            reader.drain?.();
+        }
+        this.idx = this.segments.length;
     }
 }

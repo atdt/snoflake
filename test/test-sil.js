@@ -1606,7 +1606,7 @@ describe( 'Input and Output Macros', function () {
         }
     } );
 
-    it( 'STREAD separates source cards from runtime INPUT data', function () {
+    it( 'STREAD reads source then runtime input, with mode-appropriate length handling', function () {
         const sourceFile = path.join( os.tmpdir(), 'snoflake-stread-source-' + process.pid + '.sno' ),
               inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-' + process.pid + '.txt' ),
               unit = this.vm.d(),
@@ -1624,13 +1624,17 @@ describe( 'Input and Output Macros', function () {
         spec.update( ptr, 0, 0, 0, 6 );
 
         try {
-            this.vm.currentLabel = 'XLATRN';
+            // First read drains the (card-padded) source segment; SPEC.length
+            // stays at the requested width because card reads are fixed-column.
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
+            assert.equal( spec.length, 6 );
             assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + 6 ) ).map( function ( c ) {
                 return String.fromCharCode( c );
             } ).join( '' ), 'SOURCE' );
 
-            this.vm.currentLabel = null;
+            // Second read falls through to the input segment; SPEC.length is
+            // updated to the actual record length so the caller sees DATA, not
+            // a padded six-char field.
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( spec.length, 4 );
             assert.equal( Array.from( this.vm.mem.slice( ptr, ptr + spec.length ) ).map( function ( c ) {
