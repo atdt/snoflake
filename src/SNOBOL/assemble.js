@@ -1,6 +1,6 @@
 "use strict";
 
-import { VM } from './base.js';
+import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
 import { hostStrings } from './syntax.js';

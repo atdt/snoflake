@@ -1,9 +1,9 @@
 "use strict";
 
 import { File } from './file.js';
-import { isFloat32, isInt32 } from './mem.js';
 import { str } from './string.js';
 import { constants, hostStrings, match, syntaxTables, tableNames } from './syntax.js';
+import { isFloat32, isInt32 } from './vm.js';
 
 function assert( condition ) {
     if ( !condition ) {

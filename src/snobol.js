@@ -1,10 +1,4 @@
-// Public entry point. Imports below are ordered so that the side-effect
-// modules (mem, vm) finish patching VM.prototype before any caller
-// constructs a VM.
-import { VM } from './SNOBOL/base.js';
-import './SNOBOL/mem.js';
-import './SNOBOL/vm.js';
-
+// Public entry point.
 import * as io from './SNOBOL/io.js';
 import { Descriptor, Specifier } from './SNOBOL/datatypes.js';
 import { File } from './SNOBOL/file.js';
@@ -12,7 +6,7 @@ import { constants, hostStrings, match, syntaxTables, tableNames } from './SNOBO
 import { str } from './SNOBOL/string.js';
 import { sil } from './SNOBOL/sil.js';
 import { assemble } from './SNOBOL/assemble.js';
-import { isInt32, isFloat32 } from './SNOBOL/mem.js';
+import { VM, isInt32, isFloat32 } from './SNOBOL/vm.js';
 import image from './SNOBOL/snobol.sil.js';
 
 const D = 3;

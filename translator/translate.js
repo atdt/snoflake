@@ -6,11 +6,9 @@ import peggy from 'peggy';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-// Import directly from the SIL modules rather than the public entry: the
-// public entry imports the generated snobol.sil.js, which is the file we are
-// about to overwrite.
-import '../src/SNOBOL/mem.js';
-import '../src/SNOBOL/vm.js';
+// Import directly from assemble rather than the public entry: the entry
+// imports the generated snobol.sil.js, which is the file we are about to
+// overwrite.
 import { assemble } from '../src/SNOBOL/assemble.js';
 
 function indent( text, spaces ) {
