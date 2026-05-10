@@ -7,9 +7,8 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 // Import directly from assemble rather than the public entry: the entry
-// imports the generated snobol.sil.js, which is the file we are about to
-// overwrite.
-import { assemble } from '../src/SNOBOL/assemble.js';
+// imports the generated image, which is the file we are about to overwrite.
+import { assemble } from '../src/assemble.js';
 
 function indent( text, spaces ) {
     const prefix = ' '.repeat( spaces );
