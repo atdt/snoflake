@@ -5,7 +5,6 @@ import { runSnoflake } from './run-snoflake.js';
 const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),
       elizaSourceUrl = new URL( './eliza.sno', import.meta.url ),
       patternSampleInput = 'THE BLUEBIRD\nGOLDFISH\n',
-      maxInputBytes = 4096,
       patternSource = document.querySelector( '#pattern-source' ),
       patternInput = document.querySelector( '#pattern-input' ),
       patternOutput = document.querySelector( '#pattern-output' ),
@@ -20,8 +19,7 @@ const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),
       elizaInputForm = document.querySelector( '#eliza-input-form' ),
       elizaInputLine = document.querySelector( '#eliza-input-line' ),
       elizaSendButton = document.querySelector( '#eliza-send' ),
-      elizaEofButton = document.querySelector( '#eliza-eof' ),
-      encoder = new TextEncoder();
+      elizaEofButton = document.querySelector( '#eliza-eof' );
 
 let elizaWorker = null,
     elizaStdin = null,
@@ -104,43 +102,17 @@ async function resetPattern() {
     }
 }
 
-function createSharedStdin() {
-    if ( !globalThis.SharedArrayBuffer || !globalThis.crossOriginIsolated ) {
-        throw new Error( 'Interactive input needs the demo server headers. Run `npm run demo` and open the printed URL.' );
-    }
-
-    const stateBuffer = new SharedArrayBuffer( Int32Array.BYTES_PER_ELEMENT * 2 ),
-          lineBuffer = new SharedArrayBuffer( maxInputBytes ),
-          state = new Int32Array( stateBuffer ),
-          bytes = new Uint8Array( lineBuffer );
-
+function createWorkerStdin( worker ) {
     return {
-        shared() {
-            return {
-                state: stateBuffer,
-                line: lineBuffer
-            };
-        },
-
         writeLine( line ) {
-            const encoded = encoder.encode( line );
-            if ( encoded.length > bytes.length ) {
-                throw new Error( 'Input line is longer than ' + bytes.length + ' bytes.' );
-            }
-            if ( Atomics.load( state, 0 ) !== 0 ) {
-                throw new Error( 'The previous input line is still pending.' );
-            }
-
-            bytes.fill( 0 );
-            bytes.set( encoded );
-            Atomics.store( state, 1, encoded.length );
-            Atomics.store( state, 0, 1 );
-            Atomics.notify( state, 0 );
+            worker.postMessage( {
+                type: 'input',
+                line
+            } );
         },
 
         close() {
-            Atomics.store( state, 0, 2 );
-            Atomics.notify( state, 0 );
+            worker.postMessage( { type: 'eof' } );
         }
     };
 }
@@ -162,15 +134,8 @@ function startElizaSession() {
     stopElizaSession();
     clearElizaConversation();
 
-    try {
-        elizaStdin = createSharedStdin();
-    } catch ( e ) {
-        appendElizaLine( e.message, 'error' );
-        setElizaStatus( 'Error' );
-        return;
-    }
-
     elizaWorker = new Worker( './worker.js', { type: 'module' } );
+    elizaStdin = createWorkerStdin( elizaWorker );
     elizaWorker.addEventListener( 'message', function ( event ) {
         const message = event.data;
 
@@ -196,8 +161,7 @@ function startElizaSession() {
     setElizaInputEnabled( true );
     elizaWorker.postMessage( {
         type: 'start',
-        source: elizaSource.value,
-        stdin: elizaStdin.shared()
+        source: elizaSource.value
     } );
 }
 
