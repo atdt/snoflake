@@ -1,0 +1,297 @@
+* @title ELIZA-style consultant responds to scripted input
+* @attribution Robert T. Duquet, SIGPLAN Notices, December 1970; modified by Mike Alexander and Viktors Berstis
+* @input >>>
+* I am sad
+* because my mother hates me
+* can you help me
+* bye
+* <<<
+* @expect >>>
+* HELLO. PLEASE TELL ME ABOUT YOUR PROBLEM.
+* I AM SORRY TO HEAR YOU ARE SAD.
+* TELL ME MORE ABOUT YOUR FAMILY.
+* YOU BELIEVE I CAN HELP YOU , DON'T YOU?
+* THANK YOU.  I HAVE ENJOYED TALKING WITH YOU.
+* <<<
+* PLEASE WAIT A MINUTE WHILE I PREPARE TO BE YOUR CONSULTANT.
+* This program is based on the ELIZA program in the 1970 December
+* issue of SIGPLAN page 50, by Robert T. Duquet.
+* It has been modified by Mike Alexander and Viktors Berstis.
+* ELIZA was originally written in LISP.  See "ELIZA - A Computer Program
+* For the Study of Natural Language Communication Between Man and Machine"
+* in Communications of the ACM, Volume 9, Number 1, January 1966, pages 36-45.
+*
+* Modernized by O.L. (2026-05-09):
+* - Removed obsolete CODE()/SAVE() memory hacks and custom I/O bindings.
+* - Replaced dynamic compilation with a standard SETUP -> MAIN flow.
+* - Fixed EOF (CTRL-D) loop and removed the teletype paper-feed hack.
+* - Removed non-standard &STAT keyword for strict v3.11 compatibility.
+        :(SETUP)
+MAIN    OUTPUT = 'HELLO. PLEASE TELL ME ABOUT YOUR PROBLEM.'
+
+RESET   Q =
+        PMAX = 0
+        KLIST = '/'
+        TX = ' '
+        TEXT = REPLACE(TRIM(INPUT),LC,UC) ' '  :F(OOFF)
+        TEXT NOTANY(' ')        :F(OOFF)
+        TEXT POS(0) ('QUIT' | 'OFF' | 'BYE' | 'END' | 'STOP' |
++   'GOOD' ARB 'BYE' | 'SIGNOFF') (SPAN('., !') | '') RPOS(0) :S(OOFF)
+DPOS    TEXT "'" =     :S(DPOS)
+NXWD    TEXT WORD =            :F(NUKEY)
+        W PUNCT =
+        $('W.' W) KEY          :F(ADWD)
+        W = DIFFER(SW) SW
+        PMAX = GT(P,PMAX) P    :F(PLOW)
+        KLIST = KL '/' KLIST   :(ADWD)
+PLOW    KLIST = DIFFER(KL) KLIST KL '/'
+ADWD    TX = TX W ' '
+        Q = DIFFER(Q)          :F(NXWD)
+        GT(SIZE(KLIST),1)      :S(NUKEY)
+        TX = ' '
+        TEXT = R ' ' TEXT      :(NXWD)
+NUKEY   KLIST NKEY =          :F(NOK)
+NUPAT   KL NPAT =             :F(NUKEY)
+        TX PAT<K>             :F(NUPAT)
+GREP    REP<K> NREP = RL REPLY '/'
+        REPLY '=' REM . K     :S(GREP)
+ESUB    REPLY EPAT = $EE      :S(ESUB)
+DBLNK2  REPLY ' ' SPAN(' ') = ' ' :S(DBLNK2)
+        REPLY ' ' ANY('.?') . QQX = QQX
+        OUTPUT = REPLY        :(RESET)
+NOK     K = 0   :(GREP)
+OOFF    OUTPUT = 'THANK YOU.  I HAVE ENJOYED TALKING WITH YOU.'    :(END)
+SETUP   LC = 'abcdefghijklmnopqrstuvwxyz'
+        UC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        WORD = POS(0) BREAK(' ') . W LEN(1)
+        PUNCT = ANY('.,;:?') . Q REM . R
+        KEY = POS(0) BREAK('/') . SW LEN(1) BREAK('/') . P LEN(1) REM . KL
+        NKEY = POS(0) BREAK('/') . KL LEN(1)
+        NPAT = POS(0) BREAK('.') . K LEN(1)
+        NREP = POS(0) BREAK('/') . REPLY LEN(1) REM . RL
+        EPAT = '#' LEN(2) . EE
+        PAT = ARRAY(100) ; REP = ARRAY('0:100')
+        REP<0> = "I AM NOT SURE I UNDERSTAND YOU FULLY./PLEASE GO ON./"
+.  "WHAT DOES THAT SUGGEST TO YOU?/DO YOU FEEL STRONGLY ABOUT DISCUS"
+.  "SING SUCH THINGS?/"
+        PFAM = "MOTHER " | "FATHER " | "SISTER " | "BROTHER " | "WIFE "
+.       | "CHILDREN " | "HUSBAND " | "KID " | "KIDS "
+        W.MY = "YOUR/2/1.2."
+        PAT<1> = "YOUR " ARB PFAM . E4 REM . E5
+        REP<1> = "TELL ME MORE ABOUT YOUR FAMILY./WHO ELSE IN YOUR FAMILY #E5?"
+.   "/YOUR #E4?/WHAT ELSE COMES TO MIND WHEN YOU THINK OF YOUR #E4?/"
+        PAT<2> = "YOUR " REM . E3
+        REP<2> = "YOUR #E3?/WHY DO YOU SAY YOUR #E3?/DOES THAT SUGGEST ANY"
+.   "THING ELSE WHICH BELONGS TO YOU?/"
+.  "IS IT IMPORTANT TO YOU THAT YOUR #E3?/"
+        W.YOU = "I//3.4.5.6."
+        PAT<3> = "I REMIND YOU OF"
+        REP<3> = "=DIT/"
+        PAT<4> = "I ARE " REM . E4
+        REP<4> = "WHAT MAKES YOU THINK I AM #E4?/"
+.  "DOES IT PLEASE YOU TO BELIEVE I AM #E4?/"
+.  "DO YOU SOMETIMES WISH YOU WERE #E4?/"
+.  "PERHAPS YOU WOULD LIKE TO BE #E4./"
+        PAT<5> = "I " ARB . E3 "YOU " RPOS(0)
+        REP<5> = "WHY DO YOU THINK I #E3 YOU?/YOU LIKE TO THINK I #E3 YOU, "
+.     "DON'T YOU?/WHAT MAKES YOU THINK I #E3 YOU?/REALLY, I #E3 YOU/"
+.   "SUPPOSE I DID #E3 YOU -- WHAT WOULD THAT MEAN?/"
+.   "DOES SOMEONE ELSE BELIEVE I #E3 YOU?/"
+        PAT<6> = "I " REM . E3
+        REP<6> = "WE WERE DISCUSSING YOU, NOT ME./OH, I #E3/"
+.  "YOU'RE NOT REALLY TALKING ABOUT ME, ARE YOU?/"
+.   "WHAT ARE YOUR FEELINGS NOW?/"
+        W.MOM = "MOTHER//"
+        W.DAD = "FATHER//"
+        W.YES = "//7."
+        PAT<7> = ARB
+        REP<7> = "PLEASE TELL ME MORE./YOU ARE SURE?/I SEE./I UNDERSTAND./"
+        W.NO = "//8."
+        PAT<8> = ARB
+        REP<8> = "PLEASE EXPLAIN YOUR ANSWER IN MORE DETAIL/WHY NOT?/"
+.   "YOU ARE BEING A BIT NEGATIVE./WHY 'NO'?/WOULD MOST PEOPLE SAY NO?/"
+        PEVRY = "EVERYONE " | "EVERYBODY " | "NOBODY " | "NOONE "
+        W.EVERYONE = "/2/9."
+        PAT<9> = PEVRY . E2
+        REP<9> = "REALLY, #E2?/SURELY NOT #E2/CAN YOU THINK OF ANYONE IN "
+.    "PARTICULAR?/WHO, FOR EXAMPLE?/YOU ARE THINKING OF A VERY SPECIAL"
+.    " PERSON./WHO, MAY I ASK?/SOMEONE SPECIAL PERHAPS?/YOU HAVE A "
+.   "PARTICULAR PERSON IN MIND, DON'T YOU?/WHO DO YOU THINK YOU'RE "
+.    "TALKING ABOUT?/"
+        W.EVERYBODY = "/2/9."
+        W.NOBODY = "/2/9."
+        W.NOONE = "/2/9."
+        W.ALWAYS = "/1/10."
+        PAT<10> = ARB
+        REP<10> = "CAN YOU THINK OF A SPECIFIC EXAMPLE?/WHEN?/"
+.   "WHAT INCIDENT ARE YOU THINKING OF?/REALLY, ALWAYS?/"
+        PBE = "AM " | "IS " | "ARE " | "WAS "
+        W.LIKE = "/10/11."
+        PAT<11> = PBE ARB "LIKE "
+        REP<11> = "IN WHAT WAY?/WHAT RESEMBLANCE DO YOU SEE?/WHAT DOES "
+.   "THAT SIMILARITY SUGGEST TO YOU?/WHAT OTHER CONNECTIONS DO YOU "
+.   "SEE?/WHAT DO YOU SUPPOSE THAT RESEMBLANCE MEANS?/HOW?/"
+        W.SORRY = "//12."
+        PAT<12> = ARB
+        REP<12> = "PLEASE DON'T APOLOGIZE./APOLOGIES ARE NOT NECESSARY./"
+.   "WHAT FEELINGS DO YOU HAVE WHEN YOU APOLOGIZE?/"
+        W.REMEMBER = "/5/13.14."
+        PAT<13> = "YOU REMEMBER " REM . E4
+        REP<13> = "DO YOU OFTEN THINK OF #E4?/DOES THINKING OF #E4 BRING "
+.  "ANYTHING ELSE TO MIND?/WHAT ELSE DO YOU REMEMBER?/WHY DO YOU "
+.  "REMEMBER #E4 JUST NOW?/WHAT IN THE PRESENT SITUATION REMINDS "
+.  "YOU OF #E4?/WHAT IS THE CONNECTION BETWEEN ME AND #E4?/"
+        PAT<14> = "DO I REMEMBER " REM . E5
+        REP<14> = "DID YOU THINK I WOULD FORGET #E5?/WHY DO YOU THINK I "
+.  "SHOULD RECALL #E5 NOW?/WHAT ABOUT #E5?/=15/YOU MENTIONED #E5./"
+        W.WHAT = "//15."
+        PAT<15> = ARB
+        REP<15> = "WHY DO YOU ASK?/DOES THAT QUESTION INTEREST YOU?/"
+.  "WHAT IS IT YOU REALLY WANT TO KNOW?/ARE SUCH QUESTIONS MUCH "
+.  "ON YOUR MIND?/WHAT ANSWER WOULD PLEASE YOU MOST?/"
+        W.IF = "/3/16."
+        PAT<16> = "IF " REM . E3
+        REP<16> = "DO YOU THINK ITS LIKELY THAT #E3?/DO YOU WISH THAT #E3?/"
+.  "WHAT DO YOU THINK ABOUT #E3?/REALLY, IF #E3?/"
+        W.DREAMT = "/4/17."
+        PAT<17> = "YOU DREAMT " REM . E4
+        REP<17> = "REALLY, #E4/HAVE YOU EVER FANTASIED #E4 WHILE YOU WERE "
+.  "AWAKE?/HAVE YOU DREAMT #E4 BEFORE?/=18/"
+        W.DREAMED = "DREAMT/4/17."
+        W.DREAM = "/3/18."
+        PAT<18> = ARB
+        REP<18> = "WHAT DOES THAT DREAM SUGGEST TO YOU?/DO YOU DREAM OFTEN?/"
+.  "WHAT PERSONS APPEAR IN YOUR DREAMS?/DON'T YOU BELIEVE THAT "
+.  "DREAM HAS SOMETHING TO DO WITH YOUR PROBLEM?/"
+        W.DREAMS = "/3/18."
+        W.HOW = "//15."
+        W.WHEN = "//15."
+        W.ALIKE = "/10/11."
+        W.SAME = "/10/11."
+        W.CERTAINLY = "//7."
+        W.PERHAPS = "//19."
+        PAT<19> = ARB
+        REP<19> = "YOU DON'T SEEM QUITE CERTAIN./WHY THE UNCERTAIN TONE?/"
+.  "CAN'T YOU BE MORE POSITIVE?/YOU AREN'T SURE./DON'T YOU KNOW?/"
+        W.MAYBE = "//19."
+        W.NAME = "/15/20."
+        PAT<20> = ARB
+        REP<20> = "I AM NOT INTERESTED IN NAMES./I'VE TOLD YOU BEFORE, I "
+.  "DON'T CARE ABOUT NAMES  PLEASE CONTINUE./"
+        W.COMPUTER = "/50/21."
+        PAT<21> = ARB
+        REP<21> = "DO COMPUTERS WORRY YOU?/WHY DO YOU MENTION COMPUTERS?/"
+.  "WHAT DO YOU THINK MACHINES HAVE TO DO WITH YOUR PROBLEM?/"
+.  "DON'T YOU THINK COMPUTERS CAN HELP PEOPLE?/WHAT ABOUT MACHINES "
+.  "WORRIES YOU?/WHAT DO YOU THINK ABOUT MACHINES?/"
+        W.MACHINE = "/50/21."
+        W.COMPUTERS = "/50/21."
+        W.MACHINES = "/50/21."
+        W.AM = "ARE//22.23."
+        PAT<22> = "ARE YOU " REM . E4
+        REP<22> = "DO YOU BELIEVE YOU ARE #E4?/WOULD YOU WANT TO BE #E4?/"
+.  "YOU WISH I WOULD TELL YOU YOU ARE #E4./WHAT WOULD IT MEAN IF "
+.  "YOU WERE #E4?/=15/"
+        PAT<23> = ARB
+        REP<23> = "WHY DO YOU SAY 'AM'?/I DON'T UNDERSTAND THAT./"
+        W.ARE = "//24.25."
+        PAT<24> = "ARE I " REM . E4
+        REP<24> = "WHY ARE YOU INTERESTED IN WHETHER I AM #E4 OR NOT?/"
+.  "WOULD YOU PREFER IF I WEREN'T #E4?/PERHAPS I AM #E4 IN YOUR "
+.  "FANTASIES./DO YOU SOMETIMES THINK I AM #E4?/=15/"
+        PAT<25> = "ARE " REM . E3
+        REP<25> = "DID YOU THINK THEY MIGHT NOT BE #E3?/WOULD YOU LIKE "
+.  "IT IF THEY WERE NOT #E3?/WHAT IF THEY WERE NOT #E3?/"
+        W.YOUR = "MY//26."
+        PAT<26> = "MY " REM . E3
+        REP<26> = "WHY ARE YOU CONCERNED OVER MY #E3?/WHAT ABOUT YOUR "
+.  "OWN #E3?/ARE YOU WORRIED ABOUT SOMEONE ELSE'S #E3?/REALLY, MY #E3/"
+        W.WAS = "/2/27.28.29."
+        PAT<27> = "WAS YOU " REM . E4
+        REP<27> = "WHAT IF YOU WERE #E4?/DO YOU THINK YOU WERE #E4?/WERE YOU "
+.  "#E4?/WHAT WOULD IT MEAN IF YOU WERE #E4?/=15/"
+        PAT<28> = "YOU WAS " REM . E4
+        REP<28> = "WERE YOU REALLY?/WHY DO YOU TELL ME YOU WERE #E4 NOW?/"
+.  "PERHAPS I ALREADY KNEW YOU WERE #E4./"
+        PAT<29> = "WAS I " REM . E4
+        REP<29> = "WOULD YOU LIKE TO BELIEVE I WAS #E4?/WHAT SUGGEST THAT I "
+.  "WAS #E4?/WHAT DO YOU THINK?/PERHAPS I WAS #E4./"
+        W.WERE = "WAS//27.28.29."
+        W.ME = "YOU//"
+        W.MYSELF = "YOURSELF//"
+        W.YOURSELF = "MYSELF//"
+        W.I = "YOU//30.31.32.33.34.35.36.37.38.39.40.41."
+        PAT<30> = "YOU " ("WANT " | "NEED ") REM . E4
+        REP<30> = "WHAT WOULD IT MEAN TO YOU IF YOU GOT #E4?/WHY DO YOU WANT "
+.   "#E4?/SUPPOSE YOU GOT #E4 SOON./WHAT IF YOU NEVER GOT #E4?/WHAT "
+.   "WOULD GETTING #E4 MEAN TO YOU?/WHAT DOES WANTING #E4 HAVE TO DO "
+.   "WITH THIS DISCUSSION?/"
+        PAT<31> = "YOU ARE " ARB ("SAD " | "UNHAPPY " | "DEPRESSED " | "SICK ")
+.   . E5
+        REP<31> = "I AM SORRY TO HEAR YOU ARE #E5./DO YOU THINK COMING HERE "
+.   "WILL HELP YOU NOT TO BE #E5?/I'M SURE ITS NOT PLEASANT TO BE #E5./"
+.   "CAN YOU EXPLAIN WHAT MADE YOU #E5?/"
+        PAT<32> = "YOU ARE " ARB ("HAPPY " | "ELATED " | "GLAD " | "BETTER ")
+.   . E5
+        REP<32> = "HOW HAVE I HELPED YOU TO BE #E5?/HAS YOUR TREATMENT MADE "
+.  "YOU #E5?/WHAT MAKES YOU #E5 JUST NOW?/CAN YOU EXPLAIN WHY YOU "
+.  "ARE SUDDENLY #E5?/"
+        PAT<33> = "YOU WAS " REM . E4
+        REP<33> = "=27/=28/"
+        PBLIEF = "FEEL " | "THINK " | "BELIEVE " | "WISH "
+        PAT<34> = "YOU " PBLIEF "YOU " REM . E5
+        REP<34> = "DO YOU REALLY THINK SO?/BUT YOU ARE NOT SURE YOU #E5./"
+.  "DO YOU REALLY DOUBT YOU #E5?/"
+        PAT<35> = "YOU " ARB PBLIEF ARB "I " REM . E4
+        REP<35> = "=4/"
+        PAT<36> = "YOU ARE " REM . E4
+        REP<36> = "IS IT BECAUSE YOU ARE #E4 THAT YOU CAME TO ME?/"
+.  "HOW LONG HAVE YOU BEEN #E4?/DO YOU BELIEVE IT NORMAL TO BE #E4?/"
+.  "DO YOU ENJOY BEING #E4?/"
+        PAT<37> = "YOU " ("CAN'T " | "CANNOT ") REM . E4
+        REP<37> = "HOW DO YOU KNOW YOU CAN'T #E4?/HAVE YOU TRIED?/"
+.   "PERHAPS YOU COULD #E4 NOW./"
+.   "DO YOU REALLY WANT TO BE ABLE TO #E4?/"
+        PAT<38> = "YOU DON'T " REM . E4
+        REP<38> = "DON'T YOU REALLY #E4?/WHY DON'T YOU #E4?/"
+.  "DO YOU WISH TO BE ABLE TO #E4?/DOES THAT TROUBLE YOU?/"
+        PAT<39> = "YOU FEEL " REM . E4
+        REP<39> = "TELL ME MORE ABOUT SUCH FEELINGS./DO YOU OFTEN FEEL #E4?/"
+.  "DO YOU ENJOY FEELING #E4?/OF WHAT DOES FEELING #E4 REMIND YOU?/"
+        PAT<40> = "YOU " ARB . E3 "I "
+        REP<40> = "PERHAPS IN YOUR FANTASY WE #E3 EACH OTHER./DO YOU WISH TO "
+.  "#E3 ME?/YOU SEEM TO NEED TO #E3 ME./DO YOU #E3 ANYONE ELSE?/"
+        PAT<41> = REM . E1
+        REP<41> = "YOU SAY #E1./CAN'T YOU ELABORATE ON THAT?/"
+.  "DO YOU SAY #E1 FOR SOME SPECIAL REASON?/"
+.  "THAT'S QUITE INTERESTING./"
+        W.CAN = "//42.43."
+        PAT<42> = "CAN I " REM . E4
+        REP<42> = "YOU BELIEVE I CAN #E4, DON'T YOU?/=15/YOU WANT ME TO BE "
+.  "ABLE TO #E4./PERHAPS YOU WOULD LIKE TO BE ABLE TO #E4 YOURSELF./"
+        PAT<43> = "CAN YOU " REM . E4
+        REP<43> = "WHETHER OR NOT YOU CAN #E4 DEPENDS ON YOU MORE THAN ON ME./"
+.  "DO YOU WANT TO BE ABLE TO #E4?/PERHAPS YOU DON'T WANT TO #E4./"
+.  "=15/"
+        W.BECAUSE = "//44."
+        PAT<44> = ARB
+        REP<44> = "IS THAT THE REAL REASON?/DON'T ANY OTHER REASONS COME TO "
+.  "MIND?/DOES THAT REASON SEEM TO EXPLAIN ANYTHING ELSE?/WHAT OTHER "
+.  "REASONS MIGHT THERE BE?/"
+        W.WHY = "//45.46.15."
+        PAT<45> = "WHY DON'T I " REM . E5
+        REP<45> = "DO YOU BELIEVE I DON'T #E5?/PERHAPS I WILL #E5 IN GOOD "
+.  "TIME./SHOULD YOU #E5 YOURSELF?/YOU WANT ME TO #E5/=15/"
+        PAT<46> = "WHY CAN'T YOU " REM . E5
+        REP<46> = "DO YOU THINK YOU SHOULD BE ABLE TO #E5?/DO YOU WANT TO "
+.  "BE ABLE TO #E5?/DO YOU BELIEVE THIS WILL HELP YOU TO #E5?/"
+.  "HAVE YOU ANY IDEA WHY YOU CAN'T #E5?/=15/"
+        W.DONT = "DON'T//"
+        W.CANT = "CAN'T//"
+        W.WONT = "WON'T//"
+        W.YOURE = "I ARE/4."
+        W.IM = "YOU ARE//31.32.35.36."
+        W.THATS = "THAT'S//"
+THAT'S//"
+        :(MAIN)
+END
