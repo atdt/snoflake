@@ -12,7 +12,7 @@
     ".": "./src/snobol.js"
   },
   "bin": {
-    "snoflake": "./bin/snoflake.js"
+    "snoflake": "bin/snoflake.js"
   },
   "files": [
     "bin/",
@@ -23,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "http://github.com/atdt/snoflake"
+    "url": "git+https://github.com/atdt/snoflake.git"
   },
   "devDependencies": {
     "mocha": "^12.0.0-beta-10",
