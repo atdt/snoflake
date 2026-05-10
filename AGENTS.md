@@ -74,6 +74,12 @@ crystal-clear, beautiful, simple, and well-documented.
 - `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
 - `make build`: regenerate `src/generated-snobol-image.js`.
 - `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
+- `make bench` (or `node tools/bench-snoflake.js [opts]`): run the
+  Snoflake benchmark harness against a default fixture suite. Pass `-h`
+  for full options.
+- `make bench-vs-csnobol4` (or `node tools/bench-vs-csnobol4.js [opts]`):
+  wall-clock comparison against CSNOBOL4. Requires `snobol4` on PATH;
+  override with `--snobol4=PATH`.
 - `make profile` (or `node tools/profile.js [bench-snoflake.js opts]`):
   capture a V8 tick profile of `bench-snoflake.js --mode=vm` and post-
   process it into a report under `tmp/profiles/`. The first ~60 lines
