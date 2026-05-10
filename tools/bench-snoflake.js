@@ -218,9 +218,9 @@ async function createRunner( opts ) {
         return fixture => runCli( opts, fixture );
     }
 
-    const SNOBOL = ( await import(
+    const SNOBOL = await import(
         pathToFileURL( path.join( opts.root, 'src', 'snobol.js' ) ).href + '?bench=' + Date.now()
-    ) ).default;
+    );
 
     return fixture => runVm( SNOBOL, fixture );
 }
