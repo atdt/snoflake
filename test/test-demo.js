@@ -1,6 +1,7 @@
 "use strict";
 
 import assert from 'node:assert';
+import fs from 'node:fs';
 import { runSnoflake } from '../demo/run-snoflake.js';
 
 describe( 'browser demo runner', function () {
@@ -33,6 +34,30 @@ describe( 'browser demo runner', function () {
         assert.equal( result.stderr, '' );
         assert.match( result.stdout, /FIRST/ );
         assert.match( result.stdout, /SECOND/ );
+    } );
+
+    it( 'keeps the original pattern-matcher demo runnable', function () {
+        const result = runSnoflake(
+            fs.readFileSync( 'demo/pattern-matcher.sno', 'utf8' ),
+            { inputText: 'THE BLUEBIRD\nGOLDFISH\n' }
+        );
+
+        assert.equal( result.stderr, '' );
+        assert.match( result.stdout, /BLUE/ );
+        assert.match( result.stdout, /BIRD/ );
+        assert.match( result.stdout, /GOLD/ );
+        assert.match( result.stdout, /FISH/ );
+    } );
+
+    it( 'runs ELIZA as a batch companion demo with scripted input', function () {
+        const result = runSnoflake(
+            fs.readFileSync( 'demo/eliza.sno', 'utf8' ),
+            { inputText: 'I feel nervous about computers\nbye\n' }
+        );
+
+        assert.equal( result.stderr, '' );
+        assert.match( result.stdout, /HELLO\. PLEASE TELL ME ABOUT YOUR PROBLEM\./ );
+        assert.match( result.stdout, /THANK YOU\.  I HAVE ENJOYED TALKING WITH YOU\./ );
     } );
 
     it( 'can read runtime INPUT from an injected interactive reader', function () {

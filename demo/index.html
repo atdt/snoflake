@@ -10,26 +10,45 @@
     <main class="shell">
         <header>
             <div>
-                <h1>ELIZA on Snoflake</h1>
-                <p>A browser-hosted SNOBOL4 macro implementation running the modernized ELIZA program.</p>
+                <h1>Snoflake Demo</h1>
+                <p id="demo-description">A browser-hosted SNOBOL4 macro implementation.</p>
             </div>
             <div class="actions">
-                <button id="run" type="button">Restart</button>
+                <label class="demo-picker">
+                    <span>Program</span>
+                    <select id="demo-select" aria-label="Demo program">
+                        <option value="pattern">Pattern matcher</option>
+                        <option value="eliza">ELIZA</option>
+                    </select>
+                </label>
+                <div class="mode-switch" role="group" aria-label="Demo view">
+                    <button class="mode-button active" type="button" data-mode="batch" aria-pressed="true">Three-pane</button>
+                    <button class="mode-button" type="button" data-mode="interactive" aria-pressed="false">Interactive</button>
+                </div>
+                <button id="run" type="button">Run</button>
                 <button id="reset" class="secondary" type="button">Reset</button>
+                <span id="status" class="status">Ready</span>
             </div>
         </header>
 
-        <section class="workspace" aria-label="Snoflake browser demo">
+        <section id="workspace" class="workspace mode-batch" aria-label="Snoflake browser demo">
             <div class="pane">
                 <div class="pane-header">Source</div>
                 <textarea id="source" spellcheck="false" aria-label="SNOBOL source"></textarea>
             </div>
-            <div class="pane conversation-pane">
+            <div id="batch-input-pane" class="pane input-pane">
+                <div class="pane-header">Input</div>
+                <textarea id="input" spellcheck="false" aria-label="SNOBOL input"></textarea>
+            </div>
+            <div id="batch-output-pane" class="pane">
                 <div class="pane-header">
-                    <span>Conversation</span>
-                    <span id="status" class="status">Ready</span>
+                    <span>Output</span>
                 </div>
-                <div id="output" class="terminal" role="log" aria-live="polite"></div>
+                <pre id="batch-output" aria-live="polite"></pre>
+            </div>
+            <div id="conversation-pane" class="pane conversation-pane" hidden>
+                <div class="pane-header">Conversation</div>
+                <div id="conversation" class="terminal" role="log" aria-live="polite"></div>
                 <form id="input-form" class="prompt">
                     <span aria-hidden="true">&gt;</span>
                     <input id="input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">

@@ -1,9 +1,32 @@
 "use strict";
 
-const sampleProgramUrl = new URL( './eliza.sno', import.meta.url ),
+import { runSnoflake } from './run-snoflake.js';
+
+const demos = {
+          pattern: {
+              title: 'Pattern matcher',
+              description: 'The original browser demo: edit a short SNOBOL4 pattern program, feed it input, and inspect the output.',
+              sourceUrl: new URL( './pattern-matcher.sno', import.meta.url ),
+              input: 'THE BLUEBIRD\nGOLDFISH\n',
+              defaultMode: 'batch'
+          },
+          eliza: {
+              title: 'ELIZA',
+              description: 'A modernized ELIZA program running on Snoflake, available as a scripted batch run or as a live conversation.',
+              sourceUrl: new URL( './eliza.sno', import.meta.url ),
+              input: 'I feel anxious about computers\nMy mother listens to me\nbye\n',
+              defaultMode: 'interactive'
+          }
+      },
       maxInputBytes = 4096,
+      workspace = document.querySelector( '#workspace' ),
+      description = document.querySelector( '#demo-description' ),
+      demoSelect = document.querySelector( '#demo-select' ),
+      modeButtons = document.querySelectorAll( '.mode-button' ),
       editor = document.querySelector( '#source' ),
-      output = document.querySelector( '#output' ),
+      batchInput = document.querySelector( '#input' ),
+      batchOutput = document.querySelector( '#batch-output' ),
+      conversation = document.querySelector( '#conversation' ),
       status = document.querySelector( '#status' ),
       runButton = document.querySelector( '#run' ),
       resetButton = document.querySelector( '#reset' ),
@@ -15,7 +38,9 @@ const sampleProgramUrl = new URL( './eliza.sno', import.meta.url ),
 
 let worker = null,
     stdin = null,
-    running = false;
+    running = false,
+    mode = 'batch',
+    loadId = 0;
 
 function setStatus( text ) {
     status.textContent = text;
@@ -29,15 +54,19 @@ function setInputEnabled( enabled ) {
 }
 
 function clearConversation() {
-    output.textContent = '';
+    conversation.textContent = '';
+}
+
+function clearBatchOutput() {
+    batchOutput.textContent = '';
 }
 
 function appendLine( text, kind = 'program' ) {
     const line = document.createElement( 'div' );
     line.className = 'terminal-line ' + kind;
     line.textContent = text;
-    output.append( line );
-    output.scrollTop = output.scrollHeight;
+    conversation.append( line );
+    conversation.scrollTop = conversation.scrollHeight;
 }
 
 function stopSession() {
@@ -53,14 +82,101 @@ function stopSession() {
     setInputEnabled( false );
 }
 
-async function loadSampleProgram() {
+function currentDemo() {
+    return demos[ demoSelect.value ];
+}
+
+function updateDemoText() {
+    const demo = currentDemo();
+    description.textContent = demo.description;
+}
+
+async function loadSelectedProgram() {
+    const id = ++loadId,
+          demo = currentDemo();
+
     setStatus( 'Loading' );
-    const response = await fetch( sampleProgramUrl );
+    const response = await fetch( demo.sourceUrl );
     if ( !response.ok ) {
-        throw new Error( 'Could not load ' + sampleProgramUrl.pathname );
+        throw new Error( 'Could not load ' + demo.sourceUrl.pathname );
     }
-    editor.value = await response.text();
+    const source = await response.text();
+    if ( id !== loadId ) {
+        return false;
+    }
+    editor.value = source;
+    batchInput.value = demo.input;
     setStatus( 'Ready' );
+    return true;
+}
+
+function renderBatchResult( result ) {
+    const parts = [];
+
+    if ( result.stdout ) {
+        parts.push( result.stdout );
+    }
+    if ( result.stderr ) {
+        parts.push( result.stderr );
+    }
+
+    batchOutput.textContent = parts.join( '\n' ) || '(no output)';
+    setStatus( result.stderr || result.exitCode ? 'Error' : 'Finished' );
+}
+
+function runBatch() {
+    stopSession();
+    clearBatchOutput();
+    setStatus( 'Running' );
+
+    try {
+        renderBatchResult( runSnoflake( editor.value, { inputText: batchInput.value } ) );
+    } catch ( e ) {
+        batchOutput.textContent = 'Execution error: ' + ( e && e.message || e );
+        setStatus( 'Error' );
+    }
+}
+
+function runCurrentMode() {
+    if ( mode === 'interactive' ) {
+        startSession();
+    } else {
+        runBatch();
+    }
+}
+
+function setMode( nextMode, options = {} ) {
+    if ( nextMode !== 'batch' && nextMode !== 'interactive' ) {
+        return;
+    }
+    if ( mode === nextMode && !options.force ) {
+        return;
+    }
+
+    if ( mode === 'interactive' ) {
+        stopSession();
+    }
+
+    mode = nextMode;
+    workspace.classList.toggle( 'mode-batch', mode === 'batch' );
+    workspace.classList.toggle( 'mode-interactive', mode === 'interactive' );
+    document.querySelector( '#batch-input-pane' ).hidden = mode !== 'batch';
+    document.querySelector( '#batch-output-pane' ).hidden = mode !== 'batch';
+    document.querySelector( '#conversation-pane' ).hidden = mode !== 'interactive';
+
+    modeButtons.forEach( function ( button ) {
+        const active = button.dataset.mode === mode;
+        button.classList.toggle( 'active', active );
+        button.setAttribute( 'aria-pressed', active ? 'true' : 'false' );
+    } );
+
+    runButton.textContent = mode === 'interactive' ? 'Restart' : 'Run';
+    setInputEnabled( false );
+    setStatus( 'Ready' );
+
+    if ( mode === 'interactive' && options.start !== false ) {
+        startSession();
+    }
 }
 
 function createSharedStdin() {
@@ -150,12 +266,16 @@ function startSession() {
 
 async function resetDemo() {
     stopSession();
+    clearBatchOutput();
     clearConversation();
     try {
-        await loadSampleProgram();
-        startSession();
+        const loaded = await loadSelectedProgram();
+        if ( loaded && mode === 'interactive' ) {
+            startSession();
+        }
     } catch ( e ) {
         appendLine( e.message, 'error' );
+        batchOutput.textContent = e.message;
         setStatus( 'Error' );
     }
 }
@@ -188,8 +308,35 @@ eofButton.addEventListener( 'click', function () {
     setInputEnabled( false );
 } );
 
-runButton.addEventListener( 'click', startSession );
+runButton.addEventListener( 'click', runCurrentMode );
 resetButton.addEventListener( 'click', resetDemo );
 
+demoSelect.addEventListener( 'change', async function () {
+    stopSession();
+    clearBatchOutput();
+    clearConversation();
+    updateDemoText();
+    setMode( currentDemo().defaultMode, { force: true, start: false } );
+
+    try {
+        const loaded = await loadSelectedProgram();
+        if ( loaded && mode === 'interactive' ) {
+            startSession();
+        }
+    } catch ( e ) {
+        appendLine( e.message, 'error' );
+        batchOutput.textContent = e.message;
+        setStatus( 'Error' );
+    }
+} );
+
+modeButtons.forEach( function ( button ) {
+    button.addEventListener( 'click', function () {
+        setMode( button.dataset.mode );
+    } );
+} );
+
 setInputEnabled( false );
+updateDemoText();
+setMode( 'batch', { force: true, start: false } );
 resetDemo();

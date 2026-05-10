@@ -1,0 +1,7 @@
+* Snoflake browser demo: read input and match a pattern
+READ LINE = INPUT :F(END)
+ LINE ('GOLD' | 'BLUE') . SHADE ('FISH' | 'BIRD') . ANIMAL :S(SHOW)F(READ)
+SHOW OUTPUT = SHADE
+ OUTPUT = ANIMAL
+ :(READ)
+END

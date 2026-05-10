@@ -11,7 +11,8 @@ const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..
       contentTypes = {
           '.css': 'text/css; charset=utf-8',
           '.html': 'text/html; charset=utf-8',
-          '.js': 'text/javascript; charset=utf-8'
+          '.js': 'text/javascript; charset=utf-8',
+          '.sno': 'text/plain; charset=utf-8'
       };
 
 function responseHeaders( file ) {
