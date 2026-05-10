@@ -2,6 +2,13 @@
 
 import { str } from './string.js';
 
+// SIL descriptor word width. Specifiers are two descriptors wide. This is
+// the most fundamental layout constant in the runtime; everything else that
+// addresses descriptor cells -- syntax.js's DESCR/SPEC/STACK constants,
+// assemble.js's storage reservations, sil.js's pointer arithmetic -- pulls
+// from here.
+export const D = 3;
+
 export class Descriptor {
     constructor( vm, ptr ) {
         this.vm = vm;
@@ -15,8 +22,8 @@ export class Descriptor {
     }
 
     get name()      { return 'Descriptor'; }
-    get width()     { return 3; }
-    get rawLength() { return 3; }
+    get width()     { return D; }
+    get rawLength() { return D; }
 
     get addr()    { return this.vm.getInt( this.ptr + 0 ); }
     set addr( n ) { this.vm.setInt( this.ptr + 0, n ); }
@@ -87,8 +94,8 @@ export class Descriptor {
 
 export class Specifier extends Descriptor {
     get name()      { return 'Specifier'; }
-    get width()     { return 6; }
-    get rawLength() { return 5; }
+    get width()     { return 2 * D; }
+    get rawLength() { return 2 * D - 1; }
 
     get offset()    { return this.vm.getUint( this.ptr + 3 ); }
     set offset( n ) { this.vm.setUint( this.ptr + 3, n ); }

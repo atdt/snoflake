@@ -1,11 +1,11 @@
 "use strict";
 
+import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
 import { hostStrings } from './syntax.js';
 
-const D = 3;
 const SPECIFIER_SIZE = 2 * D;
 
 function resolveBinaryOperand( vm, operand ) {

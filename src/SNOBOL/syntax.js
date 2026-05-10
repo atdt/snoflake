@@ -1,8 +1,9 @@
 "use strict";
 
+import { D } from './datatypes.js';
+
 // &ALPHABET holds every byte value of the host character set, matching
 // CSNOBOL4 and the original IBM/360 ALPHSZ = 256.
-const D = 3;
 const BYTE_VALUES = 256;
 let ALPHA = '';
 
@@ -20,8 +21,8 @@ export const hostStrings = {
 export const constants = {
     ALPHSZ  : ALPHA.length,
     CPA     : 1,
-    DESCR   : 3,
-    SPEC    : 6,
+    DESCR   : D,
+    SPEC    : 2 * D,
     SIZLIM  : 0x7FFFFFFF,
 
     // Match CSNOBOL4's machine parameters in include/snotypes.h. Keeping PTR

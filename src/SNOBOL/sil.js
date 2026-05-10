@@ -1,5 +1,6 @@
 "use strict";
 
+import { D } from './datatypes.js';
 import { File } from './file.js';
 import { str } from './string.js';
 import { constants, hostStrings, match, syntaxTables, tableNames } from './syntax.js';
@@ -11,8 +12,9 @@ function assert( condition ) {
     }
 }
 
-const D = 3,
-      CPD = 3;  // Characters per descriptor
+const CPD = 3;  // Characters per descriptor cell (matches the historical
+                // IBM/360 layout, even though the JS encoding stores one
+                // character per Uint32 word).
 
 const sil = {};
 
