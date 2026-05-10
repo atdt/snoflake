@@ -1,7 +1,5 @@
 "use strict";
 
-import SNOBOL from './base.js';
-
 function pad( str, width, align, padChar ) {
         if ( str.length >= width ) {
                 return str;
@@ -16,7 +14,7 @@ function pad( str, width, align, padChar ) {
                 : str.padStart( width, padChar );
 }
 
-SNOBOL.str = {
+export const str = {
 
     pad: pad,
 
@@ -169,7 +167,7 @@ SNOBOL.str = {
 
             if (code === '"' || code === "'") {
                 const literal = readQuotedLiteral(code);
-                out += SNOBOL.str.repeat(literal, rep);
+                out += str.repeat(literal, rep);
             } else if (code === 'H') {
                 // Hollerith literal: rep is the character count.
                 out += template.slice(i, i + rep);

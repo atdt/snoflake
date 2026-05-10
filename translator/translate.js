@@ -6,17 +6,12 @@ import peggy from 'peggy';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import SNOBOL from '../src/SNOBOL/base.js';
-
-import '../src/SNOBOL/string.js';
+// Import directly from the SIL modules rather than the public entry: the
+// public entry imports the generated snobol.sil.js, which is the file we are
+// about to overwrite.
 import '../src/SNOBOL/mem.js';
-import '../src/SNOBOL/syntax.js';
-import '../src/SNOBOL/datatypes.js';
-import '../src/SNOBOL/io.js';
-import '../src/SNOBOL/file.js';
 import '../src/SNOBOL/vm.js';
-import '../src/SNOBOL/sil.js';
-import '../src/SNOBOL/assemble.js';
+import { assemble } from '../src/SNOBOL/assemble.js';
 
 function indent( text, spaces ) {
     const prefix = ' '.repeat( spaces );
@@ -72,7 +67,7 @@ if ( process.argv[ 1 ] === invokedPath ) {
               '// Image sections: resolved symbols, data declarations, and resolved instructions.',
               ''
           ].join( '\n' ),
-          image = SNOBOL.assemble( listing ),
+          image = assemble( listing ),
           code = prolog + serializeImage( image );
 
     process.stdout.write( code );

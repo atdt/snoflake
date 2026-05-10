@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 
-import SNOBOL from '../src/snobol.js';
+import { VM, image } from '../src/snobol.js';
 import process from "node:process";
 
 function optionValue( value ) {
@@ -20,7 +20,7 @@ function optionValue( value ) {
     return value;
 }
 
-const vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
+const vm = new VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
     const m = /--(\w+)(?:=(.*))?/g.exec( c );
     if ( c === '-f' ) {
         p.caseFold = false;
@@ -46,5 +46,5 @@ const vm = new SNOBOL.VM( process.argv.slice( 2 ).reduce( function ( p, c ) {
     return p;
 }, {} ) );
 
-vm.run( SNOBOL.image );
+vm.run( image );
 process.exitCode = vm.exitCode;

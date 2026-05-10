@@ -1,6 +1,9 @@
 "use strict";
 
-import SNOBOL from './base.js';
+import { File } from './file.js';
+import { isFloat32, isInt32 } from './mem.js';
+import { str } from './string.js';
+import { constants, hostStrings, match, syntaxTables, tableNames } from './syntax.js';
 
 function assert( condition ) {
     if ( !condition ) {
@@ -16,15 +19,15 @@ const sil = {};
 function internStringStructure( vm, $DESCR, $SPEC ) {
     const DESCR = vm.d( $DESCR ),
           SPEC = vm.s( $SPEC ),
-          str = SPEC.specified,
+          text = SPEC.specified,
           len = SPEC.length,
-          K = Math.abs( SNOBOL.str.hash( 'K' + str ) % vm.$( 'OBSIZ' ) ) * D,
-          M = Math.abs( SNOBOL.str.hash( 'M' + str ) % ( vm.$( 'SIZLIM' ) + 1 ) ),
+          K = Math.abs( str.hash( 'K' + text ) % vm.$( 'OBSIZ' ) ) * D,
+          M = Math.abs( str.hash( 'M' + text ) % ( vm.$( 'SIZLIM' ) + 1 ) ),
           FRSGPT = vm.d( 'FRSGPT' ),
           bin = vm.d( vm.d( 'OBPTR' ).addr + K + vm.$( 'LNKFLD' ) ),
           ptr = FRSGPT.addr,
           size = D + ( D * ( 3 + Math.floor( ( len - 1 ) / CPD + 1 ) ) ),
-          encoded = SNOBOL.str.encode( str );
+          encoded = str.encode( text );
 
     DESCR.update( ptr, vm.$( 'PTR' ), vm.$( 'S' ) );
     vm.d( ptr ).update( ptr, vm.$( 'TTL' ) + vm.$( 'STTL' ), len );
@@ -37,45 +40,6 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     bin.addr = ptr;
     FRSGPT.addr += size;
 }
-
-SNOBOL.VM.prototype.printLinePrinterRecord = function ( record, unit, carriageControl ) {
-    // TODO: route by unit.  Today all output goes to stdout.  Per the SIL
-    // spec, OUTPUT (UNITO) and PUNCH (UNITP) are distinct destinations, and
-    // user programs may associate other unit numbers with files.  When that
-    // is implemented, dispatch on `unit` here.
-    const stdout = this.stdout;
-    record.split( '\n' ).forEach( function ( line ) {
-        if ( line.length === 0 ) {
-            stdout.write( '' );
-            return;
-        }
-
-        if ( carriageControl === false ) {
-            stdout.write( line.replace( /\u0000+/g, '' ) );
-            return;
-        }
-
-        const control = line.charAt( 0 );
-        const content = line.slice( 1 ).replace( /\u0000+/g, '' );
-
-        // SNOBOL4 inherited FORTRAN-style carriage control from line printers:
-        // the first character of each record is not text, but spacing
-        // metadata.  A literal terminal rendering of "double space" and
-        // "new page" is too airy because the SIL formats also contain explicit
-        // slash records, so we strip the control and preserve only real record
-        // breaks produced by the format.
-        switch ( control ) {
-            case '1':
-            case '0':
-            case '+':
-            case ' ':
-                stdout.write( content );
-                break;
-            default:
-                stdout.write( line.replace( /\u0000+/g, '' ) );
-        }
-    } );
-};
 
 function formatHasLeadingCarriageControl( fmt ) {
     if ( !fmt ) {
@@ -126,7 +90,7 @@ function fileRole( unitNum ) {
 
 function openFile( vm, $DESCR ) {
     const unitNum = vm.d( $DESCR ).addr;
-    return new SNOBOL.File( vm, unitNum, fileRole.call( vm, unitNum ) );
+    return new File( vm, unitNum, fileRole.call( vm, unitNum ) );
 }
 
 function foldAsciiUpperString( str ) {
@@ -139,7 +103,7 @@ function stringStructureText( vm, DESCR ) {
     const title = vm.d( DESCR.addr ),
           start = DESCR.addr + vm.$( 'BCDFLD' );
 
-    return SNOBOL.str.decode( vm.mem.slice( start, start + title.value ) );
+    return str.decode( vm.mem.slice( start, start + title.value ) );
 }
 
 function isFoldableStreamTable( tableName ) {
@@ -420,7 +384,7 @@ sil.ADREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newRaddr = DESCR2.raddr + DESCR3.raddr;
 
-    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+    if ( !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -553,7 +517,7 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
           STR2 = SPEC2.specified;
 
     const combined = STR1 + STR2,
-          encoded = SNOBOL.str.encode( combined );
+          encoded = str.encode( combined );
 
     this.mem.set( encoded, A1 + O1 );
     SPEC1.length = combined.length;
@@ -765,7 +729,7 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 // 2.  See also PLUGTB.
 function syntaxTableName( TABLE ) {
     if ( typeof TABLE === 'number' ) {
-        return SNOBOL.tableNames[ TABLE ];
+        return tableNames[ TABLE ];
     }
 
     return TABLE;
@@ -776,17 +740,17 @@ function syntaxTable( TABLE ) {
         return TABLE;
     }
 
-    return SNOBOL.syntaxTables[ syntaxTableName( TABLE ) ];
+    return syntaxTables[ syntaxTableName( TABLE ) ];
 }
 
 sil.CLERTB = function ( TABLE, KEY ) {
     // clear syntax table
     const tableName = syntaxTableName( TABLE );
     let table = syntaxTable( TABLE );
-    const chars = SNOBOL.hostStrings.ALPHA;
+    const chars = hostStrings.ALPHA;
 
     if ( tableName ) {
-        table = SNOBOL.syntaxTables[ tableName ] = chars
+        table = syntaxTables[ tableName ] = chars
             .split( '' )
             .map( function ( ch ) {
                 return [ ch, null, KEY ];
@@ -1152,7 +1116,7 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newRaddr = DESCR2.raddr / DESCR3.raddr;
 
-    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+    if ( !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1234,7 +1198,7 @@ sil.EXPINT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newAddr = Math.pow( DESCR2.addr, DESCR3.addr );
 
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+    if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1266,7 +1230,7 @@ sil.EXREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newRaddr = Math.pow( DESCR2.raddr, DESCR3.raddr );
 
-    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+    if ( !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1356,7 +1320,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
           DESCR = this.d( $DESCR ),
           start = SPEC.addr + SPEC.offset + SPEC.length,
           stop = start + DESCR.addr,
-          string = SNOBOL.str.decode( this.mem.slice( start, stop ) );
+          string = str.decode( this.mem.slice( start, stop ) );
     let j,
         stack;
 
@@ -1772,7 +1736,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
           I_str = DESCR.addr.toString(),
-          encoded = SNOBOL.str.encode( I_str );
+          encoded = str.encode( I_str );
 
     if ( this.INTSPC_BUFFER === null ) {
         this.INTSPC_BUFFER = this.alloc( 255 );
@@ -2380,7 +2344,7 @@ sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
           DESCR2 = this.d( $DESCR2 ),
           newAddr = -DESCR2.addr;
 
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+    if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -2544,7 +2508,7 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newRaddr = DESCR2.raddr * DESCR3.raddr;
 
-    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+    if ( !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -2607,7 +2571,7 @@ sil.MULT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newAddr = DESCR2.addr * DESCR3.addr;
 
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+    if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -2738,7 +2702,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     }
 
     ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
-    this.printLinePrinterRecord( SNOBOL.str.format( fmt, ARGs ), DESCR.addr );
+    this.printLinePrinterRecord( str.format( fmt, ARGs ), DESCR.addr );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3368,7 +3332,7 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
           DESCR2 = this.d( $DESCR2 ),
           newAddr = Math.floor( DESCR2.raddr );
 
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+    if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -3550,7 +3514,7 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newRaddr = DESCR2.raddr - DESCR3.addr;
 
-    if ( !SNOBOL.isFloat32( newRaddr ) ) {
+    if ( !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -4062,10 +4026,10 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
           L = SPEC.length;
     let item = this.mem.slice( A1 + O1, A1 + O1 + L );
 
-    fmt = SNOBOL.str.decode( fmt );
-    item = SNOBOL.str.decode( item );
+    fmt = str.decode( fmt );
+    item = str.decode( item );
     this.printLinePrinterRecord(
-        SNOBOL.str.format( fmt, item ),
+        str.format( fmt, item ),
         I,
         formatHasLeadingCarriageControl( fmt )
     );
@@ -4113,7 +4077,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     // record.text length is bounded by the buffer size (SPEC.length), so
     // trim the encoder's pad cells to avoid writing past the buffer.
     const text = record.text,
-          encoded = SNOBOL.str.encode( text );
+          encoded = str.encode( text );
     this.mem.set( encoded.subarray( 0, text.length ), SPEC.addr + SPEC.offset );
 
     if ( file.role === 'input' ) {
@@ -4220,14 +4184,14 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           O = SPEC2.offset,
           L = SPEC2.length;
 
-    let tableName = SNOBOL.tableNames[ TABLE ],
-        table = SNOBOL.syntaxTables[ tableName ],
+    let tableName = tableNames[ TABLE ],
+        table = syntaxTables[ tableName ],
         P = 0;
     // P and TI are STREAM's names from the macro spec: P is the last PUT
     // value seen, and TI is the table action for the current character.
 
     function selectTable( name ) {
-        const selected = SNOBOL.syntaxTables[ name ];
+        const selected = syntaxTables[ name ];
         assert( selected !== undefined );
         tableName = name;
         table = selected;
@@ -4254,7 +4218,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         for ( let t = 0; t < table.length; t++ ) {
             const row = table[ t ];
-            if ( SNOBOL.match( row[ 0 ], ch ) ) {
+            if ( match( row[ 0 ], ch ) ) {
                 // if table specifies a value to PUT(), assign it to P
                 if ( row[ 1 ] !== null ) {
                     P = this.$( row[ 1 ] );
@@ -4398,7 +4362,7 @@ sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newAddr = DESCR2.addr - DESCR3.addr;
 
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+    if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -4437,7 +4401,7 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 );
 
     const newAddr = DESCR2.addr + DESCR3.addr;
-    if ( !SNOBOL.isInt32( newAddr ) ) {
+    if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -4650,12 +4614,12 @@ sil.VARID = function ( $DESCR, $SPEC ) {
     // compute variable identification numbers
     const DESCR = this.d( $DESCR ),
         SPEC = this.s( $SPEC ),
-        str = SPEC.specified,
+        text = SPEC.specified,
 
-        K_HASH = SNOBOL.str.hash( 'K' + str ),
+        K_HASH = str.hash( 'K' + text ),
         K = Math.abs( K_HASH % this.$( 'OBSIZ' ) ) * D,
 
-        M_HASH = SNOBOL.str.hash( 'M' + str ),
+        M_HASH = str.hash( 'M' + text ),
         M = Math.abs( M_HASH % ( this.$( 'SIZLIM' ) + 1 ) );
 
     DESCR.addr  = K;
@@ -4769,4 +4733,4 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     this.mem.fill( 0, start, end );
 };
 
-SNOBOL.sil = sil;
+export { sil };

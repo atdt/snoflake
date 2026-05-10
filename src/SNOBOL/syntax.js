@@ -1,7 +1,5 @@
 "use strict";
 
-import SNOBOL from './base.js';
-
 // &ALPHABET holds every byte value of the host character set, matching
 // CSNOBOL4 and the original IBM/360 ALPHSZ = 256.
 const D = 3;
@@ -12,14 +10,14 @@ for ( let i = 0; i < BYTE_VALUES; i++ ) {
     ALPHA += String.fromCharCode(i);
 }
 
-SNOBOL.hostStrings = {
+export const hostStrings = {
     ALPHA   : ALPHA,
     AMPST   : '&',
     COLSTR  : ': ',
     QTSTR   : "'",
 };
 
-SNOBOL.constants = {
+export const constants = {
     ALPHSZ  : ALPHA.length,
     CPA     : 1,
     DESCR   : 3,
@@ -115,7 +113,7 @@ for ( const name in characterClasses ) {
     characterClassBitsets[ name ] = bitset;
 }
 
-SNOBOL.match = function ( characterClass, char ) {
+export function match( characterClass, char ) {
     if ( characterClass === 'ELSE' ) {
         return true;
     }
@@ -134,9 +132,9 @@ SNOBOL.match = function ( characterClass, char ) {
     return characterClass.length === 1
         ? characterClass.charCodeAt( 0 ) === code
         : characterClass === char;
-};
+}
 
-SNOBOL.syntaxTables = {
+export const syntaxTables = {
     BIOPTB: [
         [ 'PLUS', 'ADDFN', 'TBLKTB' ],
         [ 'MINUS', 'SUBFN', 'TBLKTB' ],
@@ -331,4 +329,4 @@ SNOBOL.syntaxTables = {
     ]
 };
 
-SNOBOL.tableNames = Object.keys( SNOBOL.syntaxTables ).sort();
+export const tableNames = Object.keys( syntaxTables ).sort();

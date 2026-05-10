@@ -1,8 +1,8 @@
 "use strict";
 
-import SNOBOL from './base.js';
+import { str } from './string.js';
 
-class Descriptor {
+export class Descriptor {
     constructor( vm, ptr ) {
         this.vm = vm;
 
@@ -85,7 +85,7 @@ class Descriptor {
     }
 }
 
-class Specifier extends Descriptor {
+export class Specifier extends Descriptor {
     get name()      { return 'Specifier'; }
     get width()     { return 6; }
     get rawLength() { return 5; }
@@ -100,7 +100,7 @@ class Specifier extends Descriptor {
         const start = this.addr + this.offset,
               end = start + this.length;
 
-        return SNOBOL.str.decode( this.vm.mem.slice( start, end ) );
+        return str.decode( this.vm.mem.slice( start, end ) );
     }
 
     update( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {
@@ -111,5 +111,3 @@ class Specifier extends Descriptor {
     }
 }
 
-SNOBOL.Descriptor = Descriptor;
-SNOBOL.Specifier = Specifier;

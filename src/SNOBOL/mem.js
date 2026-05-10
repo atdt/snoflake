@@ -1,7 +1,7 @@
 "use strict";
 
-import SNOBOL from './base.js';
-const VM = SNOBOL.VM;
+import { VM } from './base.js';
+import { str } from './string.js';
 
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT,
       INITIAL_WORDS = 1024 * 1024,
@@ -13,10 +13,10 @@ const buf = new ArrayBuffer( 4 ),
       u32 = new Uint32Array( buf );
 
 
-SNOBOL.isInt32 = function isInteger( value ) {
+export function isInt32( value ) {
     i32[0] = value;
     return i32[0] === value;
-};
+}
 
 function nearlyEqual( a, b ) {
     return a === b || Math.abs( a - b ) < 0.001;
@@ -25,10 +25,10 @@ function nearlyEqual( a, b ) {
 // Tests whether v survives the round-trip through 32-bit IEEE 754, using the
 // same tolerance as the typed setter so callers and setters agree on what
 // counts as overflow.
-SNOBOL.isFloat32 = function isFloat32( value ) {
+export function isFloat32( value ) {
     f32[0] = value;
     return nearlyEqual( f32[0], value );
-};
+}
 
 function wordsToBytes( words ) {
     return words * WORD_SIZE;
@@ -113,10 +113,10 @@ VM.prototype.alloc = function ( size, value = 0 ) {
     return ptr;
 };
 
-VM.prototype.specify = function ( str, $SPEC ) {
-    const SPEC = this.s( $SPEC ), encodedString = SNOBOL.str.encode( str );
+VM.prototype.specify = function ( s, $SPEC ) {
+    const SPEC = this.s( $SPEC ), encodedString = str.encode( s );
     const ptr = this.alloc( encodedString.length );
-    SPEC.update( ptr, 0, 0, 0, str.toString().length );
+    SPEC.update( ptr, 0, 0, 0, s.toString().length );
     this.mem.set( encodedString, ptr );
     return SPEC.ptr;
 }
@@ -124,7 +124,7 @@ VM.prototype.specify = function ( str, $SPEC ) {
 VM.prototype.define = function ( symbol, value ) {
     if ( typeof value === 'string' ) {
         const ptr = this.alloc( value.length ),
-              encoded = SNOBOL.str.encode( value );
+              encoded = str.encode( value );
         this.symbols[ symbol ] = ptr;
         this.mem.set( encoded.subarray( 0, value.length ), ptr );
     } else {

@@ -1,6 +1,6 @@
 "use strict";
 
-import SNOBOL from './base.js';
+import { str } from './string.js';
 
 const textDecoder = new TextDecoder( 'utf-8' );
 
@@ -24,7 +24,7 @@ function decodeBytes( bytes ) {
     return textDecoder.decode( bytes );
 }
 
-SNOBOL.File = class File {
+export class File {
     constructor( vm, unitNum, role = 'source' ) {
         const key = role + ':' + unitNum;
 
@@ -87,16 +87,16 @@ SNOBOL.File = class File {
         const record = this.buf.slice( this.pos, end );
         this.pos = next;
 
-        const str = decodeBytes( record );
-        if ( str.length > length ) {
-            return { eof: false, text: str.slice( 0, length ) };
+        const text = decodeBytes( record );
+        if ( text.length > length ) {
+            return { eof: false, text: text.slice( 0, length ) };
         }
 
         if ( this.role === 'input' ) {
-            return { eof: false, text: str };
+            return { eof: false, text };
         }
 
-        return { eof: false, text: SNOBOL.str.pad( str, length, 'left' ) };
+        return { eof: false, text: str.pad( text, length, 'left' ) };
     }
 
     read( length ) {
@@ -106,4 +106,4 @@ SNOBOL.File = class File {
     write( a /* ... */ ) {
         this.vm.stdout.write( a );
     }
-};
+}

@@ -1,8 +1,12 @@
 "use strict";
 
-import SNOBOL from './base.js';
+import { VM } from './base.js';
+import { sil } from './sil.js';
+import { str } from './string.js';
+import { hostStrings } from './syntax.js';
 
-const SPECIFIER_SIZE = 2 * SNOBOL.D;
+const D = 3;
+const SPECIFIER_SIZE = 2 * D;
 
 function resolveBinaryOperand( vm, operand ) {
     const left = resolveOperand( vm, operand.operands[ 0 ] ),
@@ -48,7 +52,7 @@ function argsFor( vm, stmt ) {
 }
 
 function encodedLength( value ) {
-    return SNOBOL.str.encode( value ).length;
+    return str.encode( value ).length;
 }
 
 // Storage declarations have two assembly phases. First, reserve exactly the
@@ -100,13 +104,13 @@ function reserveStorage( vm, stmt ) {
 
     switch ( macro ) {
     case 'ARRAY':
-        vm.alloc( argsFor( vm, stmt )[ 0 ] * SNOBOL.D );
+        vm.alloc( argsFor( vm, stmt )[ 0 ] * D );
         break;
     case 'BUFFER':
         vm.alloc( argsFor( vm, stmt )[ 0 ] );
         break;
     case 'DESCR':
-        vm.alloc( SNOBOL.D );
+        vm.alloc( D );
         break;
     case 'FORMAT':
     case 'STRING':
@@ -130,7 +134,7 @@ function emitInstruction( instructions, stmt ) {
 
 function storageOrConstantLocation( vm, stmt ) {
     return stmt.macro === 'EQU'
-        ? SNOBOL.sil.EQU.apply( vm, argsFor( vm, stmt ) )
+        ? sil.EQU.apply( vm, argsFor( vm, stmt ) )
         : reserveStorage( vm, stmt );
 }
 
@@ -170,7 +174,7 @@ function initializeReservedStorage( vm, program, dataStart, dataEnd ) {
     try {
         for ( const stmt of program ) {
             if ( STORAGE_MACROS.has( stmt.macro ) ) {
-                SNOBOL.sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
+                sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
             }
         }
         if ( vm.memPtr !== dataEnd ) {
@@ -206,16 +210,16 @@ function assembleListing( vm, program ) {
 // drive macros directly against an empty memory layout don't pay for
 // strings they don't reference.
 function allocateHostStrings( vm ) {
-    for ( const name in SNOBOL.hostStrings ) {
-        vm.define( name, SNOBOL.hostStrings[ name ] );
+    for ( const name in hostStrings ) {
+        vm.define( name, hostStrings[ name ] );
     }
 }
 
 // Assembly is a pure function from a SIL listing to an image. It runs on
 // a throwaway scratch VM whose mem/symbols become the snapshot shipped to
 // the runtime; the caller never sees that scratch state.
-SNOBOL.assemble = function ( program ) {
-    const vm = new SNOBOL.VM();
+export function assemble( program ) {
+    const vm = new VM();
     allocateHostStrings( vm );
     const instructions = assembleListing( vm, program );
 
@@ -224,4 +228,4 @@ SNOBOL.assemble = function ( program ) {
         memory: vm.mem.slice( 0, vm.memPtr ),
         instructions
     };
-};
+}
