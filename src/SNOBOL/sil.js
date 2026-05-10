@@ -6,6 +6,11 @@ import { str } from './string.js';
 import { constants, hostStrings, match, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
 
+// Machine constants that macros consult at runtime. These have fixed
+// values across every program, so importing them keeps the symbol table
+// reserved for names the SIL program actually binds.
+const { PTR, SIZLIM, STTL, TTL } = constants;
+
 function assert( condition ) {
     if ( !condition ) {
         throw new Error( 'Assertion failed' );
@@ -24,15 +29,15 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
           text = SPEC.specified,
           len = SPEC.length,
           K = Math.abs( str.hash( 'K' + text ) % vm.$( 'OBSIZ' ) ) * D,
-          M = Math.abs( str.hash( 'M' + text ) % ( vm.$( 'SIZLIM' ) + 1 ) ),
+          M = Math.abs( str.hash( 'M' + text ) % ( SIZLIM + 1 ) ),
           FRSGPT = vm.d( 'FRSGPT' ),
           bin = vm.d( vm.d( 'OBPTR' ).addr + K + vm.$( 'LNKFLD' ) ),
           ptr = FRSGPT.addr,
           size = D + ( D * ( 3 + Math.floor( ( len - 1 ) / CPD + 1 ) ) ),
           encoded = str.encode( text );
 
-    DESCR.update( ptr, vm.$( 'PTR' ), vm.$( 'S' ) );
-    vm.d( ptr ).update( ptr, vm.$( 'TTL' ) + vm.$( 'STTL' ), len );
+    DESCR.update( ptr, PTR, vm.$( 'S' ) );
+    vm.d( ptr ).update( ptr, TTL + STTL, len );
     vm.d( ptr + D ).update( 0, 0, vm.$( 'S' ) );
     vm.d( ptr + vm.$( 'ATTRIB' ) ).update( 0, 0, 0 );
     vm.d( ptr + vm.$( 'LNKFLD' ) ).update( bin.addr, 0, M );
@@ -518,8 +523,7 @@ sil.ARRAY = function ( N ) {
 // 1.  See also GETLTH.
 sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
     // get block size
-    const STTL = this.$( 'STTL' ),
-          DESCR1 = this.d( $DESCR1 ),
+    const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
           A = this.d( DESCR2.addr ),
           V = A.value,
@@ -4401,8 +4405,7 @@ sil.DBG = sil.TITLE; // nonstandard ;)
 // 1.  N may be 0.  That is, F30 may contain TTL.
 sil.TOP = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // get to top of block
-    const TTL = this.$( 'TTL' ),
-          DESCR1 = this.d( $DESCR1 ),
+    const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
           DESCR3 = this.d( $DESCR3 ),
           A = DESCR3.addr;
@@ -4528,7 +4531,7 @@ sil.VARID = function ( $DESCR, $SPEC ) {
         K = Math.abs( K_HASH % this.$( 'OBSIZ' ) ) * D,
 
         M_HASH = str.hash( 'M' + text ),
-        M = Math.abs( M_HASH % ( this.$( 'SIZLIM' ) + 1 ) );
+        M = Math.abs( M_HASH % ( SIZLIM + 1 ) );
 
     DESCR.addr  = K;
     DESCR.value = M;

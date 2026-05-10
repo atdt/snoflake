@@ -7,6 +7,8 @@ import { sil } from './sil.js';
 import { str } from './string.js';
 import { constants } from './syntax.js';
 
+const { UNITI } = constants;
+
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 1024 * 1024;
 const MAX_WORDS = 256 * 1024 * 1024;
@@ -83,7 +85,6 @@ export class VM {
         // to avoid accidental overwrites by program macros.
         this.CSTACK = { addr: 0 };
         this.OSTACK = { addr: 0 };
-        seedConstants( this );
     }
 
     // SIL storage is word-addressed. These length-tracking views share one
@@ -206,13 +207,13 @@ export class VM {
                 padReads: true,
             } );
         }
-        if ( this.options.input && unitNum === this.symbols.UNITI ) {
+        if ( this.options.input && unitNum === UNITI ) {
             segments.push( {
                 reader: bufferedReader( loadBytes( this, this.options.input ) ),
                 padReads: false,
             } );
         }
-        if ( this.options.interactive && unitNum === this.symbols.UNITI ) {
+        if ( this.options.interactive && unitNum === UNITI ) {
             segments.push( {
                 reader: readStdin(),
                 padReads: false,
@@ -256,17 +257,6 @@ export class VM {
         interpret( this, compileInstructions( this, image.instructions ) );
 
         return !( this.instructionPointer < 0 );
-    }
-}
-
-// Bind the host environment's PARMS-style constants into the symbol table.
-// No memory is touched -- ALPHA and the other host strings are allocated
-// separately by ./assemble.js. This runs on every reset so a fresh VM can
-// drive macros that look up TTL/STACK/UNITI/&c. directly, without needing
-// to first walk the assembler.
-function seedConstants( vm ) {
-    for ( const name in constants ) {
-        vm.symbols[ name ] = constants[ name ];
     }
 }
 

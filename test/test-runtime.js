@@ -4,7 +4,7 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VM, Descriptor, Specifier, File, assemble, sil, str, stdinReader } from '../src/snobol.js';
+import { VM, Descriptor, Specifier, File, assemble, constants, sil, str, stdinReader } from '../src/snobol.js';
 import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -192,7 +192,7 @@ describe( 'SNOBOL Program Execution', function () {
                   loader: { load: path => files[ path ] },
                   stdinReader: () => bufferedLineReader( [ 'STDIN' ] ),
               } ),
-              file = vm.openUnit( vm.$( 'UNITI' ) );
+              file = vm.openUnit( constants.UNITI );
 
         assert.deepEqual( file.readRecord( 8 ), {
             eof: false,

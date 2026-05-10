@@ -36,7 +36,7 @@ describe( 'Assembly Control Macros', function () {
             { label: 'B',  macro: 'LHERE', operands: [] },
             { label: null, macro: 'DESCR', operands: [] }
         ] ) );
-        assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), this.vm.$( 'DESCR' ) );
+        assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), constants.DESCR );
         assert.deepEqual( this.vm.d( 'A' ).raw(), [ 0, 0, 0 ] );
         assert.deepEqual( this.vm.d( 'B' ).raw(), [ 0, 0, 0 ] );
     } );
@@ -425,14 +425,18 @@ describe( 'Comparison Macros', function () {
 describe( 'Macros that Relate to Recursive Procedures and Stack Management', function () {
     beforeEach( function () {
         this.vm = new VM();
-        this.vm.reset();
+        // STACK and STSIZE are program-overridable defaults: at runtime
+        // they come from image.symbols. These tests bypass the assembler,
+        // so seed them explicitly with the reference values.
+        this.vm.define( 'STACK', constants.STACK );
+        this.vm.define( 'STSIZE', constants.STSIZE );
         sil.ISTACK.call( this.vm );
     } );
 
     it( 'ISTACK', function () {
         sil.ISTACK.call( this.vm );
         assert.equal( this.vm.OSTACK.addr, 0 );
-        assert.equal( this.vm.CSTACK.addr, this.vm.$( 'STACK' ) );
+        assert.equal( this.vm.CSTACK.addr, constants.STACK );
     } );
 
     it( 'POP', function () {
@@ -659,11 +663,10 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
               d2 = this.vm.d(),
               di = this.vm.d();
         let FV;
-        this.vm.define( 'STTL', 1 << 4 );
         d2.addr = di.ptr;
 
         // F contains STTL
-        di.update( 3, 1 << 4, 5 );
+        di.update( 3, constants.STTL, 5 );
         sil.BKSIZE.call( this.vm, d1, d2 );
         FV = 3 * (4 + Math.floor((di.value - 1) / 3 + 1));
         assert.deepEqual( d1.raw(), [ FV, 0, 0 ] );
@@ -1616,7 +1619,7 @@ describe( 'Input and Output Macros', function () {
         fs.writeFileSync( inputFile, 'DATA\n' );
         this.vm.options.file = sourceFile;
         this.vm.options.input = inputFile;
-        unit.addr = this.vm.$( 'UNITI' );
+        unit.addr = constants.UNITI;
         spec.update( ptr, 0, 0, 0, 6 );
 
         try {
@@ -1653,7 +1656,7 @@ describe( 'Input and Output Macros', function () {
 
         fs.writeFileSync( inputFile, 'ABC   \n' );
         this.vm.options.input = inputFile;
-        unit.addr = this.vm.$( 'UNITI' );
+        unit.addr = constants.UNITI;
         spec.update( ptr, 0, 0, 0, 8 );
 
         try {
@@ -1678,7 +1681,7 @@ describe( 'Input and Output Macros', function () {
 
         fs.writeFileSync( inputFile, '\nNEXT\n' );
         this.vm.options.input = inputFile;
-        unit.addr = this.vm.$( 'UNITI' );
+        unit.addr = constants.UNITI;
         spec.update( ptr, 0, 0, 0, 8 );
 
         try {
@@ -1716,9 +1719,10 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
     } );
 
     it( 'INIT', function () {
-        const obstart = this.vm.alloc( this.vm.$( 'OBSIZ' ) * D ),
+        const obstart = this.vm.alloc( constants.OBSIZ * D ),
               spec = this.vm.s();
 
+        this.vm.define( 'OBSIZ', constants.OBSIZ );
         this.vm.define( 'ATTRIB', 2 * D );
         this.vm.define( 'LNKFLD', 3 * D );
         this.vm.define( 'BCDFLD', 4 * D );
@@ -1729,14 +1733,14 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
         this.vm.define( 'HDSGPT', this.vm.d().ptr );
         this.vm.define( 'TLSGP1', this.vm.d().ptr );
         this.vm.define( 'OBPTR', this.vm.d().ptr );
-        this.vm.d( 'OBPTR' ).update( obstart - this.vm.$( 'LNKFLD' ), this.vm.$( 'PTR' ), this.vm.$( 'S' ) );
+        this.vm.d( 'OBPTR' ).update( obstart - this.vm.$( 'LNKFLD' ), constants.PTR, this.vm.$( 'S' ) );
 
         sil.INIT.call( this.vm );
         const ptr = this.vm.d( 'ENDPTR' );
         sil.LOCSP.call( this.vm, spec, ptr );
 
         assert( ptr.addr > 0 );
-        assert.equal( ptr.flags, this.vm.$( 'PTR' ) );
+        assert.equal( ptr.flags, constants.PTR );
         assert.equal( ptr.value, this.vm.$( 'S' ) );
         assert.equal( spec.specified, 'END' );
     } );
@@ -1775,7 +1779,7 @@ describe( 'Miscellaneous Macros', function () {
     } );
 
     it( 'LOCAPT', function () {
-        const DESCR = this.vm.$( 'DESCR' ),
+        const DESCR = constants.DESCR,
               PAIR_WIDTH = 2 * DESCR,
               PAIR_COUNT = 2,
               LIST_FLAGS = 7,
@@ -1953,7 +1957,7 @@ describe( 'Miscellaneous Macros', function () {
               d2 = this.vm.d(),
               d3 = this.vm.d(),
               block = [],
-              TTL = this.vm.$( 'TTL' );
+              TTL = constants.TTL;
         this.vm.define( 'TTL', TTL );
         for ( let i = 0; i < 10; i++ ) {
             block.push(this.vm.d());
@@ -1980,7 +1984,7 @@ describe( 'Miscellaneous Macros', function () {
               d2 = this.vm.d(),
               d3 = this.vm.d(),
               block = [];
-        this.vm.define( 'TTL', this.vm.$( 'TTL' ) );
+        this.vm.define( 'TTL', constants.TTL );
         for ( let i = 0; i < 3; i++ ) {
             block.push( this.vm.d() );
         }
@@ -1995,6 +1999,7 @@ describe( 'Miscellaneous Macros', function () {
         const d = this.vm.d(),
               s = this.vm.s( sil.STRING.call( this.vm, 'hello' ) );
 
+        this.vm.define( 'OBSIZ', constants.OBSIZ );
         sil.VARID.call( this.vm, d, s );
         assert.equal( d.addr, 744 );
         assert.equal( d.addr % D, 0 );

@@ -4,7 +4,7 @@ import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { hostStrings, streamActions, syntaxTables } from './syntax.js';
+import { constants, hostStrings, streamActions, syntaxTables } from './syntax.js';
 
 const SPECIFIER_SIZE = 2 * D;
 
@@ -29,6 +29,12 @@ const MARKER_MACROS = new Set( [ 'LHERE', 'PROC', 'TITLE' ] );
 // when they're emitted into the image.
 export function assemble( program ) {
     const vm = new VM();
+
+    // The SIL listing references machine constants (DESCR, TTL, UNITI,
+    // ...) as named operands. Seed them into the scratch symbol table so
+    // resolveOperand can resolve them; loadImage carries the resolved
+    // values through to the runtime VM in image.symbols.
+    Object.assign( vm.symbols, constants );
 
     // MDATA host strings (ALPHA, AMPST, COLSTR, QTSTR) live at the start
     // of memory in the assembled image. Allocating them here -- rather
