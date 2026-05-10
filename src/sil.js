@@ -198,7 +198,6 @@ sil.ADDLG = function ( $SPEC, $DESCR ) {
 sil.ADDSIB = function ( $DESCR1, $DESCR2 ) {
     // add sibling to tree node
     const FATHER = this.$( 'FATHER' ),
-        LSON   = this.$( 'LSON' ),
         RSIB   = this.$( 'RSIB' ),
         CODE   = this.$( 'CODE' ),
 
@@ -548,7 +547,7 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 // 1.  See also ENFILE and REWIND.
 // 2.  Refer to Section 2.1 for a discussion of unit  reference
 // numbers.
-sil.BKSPCE = function ( $DESCR ) {
+sil.BKSPCE = function ( _$DESCR ) {
     // No-op stub. BKSPCE backs up one record on a unit; the SIL compiler
     // never invokes this in practice and the historical card-deck record
     // model doesn't fit Snoflake's stream-based file abstraction. Wire a
@@ -564,7 +563,7 @@ sil.BKSPCE = function ( $DESCR ) {
 // In the source SIL, PROC disambiguates the procedure-local assembly
 // context for LOC.  The JavaScript translator resolves labels into
 // global memory entries up front, so the LOC pointer is sufficient here.
-sil.BRANCH = function ( LOC, PROC ) {
+sil.BRANCH = function ( LOC, _PROC ) {
     // branch to program location
     this.jmp( LOC );
 };
@@ -754,7 +753,7 @@ sil.CLERTB = function ( TABLE, KEY ) {
 // on the value of its argument as given above.
 // 2.  Any  of  the  COPY  segments  can be used to incorporate
 // other machine-dependent data.
-sil.COPY = function ( FILE ) {
+sil.COPY = function ( _FILE ) {
     // SIL COPY pulls in machine-dependent data; the JS runtime has none.
 };
 
@@ -1571,35 +1570,34 @@ sil.INIT = function () {
 sil.INSERT = function ( $DESCR1, $DESCR2 ) {
     // insert node in tree
     const FATHER = this.$( 'FATHER' ),
-        LSON   = this.$( 'LSON' ),
-        RSIB   = this.$( 'RSIB' ),
-        CODE   = this.$( 'CODE' ),
+          LSON   = this.$( 'LSON' ),
+          RSIB   = this.$( 'RSIB' ),
+          CODE   = this.$( 'CODE' ),
 
-        DESCR1 = this.d( $DESCR1 ),
-        A1 = DESCR1.addr,
-        F1 = DESCR1.flags,
-        V1 = DESCR1.value,
+          DESCR1 = this.d( $DESCR1 ),
+          A1 = DESCR1.addr,
+          F1 = DESCR1.flags,
+          V1 = DESCR1.value,
 
-        DESCR2 = this.d( $DESCR2 ),
-        A2 = DESCR2.addr,
-        F2 = DESCR2.flags,
-        V2 = DESCR2.value,
+          DESCR2 = this.d( $DESCR2 ),
+          A2 = DESCR2.addr,
+          F2 = DESCR2.flags,
+          V2 = DESCR2.value,
 
-        A1_FATHER = this.d( A1 + FATHER ),
-        A3 = A1_FATHER.addr,
-        F3 = A1_FATHER.flags,
-        V3 = A1_FATHER.value,
+          A1_FATHER = this.d( A1 + FATHER ),
+          A3 = A1_FATHER.addr,
+          F3 = A1_FATHER.flags,
+          V3 = A1_FATHER.value,
 
-        A3_LSON = this.d( A3 + LSON ),
-        A4 = A3_LSON.addr,
-        F4 = A3_LSON.flags,
+          A3_LSON = this.d( A3 + LSON ),
+          A4 = A3_LSON.addr,
 
-        A2_CODE = this.d( A2 + CODE ),
-        I = A2_CODE.value,
+          A2_CODE = this.d( A2 + CODE ),
+          I = A2_CODE.value,
 
-        A4_RSIB = this.d( A4 + RSIB ),
-        A2_FATHER = this.d( A2 + FATHER ),
-        A2_LSON = this.d( A2 + LSON );
+          A4_RSIB = this.d( A4 + RSIB ),
+          A2_FATHER = this.d( A2 + FATHER ),
+          A2_LSON = this.d( A2 + LSON );
 
 
     A1_FATHER.update( A2, F2, V2 );
@@ -1826,7 +1824,7 @@ sil.LHERE = function () {
 // 2.  LINK need not be implemented if LOAD is  not.   In  this
 // case, LINK should branch to INTR10.
 // 3.  See also LOAD and UNLOAD.
-sil.LINK = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, FLOC, SLOC ) {
+sil.LINK = function ( _$DESCR1, _$DESCR2, _$DESCR3, _$DESCR4, _FLOC, _SLOC ) {
     // External function linkage isn't supported — branch to INTR10 per
     // programming note 2.
     this.jmp( this.$( 'INTR10' ) );
@@ -1904,7 +1902,7 @@ sil.LINKOR = function ( $DESCR1, $DESCR2 ) {
 // bring  an external function from the library whose DDNAME is
 // specified by C21...C2L2.
 // 4.  See also LINK and UNLOAD.
-sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, FLOC, SLOC ) {
+sil.LOAD = function ( _$DESCR, _$SPEC1, _$SPEC2, _FLOC, _SLOC ) {
     // External function linkage isn't supported — branch to UNDF per
     // programming note 2.
     this.jmp( this.$( 'UNDF' ) );
@@ -2614,7 +2612,7 @@ sil.ORDVST = function () {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also STPRNT.
-sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
+sil.OUTPUT = function ( _$DESCR, FORMAT, ARGs ) {
     // output record
     const fmt = this.s( FORMAT ).specified,
           descrs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this ),
@@ -3966,7 +3964,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 // truncation  or  reading  of  additional  records  should  be
 // followed.
 // 2.  See also STPRNT.
-sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
+sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
           file = this.openUnit( DESCR.addr );
@@ -4476,7 +4474,7 @@ sil.TRIMSP = function ( $SPEC1, $SPEC2 ) {
 // 3.  UNLOAD  should do nothing if the function C1...CL is not
 // a LOADed function.
 // 4.  See also LOAD and LINK.
-sil.UNLOAD = function ( $SPEC ) {
+sil.UNLOAD = function ( _$SPEC ) {
     // unload external function
 };
 

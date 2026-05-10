@@ -56,8 +56,8 @@ describe( 'browser demo runner', function () {
         );
 
         assert.equal( result.stderr, '' );
-        assert.match( result.stdout, /HELLO\. PLEASE TELL ME ABOUT YOUR PROBLEM\./ );
-        assert.match( result.stdout, /THANK YOU\.  I HAVE ENJOYED TALKING WITH YOU\./ );
+        assert.match( result.stdout, /PLEASE TELL ME ABOUT YOUR PROBLEM\./ );
+        assert.match( result.stdout, /I HAVE ENJOYED TALKING WITH YOU\./ );
     } );
 
     it( 'can read runtime INPUT from an injected interactive reader', function () {

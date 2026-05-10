@@ -90,7 +90,7 @@ export class File {
             const { reader, padReads } = this.segments[ this.idx ];
             const line = reader.readLine();
             if ( line !== null ) {
-                let text = textDecoder.decode( line );
+                const text = textDecoder.decode( line );
                 if ( text.length > length ) {
                     return { eof: false, text: text.slice( 0, length ), padded: false };
                 }
