@@ -88,10 +88,10 @@ crystal-clear, beautiful, simple, and well-documented.
   wc -l tmp/min-output.log
   tail -n 80 tmp/min-output.log
   ```
-- Capture a debug run for later searching:
+- Capture a run for later searching:
   ```sh
-  node bin/snoflake.js --file=tmp/min-output.sno --debug=true > tmp/min-output-debug.log 2>&1
-  rg "XLATRN|XLATNX|INTERP|ASGN|PUTOUT|END" tmp/min-output-debug.log
+  node bin/snoflake.js --file=tmp/min-output.sno > tmp/min-output.log 2>&1
+  rg "XLATRN|XLATNX|INTERP|ASGN|PUTOUT|END" tmp/min-output.log
   ```
 - **Custom descriptor probes:** to capture descriptor contents during
   execution, write a short Node script that instantiates `vm`, overrides
