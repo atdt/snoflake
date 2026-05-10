@@ -23,7 +23,7 @@ JavaScript library, and in the browser.
 Install from npm and run a SNOBOL program:
 
 ```
-npm install -g snoflake
+npm install -g @ath0/snoflake
 snoflake hello.sno
 ```
 
@@ -44,7 +44,7 @@ continues runtime `INPUT` reads from standard input after the source and any
 Snoflake is a standard ES module:
 
 ```js
-import SNOBOL from 'snoflake';
+import SNOBOL from '@ath0/snoflake';
 
 const vm = new SNOBOL.VM( { file: 'hello.sno', interactive: true } );
 vm.run( SNOBOL.image );
