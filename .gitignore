@@ -1,2 +1,7 @@
 /node_modules/
-npm-debug.log
+*.log
+.DS_Store
+package-lock.json
+deno.lock
+bun.lockb
+bun.lock
