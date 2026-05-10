@@ -13,6 +13,9 @@ Snoflake is a port of the macro implementation of SNOBOL4. It tracks the
 SNOBOL4 version 3.11 SIL source and is a working, usable implementation of
 the language.
 
+> **Try it now:** [atdt.github.io/snoflake/demo/][3] — Snoflake runs in
+> your browser, no install required.
+
 Usage
 -----
 Snoflake can be used three ways: as a command-line interpreter, as a
@@ -58,9 +61,11 @@ example.
 
 ### Browser
 
-Snoflake runs unmodified in the browser. The bundled demo loads
-`src/snobol.js` directly as an ES module and captures output through custom
-writers. To try it locally:
+Snoflake runs unmodified in the browser. A hosted build of the demo is
+live at [atdt.github.io/snoflake/demo/][3]; the demo loads `src/snobol.js`
+directly as an ES module and captures output through custom writers.
+
+To run the same demo against your local checkout:
 
 ```
 npm run demo
@@ -88,3 +93,4 @@ tagged inline with their original `[PLBnn]` revision markers; see
 [0]: http://en.wikipedia.org/wiki/SNOBOL
 [1]: mailto:ori.livneh@gmail.com
 [2]: https://github.com/philbudne/csnobol4
+[3]: https://atdt.github.io/snoflake/demo/
