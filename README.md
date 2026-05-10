@@ -74,6 +74,10 @@ npm run demo
 Then open the URL it prints. The demo source under [`demo/`](demo/) is the
 shortest path to embedding Snoflake in a web page.
 
+Dedication
+----------
+This project is dedicated to my dad, Meir Livneh.
+
 License
 -------
 Copyright (c) 2012-2026 [Ori Livneh][1]
