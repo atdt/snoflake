@@ -5,3 +5,5 @@ package-lock.json
 deno.lock
 bun.lockb
 bun.lock
+.claude
+tmp/
