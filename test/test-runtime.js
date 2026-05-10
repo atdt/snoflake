@@ -4,7 +4,7 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VM, Descriptor, Specifier, assemble, sil, str } from '../src/snobol.js';
+import { VM, Descriptor, Specifier, File, assemble, sil, str, stdinReader } from '../src/snobol.js';
 import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -157,7 +157,85 @@ describe( 'SNOBOL Program Execution', function () {
         const vm = new VM();
         assert.equal( vm.openUnit( 5 ).read( 80 ), '' );
     } );
+
+    it( 'opens interactive UNITI with a stdin segment after source and runtime input', function () {
+        const files = {
+                  source: 'SOURCE\n',
+                  input: 'INPUT\n',
+              },
+              vm = new VM( {
+                  file: 'source',
+                  input: 'input',
+                  interactive: true,
+                  loader: { load: path => files[ path ] },
+                  stdinReader: () => bufferedLineReader( [ 'STDIN' ] ),
+              } ),
+              file = vm.openUnit( 5 );
+
+        assert.equal( file.segments.length, 3 );
+        assert.deepEqual( file.segments.map( segment => segment.padReads ), [
+            true,
+            false,
+            false,
+        ] );
+    } );
+
+    it( 'reads source, then runtime input, then interactive stdin', function () {
+        const files = {
+                  source: 'SOURCE\n',
+                  input: 'INPUT\n',
+              },
+              vm = new VM( {
+                  file: 'source',
+                  input: 'input',
+                  interactive: true,
+                  loader: { load: path => files[ path ] },
+                  stdinReader: () => bufferedLineReader( [ 'STDIN' ] ),
+              } ),
+              file = vm.openUnit( vm.$( 'UNITI' ) );
+
+        assert.deepEqual( file.readRecord( 8 ), {
+            eof: false,
+            text: 'SOURCE  ',
+            padded: true,
+        } );
+        assert.deepEqual( file.readRecord( 8 ), {
+            eof: false,
+            text: 'INPUT',
+            padded: false,
+        } );
+        assert.deepEqual( file.readRecord( 8 ), {
+            eof: false,
+            text: 'STDIN',
+            padded: false,
+        } );
+        assert.deepEqual( file.readRecord( 8 ), {
+            eof: true,
+            text: '',
+            padded: false,
+        } );
+    } );
+
+    it( 'drains stdin without reading from fd 0 after close', function () {
+        const reader = stdinReader(),
+              file = new File( [ { reader, padReads: false } ] );
+
+        file.close();
+        assert.equal( reader.readLine(), null );
+    } );
 } );
+
+function bufferedLineReader( lines ) {
+    let pos = 0,
+        drained = false;
+    return {
+        readLine() {
+            if ( drained || pos >= lines.length ) return null;
+            return new TextEncoder().encode( lines[ pos++ ] );
+        },
+        drain() { drained = true; },
+    };
+}
 
 describe( 'Descriptor Datatype', function () {
     beforeEach( function () {

@@ -10,8 +10,6 @@ const textDecoder = new TextDecoder( 'utf-8' );
 //     rewind?()                         // optional; absent on streaming sources
 //     drain?()                          // optional; signals "no more lines"
 //
-// `bufferedReader` is the only implementation today; an interactive stdin
-// reader will follow the same shape when interactive mode lands.
 export function bufferedReader( bytes ) {
     let pos = 0;
     return {
@@ -32,11 +30,48 @@ export function bufferedReader( bytes ) {
     };
 }
 
+export function stdinReader() {
+    let drained = false;
+    return {
+        readLine() {
+            if ( drained ) return null;
+
+            const line = readLineFromStdinSync();
+            if ( line === null ) {
+                drained = true;
+                return null;
+            }
+            return line;
+        },
+        drain() { drained = true; },
+    };
+}
+
+function readLineFromStdinSync() {
+    const fs = process.getBuiltinModule( 'fs' ),
+          buf = Buffer.alloc( 1 ),
+          chunks = [];
+
+    while ( true ) {
+        let n;
+        try {
+            n = fs.readSync( 0, buf, 0, 1, null );
+        } catch ( e ) {
+            if ( e.code === 'EAGAIN' ) continue;
+            throw e;
+        }
+
+        if ( n === 0 ) return chunks.length ? Buffer.concat( chunks ) : null;
+        if ( buf[ 0 ] === 10 ) return Buffer.concat( chunks );
+        if ( buf[ 0 ] !== 13 ) chunks.push( Uint8Array.from( buf ) );
+    }
+}
+
 // A File is one logical input unit. It composes one or more segments, read
 // in order. Each segment carries its own padding policy: card-formatted
 // segments (the SIL source file) right-pad each record to the requested
-// length; stream segments (a host-supplied --input file, eventually stdin)
-// preserve the actual record length so callers can detect short lines.
+// length; stream segments (--input and stdin) preserve the actual record
+// length so callers can detect short lines.
 export class File {
     constructor( segments ) {
         this.segments = segments;

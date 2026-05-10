@@ -27,6 +27,18 @@ npm install -g snoflake
 snoflake hello.sno
 ```
 
+The CLI also accepts explicit source and input options:
+
+```
+snoflake --file=hello.sno
+snoflake --file=filter.sno --input=data.txt
+snoflake --file=eliza.sno --interactive
+```
+
+`--input` supplies a finite runtime input file. `--interactive` (or `-i`)
+continues runtime `INPUT` reads from standard input after the source and any
+`--input` file have been exhausted.
+
 ### Library
 
 Snoflake is a standard ES module:
@@ -34,14 +46,15 @@ Snoflake is a standard ES module:
 ```js
 import SNOBOL from 'snoflake';
 
-const vm = new SNOBOL.VM( { file: 'hello.sno' } );
+const vm = new SNOBOL.VM( { file: 'hello.sno', interactive: true } );
 vm.run( SNOBOL.image );
 ```
 
 The `VM` constructor accepts options for selecting the source file, input
-file, output streams, and a custom `loader` for resolving file reads. See
-[`bin/snoflake.js`](bin/snoflake.js) for the CLI's use of the API and
-[`demo/run-snoflake.js`](demo/run-snoflake.js) for an in-memory example.
+file, interactive stdin, output streams, and a custom `loader` for resolving
+file reads. See [`bin/snoflake.js`](bin/snoflake.js) for the CLI's use of the
+API and [`demo/run-snoflake.js`](demo/run-snoflake.js) for an in-memory
+example.
 
 ### Browser
 

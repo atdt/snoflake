@@ -1,7 +1,7 @@
 "use strict";
 
 import { Descriptor, Specifier } from './datatypes.js';
-import { File, bufferedReader } from './file.js';
+import { File, bufferedReader, stdinReader } from './file.js';
 import { nodeStdout, nodeStderr, nodeLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
@@ -201,11 +201,11 @@ export class VM {
     // access. Snoflake gives each unit a stream of one or more byte
     // segments: the SIL source program (`--file`, card-padded) followed by
     // optional runtime input (`--input`, length-preserving) on UNITI.
-    // An interactive stdin segment will plug in here when added.
     openUnit( unitNum ) {
         if ( this.units[ unitNum ] ) return this.units[ unitNum ];
 
         const segments = [];
+        const readStdin = this.options.stdinReader || stdinReader;
         if ( this.options.file ) {
             segments.push( {
                 reader: bufferedReader( loadBytes( this, this.options.file ) ),
@@ -215,6 +215,12 @@ export class VM {
         if ( this.options.input && unitNum === this.symbols.UNITI ) {
             segments.push( {
                 reader: bufferedReader( loadBytes( this, this.options.input ) ),
+                padReads: false,
+            } );
+        }
+        if ( this.options.interactive && unitNum === this.symbols.UNITI ) {
+            segments.push( {
+                reader: readStdin(),
                 padReads: false,
             } );
         }

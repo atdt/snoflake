@@ -10,6 +10,7 @@ const { values, positionals } = parseArgs( {
     options: {
         file:            { type: 'string' },
         input:           { type: 'string' },
+        interactive:     { type: 'boolean', short: 'i' },
         // -f preserves the source's original case. The SIL compiler folds
         // identifiers to uppercase by default to match historical SNOBOL4.
         'preserve-case': { type: 'boolean', short: 'f' },
@@ -25,12 +26,13 @@ const { values, positionals } = parseArgs( {
 } );
 
 const vm = new VM( {
-    file:       values.file ?? positionals[ 0 ],
-    input:      values.input,
-    caseFold:   !values[ 'preserve-case' ],
-    banner:     values.banner,
-    statistics: values.statistics,
-    listing:    values.listing,
+    file:        values.file ?? positionals[ 0 ],
+    input:       values.input,
+    interactive: values.interactive,
+    caseFold:    !values[ 'preserve-case' ],
+    banner:      values.banner,
+    statistics:  values.statistics,
+    listing:     values.listing,
 } );
 
 vm.run( image );
