@@ -11,7 +11,7 @@ crystal-clear, beautiful, simple, and well-documented.
 ## Repository Structure
 
 - `bin/snoflake.js`: CLI entry point for running a SNOBOL source file.
-- `translator/`: SIL parser grammar (`sil.peg`) and translator (`translate.js`)
+- `build/`: SIL grammar (`sil-grammar.peg`) and build script (`build-image.js`)
   that emit `src/generated-snobol-image.js`.
 - `external/`: Upstream SIL and syntax-table sources.
   - `v311.sil`: Untouched historical reference source.
@@ -25,7 +25,7 @@ crystal-clear, beautiful, simple, and well-documented.
 - `src/`: Runtime.
   - `snobol.js`: Runtime assembly and entry point.
   - `sil.js`: JS implementations of SIL macros (authoritative spec).
-  - `generated-snobol-image.js`: Generated translation (regenerate via `make translate`).
+  - `generated-snobol-image.js`: Generated translation (regenerate via `make build`).
   - `{vm,mem,datatypes,string,file,syntax}.js`: Core VM components.
 - `test/`: Focused macro/runtime tests (`test-*.js`) and end-to-end `*.sno`
   fixtures (`test/programs/`).
@@ -40,8 +40,8 @@ crystal-clear, beautiful, simple, and well-documented.
   spec. When tests or guesses disagree with those comments, trust the
   comments until you have strong evidence.
 - Do not hand-edit `src/generated-snobol-image.js`. Regenerate it with
-  `make translate` when the translator or SIL input changes.
-- `make translate` reads `external/v311-snoflake.sil`. Keep
+  `make build` when the translator or SIL input changes.
+- `make build` reads `external/v311-snoflake.sil`. Keep
   `external/v311.sil` as the historical baseline and compare against it when
   reviewing local SIL edits.
 
@@ -72,7 +72,7 @@ crystal-clear, beautiful, simple, and well-documented.
 - `npx mocha test/test-programs.js`: run only the program-level tests.
 - `npx mocha test/test-sil.js`: run a specific unit test file.
 - `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
-- `make translate`: regenerate `src/generated-snobol-image.js`.
+- `make build`: regenerate `src/generated-snobol-image.js`.
 - `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
 
 ### Sample debug commands

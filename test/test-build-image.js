@@ -6,10 +6,10 @@ import peggy from 'peggy';
 import { assemble } from '../src/snobol.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
-      grammar = fs.readFileSync( path.join( __dirname, '..', 'translator', 'sil.peg' ), 'utf8' ),
+      grammar = fs.readFileSync( path.join( __dirname, '..', 'build', 'sil-grammar.peg' ), 'utf8' ),
       parser = peggy.generate( grammar );
 
-describe( 'SIL translator', function () {
+describe( 'SIL build pipeline', function () {
     it( 'parses symbol operands as data', function () {
         const listing = parser.parse( '       GETAC   TVAL,PDLPTR\n END\n' );
 

@@ -15,10 +15,10 @@ test-bun:
 
 test-all: test-node test-deno test-bun
 
-translate:
-	@node ./translator/translate.js >| ./src/generated-snobol-image.js
+build:
+	@node ./build/build-image.js >| ./src/generated-snobol-image.js
 
 run:
 	@node ./bin/snoflake.js --debug
 
-.PHONY: test test-node test-deno test-bun test-all translate run
+.PHONY: test test-node test-deno test-bun test-all build run
