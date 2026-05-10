@@ -48,8 +48,15 @@ export function stdinReader() {
 }
 
 function readLineFromStdinSync() {
-    const fs = process.getBuiltinModule( 'fs' ),
-          buf = Buffer.alloc( 1 ),
+    const fs = globalThis.process &&
+        globalThis.process.getBuiltinModule &&
+        globalThis.process.getBuiltinModule( 'fs' );
+
+    if ( !fs ) {
+        throw new Error( 'No stdin reader configured for this host' );
+    }
+
+    const buf = new Uint8Array( 1 ),
           chunks = [];
 
     while ( true ) {
@@ -61,9 +68,9 @@ function readLineFromStdinSync() {
             throw e;
         }
 
-        if ( n === 0 ) return chunks.length ? Buffer.concat( chunks ) : null;
-        if ( buf[ 0 ] === 10 ) return Buffer.concat( chunks );
-        if ( buf[ 0 ] !== 13 ) chunks.push( Uint8Array.from( buf ) );
+        if ( n === 0 ) return chunks.length ? Uint8Array.from( chunks ) : null;
+        if ( buf[ 0 ] === 10 ) return Uint8Array.from( chunks );
+        if ( buf[ 0 ] !== 13 ) chunks.push( buf[ 0 ] );
     }
 }
 

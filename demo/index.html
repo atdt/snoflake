@@ -11,50 +11,65 @@
         <header>
             <div>
                 <h1>Snoflake Demo</h1>
-                <p id="demo-description">A browser-hosted SNOBOL4 macro implementation.</p>
-            </div>
-            <div class="actions">
-                <label class="demo-picker">
-                    <span>Program</span>
-                    <select id="demo-select" aria-label="Demo program">
-                        <option value="pattern">Pattern matcher</option>
-                        <option value="eliza">ELIZA</option>
-                    </select>
-                </label>
-                <div class="mode-switch" role="group" aria-label="Demo view">
-                    <button class="mode-button active" type="button" data-mode="batch" aria-pressed="true">Three-pane</button>
-                    <button class="mode-button" type="button" data-mode="interactive" aria-pressed="false">Interactive</button>
-                </div>
-                <button id="run" type="button">Run</button>
-                <button id="reset" class="secondary" type="button">Reset</button>
-                <span id="status" class="status">Ready</span>
+                <p><a href="https://github.com/atdt/snoflake">Snoflake</a> is a browser-hosted SNOBOL4 macro implementation. Try it out.</p>
             </div>
         </header>
 
-        <section id="workspace" class="workspace mode-batch" aria-label="Snoflake browser demo">
-            <div class="pane">
-                <div class="pane-header">Source</div>
-                <textarea id="source" spellcheck="false" aria-label="SNOBOL source"></textarea>
-            </div>
-            <div id="batch-input-pane" class="pane input-pane">
-                <div class="pane-header">Input</div>
-                <textarea id="input" spellcheck="false" aria-label="SNOBOL input"></textarea>
-            </div>
-            <div id="batch-output-pane" class="pane">
-                <div class="pane-header">
-                    <span>Output</span>
+        <section id="eliza-example" class="example" aria-labelledby="eliza-title">
+            <div class="example-header">
+                <div>
+                    <h2 id="eliza-title">Interactive I/O</h2>
                 </div>
-                <pre id="batch-output" aria-live="polite"></pre>
+                <div class="actions">
+                    <button id="eliza-restart" type="button">Restart</button>
+                    <button id="eliza-reset" class="secondary" type="button">Reset</button>
+                    <span id="eliza-status" class="status">Ready</span>
+                </div>
             </div>
-            <div id="conversation-pane" class="pane conversation-pane" hidden>
-                <div class="pane-header">Conversation</div>
-                <div id="conversation" class="terminal" role="log" aria-live="polite"></div>
-                <form id="input-form" class="prompt">
-                    <span aria-hidden="true">&gt;</span>
-                    <input id="input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">
-                    <button id="send" type="submit">Send</button>
-                    <button id="eof" class="secondary" type="button">EOF</button>
-                </form>
+
+            <div class="workspace workspace-interactive" aria-label="Interactive SNOBOL demo">
+                <div class="pane">
+                    <div class="pane-header">Source</div>
+                    <textarea id="eliza-source" spellcheck="false" aria-label="ELIZA SNOBOL source"></textarea>
+                </div>
+                <div class="pane conversation-pane">
+                    <div class="pane-header">Interactive I/O</div>
+                    <div id="eliza-conversation" class="terminal" role="log" aria-label="Interactive output" aria-live="polite"></div>
+                    <form id="eliza-input-form" class="prompt">
+                        <span aria-hidden="true">&gt;</span>
+                        <input id="eliza-input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">
+                        <button id="eliza-send" type="submit">Send</button>
+                        <button id="eliza-eof" class="secondary" type="button">EOF</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="pattern-example" class="example" aria-labelledby="pattern-title">
+            <div class="example-header">
+                <div>
+                    <h2 id="pattern-title">Batch I/O</h2>
+                </div>
+                <div class="actions">
+                    <button id="pattern-run" type="button">Run</button>
+                    <button id="pattern-reset" class="secondary" type="button">Reset</button>
+                    <span id="pattern-status" class="status">Ready</span>
+                </div>
+            </div>
+
+            <div class="workspace workspace-batch" aria-label="Batch I/O demo">
+                <div class="pane">
+                    <div class="pane-header">Source</div>
+                    <textarea id="pattern-source" spellcheck="false" aria-label="Batch SNOBOL source"></textarea>
+                </div>
+                <div class="pane input-pane">
+                    <div class="pane-header">Input</div>
+                    <textarea id="pattern-input" spellcheck="false" aria-label="Batch input"></textarea>
+                </div>
+                <div class="pane">
+                    <div class="pane-header">Output</div>
+                    <pre id="pattern-output" aria-live="polite"></pre>
+                </div>
             </div>
         </section>
     </main>

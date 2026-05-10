@@ -4,6 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import process from "node:process";
 
 const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..' ),
       port = Number( process.env.PORT || 4173 ),
