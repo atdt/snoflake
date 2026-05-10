@@ -4,7 +4,7 @@ import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { constants, hostStrings, streamActions, syntaxTables } from './syntax.js';
+import { constants, defaults, hostStrings, streamActions, syntaxTables } from './syntax.js';
 
 const SPECIFIER_SIZE = 2 * D;
 
@@ -31,10 +31,12 @@ export function assemble( program ) {
     const vm = new VM();
 
     // The SIL listing references machine constants (DESCR, TTL, UNITI,
-    // ...) as named operands. Seed them into the scratch symbol table so
+    // ...) and the program-overridable defaults (STACK, OBSIZ, STSIZE)
+    // as named operands. Seed both into the scratch symbol table so
     // resolveOperand can resolve them; loadImage carries the resolved
-    // values through to the runtime VM in image.symbols.
-    Object.assign( vm.symbols, constants );
+    // values through to the runtime VM in image.symbols, where the SIL
+    // program's own assignments to STACK/OBSIZ/STSIZE will have won.
+    Object.assign( vm.symbols, constants, defaults );
 
     // MDATA host strings (ALPHA, AMPST, COLSTR, QTSTR) live at the start
     // of memory in the assembled image. Allocating them here -- rather

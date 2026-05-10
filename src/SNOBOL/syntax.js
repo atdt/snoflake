@@ -18,6 +18,10 @@ export const hostStrings = {
     QTSTR   : "'",
 };
 
+// Machine parameters: PARMS-style names whose values are fixed by the
+// host environment and never reassigned by the SIL program. Macros may
+// import these directly; the assembler seeds them into its scratch
+// symbol table so SIL operands like `TTL+STTL` resolve.
 export const constants = {
     ALPHSZ  : ALPHA.length,
     CPA     : 1,
@@ -41,12 +45,13 @@ export const constants = {
     MLINK   : -1,
     PARMS   : -1,
     MDATA   : -1,
+};
 
-    // Misc
-    // The following provide sensible defaults for unit tests that
-    // directly invoke macros (e.g., ISTACK) without running the
-    // generated SIL program. At full runtime, values created by the
-    // generated program should supersede these.
+// Defaults for symbols the SIL program assigns its own value to (the
+// stack base address, the variable bin count, the stack size). The
+// assembled image carries the program's chosen values; these are only
+// observable in unit tests that drive macros without running an image.
+export const defaults = {
     STACK   : 2002 * D,
     OBSIZ   : 256,
     STSIZE  : 1000,

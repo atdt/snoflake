@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { D, VM, assemble, constants, sil, str, syntaxTables } from '../src/snobol.js';
+import { D, VM, assemble, constants, defaults, sil, str, syntaxTables } from '../src/snobol.js';
 import process from "node:process";
 
 //
@@ -428,15 +428,15 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         // STACK and STSIZE are program-overridable defaults: at runtime
         // they come from image.symbols. These tests bypass the assembler,
         // so seed them explicitly with the reference values.
-        this.vm.define( 'STACK', constants.STACK );
-        this.vm.define( 'STSIZE', constants.STSIZE );
+        this.vm.define( 'STACK', defaults.STACK );
+        this.vm.define( 'STSIZE', defaults.STSIZE );
         sil.ISTACK.call( this.vm );
     } );
 
     it( 'ISTACK', function () {
         sil.ISTACK.call( this.vm );
         assert.equal( this.vm.OSTACK.addr, 0 );
-        assert.equal( this.vm.CSTACK.addr, constants.STACK );
+        assert.equal( this.vm.CSTACK.addr, defaults.STACK );
     } );
 
     it( 'POP', function () {
@@ -1719,10 +1719,10 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
     } );
 
     it( 'INIT', function () {
-        const obstart = this.vm.alloc( constants.OBSIZ * D ),
+        const obstart = this.vm.alloc( defaults.OBSIZ * D ),
               spec = this.vm.s();
 
-        this.vm.define( 'OBSIZ', constants.OBSIZ );
+        this.vm.define( 'OBSIZ', defaults.OBSIZ );
         this.vm.define( 'ATTRIB', 2 * D );
         this.vm.define( 'LNKFLD', 3 * D );
         this.vm.define( 'BCDFLD', 4 * D );
@@ -1999,7 +1999,7 @@ describe( 'Miscellaneous Macros', function () {
         const d = this.vm.d(),
               s = this.vm.s( sil.STRING.call( this.vm, 'hello' ) );
 
-        this.vm.define( 'OBSIZ', constants.OBSIZ );
+        this.vm.define( 'OBSIZ', defaults.OBSIZ );
         sil.VARID.call( this.vm, d, s );
         assert.equal( d.addr, 744 );
         assert.equal( d.addr % D, 0 );
