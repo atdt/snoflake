@@ -74,6 +74,13 @@ crystal-clear, beautiful, simple, and well-documented.
 - `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
 - `make build`: regenerate `src/generated-snobol-image.js`.
 - `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
+- `make profile` (or `node tools/profile.js [bench-snoflake.js opts]`):
+  capture a V8 tick profile of `bench-snoflake.js --mode=vm` and post-
+  process it into a report under `tmp/profiles/`. The first ~60 lines
+  (Summary + JavaScript hot list) are printed; a full timestamped report
+  path is logged at the end. Forward any `bench-snoflake.js` flag to
+  scope the profile (e.g. `node tools/profile.js --iterations=10
+  kalah-opening-search`).
 
 ### Sample debug commands
 

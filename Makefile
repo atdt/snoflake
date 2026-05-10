@@ -21,4 +21,7 @@ build:
 run:
 	@node ./bin/snoflake.js --debug
 
-.PHONY: test test-node test-deno test-bun test-all build run
+profile:
+	@node ./tools/profile.js
+
+.PHONY: test test-node test-deno test-bun test-all build run profile
