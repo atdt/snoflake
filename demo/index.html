@@ -10,11 +10,11 @@
     <main class="shell">
         <header>
             <div>
-                <h1>Snoflake</h1>
-                <p>A browser-hosted SNOBOL4 macro implementation. Edit the source and input, run it, and inspect the VM output directly on the page.</p>
+                <h1>ELIZA on Snoflake</h1>
+                <p>A browser-hosted SNOBOL4 macro implementation running the modernized ELIZA program.</p>
             </div>
             <div class="actions">
-                <button id="run" type="button">Run</button>
+                <button id="run" type="button">Restart</button>
                 <button id="reset" class="secondary" type="button">Reset</button>
             </div>
         </header>
@@ -24,16 +24,18 @@
                 <div class="pane-header">Source</div>
                 <textarea id="source" spellcheck="false" aria-label="SNOBOL source"></textarea>
             </div>
-            <div class="pane input-pane">
-                <div class="pane-header">Input</div>
-                <textarea id="input" spellcheck="false" aria-label="SNOBOL input"></textarea>
-            </div>
-            <div class="pane">
+            <div class="pane conversation-pane">
                 <div class="pane-header">
-                    <span>Output</span>
+                    <span>Conversation</span>
                     <span id="status" class="status">Ready</span>
                 </div>
-                <pre id="output" aria-live="polite"></pre>
+                <div id="output" class="terminal" role="log" aria-live="polite"></div>
+                <form id="input-form" class="prompt">
+                    <span aria-hidden="true">&gt;</span>
+                    <input id="input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">
+                    <button id="send" type="submit">Send</button>
+                    <button id="eof" class="secondary" type="button">EOF</button>
+                </form>
             </div>
         </section>
     </main>

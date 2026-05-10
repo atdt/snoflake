@@ -14,6 +14,16 @@ const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..
           '.js': 'text/javascript; charset=utf-8'
       };
 
+function responseHeaders( file ) {
+    return {
+        'Content-Type': contentTypes[ path.extname( file ) ] ||
+            'application/octet-stream',
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+        'Cross-Origin-Resource-Policy': 'same-origin',
+    };
+}
+
 const server = http.createServer( function ( req, res ) {
     const url = new URL( req.url, 'http://' + host ),
           pathname = decodeURIComponent( url.pathname.endsWith( '/' )
@@ -34,10 +44,7 @@ const server = http.createServer( function ( req, res ) {
             return;
         }
 
-        res.writeHead( 200, {
-            'Content-Type': contentTypes[ path.extname( file ) ] ||
-                'application/octet-stream'
-        } );
+        res.writeHead( 200, responseHeaders( file ) );
         res.end( data );
     } );
 } );

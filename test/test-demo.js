@@ -34,4 +34,30 @@ describe( 'browser demo runner', function () {
         assert.match( result.stdout, /FIRST/ );
         assert.match( result.stdout, /SECOND/ );
     } );
+
+    it( 'can read runtime INPUT from an injected interactive reader', function () {
+        const result = runSnoflake( [
+            "READ LINE = INPUT :F(END)",
+            " OUTPUT = LINE",
+            " :(READ)",
+            "END",
+            ""
+        ].join( '\n' ), {
+            interactive: true,
+            stdinReader: () => bufferedLineReader( [ 'LIVE' ] ),
+        } );
+
+        assert.equal( result.stderr, '' );
+        assert.match( result.stdout, /LIVE/ );
+    } );
 } );
+
+function bufferedLineReader( lines ) {
+    let pos = 0;
+    return {
+        readLine() {
+            if ( pos >= lines.length ) return null;
+            return new TextEncoder().encode( lines[ pos++ ] );
+        },
+    };
+}
