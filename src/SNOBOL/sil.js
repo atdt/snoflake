@@ -1682,8 +1682,8 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 // the first descriptor of the system stack.
 // 2.  See also PSTACK, RCALL, and RRTURN.
 sil.ISTACK = function () {
-    this.OSTACK.addr = 0;
-    this.CSTACK.addr = this.$( 'STACK' );
+    this.OSTACK = 0;
+    this.CSTACK = this.$( 'STACK' );
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2720,11 +2720,11 @@ sil.POP = function ( DESCRs ) {
     const STACK_BASE = this.$( 'STACK' );
     for ( const arg of asArray( DESCRs ) ) {
         const dst = this.d( arg );
-        if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
+        if ( this.CSTACK - dst.width < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
         }
-        dst.read( this.d( this.CSTACK.addr ) );
-        this.CSTACK.addr -= dst.width;
+        dst.read( this.d( this.CSTACK ) );
+        this.CSTACK -= dst.width;
     }
 };
 
@@ -2756,8 +2756,7 @@ sil.PROC = sil.LHERE;
 sil.PSTACK = function ( $DESCR ) {
     // post stack position
     const DESCR = this.d( $DESCR ),
-          CSTACK = this.CSTACK,
-          A = CSTACK.addr;
+          A = this.CSTACK;
 
     DESCR.addr  = A - D;
     DESCR.flags = 0;
@@ -2801,11 +2800,11 @@ sil.PUSH = function ( DESCRs ) {
     const STACK_TOP = this.$( 'STACK' ) + D * this.$( 'STSIZE' );
     for ( const arg of asArray( DESCRs ) ) {
         const src = this.d( arg );
-        if ( this.CSTACK.addr + src.width > STACK_TOP ) {
+        if ( this.CSTACK + src.width > STACK_TOP ) {
             throw new RangeError( 'Stack overflow' );
         }
-        this.CSTACK.addr += src.width;
-        this.d( this.CSTACK.addr ).read( src );
+        this.CSTACK += src.width;
+        this.d( this.CSTACK ).read( src );
     }
 };
 
@@ -3046,7 +3045,7 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // 9.  See also SELBRA.
 sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
-    const retLoc = this.instructionPointer;
+    const fallthroughLoc = this.instructionPointer;
     let DESCR;
 
     if ( $DESCR !== undefined ) {
@@ -3063,15 +3062,15 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
 
     // Save the old stack pointer (A0) at A+D; flags and value cleared so
     // the slot reads as a plain descriptor.
-    this.d( this.CSTACK.addr + D ).update( this.OSTACK.addr, 0, 0 );
-    this.OSTACK.addr = this.CSTACK.addr;
-    this.CSTACK.addr += D;
+    this.d( this.CSTACK + D ).update( this.OSTACK, 0, 0 );
+    this.OSTACK = this.CSTACK;
+    this.CSTACK += D;
 
     // The translated runtime carries the return continuation in callbacks,
     // but still reserves the SIL LOC descriptor slot so the stack frame shape
     // remains A+(2+N)*D with zeroed descriptor flags.
-    this.d( this.CSTACK.addr + D ).update( 0 );
-    this.CSTACK.addr += D;
+    this.d( this.CSTACK + D ).update( 0 );
+    this.CSTACK += D;
 
     this.callbacks.push( function ( $DESCR_SRC, N ) {
         if ( DESCR && $DESCR_SRC !== undefined ) {
@@ -3079,16 +3078,15 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
 
         // Restore CSTACK to A and OSTACK to saved A0 (at A+D).
-        const A = this.OSTACK.addr;
-        this.CSTACK.addr = this.OSTACK.addr;
-        this.OSTACK.addr = this.d( A + D ).addr;
+        const A = this.OSTACK;
+        this.CSTACK = this.OSTACK;
+        this.OSTACK = this.d( A + D ).addr;
 
         // N picks the matching labeled return; missing N, missing slot, or
         // a non-numeric slot all fall through to the instruction after RCALL.
         this.instructionPointer = ( typeof N === 'number' && typeof $LOCs?.[ N - 1 ] === 'number' )
             ? $LOCs[ N - 1 ]
-            : retLoc + 1;
-        this.instructionPointerChanged = true;
+            : fallthroughLoc;
     } );
 
     sil.PUSH.call( this, $DESCRs.slice().reverse() );
@@ -3794,11 +3792,11 @@ sil.SPOP = function ( SPECs ) {
     const STACK_BASE = this.$( 'STACK' );
     for ( const arg of asArray( SPECs ) ) {
         const dst = this.s( arg );
-        if ( this.CSTACK.addr - dst.width < STACK_BASE ) {
+        if ( this.CSTACK - dst.width < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
         }
-        dst.read( this.s( this.CSTACK.addr - ( dst.width - D ) ) );
-        this.CSTACK.addr -= dst.width;
+        dst.read( this.s( this.CSTACK - ( dst.width - D ) ) );
+        this.CSTACK -= dst.width;
     }
 };
 
@@ -3882,11 +3880,11 @@ sil.SPUSH = function ( SPECs ) {
     const STACK_TOP = this.$( 'STACK' ) + D * this.$( 'STSIZE' );
     for ( const arg of asArray( SPECs ) ) {
         const src = this.s( arg );
-        if ( this.CSTACK.addr + src.width > STACK_TOP ) {
+        if ( this.CSTACK + src.width > STACK_TOP ) {
             throw new RangeError( 'Stack overflow' );
         }
-        this.CSTACK.addr += src.width;
-        this.s( this.CSTACK.addr - ( src.width - D ) ).read( src );
+        this.CSTACK += src.width;
+        this.s( this.CSTACK - ( src.width - D ) ).read( src );
     }
 };
 
@@ -3977,7 +3975,8 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, ERROR, SLOC ) {
     if ( record.eof ) {
         DESCR.addr = 0;
         // Avoid jumping to ourselves on EOF, which would loop forever.
-        if ( typeof EOF === 'number' && this.mem[ EOF ] === this.instructionPointer ) {
+        const currentLoc = this.instructionPointer - 1;
+        if ( typeof EOF === 'number' && this.mem[ EOF ] === currentLoc ) {
             return;
         }
         return this.jmp( EOF );

@@ -48,15 +48,6 @@ const DEFAULT_OPTIONS = {
     statistics: false,
 };
 
-// Host options override a few assembled SIL switches after data
-// initialization. This keeps the historical SIL constants intact while
-// giving the JS host control over banner, listing, and statistics output.
-const HOST_OUTPUT_OPTIONS = [
-    [ 'LISTCL', 'listing' ],
-    [ 'BANRCL', 'banner' ],
-    [ 'STATCL', 'statistics' ],
-];
-
 function wordsToBytes( words ) {
     return words * WORD_SIZE;
 }
@@ -83,8 +74,8 @@ export class VM {
         this.INTSPC_BUFFER = null;
         // Keep stack pointers as VM registers, not memory-backed descriptors,
         // to avoid accidental overwrites by program macros.
-        this.CSTACK = { addr: 0 };
-        this.OSTACK = { addr: 0 };
+        this.CSTACK = 0;
+        this.OSTACK = 0;
     }
 
     // SIL storage is word-addressed. These length-tracking views share one
@@ -227,7 +218,6 @@ export class VM {
         // PEG grammar's empty-list-slot rule); SIL specifies fall-through.
         if ( typeof loc === 'number' ) {
             this.instructionPointer = loc;
-            this.instructionPointerChanged = true;
         }
     }
 
@@ -252,19 +242,15 @@ export class VM {
         this.loadImage( image );
 
         this.instructionPointer = 0;
-        this.instructionPointerChanged = false;
-        applyHostOutputOptions( this );
+        // Host options override a few assembled SIL switches after data
+        // initialization. This keeps the historical SIL constants intact while
+        // giving the JS host control over banner, listing, and statistics output.
+        if ( Object.hasOwn( this.symbols, 'LISTCL' ) ) this.d( 'LISTCL' ).addr = this.options.listing ? 1 : 0;
+        if ( Object.hasOwn( this.symbols, 'BANRCL' ) ) this.d( 'BANRCL' ).addr = this.options.banner ? 1 : 0;
+        if ( Object.hasOwn( this.symbols, 'STATCL' ) ) this.d( 'STATCL' ).addr = this.options.statistics ? 1 : 0;
         interpret( this, compileInstructions( this, image.instructions ) );
 
         return !( this.instructionPointer < 0 );
-    }
-}
-
-function applyHostOutputOptions( vm ) {
-    for ( const [ symbol, option ] of HOST_OUTPUT_OPTIONS ) {
-        if ( Object.hasOwn( vm.symbols, symbol ) ) {
-            vm.d( symbol ).addr = vm.options[ option ] ? 1 : 0;
-        }
     }
 }
 
@@ -292,15 +278,12 @@ function loadBytes( vm, path ) {
     throw new TypeError( 'Loader must return a string or Uint8Array' );
 }
 
-// Branching macros update instructionPointer themselves. Everything else
-// falls through to the next compact instruction.
+// Fall-through advances before dispatch. Branching macros overwrite
+// instructionPointer, including explicit branches back to the same instruction.
 function interpret( vm, instructions ) {
     while ( vm.instructionPointer >= 0 && vm.instructionPointer < instructions.length ) {
         const loc = vm.instructionPointer;
-        vm.instructionPointerChanged = false;
+        vm.instructionPointer = loc + 1;
         instructions[ loc ]();
-        if ( !vm.instructionPointerChanged && vm.instructionPointer === loc ) {
-            vm.instructionPointer++;
-        }
     }
 }

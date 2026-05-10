@@ -435,8 +435,8 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
 
     it( 'ISTACK', function () {
         sil.ISTACK.call( this.vm );
-        assert.equal( this.vm.OSTACK.addr, 0 );
-        assert.equal( this.vm.CSTACK.addr, defaults.STACK );
+        assert.equal( this.vm.OSTACK, 0 );
+        assert.equal( this.vm.CSTACK, defaults.STACK );
     } );
 
     it( 'POP', function () {
@@ -444,16 +444,16 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
               d2 = this.vm.d(),
               d3 = this.vm.d(),
               d4 = this.vm.d(),
-              cur = this.vm.CSTACK.addr;
+              cur = this.vm.CSTACK;
 
         d1.update( 2, 4, 6 );
         d2.update( 3, 5, 7 );
 
-        assert.equal( this.vm.CSTACK.addr, cur );
+        assert.equal( this.vm.CSTACK, cur );
         sil.PUSH.call( this.vm, [ d1, d2 ] );
-        assert.equal( this.vm.CSTACK.addr, cur + d1.width + d2.width );
+        assert.equal( this.vm.CSTACK, cur + d1.width + d2.width );
         sil.POP.call( this.vm, [ d3, d4 ] );
-        assert.equal( this.vm.CSTACK.addr, cur );
+        assert.equal( this.vm.CSTACK, cur );
         assert.deepEqual( d1.raw(), d4.raw() );
         assert.deepEqual( d2.raw(), d3.raw() );
     } );
@@ -465,13 +465,13 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
 
     it( 'PSTACK', function () {
         const d = this.vm.d();
-        this.vm.CSTACK.addr = 123;
+        this.vm.CSTACK = 123;
         sil.PSTACK.call( this.vm, d );
         assert.deepEqual( d.raw(), [ 120, 0, 0 ] );
     } );
 
     it( 'PUSH', function () {
-        const cur = this.vm.CSTACK.addr;
+        const cur = this.vm.CSTACK;
         let d = this.vm.d();
         d.update( 4, 1, 6 );
         sil.PUSH.call( this.vm, d );
@@ -492,21 +492,21 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
               s2 = this.vm.s(),
               s3 = this.vm.s(),
               s4 = this.vm.s(),
-              cur = this.vm.CSTACK.addr;
+              cur = this.vm.CSTACK;
 
         s1.update( 0, 2, 4, 6, 8 );
         s2.update( 1, 3, 5, 7, 9 );
-        assert.equal( this.vm.CSTACK.addr, cur );
+        assert.equal( this.vm.CSTACK, cur );
         sil.SPUSH.call( this.vm, [ s1, s2 ] );
-        assert.equal( this.vm.CSTACK.addr, cur + s1.width + s2.width );
+        assert.equal( this.vm.CSTACK, cur + s1.width + s2.width );
         sil.SPOP.call( this.vm, [ s3, s4 ] );
-        assert.equal( this.vm.CSTACK.addr, cur );
+        assert.equal( this.vm.CSTACK, cur );
         assert.deepEqual( s1.raw(), s4.raw() );
         assert.deepEqual( s2.raw(), s3.raw() );
     } );
 
     it( 'SPUSH', function () {
-        const cur = this.vm.CSTACK.addr;
+        const cur = this.vm.CSTACK;
         let s = this.vm.s();
 
         s.update( 1, 2, 3, 4, 5 );

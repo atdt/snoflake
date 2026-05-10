@@ -433,6 +433,34 @@ describe( 'Program Execution', function () {
         assert.equal( this.vm.resolve( 'B' ), 17 );
     } );
 
+    it( 'honors an explicit branch to the current instruction', function () {
+        const previous = sil.TEST_SELF_BRANCH;
+
+        sil.TEST_SELF_BRANCH = function () {
+            this.selfBranchCount = ( this.selfBranchCount || 0 ) + 1;
+            this.jmp( this.selfBranchCount < 3 ? 0 : 1 );
+        };
+
+        try {
+            this.vm.run( {
+                symbols: {},
+                memory: new Uint32Array( 0 ),
+                instructions: [
+                    [ null, 'TEST_SELF_BRANCH', [] ],
+                    [ null, 'END', [] ],
+                ],
+            } );
+        } finally {
+            if ( previous === undefined ) {
+                delete sil.TEST_SELF_BRANCH;
+            } else {
+                sil.TEST_SELF_BRANCH = previous;
+            }
+        }
+
+        assert.equal( this.vm.selfBranchCount, 3 );
+    } );
+
     it( 'loads the image memory snapshot directly into VM memory', function () {
         // The image carries memory as a byte snapshot; vm.run copies it,
         // it does not re-run the assembler. Stash a single descriptor
