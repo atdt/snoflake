@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import SNOBOL from '../src/snobol.js';
+import { VM, image } from '../src/snobol.js';
 import { parseHeader, loadCases } from './program-fixture.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -58,9 +58,9 @@ function runProgram( filePath, header ) {
 
     const stdout = captureWriter();
     const stderr = captureWriter();
-    const vm = new SNOBOL.VM( { ...opts, stdout: stdout, stderr: stderr } );
+    const vm = new VM( { ...opts, stdout: stdout, stderr: stderr } );
     try {
-        vm.run( SNOBOL.image );
+        vm.run( image );
     } catch ( e ) {
         // Treat thrown runtime errors as recognized error output so the
         // assertion logic ('Execution error' marker) can react instead of

@@ -1,6 +1,6 @@
 "use strict";
 
-import SNOBOL from '../src/snobol.js';
+import { VM, image } from '../src/snobol.js';
 
 function captureWriter() {
     const lines = [];
@@ -24,7 +24,7 @@ export function runSnoflake( source, options = {} ) {
               [ sourcePath, source ],
               [ inputPath, options.inputText || '' ]
           ] ),
-          vm = new SNOBOL.VM( {
+          vm = new VM( {
               ...options,
               file: sourcePath,
               input: options.inputText === undefined ? undefined : inputPath,
@@ -42,7 +42,7 @@ export function runSnoflake( source, options = {} ) {
           } );
 
     try {
-        vm.run( SNOBOL.image );
+        vm.run( image );
     } catch ( e ) {
         stderr.write( 'Execution error: ' + ( e && e.message || e ) );
     }

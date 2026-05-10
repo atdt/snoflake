@@ -1,29 +1,11 @@
-// Public entry point.
-import * as io from './SNOBOL/io.js';
-import { D, Descriptor, Specifier } from './SNOBOL/datatypes.js';
-import { File } from './SNOBOL/file.js';
-import { constants, hostStrings, match, syntaxTables, tableNames } from './SNOBOL/syntax.js';
-import { str } from './SNOBOL/string.js';
-import { sil } from './SNOBOL/sil.js';
-import { assemble } from './SNOBOL/assemble.js';
-import { VM, isInt32, isFloat32 } from './SNOBOL/vm.js';
-import image from './SNOBOL/snobol.sil.js';
-
-const SNOBOL = {
-    VM,
-    Descriptor, Specifier, File,
-    constants, hostStrings, match, syntaxTables, tableNames,
-    str, sil, assemble,
-    isInt32, isFloat32,
-    io, image, D,
-};
-
-export {
-    VM,
-    Descriptor, Specifier, File,
-    constants, hostStrings, match, syntaxTables, tableNames,
-    str, sil, assemble,
-    isInt32, isFloat32,
-    io, image, D,
-};
-export default SNOBOL;
+// Public entry point. Re-exports the SIL runtime, the assembler, and the
+// generated SNOBOL4 image. Hosts construct a VM and call vm.run(image).
+export * from './SNOBOL/io.js';
+export * from './SNOBOL/datatypes.js';
+export * from './SNOBOL/file.js';
+export * from './SNOBOL/syntax.js';
+export * from './SNOBOL/string.js';
+export * from './SNOBOL/sil.js';
+export * from './SNOBOL/assemble.js';
+export * from './SNOBOL/vm.js';
+export { default as image } from './SNOBOL/snobol.sil.js';

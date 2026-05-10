@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import peggy from 'peggy';
-import SNOBOL from '../src/snobol.js';
+import { assemble } from '../src/snobol.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
       grammar = fs.readFileSync( path.join( __dirname, '..', 'translator', 'sil.peg' ), 'utf8' ),
@@ -22,7 +22,7 @@ describe( 'SIL translator', function () {
 
     it( 'assembles parsed operand expressions', function () {
         const listing = parser.parse( '       TEST    DESCR,-DESCR+UNITI,-2*DESCR\n END\n' ),
-              image = SNOBOL.assemble( listing );
+              image = assemble( listing );
 
         assert.deepEqual( image.instructions[ 0 ][ 2 ], [ 3, 2, -6 ] );
     } );

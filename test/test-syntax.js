@@ -2,7 +2,7 @@
 // match. Tests auto-generated from the table in section 4.1 of S4D58.
 
 import assert from 'node:assert';
-import SNOBOL from '../src/snobol.js';
+import { match } from '../src/snobol.js';
 
 describe( 'Character Classes', function () {
     it( 'ALPHANUMERIC (digit and letter)', function () {
@@ -10,7 +10,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'ALPHANUMERIC', char ),
+                match( 'ALPHANUMERIC', char ),
                 characters.includes( char )
             );
         }
@@ -21,7 +21,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'AT', char ),
+                match( 'AT', char ),
                 characters.includes( char )
             );
         }
@@ -32,7 +32,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'BLANK', char ),
+                match( 'BLANK', char ),
                 characters.includes( char )
             );
         }
@@ -43,7 +43,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'BREAK', char ),
+                match( 'BREAK', char ),
                 characters.includes( char )
             );
         }
@@ -54,7 +54,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'CMT', char ),
+                match( 'CMT', char ),
                 characters.includes( char )
             );
         }
@@ -65,7 +65,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'CNT', char ),
+                match( 'CNT', char ),
                 characters.includes( char )
             );
         }
@@ -76,7 +76,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'COLON', char ),
+                match( 'COLON', char ),
                 characters.includes( char )
             );
         }
@@ -87,7 +87,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'COMMA', char ),
+                match( 'COMMA', char ),
                 characters.includes( char )
             );
         }
@@ -98,7 +98,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'CTL', char ),
+                match( 'CTL', char ),
                 characters.includes( char )
             );
         }
@@ -109,7 +109,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'DOLLAR', char ),
+                match( 'DOLLAR', char ),
                 characters.includes( char )
             );
         }
@@ -120,7 +120,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'DOT', char ),
+                match( 'DOT', char ),
                 characters.includes( char )
             );
         }
@@ -131,7 +131,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'DQUOTE', char ),
+                match( 'DQUOTE', char ),
                 characters.includes( char )
             );
         }
@@ -142,7 +142,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'EOS', char ),
+                match( 'EOS', char ),
                 characters.includes( char )
             );
         }
@@ -153,7 +153,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'EQUAL', char ),
+                match( 'EQUAL', char ),
                 characters.includes( char )
             );
         }
@@ -164,7 +164,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'FGOSYM', char ),
+                match( 'FGOSYM', char ),
                 characters.includes( char )
             );
         }
@@ -175,7 +175,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'KEYSYM', char ),
+                match( 'KEYSYM', char ),
                 characters.includes( char )
             );
         }
@@ -186,7 +186,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'LEFTBR', char ),
+                match( 'LEFTBR', char ),
                 characters.includes( char )
             );
         }
@@ -197,7 +197,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'LEFTPAREN', char ),
+                match( 'LEFTPAREN', char ),
                 characters.includes( char )
             );
         }
@@ -208,7 +208,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'LETTER', char ),
+                match( 'LETTER', char ),
                 characters.includes( char )
             );
         }
@@ -219,7 +219,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'MINUS', char ),
+                match( 'MINUS', char ),
                 characters.includes( char )
             );
         }
@@ -230,7 +230,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'NOTSYM', char ),
+                match( 'NOTSYM', char ),
                 characters.includes( char )
             );
         }
@@ -241,7 +241,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'NUMBER', char ),
+                match( 'NUMBER', char ),
                 characters.includes( char )
             );
         }
@@ -252,7 +252,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'ORSYM', char ),
+                match( 'ORSYM', char ),
                 characters.includes( char )
             );
         }
@@ -263,7 +263,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'PERCENT', char ),
+                match( 'PERCENT', char ),
                 characters.includes( char )
             );
         }
@@ -274,7 +274,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'PLUS', char ),
+                match( 'PLUS', char ),
                 characters.includes( char )
             );
         }
@@ -285,7 +285,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'POUND', char ),
+                match( 'POUND', char ),
                 characters.includes( char )
             );
         }
@@ -296,7 +296,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'QUESYM', char ),
+                match( 'QUESYM', char ),
                 characters.includes( char )
             );
         }
@@ -307,7 +307,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'RAISE', char ),
+                match( 'RAISE', char ),
                 characters.includes( char )
             );
         }
@@ -318,7 +318,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'RIGHTBR', char ),
+                match( 'RIGHTBR', char ),
                 characters.includes( char )
             );
         }
@@ -329,7 +329,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'RIGHTPAREN', char ),
+                match( 'RIGHTPAREN', char ),
                 characters.includes( char )
             );
         }
@@ -340,7 +340,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'SGOSYM', char ),
+                match( 'SGOSYM', char ),
                 characters.includes( char )
             );
         }
@@ -351,7 +351,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'SLASH', char ),
+                match( 'SLASH', char ),
                 characters.includes( char )
             );
         }
@@ -362,7 +362,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'SQUOTE', char ),
+                match( 'SQUOTE', char ),
                 characters.includes( char )
             );
         }
@@ -373,7 +373,7 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'STAR', char ),
+                match( 'STAR', char ),
                 characters.includes( char )
             );
         }
@@ -384,16 +384,16 @@ describe( 'Character Classes', function () {
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
             const char = String.fromCharCode( ch );
             assert.equal(
-                SNOBOL.match( 'TERMINATOR', char ),
+                match( 'TERMINATOR', char ),
                 characters.includes( char )
             );
         }
     } );
 
     it( 'accepts numeric character codes', function () {
-        assert.equal( SNOBOL.match( 'LETTER', 'A'.charCodeAt( 0 ) ), true );
-        assert.equal( SNOBOL.match( 'LETTER', '1'.charCodeAt( 0 ) ), false );
-        assert.equal( SNOBOL.match( ';', ';'.charCodeAt( 0 ) ), true );
-        assert.equal( SNOBOL.match( ';', ','.charCodeAt( 0 ) ), false );
+        assert.equal( match( 'LETTER', 'A'.charCodeAt( 0 ) ), true );
+        assert.equal( match( 'LETTER', '1'.charCodeAt( 0 ) ), false );
+        assert.equal( match( ';', ';'.charCodeAt( 0 ) ), true );
+        assert.equal( match( ';', ','.charCodeAt( 0 ) ), false );
     } );
 } );

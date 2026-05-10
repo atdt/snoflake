@@ -2,12 +2,8 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import SNOBOL from '../src/snobol.js';
+import { D, VM, assemble, constants, sil, str, syntaxTables, tableNames } from '../src/snobol.js';
 import process from "node:process";
-
-Object.keys( SNOBOL ).forEach( function ( k ) {
-    globalThis[k] = SNOBOL[k];
-} );
 
 //
 // Test Cases
@@ -15,7 +11,7 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 
 describe( 'Assembly Control Macros', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'COPY', function () {
@@ -27,14 +23,14 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'EQU', function () {
-        this.vm.run( SNOBOL.assemble( [
+        this.vm.run( assemble( [
             { label: 'A', macro: 'EQU', operands: [ 12 ] }
         ] ) );
         assert.equal( this.vm.resolve('A'), 12 );
     } );
 
     it( 'LHERE', function () {
-        this.vm.run( SNOBOL.assemble( [
+        this.vm.run( assemble( [
             { label: 'A',  macro: 'LHERE', operands: [] },
             { label: null, macro: 'DESCR', operands: [] },
             { label: 'B',  macro: 'LHERE', operands: [] },
@@ -46,7 +42,7 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'keeps executable labels in the instruction stream', function () {
-        this.vm.run( SNOBOL.assemble( [
+        this.vm.run( assemble( [
             { label: 'PAD', macro: 'BUFFER', operands: [ 10 ] },
             { label: 'DS',  macro: 'DESCR',  operands: [] },
             { label: null,  macro: 'BRANCH', operands: [ { symbol: 'LBL' } ] },
@@ -62,7 +58,7 @@ describe( 'Assembly Control Macros', function () {
     } );
 
     it( 'resolves forward labels in assembled descriptor data', function () {
-        this.vm.run( SNOBOL.assemble( [
+        this.vm.run( assemble( [
             { label: 'DS',    macro: 'DESCR', operands: [ { symbol: 'VALUE' } ] },
             { label: 'SP',    macro: 'SPEC',  operands: [ { symbol: 'VALUE' }, 0, 0, 0, 0 ] },
             { label: 'VALUE', macro: 'EQU',   operands: [ 123 ] },
@@ -80,7 +76,7 @@ describe( 'Assembly Control Macros', function () {
 
 describe( 'Macros that Assemble Data', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'ARRAY', function () {
@@ -120,11 +116,11 @@ describe( 'Macros that Assemble Data', function () {
 
 describe( 'Branch Macros', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'BRANCH', function () {
-        this.vm.run( SNOBOL.assemble( [
+        this.vm.run( assemble( [
             { label: 'DS',  macro: 'DESCR',  operands: [] },
             { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 22 ] },
             { label: null,  macro: 'BRANCH', operands: [ { symbol: 'LBL' } ] },
@@ -159,7 +155,7 @@ describe( 'Branch Macros', function () {
 
 describe( 'Comparison Macros', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'ACOMP', function () {
@@ -428,7 +424,7 @@ describe( 'Comparison Macros', function () {
 
 describe( 'Macros that Relate to Recursive Procedures and Stack Management', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
         this.vm.reset();
         sil.ISTACK.call( this.vm );
     } );
@@ -512,7 +508,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         s.update( 1, 2, 3, 4, 5 );
         sil.SPUSH.call( this.vm, s );
 
-        s = this.vm.s( cur + SNOBOL.D );
+        s = this.vm.s( cur + D );
         assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 5 ] );
     } );
 } );
@@ -520,7 +516,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
 
 describe( 'Macros that Move and Set Descriptors', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'GETD', function () {
@@ -643,7 +639,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
 
 describe( 'Macros that Modify Address Fields of Descriptors', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'ADJUST', function () {
@@ -713,7 +709,7 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
               d1 = this.vm.d(),
               d2 = this.vm.d();
         d2.addr = s.length;
-        const len = SNOBOL.str.encode( s ).length + 9;
+        const len = str.encode( s ).length + 9;
         sil.GETLTH.call( this.vm, d1, d2 );
         assert.equal( d1.addr, len );
     } );
@@ -776,7 +772,7 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
 
 describe( 'Macros that Modify Value Fields of Descriptors', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'INCRV', function () {
@@ -842,7 +838,7 @@ describe( 'Macros that Modify Value Fields of Descriptors', function () {
 
 describe( 'Macros that Modify Flag Fields of Descriptors', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'RESETF', function () {
@@ -891,7 +887,7 @@ describe( 'Macros that Modify Flag Fields of Descriptors', function () {
 
 describe( 'Macros that Perform Integer Arithmetic on Address Fields', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'DIVIDE', function () { // stub
@@ -945,7 +941,7 @@ describe( 'Macros that Perform Integer Arithmetic on Address Fields', function (
 
 describe( 'Macros that Deal with Real Numbers', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'ADREAL', function () { // stub
@@ -999,7 +995,7 @@ describe( 'Macros that Deal with Real Numbers', function () {
 
 describe( 'Macros that Move Specifiers', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'GETSPC', function () {
@@ -1039,7 +1035,7 @@ describe( 'Macros that Move Specifiers', function () {
 
 describe( 'Macros that Operate on Specifiers', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'ADDLG', function () {
@@ -1157,7 +1153,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         assert.equal( s.specified, '42' );
         assert.notEqual( s.addr, original );
-        assert.equal( SNOBOL.str.decode( this.vm.mem.slice( original, original + 3 ) ), 'abc' );
+        assert.equal( str.decode( this.vm.mem.slice( original, original + 3 ) ), 'abc' );
     } );
 
     it( 'LOCSP', function () {
@@ -1226,7 +1222,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'FLITYP', 6 );
-        sil.STREAM.call( this.vm, s1, s2, SNOBOL.tableNames.indexOf( 'INTGTB' ), -1, -2, -3 );
+        sil.STREAM.call( this.vm, s1, s2, tableNames.indexOf( 'INTGTB' ), -1, -2, -3 );
 
         assert.equal( s1.specified, '43.2' );
     } );
@@ -1241,7 +1237,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
-        sil.STREAM.call( this.vm, s1, s2, SNOBOL.tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
+        sil.STREAM.call( this.vm, s1, s2, tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 2 );
         assert.equal( stype.addr, 0 );
@@ -1259,7 +1255,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
-        sil.STREAM.call( this.vm, s1, s2, SNOBOL.tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
+        sil.STREAM.call( this.vm, s1, s2, tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 3 );
         assert.equal( stype.addr, this.vm.$( 'EQTYP' ) );
@@ -1314,33 +1310,33 @@ describe( 'Macros that Operate on Specifiers', function () {
 
 describe( 'Macros that Operate on Syntax Tables', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'CLERTB resolves a table id and fills character entries', function () {
-        const original = SNOBOL.syntaxTables.SNABTB;
+        const original = syntaxTables.SNABTB;
 
         try {
-            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'ERROR' );
+            sil.CLERTB.call( this.vm, tableNames.indexOf( 'SNABTB' ), 'ERROR' );
 
-            assert( SNOBOL.syntaxTables.SNABTB.length >= SNOBOL.constants.ALPHSZ );
-            assert( SNOBOL.syntaxTables.SNABTB.every( function ( entry ) {
+            assert( syntaxTables.SNABTB.length >= constants.ALPHSZ );
+            assert( syntaxTables.SNABTB.every( function ( entry ) {
                 return entry[2] === 'ERROR';
             } ) );
         } finally {
-            SNOBOL.syntaxTables.SNABTB = original;
+            syntaxTables.SNABTB = original;
         }
     } );
 
     it( 'PLUGTB updates the entries selected by a specifier', function () {
-        const original = SNOBOL.syntaxTables.SNABTB,
+        const original = syntaxTables.SNABTB,
               spec = this.vm.s( sil.STRING.call( this.vm, 'AZ' ) );
         let table;
 
         try {
-            sil.CLERTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'ERROR' );
-            sil.PLUGTB.call( this.vm, SNOBOL.tableNames.indexOf( 'SNABTB' ), 'STOP', spec );
-            table = SNOBOL.syntaxTables.SNABTB;
+            sil.CLERTB.call( this.vm, tableNames.indexOf( 'SNABTB' ), 'ERROR' );
+            sil.PLUGTB.call( this.vm, tableNames.indexOf( 'SNABTB' ), 'STOP', spec );
+            table = syntaxTables.SNABTB;
 
             assert.equal( table.find( function ( entry ) {
                 return entry[0] === 'A';
@@ -1352,7 +1348,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
                 return entry[0] === 'B';
             } )[2], 'ERROR' );
         } finally {
-            SNOBOL.syntaxTables.SNABTB = original;
+            syntaxTables.SNABTB = original;
         }
     } );
 } );
@@ -1360,7 +1356,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
 
 describe( 'Macros that Construct Pattern Nodes', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'CPYPAT', function () {
@@ -1397,7 +1393,7 @@ describe( 'Macros that Construct Pattern Nodes', function () {
 
 describe( 'Macros that Operate on Tree Nodes', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'ADDSIB', function () { // stub
@@ -1416,7 +1412,7 @@ describe( 'Macros that Operate on Tree Nodes', function () {
 
 describe( 'Input and Output Macros', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'BKSPCE', function () { // stub
@@ -1489,11 +1485,11 @@ describe( 'Input and Output Macros', function () {
               format = '(1H0,A)';
 
         block.addr = this.vm.alloc( 9 );
-        this.vm.d( block.addr + SNOBOL.D ).addr = 6;
-        this.vm.d( block.addr + ( 2 * SNOBOL.D ) ).addr = formatBase;
+        this.vm.d( block.addr + D ).addr = 6;
+        this.vm.d( block.addr + ( 2 * D ) ).addr = formatBase;
         this.vm.d( formatBase ).value = format.length;
         for ( let i = 0; i < format.length; i++ ) {
-            this.vm.mem[ formatBase + ( 4 * SNOBOL.D ) + i ] = format.charCodeAt( i );
+            this.vm.mem[ formatBase + ( 4 * D ) + i ] = format.charCodeAt( i );
         }
 
         this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
@@ -1516,11 +1512,11 @@ describe( 'Input and Output Macros', function () {
               format = '(" " PAUSE,100A1)';
 
         block.addr = this.vm.alloc( 9 );
-        this.vm.d( block.addr + SNOBOL.D ).addr = 6;
-        this.vm.d( block.addr + ( 2 * SNOBOL.D ) ).addr = formatBase;
+        this.vm.d( block.addr + D ).addr = 6;
+        this.vm.d( block.addr + ( 2 * D ) ).addr = formatBase;
         this.vm.d( formatBase ).value = format.length;
         for ( let i = 0; i < format.length; i++ ) {
-            this.vm.mem[ formatBase + ( 4 * SNOBOL.D ) + i ] = format.charCodeAt( i );
+            this.vm.mem[ formatBase + ( 4 * D ) + i ] = format.charCodeAt( i );
         }
 
         this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
@@ -1543,11 +1539,11 @@ describe( 'Input and Output Macros', function () {
               format = '(121A1)';
 
         block.addr = this.vm.alloc( 9 );
-        this.vm.d( block.addr + SNOBOL.D ).addr = 6;
-        this.vm.d( block.addr + ( 2 * SNOBOL.D ) ).addr = formatBase;
+        this.vm.d( block.addr + D ).addr = 6;
+        this.vm.d( block.addr + ( 2 * D ) ).addr = formatBase;
         this.vm.d( formatBase ).value = format.length;
         for ( let i = 0; i < format.length; i++ ) {
-            this.vm.mem[ formatBase + ( 4 * SNOBOL.D ) + i ] = format.charCodeAt( i );
+            this.vm.mem[ formatBase + ( 4 * D ) + i ] = format.charCodeAt( i );
         }
 
         this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
@@ -1705,7 +1701,7 @@ describe( 'Input and Output Macros', function () {
 
 describe( 'Macros that Depend on Operating System Facilities', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'DATE', function () {
@@ -1770,7 +1766,7 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
 
 describe( 'Miscellaneous Macros', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
         this.vm.define( 'EQTYP', 4 );
     } );
 

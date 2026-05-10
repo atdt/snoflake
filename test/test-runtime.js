@@ -4,14 +4,10 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import SNOBOL from '../src/snobol.js';
+import { VM, Descriptor, Specifier, assemble, sil, str } from '../src/snobol.js';
 import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
-
-Object.keys( SNOBOL ).forEach( function ( k ) {
-    globalThis[k] = SNOBOL[k];
-} );
 
 //
 // Test Cases
@@ -19,34 +15,34 @@ Object.keys( SNOBOL ).forEach( function ( k ) {
 
 describe( 'String Encoding', function () {
     it( 'encode', function () {
-        const encoded = SNOBOL.str.encode( 'हाय' );
+        const encoded = str.encode( 'हाय' );
         assert( encoded instanceof Uint32Array );
         assert.deepEqual( Array.from( encoded ), [ 2361, 2366, 2351 ] );
     } );
 
     it( 'encode pads to descriptor boundaries', function () {
-        assert.deepEqual( Array.from( SNOBOL.str.encode( 'ab' ) ), [ 97, 98, 0 ] );
+        assert.deepEqual( Array.from( str.encode( 'ab' ) ), [ 97, 98, 0 ] );
     } );
 
     it( 'decode', function () {
-        assert.deepEqual( SNOBOL.str.decode( [ 2361, 2366, 2351 ] ), 'हाय' );
+        assert.deepEqual( str.decode( [ 2361, 2366, 2351 ] ), 'हाय' );
     } );
 
     it( 'decode preserves raw UTF-16 code units', function () {
-        assert.equal( SNOBOL.str.decode( [ 0xFEFF, 65 ] ), '\uFEFFA' );
-        assert.equal( SNOBOL.str.decode( [ 0xD800 ] ), '\uD800' );
+        assert.equal( str.decode( [ 0xFEFF, 65 ] ), '\uFEFFA' );
+        assert.equal( str.decode( [ 0xD800 ] ), '\uD800' );
     } );
 
     it( 'decode ignores descriptor padding without mutating input', function () {
         const encoded = [ 97, 98, 0 ];
-        assert.equal( SNOBOL.str.decode( encoded ), 'ab' );
+        assert.equal( str.decode( encoded ), 'ab' );
         assert.deepEqual( encoded, [ 97, 98, 0 ] );
     } );
 } );
 
 describe( 'Typed Setters', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'uint', function () {
@@ -73,7 +69,7 @@ describe( 'Typed Setters', function () {
 
 describe( 'Typed Getters', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'uint', function () {
@@ -94,7 +90,7 @@ describe( 'Typed Getters', function () {
 
 describe( 'Symbol Binding', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'simple', function () {
@@ -113,18 +109,18 @@ describe( 'Symbol Binding', function () {
 
 describe( 'Memory Management', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'alloc', function () {
-        const vm = new SNOBOL.VM(),
+        const vm = new VM(),
               ptr = vm.alloc( 3 );
         assert.deepEqual( vm.memPtr, ptr + 3 );
         assert.deepEqual( Array.from( vm.mem.slice( vm.memPtr - 3, vm.memPtr ) ), [ 0, 0, 0 ] );
     } );
 
     it( 'grows without losing allocated data', function () {
-        const vm = new SNOBOL.VM();
+        const vm = new VM();
         vm.memPtr = vm.mem.length - 1;
 
         const first = vm.alloc( 1, 123 ),
@@ -158,14 +154,14 @@ describe( 'SNOBOL Program Execution', function () {
     } );
 
     it( 'returns EOF when no input streams are configured', function () {
-        const vm = new SNOBOL.VM();
+        const vm = new VM();
         assert.equal( vm.openUnit( 5 ).read( 80 ), '' );
     } );
 } );
 
 describe( 'Descriptor Datatype', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'enumerables', function () {
@@ -223,16 +219,16 @@ describe( 'Descriptor Datatype', function () {
     } );
 
     it( 'update', function () {
-        const vm = new SNOBOL.VM(),
-              d = new SNOBOL.Descriptor( vm );
+        const vm = new VM(),
+              d = new Descriptor( vm );
         d.update( 6, 7, 8 );
         assert.deepEqual( d.raw(), [ 6, 7, 8 ] );
     } );
 
     it( 'eq', function () {
-        const vm = new SNOBOL.VM(),
-              d1 = new SNOBOL.Descriptor( vm ),
-              d2 = new SNOBOL.Descriptor( vm );
+        const vm = new VM(),
+              d1 = new Descriptor( vm ),
+              d2 = new Descriptor( vm );
 
         d1.update( 6, 7, 8 );
         d2.update( 6, 7, 8 );
@@ -245,12 +241,12 @@ describe( 'Descriptor Datatype', function () {
 
 describe( 'Specifier Datatype', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'enumerables', function () {
         const fields = [ 'ptr', 'vm' ],
-              s = new SNOBOL.Specifier( this.vm ),
+              s = new Specifier( this.vm ),
               keys = [];
         for ( const key in s ) {
             keys.push( key );
@@ -259,19 +255,19 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'init', function () {
-        const orig = new SNOBOL.Specifier( this.vm ),
-              copy = new SNOBOL.Specifier( this.vm, orig.ptr );
+        const orig = new Specifier( this.vm ),
+              copy = new Specifier( this.vm, orig.ptr );
         orig.offset = 90210;
         assert.equal( copy.offset, 90210 );
     } );
 
     it( 'width', function () {
-        const s = new SNOBOL.Specifier( this.vm );
+        const s = new Specifier( this.vm );
         assert.equal( s.width, 6 );
     } );
 
     it( 'getters_setters', function () {
-        const s = new SNOBOL.Specifier( this.vm );
+        const s = new Specifier( this.vm );
         s.offset = 123;
         assert.equal( s.offset, 123 );
         s.length = 456;
@@ -279,7 +275,7 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'raw', function () {
-        const s = new SNOBOL.Specifier( this.vm );
+        const s = new Specifier( this.vm );
         s.addr = 6;
         s.flags = 7;
         s.value = 8;
@@ -289,22 +285,22 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'read', function () {
-        const src = new SNOBOL.Specifier( this.vm ),
-              dst = new SNOBOL.Specifier( this.vm );
+        const src = new Specifier( this.vm ),
+              dst = new Specifier( this.vm );
         src.update( 6, 7, 8, 9, 10 );
         dst.read( src );
         assert.deepEqual( dst.raw(), src.raw() );
     } );
 
     it( 'update', function () {
-        const s = new SNOBOL.Specifier( this.vm );
+        const s = new Specifier( this.vm );
         s.update( 6, 7, 8, 9, 10 );
         assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
     } );
 
     it( 'eq', function () {
-        const s1 = new SNOBOL.Specifier( this.vm ),
-              s2 = new SNOBOL.Specifier( this.vm );
+        const s1 = new Specifier( this.vm ),
+              s2 = new Specifier( this.vm );
 
         s1.update( 6, 7, 8, 9, 10 );
         s2.update( 6, 7, 8, 9, 10 );
@@ -315,25 +311,25 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'specified', function () {
-        const s = this.vm.s( SNOBOL.sil.STRING.call( this.vm, '안녕' ) );
+        const s = this.vm.s( sil.STRING.call( this.vm, '안녕' ) );
         assert.equal( s.specified, '안녕' ); 
     } );
 } );
 
 describe( 'Miscellaneous Shortcuts', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'd', function () {
         const d = this.vm.d( 6 );
-        assert( d instanceof SNOBOL.Descriptor );
+        assert( d instanceof Descriptor );
         assert.equal( d.ptr, 6 );
     } );
 
     it( 's', function () {
         const s = this.vm.s( 6 );
-        assert( s instanceof SNOBOL.Specifier );
+        assert( s instanceof Specifier );
         assert.equal( s.ptr, 6 );
     } );
 } );
@@ -341,7 +337,7 @@ describe( 'Miscellaneous Shortcuts', function () {
 
 describe( 'Program Execution', function () {
     beforeEach( function () {
-        this.vm = new SNOBOL.VM();
+        this.vm = new VM();
     } );
 
     it( 'jmp', function () {
@@ -350,7 +346,7 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'run', function () {
-        this.vm.run( SNOBOL.assemble( [
+        this.vm.run( assemble( [
             { label: 'A',  macro: 'EQU', operands: [ 11 ] },
             { label: 'B',  macro: 'EQU', operands: [ 17 ] },
             { label: null, macro: 'END', operands: [] },
@@ -359,10 +355,10 @@ describe( 'Program Execution', function () {
         assert.equal( this.vm.resolve( 'B' ), 17 );
     } );
 
-    it( 'loads an assembled image without invoking the assembler', function () {
-        // The image carries memory as a byte snapshot; loading is a copy,
-        // not a replay. Stash a single descriptor (31, 7, 9) at offset 0
-        // and bind 'DS' to it.
+    it( 'loads the image memory snapshot directly into VM memory', function () {
+        // The image carries memory as a byte snapshot; vm.run copies it,
+        // it does not re-run the assembler. Stash a single descriptor
+        // (31, 7, 9) at offset 0 and bind 'DS' to it.
         const image = {
             symbols: { DS: 0 },
             memory: new Uint32Array( [ 31, 7, 9 ] ),
@@ -371,16 +367,7 @@ describe( 'Program Execution', function () {
             ]
         };
 
-        const assemble = SNOBOL.assemble;
-        SNOBOL.assemble = function () {
-            throw new Error( 'unexpected runtime assembly' );
-        };
-
-        try {
-            this.vm.run( image );
-        } finally {
-            SNOBOL.assemble = assemble;
-        }
+        this.vm.run( image );
 
         assert.equal( this.vm.d( 'DS' ).addr, 31 );
         assert.equal( this.vm.d( 'DS' ).flags, 7 );
