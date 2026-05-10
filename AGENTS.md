@@ -17,10 +17,6 @@ crystal-clear, beautiful, simple, and well-documented.
   - `v311.sil`: Untouched historical reference source.
   - `v311-snoflake.sil`: Snoflake's working SIL input for translation. Began
     as a copy of `v311.sil`; annotated snoflake fixes belong here.
-  - `snobol4-v311.sil`: Later CSNOBOL4 SIL source. A potential source for
-    surgical, evidence-backed fixes; do not treat it as a replacement
-    baseline or port modern CSNOBOL4 features wholesale. See
-    `SIL-CHANGES.md`.
   - `syntax.tbl`: Historical syntax-table source.
 - `src/`: Runtime.
   - `snobol.js`: Runtime assembly and entry point.
