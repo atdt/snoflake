@@ -2,7 +2,7 @@
 
 import { D } from './datatypes.js';
 import { str } from './string.js';
-import { constants, hostStrings, match, syntaxTables, tableNames } from './syntax.js';
+import { constants, hostStrings, match, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
 
 function assert( condition ) {
@@ -695,39 +695,11 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 // Programming Notes:
 // 1.  See Section 4.2.
 // 2.  See also PLUGTB.
-function syntaxTableName( TABLE ) {
-    if ( typeof TABLE === 'number' ) {
-        return tableNames[ TABLE ];
-    }
-
-    return TABLE;
-}
-
-function syntaxTable( TABLE ) {
-    if ( Array.isArray( TABLE ) ) {
-        return TABLE;
-    }
-
-    return syntaxTables[ syntaxTableName( TABLE ) ];
-}
-
 sil.CLERTB = function ( TABLE, KEY ) {
     // clear syntax table
-    const tableName = syntaxTableName( TABLE );
-    let table = syntaxTable( TABLE );
-    const chars = hostStrings.ALPHA;
-
-    if ( tableName ) {
-        table = syntaxTables[ tableName ] = chars
-            .split( '' )
-            .map( function ( ch ) {
-                return [ ch, null, KEY ];
-            } );
-    } else {
-        for ( let i = 0; i < table.length; i++ ) {
-            table[i][2] = KEY;
-        }
-    }
+    syntaxTables[ TABLE ] = hostStrings.ALPHA
+        .split( '' )
+        .map( ch => [ ch, null, KEY ] );
 };
 
 //     COPY is used to copy a file of  machine-dependent  data
@@ -2716,19 +2688,17 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
 sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
     // plug syntax table
     const SPEC = this.s( $SPEC ),
-          table = syntaxTable( TABLE ),
+          table = syntaxTables[ TABLE ],
           index = Object.create( null );
-    let i,
-        ch;
 
-    for ( i = 0; i < table.length; i++ ) {
-        index[ table[i][0] ] = table[i];
+    for ( const entry of table ) {
+        index[ entry[ 0 ] ] = entry;
     }
 
-    for ( i = 0; i < SPEC.length; i++ ) {
-        ch = String.fromCharCode( this.mem[ SPEC.addr + SPEC.offset + i ] );
+    for ( let i = 0; i < SPEC.length; i++ ) {
+        const ch = String.fromCharCode( this.mem[ SPEC.addr + SPEC.offset + i ] );
         if ( index[ ch ] ) {
-            index[ ch ][2] = KEY;
+            index[ ch ][ 2 ] = KEY;
         }
     }
 };
@@ -4155,7 +4125,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           O = SPEC2.offset,
           L = SPEC2.length;
 
-    let tableName = tableNames[ TABLE ],
+    let tableName = TABLE,
         table = syntaxTables[ tableName ],
         P = 0;
     // P and TI are STREAM's names from the macro spec: P is the last PUT

@@ -4,7 +4,7 @@ import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { hostStrings } from './syntax.js';
+import { hostStrings, streamActions, syntaxTables } from './syntax.js';
 
 const SPECIFIER_SIZE = 2 * D;
 
@@ -31,7 +31,7 @@ function resolveOperand( vm, operand ) {
 
     if ( operand && typeof operand === 'object' ) {
         if ( Object.hasOwn( operand, 'symbol' ) ) {
-            return vm.$( operand.symbol );
+            return resolveSymbol( vm, operand.symbol );
         }
         if ( Object.hasOwn( operand, 'negate' ) ) {
             return -resolveOperand( vm, operand.negate );
@@ -43,6 +43,16 @@ function resolveOperand( vm, operand ) {
     }
 
     return operand;
+}
+
+// Syntax-table names and stream-action keywords are not symbols -- they're
+// reserved tags that STREAM/CLERTB/PLUGTB consume by name. Pass them through
+// verbatim so the symbol table doesn't have to fake an entry for each one.
+function resolveSymbol( vm, name ) {
+    if ( Object.hasOwn( syntaxTables, name ) || streamActions.has( name ) ) {
+        return name;
+    }
+    return vm.$( name );
 }
 
 // SIL operands are parsed as data. Assembly is where symbols can finally

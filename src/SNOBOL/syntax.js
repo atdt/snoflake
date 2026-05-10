@@ -330,4 +330,7 @@ export const syntaxTables = {
     ]
 };
 
-export const tableNames = Object.keys( syntaxTables ).sort();
+// Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
+// name. They appear in operand position in the SIL listing but they are not
+// symbols -- they're tags interpreted by the macros themselves.
+export const streamActions = new Set( [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ] );

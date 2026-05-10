@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { D, VM, assemble, constants, sil, str, syntaxTables, tableNames } from '../src/snobol.js';
+import { D, VM, assemble, constants, sil, str, syntaxTables } from '../src/snobol.js';
 import process from "node:process";
 
 //
@@ -1222,7 +1222,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'FLITYP', 6 );
-        sil.STREAM.call( this.vm, s1, s2, tableNames.indexOf( 'INTGTB' ), -1, -2, -3 );
+        sil.STREAM.call( this.vm, s1, s2, 'INTGTB', -1, -2, -3 );
 
         assert.equal( s1.specified, '43.2' );
     } );
@@ -1237,7 +1237,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
-        sil.STREAM.call( this.vm, s1, s2, tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
+        sil.STREAM.call( this.vm, s1, s2, 'IBLKTB', error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 2 );
         assert.equal( stype.addr, 0 );
@@ -1255,7 +1255,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
-        sil.STREAM.call( this.vm, s1, s2, tableNames.indexOf( 'IBLKTB' ), error, runout, sloc );
+        sil.STREAM.call( this.vm, s1, s2, 'IBLKTB', error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 3 );
         assert.equal( stype.addr, this.vm.$( 'EQTYP' ) );
@@ -1317,7 +1317,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         const original = syntaxTables.SNABTB;
 
         try {
-            sil.CLERTB.call( this.vm, tableNames.indexOf( 'SNABTB' ), 'ERROR' );
+            sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
 
             assert( syntaxTables.SNABTB.length >= constants.ALPHSZ );
             assert( syntaxTables.SNABTB.every( function ( entry ) {
@@ -1334,8 +1334,8 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         let table;
 
         try {
-            sil.CLERTB.call( this.vm, tableNames.indexOf( 'SNABTB' ), 'ERROR' );
-            sil.PLUGTB.call( this.vm, tableNames.indexOf( 'SNABTB' ), 'STOP', spec );
+            sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
+            sil.PLUGTB.call( this.vm, 'SNABTB', 'STOP', spec );
             table = syntaxTables.SNABTB;
 
             assert.equal( table.find( function ( entry ) {

@@ -5,7 +5,7 @@ import { File, bufferedReader, stdinReader } from './file.js';
 import { nodeStdout, nodeStderr, nodeLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { constants, tableNames } from './syntax.js';
+import { constants } from './syntax.js';
 
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 1024 * 1024;
@@ -54,12 +54,6 @@ const HOST_OUTPUT_OPTIONS = [
     [ 'BANRCL', 'banner' ],
     [ 'STATCL', 'statistics' ],
 ];
-
-// STREAM uses these strings as dispatch tags for syntax-table actions
-// (see syntax.js's syntaxTables). The SIL listing also references them as
-// operand names (e.g. CLERTB SNABTB,ERROR), so they need to resolve to
-// themselves through vm.$().
-const STREAM_ACTIONS = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
 
 function wordsToBytes( words ) {
     return words * WORD_SIZE;
@@ -304,21 +298,14 @@ export class VM {
     }
 }
 
-// Bind the host environment's *constants* into the symbol table: PARMS-style
-// numeric values from `constants`, syntax-table indices, and the STREAM
-// dispatch tags. No memory is touched -- ALPHA and the other host strings
-// are allocated separately by ./assemble.js. This runs on every reset so
-// a fresh VM can drive macros that look up TTL/STACK/UNITI/&c. directly,
-// without needing to first walk the assembler.
+// Bind the host environment's PARMS-style constants into the symbol table.
+// No memory is touched -- ALPHA and the other host strings are allocated
+// separately by ./assemble.js. This runs on every reset so a fresh VM can
+// drive macros that look up TTL/STACK/UNITI/&c. directly, without needing
+// to first walk the assembler.
 function seedConstants( vm ) {
     for ( const name in constants ) {
         vm.symbols[ name ] = constants[ name ];
-    }
-    tableNames.forEach( ( name, idx ) => {
-        vm.symbols[ name ] = idx;
-    } );
-    for ( const action of STREAM_ACTIONS ) {
-        vm.symbols[ action ] = action;
     }
 }
 
