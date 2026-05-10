@@ -31,9 +31,10 @@ bench:
 bench-vs-csnobol4:
 	@node ./tools/bench-vs-csnobol4.js
 
-# Release flow: make release defaults to VERSION=patch, bumps package.json,
-# pushes master and the new vX.Y.Z tag, then creates the GitHub Release that
-# triggers the npm trusted-publishing workflow.
+# To release: run make release from a clean master checkout. It defaults to
+# VERSION=patch; use VERSION=minor, VERSION=major, or VERSION=X.Y.Z when
+# needed. GitHub Actions publishes the package to npm after the release is
+# created.
 release-check:
 	@test "$$(git branch --show-current)" = "master" || { echo "Release from master."; exit 1; }
 	@test -z "$$(git status --porcelain --untracked-files=no)" || { git status --short --untracked-files=no; echo "Commit or stash tracked changes before releasing."; exit 1; }
