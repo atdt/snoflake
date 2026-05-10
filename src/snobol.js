@@ -5,6 +5,7 @@ export * from './SNOBOL/datatypes.js';
 export * from './SNOBOL/file.js';
 export * from './SNOBOL/syntax.js';
 export * from './SNOBOL/string.js';
+export * from './SNOBOL/format.js';
 export * from './SNOBOL/sil.js';
 export * from './SNOBOL/assemble.js';
 export * from './SNOBOL/vm.js';

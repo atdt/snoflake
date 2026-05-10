@@ -257,45 +257,6 @@ export class VM {
 
         return !( this.instructionPointer < 0 );
     }
-
-    // Emit one logical record to a print unit. SIL OUTPUT and STPRNT both call
-    // this; today every unit goes to stdout. Per the SIL spec, OUTPUT (UNITO)
-    // and PUNCH (UNITP) are distinct destinations and user programs may bind
-    // other unit numbers to files; when that lands, dispatch on `unit` here.
-    printLinePrinterRecord( record, unit, carriageControl ) {
-        const stdout = this.stdout;
-        record.split( '\n' ).forEach( function ( line ) {
-            if ( line.length === 0 ) {
-                stdout.write( '' );
-                return;
-            }
-
-            if ( carriageControl === false ) {
-                stdout.write( line.replace( / +/g, '' ) );
-                return;
-            }
-
-            const control = line.charAt( 0 );
-            const content = line.slice( 1 ).replace( / +/g, '' );
-
-            // SNOBOL4 inherited FORTRAN-style carriage control from line printers:
-            // the first character of each record is not text, but spacing
-            // metadata.  A literal terminal rendering of "double space" and
-            // "new page" is too airy because the SIL formats also contain explicit
-            // slash records, so we strip the control and preserve only real record
-            // breaks produced by the format.
-            switch ( control ) {
-                case '1':
-                case '0':
-                case '+':
-                case ' ':
-                    stdout.write( content );
-                    break;
-                default:
-                    stdout.write( line.replace( / +/g, '' ) );
-            }
-        } );
-    }
 }
 
 // Bind the host environment's PARMS-style constants into the symbol table.

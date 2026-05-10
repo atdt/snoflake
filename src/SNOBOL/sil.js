@@ -1,6 +1,7 @@
 "use strict";
 
 import { D } from './datatypes.js';
+import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
 import { constants, hostStrings, match, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
@@ -40,29 +41,6 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
 
     bin.addr = ptr;
     FRSGPT.addr += size;
-}
-
-function formatHasLeadingCarriageControl( fmt ) {
-    if ( !fmt ) {
-        return false;
-    }
-
-    let i = 0;
-    if ( fmt.charAt( i ) === '(' ) {
-        i++;
-    }
-
-    while ( i < fmt.length && /[\s,]/.test( fmt.charAt( i ) ) ) {
-        i++;
-    }
-
-    const digits = /^(\d+)/.exec( fmt.slice( i ) );
-    if ( digits ) {
-        i += digits[1].length;
-    }
-
-    const code = fmt.charAt( i );
-    return code === 'H' || code === 'X' || code === '"' || code === "'";
 }
 
 function foldAsciiUpperString( str ) {
@@ -2634,15 +2612,11 @@ sil.ORDVST = function () {
 // 1.  See also STPRNT.
 sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
-    const DESCR = this.d( $DESCR ),
-          fmt = this.s( FORMAT ).specified;
+    const fmt = this.s( FORMAT ).specified,
+          descrs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this ),
+          lines = printerLines( fmt, descrs, { stripCarriageControl: true } );
 
-    if ( !Array.isArray( ARGs ) ) {
-        ARGs = [ ARGs ];
-    }
-
-    ARGs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this );
-    this.printLinePrinterRecord( str.format( fmt, ARGs ), DESCR.addr );
+    for ( const line of lines ) this.stdout.write( line );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3954,23 +3928,16 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     // string print
     const DESCR2 = this.d( $DESCR2 ),
           A = DESCR2.addr,
-          I = this.d( A + D ).addr,
           A2 = this.d( A + ( 2 * D ) ).addr,
-          M = this.d( A2 ).value;
-    let fmt = this.mem.slice( A2 + ( 4 * D ), A2 + ( 4 * D + M ) );
-    const SPEC = this.s( $SPEC ),
-          A1 = SPEC.addr,
-          O1 = SPEC.offset,
-          L = SPEC.length;
-    let item = this.mem.slice( A1 + O1, A1 + O1 + L );
+          M = this.d( A2 ).value,
+          fmt = str.decode( this.mem.slice( A2 + ( 4 * D ), A2 + ( 4 * D + M ) ) ),
+          SPEC = this.s( $SPEC ),
+          item = str.decode( this.mem.slice( SPEC.addr + SPEC.offset, SPEC.addr + SPEC.offset + SPEC.length ) ),
+          lines = printerLines( fmt, item, {
+              stripCarriageControl: formatHasLeadingCarriageControl( fmt )
+          } );
 
-    fmt = str.decode( fmt );
-    item = str.decode( item );
-    this.printLinePrinterRecord(
-        str.format( fmt, item ),
-        I,
-        formatHasLeadingCarriageControl( fmt )
-    );
+    for ( const line of lines ) this.stdout.write( line );
     this.d( $DESCR1 ).addr = 1;
 };
 
