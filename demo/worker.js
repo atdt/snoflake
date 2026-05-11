@@ -51,15 +51,6 @@ function makeInteractiveReader() {
     };
 }
 
-function compileInstructions( vm, instructions ) {
-    return instructions.map( stmt => {
-        const impl = sil[ stmt[ 1 ] ],
-              args = stmt[ 2 ];
-        return function () {
-            impl.apply( vm, args );
-        };
-    } );
-}
 
 function postLine( type, line ) {
     self.postMessage( { type, line } );
@@ -93,7 +84,7 @@ function createSession( source ) {
     return {
         stdin,
         vm,
-        instructions: compileInstructions( vm, image.instructions ),
+        instructions: vm.compileInstructions( image.instructions ),
         done: false,
         running: false
     };

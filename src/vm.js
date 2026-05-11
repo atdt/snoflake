@@ -248,24 +248,34 @@ export class VM {
         if ( Object.hasOwn( this.symbols, 'LISTCL' ) ) this.d( 'LISTCL' ).addr = this.options.listing ? 1 : 0;
         if ( Object.hasOwn( this.symbols, 'BANRCL' ) ) this.d( 'BANRCL' ).addr = this.options.banner ? 1 : 0;
         if ( Object.hasOwn( this.symbols, 'STATCL' ) ) this.d( 'STATCL' ).addr = this.options.statistics ? 1 : 0;
-        interpret( this, compileInstructions( this, image.instructions ) );
+        this.interpret( this.compileInstructions( image.instructions ) );
 
         return !( this.instructionPointer < 0 );
     }
-}
 
-// Compile each [label, macro, args] image entry into a thunk that
-// dispatches to the resolved sil implementation. Resolving the macro
-// once per program rather than once per dispatch is worth 10-20% on
-// CPU-heavy fixtures (kalah, n-queens, recognizer).
-function compileInstructions( vm, instructions ) {
-    return instructions.map( stmt => {
-        const impl = sil[ stmt[ 1 ] ],
-              args = stmt[ 2 ];
-        return function () {
-            impl.apply( vm, args );
-        };
-    } );
+    // Compile each [label, macro, args] image entry into a thunk that
+    // dispatches to the resolved sil implementation. Resolving the macro
+    // once per program rather than once per dispatch is worth 10-20% on
+    // CPU-heavy fixtures (kalah, n-queens, recognizer).
+    compileInstructions( instructions ) {
+        return instructions.map( stmt => {
+            const impl = sil[ stmt[ 1 ] ],
+                  args = stmt[ 2 ];
+            return () => {
+                impl.apply( this, args );
+            };
+        } );
+    }
+
+    // Fall-through advances before dispatch. Branching macros overwrite
+    // instructionPointer, including explicit branches back to the same instruction.
+    interpret( instructions ) {
+        while ( this.instructionPointer >= 0 && this.instructionPointer < instructions.length ) {
+            const loc = this.instructionPointer;
+            this.instructionPointer = loc + 1;
+            instructions[ loc ]();
+        }
+    }
 }
 
 // Coerce loader output to a Uint8Array view. The Node loader returns a
@@ -278,12 +288,3 @@ function loadBytes( vm, path ) {
     throw new TypeError( 'Loader must return a string or Uint8Array' );
 }
 
-// Fall-through advances before dispatch. Branching macros overwrite
-// instructionPointer, including explicit branches back to the same instruction.
-function interpret( vm, instructions ) {
-    while ( vm.instructionPointer >= 0 && vm.instructionPointer < instructions.length ) {
-        const loc = vm.instructionPointer;
-        vm.instructionPointer = loc + 1;
-        instructions[ loc ]();
-    }
-}
