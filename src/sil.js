@@ -3,7 +3,7 @@
 import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
-import { constants, hostStrings, match, syntaxTables } from './syntax.js';
+import { Action, clearTable, constants, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
 
 // Machine constants that macros consult at runtime. These have fixed
@@ -59,14 +59,6 @@ function stringStructureText( vm, DESCR ) {
           start = DESCR.addr + vm.$( 'BCDFLD' );
 
     return str.decode( vm.mem.slice( start, start + title.value ) );
-}
-
-function isFoldableStreamTable( tableName ) {
-    return tableName === 'LBLTB' ||
-        tableName === 'LBLXTB' ||
-        tableName === 'VARTB' ||
-        tableName === 'VARATB' ||
-        tableName === 'VARBTB';
 }
 
 // SIL stack convention: CSTACK points D cells past the start of the most
@@ -678,9 +670,7 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 // 2.  See also PLUGTB.
 sil.CLERTB = function ( TABLE, KEY ) {
     // clear syntax table
-    syntaxTables[ TABLE ] = hostStrings.ALPHA
-        .split( '' )
-        .map( ch => [ ch, null, KEY ] );
+    clearTable( syntaxTables[ TABLE ], KEY );
 };
 
 //     COPY is used to copy a file of  machine-dependent  data
@@ -2664,17 +2654,14 @@ sil.OUTPUT = function ( _$DESCR, FORMAT, ARGs ) {
 sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
     // plug syntax table
     const SPEC = this.s( $SPEC ),
-          table = syntaxTables[ TABLE ],
-          index = Object.create( null );
-
-    for ( const entry of table ) {
-        index[ entry[ 0 ] ] = entry;
-    }
+          { actions, next } = syntaxTables[ TABLE ],
+          code = Action[ KEY ];
 
     for ( let i = 0; i < SPEC.length; i++ ) {
-        const ch = String.fromCharCode( this.mem[ SPEC.addr + SPEC.offset + i ] );
-        if ( index[ ch ] ) {
-            index[ ch ][ 2 ] = KEY;
+        const slot = this.mem[ SPEC.addr + SPEC.offset + i ];
+        if ( slot < constants.ALPHSZ ) {
+            actions[ slot ] = code;
+            next[ slot ] = null;
         }
     }
 };
@@ -4093,95 +4080,85 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           O = SPEC2.offset,
           L = SPEC2.length;
 
-    let tableName = TABLE,
-        table = syntaxTables[ tableName ],
-        P = 0;
-    // P and TI are STREAM's names from the macro spec: P is the last PUT
-    // value seen, and TI is the table action for the current character.
+    const mem = this.mem;
+    const caseFold = this.options.caseFold;
+    const tokenStart = A + O;
+    const byteValues = constants.ALPHSZ;
+    let table = syntaxTables[ TABLE ];
+    let puts = table.puts, actions = table.actions, next = table.next;
+    let fallback = table.fallback;
+    let foldable = caseFold && table.foldable;
+    let lastPut = 0;
 
-    function selectTable( name ) {
-        const selected = syntaxTables[ name ];
-        assert( selected !== undefined );
-        tableName = name;
-        table = selected;
-    }
+    for ( let I = 0; I < L; I++ ) {
+        const ch = mem[ tokenStart + I ];
+        const isByte = ch < byteValues;
+        const put = isByte ? puts[ ch ] : fallback.put;
+        const action = isByte ? actions[ ch ] : fallback.action;
 
-    function maybeFoldToken( length ) {
-        if ( !this.options.caseFold || !isFoldableStreamTable( tableName ) ) {
-            return;
-        }
-        const start = SPEC1.addr + SPEC1.offset,
-            end = start + length;
-        for ( let p = start; p < end; p++ ) {
-            const c = this.mem[ p ];
-            if ( c >= 97 && c <= 122 ) {
-                this.mem[ p ] = c - 32;
-            }
-        }
-    }
+        if ( put ) lastPut = put;
 
-    const start = A + O;
-    for ( let I = 1; I <= L; I++ ) {
-        const ch = this.mem[ start + I - 1 ];
-        let TI = 'RUNOUT';
+        if ( action === Action.CONTIN ) continue;
 
-        for ( let t = 0; t < table.length; t++ ) {
-            const row = table[ t ];
-            if ( match( row[ 0 ], ch ) ) {
-                // if table specifies a value to PUT(), assign it to P
-                if ( row[ 1 ] !== null ) {
-                    P = this.$( row[ 1 ] );
-                }
-                TI = row[ 2 ];
-                break;
-            }
-        }
-
-        switch ( TI ) {
-        case 'CONTIN':
+        switch ( action ) {
+        case Action.GOTO:
+            table = isByte ? next[ ch ] : fallback.next;
+            puts = table.puts;
+            actions = table.actions;
+            next = table.next;
+            fallback = table.fallback;
+            foldable = caseFold && table.foldable;
             continue;
 
-        case 'STOPSH':
-            STYPE.addr = P;
-            SPEC1.update( A, F, V, O, I - 1 );
-            maybeFoldToken.call( this, I - 1 );
-            SPEC2.update( A, F, V, O + I - 1, L - I + 1 );
-            this.jmp( SLOC );
-            return;
-
-        case 'STOP':
-            STYPE.addr = P;
+        case Action.STOPSH:
+            STYPE.addr = lastPut;
             SPEC1.update( A, F, V, O, I );
-            maybeFoldToken.call( this, I );
+            if ( foldable ) foldToken( mem, tokenStart, I );
             SPEC2.update( A, F, V, O + I, L - I );
             this.jmp( SLOC );
             return;
 
-        case 'ERROR':
+        case Action.STOP:
+            STYPE.addr = lastPut;
+            SPEC1.update( A, F, V, O, I + 1 );
+            if ( foldable ) foldToken( mem, tokenStart, I + 1 );
+            SPEC2.update( A, F, V, O + I + 1, L - I - 1 );
+            this.jmp( SLOC );
+            return;
+
+        case Action.ERROR:
             STYPE.addr = 0;
             SPEC1.update( A, F, V, O, L );
             this.jmp( ERROR );
             return;
 
-        case 'RUNOUT':
-            STYPE.addr = P;
+        case Action.RUNOUT:
+            STYPE.addr = lastPut;
             SPEC1.update( A, F, V, O, L );
             SPEC2.update( A, F, V, O, 0 );
             this.jmp( RUNOUT );
             return;
-
-        default:
-            // GOTO
-            selectTable( TI );
         }
     }
 
-    STYPE.addr = P;
+    // Scanned to end of input without a terminal row -- same as in-loop RUNOUT
+    // except the whole span is the token, so fold it if the table calls for it.
+    STYPE.addr = lastPut;
     SPEC1.update( A, F, V, O, L );
-    maybeFoldToken.call( this, L );
+    if ( foldable ) foldToken( mem, tokenStart, L );
     SPEC2.update( A, F, V, O, 0 );
     this.jmp( RUNOUT );
 };
+
+function foldToken( mem, start, length ) {
+    const end = start + length;
+    for ( let p = start; p < end; p++ ) {
+        const c = mem[ p ];
+        if ( c >= 97 && c <= 122 ) {
+            mem[ p ] = c - 32;
+        }
+    }
+}
 
 //     STRING  is used to assemble a string and a specifier to
 // it.

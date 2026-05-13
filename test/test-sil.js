@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { D, VM, assemble, constants, defaults, sil, str, syntaxTables } from '../src/snobol.js';
+import { Action, D, VM, assemble, bindSyntaxTables, constants, defaults, sil, str, syntaxTables } from '../src/snobol.js';
 import process from "node:process";
 
 //
@@ -1225,6 +1225,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'FLITYP', 6 );
+        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'INTGTB', -1, -2, -3 );
 
         assert.equal( s1.specified, '43.2' );
@@ -1240,6 +1241,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
+        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'IBLKTB', error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 2 );
@@ -1258,12 +1260,31 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
+        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'IBLKTB', error, runout, sloc );
 
         assert.equal( this.vm.instructionPointer, 3 );
         assert.equal( stype.addr, this.vm.$( 'EQTYP' ) );
         assert.equal( s1.specified, ' =' );
         assert.equal( s2.specified, ' X' );
+    } );
+
+    it( 'STREAM routes non-byte characters to the table fallback', function () {
+        const nonByteDigit = String.fromCharCode( 0x130 );
+        const s1 = this.vm.s(),
+              s2 = this.vm.s( sil.STRING.call( this.vm, nonByteDigit ) ),
+              stype = this.vm.d(),
+              error = 1,
+              runout = 2,
+              sloc = 3;
+
+        this.vm.define( 'STYPE', stype.ptr );
+        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+        sil.STREAM.call( this.vm, s1, s2, 'INTGTB', error, runout, sloc );
+
+        assert.equal( this.vm.instructionPointer, error );
+        assert.equal( stype.addr, 0 );
+        assert.equal( s1.length, 1 );
     } );
 
     it( 'SUBSP', function () {
@@ -1316,43 +1337,62 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         this.vm = new VM();
     } );
 
+    // CLERTB and PLUGTB mutate shared syntax tables in place; re-bind after
+    // each case so later tests see the static definitions.
+    afterEach( function () {
+        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+    } );
+
     it( 'CLERTB resolves a table id and fills character entries', function () {
-        const original = syntaxTables.SNABTB;
+        sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
 
-        try {
-            sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
-
-            assert( syntaxTables.SNABTB.length >= constants.ALPHSZ );
-            assert( syntaxTables.SNABTB.every( function ( entry ) {
-                return entry[2] === 'ERROR';
-            } ) );
-        } finally {
-            syntaxTables.SNABTB = original;
+        const { actions, fallback } = syntaxTables.SNABTB;
+        assert.equal( actions.length, constants.ALPHSZ );
+        assert.deepEqual( fallback, { put: 0, action: Action.RUNOUT, next: null } );
+        for ( let code = 0; code < constants.ALPHSZ; code++ ) {
+            assert.equal( actions[ code ], Action.ERROR );
         }
     } );
 
+    it( 'binds non-byte fallback separately from byte slots', function () {
+        this.vm.define( 'NBTYP', 77 );
+        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+
+        const table = syntaxTables.FRWDTB;
+        assert.equal( table.actions.length, constants.ALPHSZ );
+        assert.equal( table.puts.length, constants.ALPHSZ );
+        assert.equal( table.next.length, constants.ALPHSZ );
+        assert.deepEqual( table.fallback, {
+            put: 77,
+            action: Action.STOPSH,
+            next: null,
+        } );
+    } );
+
     it( 'PLUGTB updates the entries selected by a specifier', function () {
-        const original = syntaxTables.SNABTB,
-              spec = this.vm.s( sil.STRING.call( this.vm, 'AZ' ) );
-        let table;
+        const spec = this.vm.s( sil.STRING.call( this.vm, 'AZ' ) );
+        sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
+        sil.PLUGTB.call( this.vm, 'SNABTB', 'STOP', spec );
 
-        try {
-            sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
-            sil.PLUGTB.call( this.vm, 'SNABTB', 'STOP', spec );
-            table = syntaxTables.SNABTB;
+        const { actions } = syntaxTables.SNABTB;
+        assert.equal( actions[ 'A'.charCodeAt( 0 ) ], Action.STOP );
+        assert.equal( actions[ 'Z'.charCodeAt( 0 ) ], Action.STOP );
+        assert.equal( actions[ 'B'.charCodeAt( 0 ) ], Action.ERROR );
+    } );
 
-            assert.equal( table.find( function ( entry ) {
-                return entry[0] === 'A';
-            } )[2], 'STOP' );
-            assert.equal( table.find( function ( entry ) {
-                return entry[0] === 'Z';
-            } )[2], 'STOP' );
-            assert.equal( table.find( function ( entry ) {
-                return entry[0] === 'B';
-            } )[2], 'ERROR' );
-        } finally {
-            syntaxTables.SNABTB = original;
-        }
+    it( 'PLUGTB ignores non-byte entries in the plug specifier', function () {
+        const nonByteDigit = String.fromCharCode( 0x130 );
+        const spec = this.vm.s( sil.STRING.call(
+            this.vm,
+            'A' + nonByteDigit
+        ) );
+        sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
+        sil.PLUGTB.call( this.vm, 'SNABTB', 'STOP', spec );
+
+        const { actions, next } = syntaxTables.SNABTB;
+        assert.equal( actions[ 'A'.charCodeAt( 0 ) ], Action.STOP );
+        assert.equal( next.length, constants.ALPHSZ );
+        assert.equal( next[ 0x130 ], undefined );
     } );
 } );
 

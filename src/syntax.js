@@ -97,10 +97,6 @@ const characterClasses = {
     ELSE         : /.*/,
 };
 
-function characterCode( char ) {
-    return typeof char === 'number' ? char : char.charCodeAt( 0 );
-}
-
 // STREAM asks this matcher about every scanned character, so compile the
 // documented regular-expression classes into byte lookup tables once.
 const characterClassBitsets = {};
@@ -124,7 +120,7 @@ export function match( characterClass, char ) {
         return true;
     }
 
-    const code = characterCode( char ),
+    const code = typeof char === 'number' ? char : char.charCodeAt( 0 ),
           bitset = characterClassBitsets[ characterClass ];
 
     if ( bitset ) {
@@ -140,7 +136,44 @@ export function match( characterClass, char ) {
         : characterClass === char;
 }
 
-export const syntaxTables = {
+export const Action = Object.freeze( {
+    CONTIN: 0,
+    STOPSH: 1,
+    STOP:   2,
+    ERROR:  3,
+    RUNOUT: 4,
+    GOTO:   5,
+} );
+
+// Tables whose scanned tokens get uppercased in place when caseFold is on
+// (they consume identifiers: labels and variable names).
+const FOLDABLE_TABLES = new Set( [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ] );
+
+// Bound tables have one row for each byte value, plus an ELSE row for wider
+// JavaScript code units.
+function emptyEntry() {
+    return { put: 0, action: Action.RUNOUT, next: null };
+}
+
+function emptyTable( foldable ) {
+    return {
+        puts:     new Int32Array( BYTE_VALUES ),
+        actions:  new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
+        next:     new Array( BYTE_VALUES ).fill( null ),
+        fallback: emptyEntry(),
+        foldable,
+    };
+}
+
+// CLERTB rewrites byte rows; wider host code units remain a miss.
+export function clearTable( table, key ) {
+    table.puts.fill( 0 );
+    table.actions.fill( Action[ key ] );
+    table.next.fill( null );
+    table.fallback = emptyEntry();
+}
+
+const tableDefinitions = {
     BIOPTB: [
         [ 'PLUS', 'ADDFN', 'TBLKTB' ],
         [ 'MINUS', 'SUBFN', 'TBLKTB' ],
@@ -334,6 +367,49 @@ export const syntaxTables = {
         [ 'ELSE', null, 'ERROR' ]
     ]
 };
+
+export const syntaxTables = {};
+for ( const name in tableDefinitions ) {
+    syntaxTables[ name ] = emptyTable( FOLDABLE_TABLES.has( name ) );
+}
+
+// Resolve symbolic PUT and GOTO operands after the image symbols are loaded.
+export function bindSyntaxTables( resolveSymbol ) {
+    for ( const name in tableDefinitions ) {
+        bindTable( syntaxTables[ name ], tableDefinitions[ name ], resolveSymbol );
+    }
+}
+
+function bindTable( table, rows, resolveSymbol ) {
+    table.puts.fill( 0 );
+    table.actions.fill( Action.RUNOUT );
+    table.next.fill( null );
+    table.fallback = emptyEntry();
+
+    function bindEntry( row ) {
+        if ( !row ) {
+            return emptyEntry();
+        }
+
+        const [ , putName, actionName ] = row;
+        const put = putName === null ? 0 : resolveSymbol( putName );
+
+        if ( Object.hasOwn( Action, actionName ) ) {
+            return { put, action: Action[ actionName ], next: null };
+        }
+
+        return { put, action: Action.GOTO, next: syntaxTables[ actionName ] };
+    }
+
+    for ( let code = 0; code < BYTE_VALUES; code++ ) {
+        const entry = bindEntry( rows.find( ( r ) => match( r[ 0 ], code ) ) );
+        table.puts[ code ] = entry.put;
+        table.actions[ code ] = entry.action;
+        table.next[ code ] = entry.next;
+    }
+
+    table.fallback = bindEntry( rows.find( ( r ) => r[ 0 ] === 'ELSE' ) );
+}
 
 // Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
 // name. They appear in operand position in the SIL listing but they are not

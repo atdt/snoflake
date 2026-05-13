@@ -5,7 +5,7 @@ import { File, bufferedReader, stdinReader } from './file.js';
 import { nodeStdout, nodeStderr, nodeLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { constants } from './syntax.js';
+import { bindSyntaxTables, constants } from './syntax.js';
 
 const { UNITI } = constants;
 
@@ -235,6 +235,11 @@ export class VM {
         }
         this.mem.set( image.memory, 0 );
         this.memPtr = image.memory.length;
+        // Symbols are now in place, so the SIL syntax tables' PUT operands
+        // can be resolved to addresses STREAM reads directly. Symbols absent
+        // from a minimal image stay 0; a real image carries every PUT the
+        // static tables reference.
+        bindSyntaxTables( ( name ) => this.symbols[ name ] ?? 0 );
     }
 
     run( image ) {
