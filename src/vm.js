@@ -258,17 +258,15 @@ export class VM {
         return !( this.instructionPointer < 0 );
     }
 
-    // Compile each [label, macro, args] image entry into a thunk that
-    // dispatches to the resolved sil implementation. Resolving the macro
-    // once per program rather than once per dispatch is worth 10-20% on
-    // CPU-heavy fixtures (kalah, n-queens, recognizer).
+    // Compile each [label, macro, args] image entry into a bound call.
+    // Resolving the macro and binding its operands once per run avoids
+    // per-dispatch lookup and apply() overhead in the interpreter loop.
     compileInstructions( instructions ) {
         return instructions.map( stmt => {
             const impl = sil[ stmt[ 1 ] ],
                   args = stmt[ 2 ];
-            return () => {
-                impl.apply( this, args );
-            };
+
+            return impl.bind( this, ...args );
         } );
     }
 
@@ -292,4 +290,3 @@ function loadBytes( vm, path ) {
     if ( content instanceof Uint8Array ) return content;
     throw new TypeError( 'Loader must return a string or Uint8Array' );
 }
-

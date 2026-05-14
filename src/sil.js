@@ -11,12 +11,6 @@ import { isFloat32, isInt32 } from './vm.js';
 // reserved for names the SIL program actually binds.
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
-function assert( condition ) {
-    if ( !condition ) {
-        throw new Error( 'Assertion failed' );
-    }
-}
-
 const CPD = 3;  // Characters per descriptor cell (matches the historical
                 // IBM/360 layout, even though the JS encoding stores one
                 // character per Uint32 word).
@@ -69,6 +63,9 @@ function asArray( ARGs ) {
     return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
 }
 
+// Hot descriptor macros use the assembled image convention directly:
+// descriptor operands are numeric memory addresses, not Descriptor wrappers.
+
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
 // being considered as signed integers.  If A1 >  A2,  transfer
@@ -86,10 +83,9 @@ function asArray( ARGs ) {
 // 2.  See also LCOMP, ACOMPC, AEQL, AEQLC, and AEQLIC.
 
 sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          A1 = DESCR1.addr,
-          A2 = DESCR2.addr;
+    const i32 = this.i32,
+          A1 = i32[ $DESCR1 + 0 ],
+          A2 = i32[ $DESCR2 + 0 ];
 
     if ( A1 > A2 ) {
         this.jmp( GTLOC );
@@ -115,10 +111,7 @@ sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 3.  N is often 0.
 // 4.  See also ACOMP, AEQL, AEQLC, and AEQLIC.
 sil.ACOMPC = function ( $DESCR, N, GTLOC, EQLOC, LTLOC ) {
-    const DESCR = this.d( $DESCR ),
-          A = DESCR.addr;
-
-    assert( N >= 0 );
+    const A = this.i32[ $DESCR + 0 ];
     if ( A > N ) {
         this.jmp( GTLOC );
     } else if ( A < N ) {
@@ -146,8 +139,6 @@ sil.ACOMPC = function ( $DESCR, N, GTLOC, EQLOC, LTLOC ) {
 sil.ADDLG = function ( $SPEC, $DESCR ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR );
-
-    assert( DESCR.addr >= 0 );
     SPEC.length += DESCR.addr;
 };
 
@@ -381,10 +372,7 @@ sil.AEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 4.  See also LEQLC, AEQL, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
     // address equal to constant test
-    const DESCR = this.d( $DESCR ),
-          A = DESCR.addr;
-
-    assert( N >= 0 );
+    const A = this.i32[ $DESCR + 0 ];
     if ( A === N ) {
         this.jmp( EQLOC );
     } else {
@@ -417,9 +405,6 @@ sil.AEQLIC = function ( $DESCR, N1, N2, NELOC, EQLOC ) {
           A1 = DESCR.addr,
           DESCR_indirect = this.d( A1 + N1 ),
           A2 = DESCR_indirect.addr;
-
-    assert( N2 === 0 );
-    assert( N1 >= 0 );
     if ( A2 === N2 ) {
         this.jmp( EQLOC );
     } else {
@@ -573,11 +558,9 @@ sil.BRANCH = function ( LOC, _PROC ) {
 // 1.  N is always zero
 sil.BRANIC = function ( $DESCR, N ) {
     // branch indirect with offset constant
-    const DESCR = this.d( $DESCR ),
-          DESCR_indirect = this.d( DESCR.addr + N );
-
-    assert( N === 0 );
-    this.jmp( DESCR_indirect.addr );
+    const i32 = this.i32,
+          A = i32[ $DESCR + 0 ];
+    this.jmp( i32[ A + N + 0 ] );
 };
 
 //     BUFFER  is used to assemble a string of N blank charac-
@@ -621,10 +604,6 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 
         SPEC = this.s( $SPEC ),
         L = SPEC.length;
-
-    assert( I1 >= 0 );
-    assert( I2 >= 0 );
-    assert( L >= 0 );
 
     if ( L + I2 > I1 ) {
         this.jmp( GTLOC );
@@ -913,10 +892,8 @@ sil.DATE = function ( $SPEC ) {
 // 5.  See also INCRA.
 sil.DECRA = function ( $DESCR, N ) {
     // decrement address
-    const DESCR = this.d( $DESCR );
-
-    assert( N > 0 );
-    DESCR.addr -= N;
+    const ptr = $DESCR;
+    this.i32[ ptr + 0 ] = this.i32[ ptr + 0 ] - N;
 };
 
 //     DEQL is used to compare two descriptors.  If A1  =  A2,
@@ -934,10 +911,13 @@ sil.DECRA = function ( $DESCR, N ) {
 // transfer to EQLOC.
 sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
     // descriptor equal test
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+    const mem = this.mem,
+          ptr1 = $DESCR1,
+          ptr2 = $DESCR2;
 
-    if ( DESCR1.isEqualTo( DESCR2 ) ) {
+    if ( mem[ ptr1 + 0 ] === mem[ ptr2 + 0 ] &&
+         mem[ ptr1 + 1 ] === mem[ ptr2 + 1 ] &&
+         mem[ ptr1 + 2 ] === mem[ ptr2 + 2 ] ) {
         this.jmp( EQLOC );
     } else {
         this.jmp( NELOC );
@@ -1286,15 +1266,15 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
 // 1.  See also GETDC, PUTD, and PUTDC.
 sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // get descriptor
-    const DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        A2 = DESCR2.addr,
+    const i32 = this.i32,
+          mem = this.mem,
+          dst = $DESCR1,
+          A2 = i32[ $DESCR2 + 0 ],
+          src = A2 + i32[ $DESCR3 + 0 ];
 
-        DESCR3 = this.d( $DESCR3 ),
-        A3 = DESCR3.addr,
-
-        DESCR_indirect = this.d( A2 + A3 );
-    DESCR1.read( DESCR_indirect );
+    mem[ dst + 0 ] = mem[ src + 0 ];
+    mem[ dst + 1 ] = mem[ src + 1 ];
+    mem[ dst + 2 ] = mem[ src + 2 ];
 };
 
 //     GETDC  is  used to get a descriptor with an offset con-
@@ -1314,12 +1294,14 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 // 1.  See also GETD, PUTDC, and PUTD.
 sil.GETDC = function ( $DESCR1, $DESCR2, N ) {
     // get descriptor with offset constant
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          A2 = DESCR2.addr,
-          DESCR_indirect = this.d( A2 + N );
+    const i32 = this.i32,
+          mem = this.mem,
+          dst = $DESCR1,
+          src = i32[ $DESCR2 + 0 ] + N;
 
-    DESCR1.read( DESCR_indirect );
+    mem[ dst + 0 ] = mem[ src + 0 ];
+    mem[ dst + 1 ] = mem[ src + 1 ];
+    mem[ dst + 2 ] = mem[ src + 2 ];
 };
 
 //     GETLG is used to get the length of a specifier.
@@ -1443,10 +1425,9 @@ sil.GETSPC = function ( $SPEC, $DESCR, N ) {
 // 5.  See also DECRA and INCRV.
 sil.INCRA = function ( $DESCR, N ) {
     // increment address
-    const DESCR = this.d( $DESCR );
-
-    assert( DESCR.addr >= 0 &&  N > 0 );
-    DESCR.addr += N;
+    const ptr = $DESCR,
+          A = this.i32[ ptr + 0 ];
+    this.i32[ ptr + 0 ] = A + N;
 };
 
 //     INCRV  is  used  to  increment  the  value  field  of a
@@ -1466,8 +1447,6 @@ sil.INCRA = function ( $DESCR, N ) {
 // 3.  See also INCRA.
 sil.INCRV = function ( $DESCR, N ) {
     const DESCR = this.d( $DESCR );
-
-    assert( N > 0 );
     DESCR.value += N;
 };
 
@@ -1651,8 +1630,6 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     if ( this.INTSPC_BUFFER === null ) {
         this.INTSPC_BUFFER = this.alloc( 255 );
     }
-
-    assert( encoded.length <= 255 );
     SPEC.update( this.INTSPC_BUFFER, 0, 0, 0, I_str.length );
     this.mem.set( encoded, SPEC.addr + SPEC.offset );
 };
@@ -1715,8 +1692,6 @@ sil.LCOMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
 sil.LEQLC = function ( $SPEC, N, NELOC, EQLOC ) {
     // length equal to constant test
     const SPEC = this.s( $SPEC ), L = SPEC.length;
-
-    assert( L >= 0 && N >= 0 );
     if ( L === N ) {
         this.jmp( EQLOC );
     } else {
@@ -1941,19 +1916,24 @@ sil.LOAD = function ( _$DESCR, _$SPEC1, _$SPEC2, _FLOC, _SLOC ) {
 // 2.  See also LOCAPV.
 sil.LOCAPT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // locate attribute pair by type
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 ),
-          A = DESCR2.addr,
-          stop = A + this.d( A ).value;
+    const mem = this.mem,
+          i32 = this.i32,
+          ptr1 = $DESCR1,
+          ptr2 = $DESCR2,
+          ptr3 = $DESCR3,
+          A = i32[ ptr2 + 0 ],
+          stop = A + mem[ A + 2 ];
     let ptr;
 
     for ( ptr = A + 3; ptr < stop; ptr += 6 ) {
-        if ( this.d( ptr ).isEqualTo( DESCR3 ) ) {
-            DESCR1.addr = ptr - 3;
-            DESCR1.flags = DESCR2.flags;
-            DESCR1.value = DESCR2.value;
-            return this.jmp( SLOC );
+        if ( mem[ ptr + 0 ] === mem[ ptr3 + 0 ] &&
+             mem[ ptr + 1 ] === mem[ ptr3 + 1 ] &&
+             mem[ ptr + 2 ] === mem[ ptr3 + 2 ] ) {
+            i32[ ptr1 + 0 ] = ptr - 3;
+            mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
+            mem[ ptr1 + 2 ] = mem[ ptr2 + 2 ];
+            this.jmp( SLOC );
+            return;
         }
     }
     this.jmp( FLOC );
@@ -2002,24 +1982,31 @@ sil.LOCAPT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // 2.  See also LOCAPT.
 sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // locate attribute pair by value
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 ),
-          A = DESCR2.addr,
-          stop = A + this.d( A ).value;
+    const mem = this.mem,
+          i32 = this.i32,
+          ptr1 = $DESCR1,
+          ptr2 = $DESCR2,
+          ptr3 = $DESCR3,
+          A = i32[ ptr2 + 0 ],
+          stop = A + mem[ A + 2 ];
     let ptr,
         key,
         candidate;
     const isFunctionPairList = this.symbols.FNCPL !== undefined &&
-            A === this.d( 'FNCPL' ).addr;
+            A === i32[ this.symbols.FNCPL + 0 ];
 
     let i;
     for ( i = 0; ; i++ ) {
         ptr = A + 6 + ( 6 * i );
 
-        if ( this.d( ptr ).isEqualTo( DESCR3 ) ) {
-            DESCR1.update( ptr - 6, DESCR2.flags, DESCR2.value );
-            return this.jmp( SLOC );
+        if ( mem[ ptr + 0 ] === mem[ ptr3 + 0 ] &&
+             mem[ ptr + 1 ] === mem[ ptr3 + 1 ] &&
+             mem[ ptr + 2 ] === mem[ ptr3 + 2 ] ) {
+            i32[ ptr1 + 0 ] = ptr - 6;
+            mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
+            mem[ ptr1 + 2 ] = mem[ ptr2 + 2 ];
+            this.jmp( SLOC );
+            return;
         }
 
         if ( ptr === stop ) {
@@ -2032,14 +2019,17 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // names as string structures, so fall back to the same ASCII fold here
     // after preserving the exact descriptor match above.
     if ( this.options.caseFold && isFunctionPairList ) {
-        key = foldAsciiUpperString( stringStructureText( this, DESCR3 ) );
+        key = foldAsciiUpperString( stringStructureText( this, this.d( ptr3 ) ) );
 
         for ( i = 0; ; i++ ) {
             ptr = A + 6 + ( 6 * i );
             candidate = foldAsciiUpperString( stringStructureText( this, this.d( ptr ) ) );
             if ( candidate === key ) {
-                DESCR1.update( ptr - 6, DESCR2.flags, DESCR2.value );
-                return this.jmp( SLOC );
+                i32[ ptr1 + 0 ] = ptr - 6;
+                mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
+                mem[ ptr1 + 2 ] = mem[ ptr2 + 2 ];
+                this.jmp( SLOC );
+                return;
             }
 
             if ( ptr === stop ) {
@@ -2277,10 +2267,9 @@ sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
 // 1.  See also MOVD and MOVV.
 sil.MOVA = function ( $DESCR1, $DESCR2 ) {
     // move address
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+    const i32 = this.i32;
 
-    DESCR1.addr = DESCR2.addr;
+    i32[ $DESCR1 + 0 ] = i32[ $DESCR2 + 0 ];
 };
 
 //     MOVBLK is used to move (copy) a block of descriptors.
@@ -2343,10 +2332,10 @@ sil.MOVBLK = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 // 1.  See also MOVA and MOVV.
 sil.MOVD = function ( $DESCR1, $DESCR2 ) {
     // move descriptor
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
-
-    DESCR1.read( DESCR2 );
+    const mem = this.mem;
+    mem[ $DESCR1 + 0 ] = mem[ $DESCR2 + 0 ];
+    mem[ $DESCR1 + 1 ] = mem[ $DESCR2 + 1 ];
+    mem[ $DESCR1 + 2 ] = mem[ $DESCR2 + 2 ];
 };
 
 //     MOVDIC  is used to move a descriptor that is indirectly
@@ -2389,10 +2378,9 @@ sil.MOVDIC = function ( $DESCR1, N1, $DESCR2, N2 ) {
 // 1.  See also MOVA and MOVD.
 sil.MOVV = function ( $DESCR1, $DESCR2 ) {
     // move value field
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+    const mem = this.mem;
 
-    DESCR1.value = DESCR2.value;
+    mem[ $DESCR1 + 2 ] = mem[ $DESCR2 + 2 ];
 };
 
 //     MPREAL  is  used  to multiply two real numbers.  If the
@@ -2702,14 +2690,18 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
 // transferring to the program location INTR10 if the condition
 // is detected.
 sil.POP = function ( DESCRs ) {
-    const STACK_BASE = this.$( 'STACK' );
+    const STACK_BASE = this.symbols.STACK;
     for ( const arg of asArray( DESCRs ) ) {
-        const dst = this.d( arg );
-        if ( this.CSTACK - dst.width < STACK_BASE ) {
+        const dst = arg;
+        if ( this.CSTACK - D < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
         }
-        dst.read( this.d( this.CSTACK ) );
-        this.CSTACK -= dst.width;
+        const mem = this.mem,
+              src = this.CSTACK;
+        mem[ dst + 0 ] = mem[ src + 0 ];
+        mem[ dst + 1 ] = mem[ src + 1 ];
+        mem[ dst + 2 ] = mem[ src + 2 ];
+        this.CSTACK -= D;
     }
 };
 
@@ -2782,14 +2774,18 @@ sil.PSTACK = function ( $DESCR ) {
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
 sil.PUSH = function ( DESCRs ) {
-    const STACK_TOP = this.$( 'STACK' ) + D * this.$( 'STSIZE' );
+    const STACK_TOP = this.symbols.STACK + D * this.symbols.STSIZE;
     for ( const arg of asArray( DESCRs ) ) {
-        const src = this.d( arg );
-        if ( this.CSTACK + src.width > STACK_TOP ) {
+        const src = arg;
+        if ( this.CSTACK + D > STACK_TOP ) {
             throw new RangeError( 'Stack overflow' );
         }
-        this.CSTACK += src.width;
-        this.d( this.CSTACK ).read( src );
+        this.CSTACK += D;
+        const mem = this.mem,
+              dst = this.CSTACK;
+        mem[ dst + 0 ] = mem[ src + 0 ];
+        mem[ dst + 1 ] = mem[ src + 1 ];
+        mem[ dst + 2 ] = mem[ src + 2 ];
     }
 };
 
@@ -2837,11 +2833,14 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
 // 1.  See also PUTDC, PUTAC, PUTVC, and GETD.
 sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // put descriptor
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+    const i32 = this.i32,
+          dst = i32[ $DESCR1 + 0 ] +
+                i32[ $DESCR2 + 0 ];
 
-    this.d( DESCR1.addr + DESCR2.addr ).read( DESCR3 );
+    const mem = this.mem;
+    mem[ dst + 0 ] = mem[ $DESCR3 + 0 ];
+    mem[ dst + 1 ] = mem[ $DESCR3 + 1 ];
+    mem[ dst + 2 ] = mem[ $DESCR3 + 2 ];
 };
 
 //     PUTDC  is used to put a descriptor at a location with a
@@ -2861,11 +2860,12 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 // 1.  See also PUTD, PUTAC, PUTVC, and GETD.
 sil.PUTDC = function ( $DESCR1, N, $DESCR2 ) {
     // put descriptor with constant offset
-    const DESCR1 = this.d( $DESCR1 ),
-          A1 = DESCR1.addr,
-          DESCR2 = this.d( $DESCR2 );
+    const mem = this.mem,
+          dst = this.i32[ $DESCR1 + 0 ] + N;
 
-    this.d( A1 + N ).read( DESCR2 );
+    mem[ dst + 0 ] = mem[ $DESCR2 + 0 ];
+    mem[ dst + 1 ] = mem[ $DESCR2 + 1 ];
+    mem[ dst + 2 ] = mem[ $DESCR2 + 2 ];
 };
 
 //     PUTLG is used to put a length into a specifier.
@@ -2885,8 +2885,6 @@ sil.PUTLG = function ( $SPEC, $DESCR ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
           I = DESCR.addr;
-
-    assert( I >= 0 );
     SPEC.length = I;
 };
 
@@ -3030,52 +3028,55 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // 9.  See also SELBRA.
 sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
-    const fallthroughLoc = this.instructionPointer;
-    let DESCR;
-
-    if ( $DESCR !== undefined ) {
-        DESCR = this.d( $DESCR );
-    }
-
-    if ( !Array.isArray( $DESCRs ) ) {
-        $DESCRs = [ $DESCRs ];
-    }
-
-    if ( !Array.isArray( $LOCs ) ) {
-        $LOCs = [ $LOCs ];
-    }
+    const fallthroughLoc = this.instructionPointer,
+          mem = this.mem,
+          STACK_TOP = this.symbols.STACK + D * this.symbols.STSIZE;
 
     // Save the old stack pointer (A0) at A+D; flags and value cleared so
     // the slot reads as a plain descriptor.
-    this.d( this.CSTACK + D ).update( this.OSTACK, 0, 0 );
+    mem[ this.CSTACK + D + 0 ] = this.OSTACK;
+    mem[ this.CSTACK + D + 1 ] = 0;
+    mem[ this.CSTACK + D + 2 ] = 0;
     this.OSTACK = this.CSTACK;
     this.CSTACK += D;
 
     // The translated runtime carries the return continuation in callbacks,
     // but still reserves the SIL LOC descriptor slot so the stack frame shape
     // remains A+(2+N)*D with zeroed descriptor flags.
-    this.d( this.CSTACK + D ).update( 0 );
+    mem[ this.CSTACK + D + 0 ] = 0;
+    mem[ this.CSTACK + D + 1 ] = 0;
+    mem[ this.CSTACK + D + 2 ] = 0;
     this.CSTACK += D;
 
-    this.callbacks.push( function ( $DESCR_SRC, N ) {
-        if ( DESCR && $DESCR_SRC !== undefined ) {
-            DESCR.read( this.d( $DESCR_SRC ) );
-        }
-
-        // Restore CSTACK to A and OSTACK to saved A0 (at A+D).
-        const A = this.OSTACK;
-        this.CSTACK = this.OSTACK;
-        this.OSTACK = this.d( A + D ).addr;
-
-        // N picks the matching labeled return; missing N, missing slot, or
-        // a non-numeric slot all fall through to the instruction after RCALL.
-        this.instructionPointer = ( typeof N === 'number' && typeof $LOCs?.[ N - 1 ] === 'number' )
-            ? $LOCs[ N - 1 ]
-            : fallthroughLoc;
+    this.callbacks.push( {
+        dest: $DESCR !== undefined ? $DESCR : undefined,
+        locs: $LOCs,
+        fallthroughLoc,
     } );
 
-    sil.PUSH.call( this, $DESCRs.slice().reverse() );
-    this.jmp( $PROC );
+    if ( Array.isArray( $DESCRs ) ) {
+        for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
+            if ( this.CSTACK + D > STACK_TOP ) {
+                throw new RangeError( 'Stack overflow' );
+            }
+            this.CSTACK += D;
+            const dst = this.CSTACK,
+                  src = $DESCRs[ i ];
+            mem[ dst + 0 ] = mem[ src + 0 ];
+            mem[ dst + 1 ] = mem[ src + 1 ];
+            mem[ dst + 2 ] = mem[ src + 2 ];
+        }
+    } else {
+        if ( this.CSTACK + D > STACK_TOP ) {
+            throw new RangeError( 'Stack overflow' );
+        }
+        this.CSTACK += D;
+        const dst = this.CSTACK;
+        mem[ dst + 0 ] = mem[ $DESCRs + 0 ];
+        mem[ dst + 1 ] = mem[ $DESCRs + 1 ];
+        mem[ dst + 2 ] = mem[ $DESCRs + 2 ];
+    }
+    this.instructionPointer = $PROC;
 };
 
 //     RCOMP is used to compare two real numbers.  If R1 > R2,
@@ -3162,8 +3163,6 @@ sil.REMSP = function ( $SPEC1, $SPEC2, $SPEC3 ) {
           SPEC2 = this.s( $SPEC2 ),
           SPEC3 = this.s( $SPEC3 ),
           L3 = SPEC3.length;
-
-    assert( SPEC2.length - SPEC3.length >= 0 );
 
     SPEC1.addr   = SPEC2.addr;
     SPEC1.flags  = SPEC2.flags;
@@ -3361,8 +3360,27 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 // executed.
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
-    const callback = this.callbacks.pop();
-    callback.call( this, $DESCR, N );
+    const frame = this.callbacks.pop(),
+          mem = this.mem;
+
+    if ( frame.dest !== undefined && $DESCR !== undefined ) {
+        mem[ frame.dest + 0 ] = mem[ $DESCR + 0 ];
+        mem[ frame.dest + 1 ] = mem[ $DESCR + 1 ];
+        mem[ frame.dest + 2 ] = mem[ $DESCR + 2 ];
+    }
+
+    // Restore CSTACK to A and OSTACK to saved A0 (at A+D).
+    const A = this.OSTACK;
+    this.CSTACK = A;
+    this.OSTACK = this.i32[ A + D + 0 ];
+
+    let loc;
+    if ( typeof N === 'number' ) {
+        loc = Array.isArray( frame.locs )
+            ? frame.locs[ N - 1 ]
+            : ( N === 1 ? frame.locs : undefined );
+    }
+    this.instructionPointer = typeof loc === 'number' ? loc : frame.fallthroughLoc;
 };
 
 //     RSETFI is used to reset (delete) a flag from a descrip-
@@ -3442,10 +3460,7 @@ sil.SELBRA = function ( $DESCR, LOCI ) {
     const DESCR = this.d( $DESCR ),
           I = DESCR.addr;
 
-    assert( Array.isArray( LOCI ) );
-
     const N = LOCI.length;
-    assert( I >= 1 && I <= N + 1 )
     if ( I !== N + 1 ) {
         this.jmp( LOCI[ I - 1 ] );
     }
@@ -3464,10 +3479,7 @@ sil.SELBRA = function ( $DESCR, LOCI ) {
 // 4.  See also SETVC, SETLC, and SETAV.
 sil.SETAC = function ( $DESCR, N ) {
     // set address to constant
-    const DESCR = this.d( $DESCR );
-
-    assert( N >= 0 );
-    DESCR.addr = N;
+    this.i32[ $DESCR + 0 ] = N;
 };
 
 //     SETAV sets the address field of one descriptor from the
@@ -3484,12 +3496,12 @@ sil.SETAC = function ( $DESCR, N ) {
 // 1.  See also SETAC
 sil.SETAV = function ( $DESCR1, $DESCR2 ) {
     // set address from value field
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+    const mem = this.mem,
+          ptr1 = $DESCR1;
 
-    DESCR1.addr = DESCR2.value;
-    DESCR1.flags = 0;
-    DESCR1.value = 0;
+    mem[ ptr1 + 0 ] = mem[ $DESCR2 + 2 ];
+    mem[ ptr1 + 1 ] = 0;
+    mem[ ptr1 + 2 ] = 0;
 };
 
 //     SETF is used to set (add) a flag in the flag  field  of
@@ -3550,8 +3562,6 @@ sil.SETFI = function ( $DESCR, FLAG ) {
 sil.SETLC = function ( $SPEC, N ) {
     // set length of specifier to constant
     const SPEC = this.s( $SPEC );
-
-    assert( N >= 0 );
     SPEC.length = N;
 };
 
@@ -3578,8 +3588,6 @@ sil.SETSIZ = function ( $DESCR1, $DESCR2 ) {
           A = DESCR1.addr,
           DESCR2 = this.d( $DESCR2 ),
           I = DESCR2.addr;
-
-    assert( I > 0 );
     this.d( A ).value = I;
 };
 
@@ -3634,10 +3642,7 @@ sil.SETVA = function ( $DESCR1, $DESCR2 ) {
 // 2.  See also SETVA and SETAC.
 sil.SETVC = function ( $DESCR, N ) {
     // set value to constant
-    const DESCR = this.d( $DESCR );
-
-    assert( N >= 0 );
-    DESCR.value = N;
+    this.mem[ $DESCR + 2 ] = N;
 };
 
 //     SHORTN  is  used  to  shorten  the  specification  of a
@@ -3655,8 +3660,6 @@ sil.SETVC = function ( $DESCR, N ) {
 sil.SHORTN = function ( $SPEC, N ) {
     // shorten specifier
     const SPEC = this.s( $SPEC );
-
-    assert( SPEC.length - N >= 0 );
     SPEC.length -= N;
 };
 
@@ -4282,19 +4285,22 @@ sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // 4.  See also SUBTRT.
 sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // sum addresses
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 ),
-          DESCR3 = this.d( $DESCR3 );
+    const i32 = this.i32,
+          mem = this.mem,
+          ptr1 = $DESCR1,
+          ptr2 = $DESCR2,
+          ptr3 = $DESCR3;
 
-    const newAddr = DESCR2.addr + DESCR3.addr;
+    const newAddr = i32[ ptr2 + 0 ] + i32[ ptr3 + 0 ];
     if ( !isInt32( newAddr ) ) {
-        return this.jmp( FLOC );
+        this.jmp( FLOC );
+        return;
     }
 
-    DESCR1.addr  = newAddr;
-    DESCR1.flags = DESCR2.flags;
-    DESCR1.value = DESCR2.value;
-    return this.jmp( SLOC );
+    i32[ ptr1 + 0 ] = newAddr;
+    mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
+    mem[ ptr1 + 2 ] = mem[ ptr2 + 2 ];
+    this.jmp( SLOC );
 };
 
 //     TESTF is used to test a flag field for the presence  of
@@ -4308,9 +4314,7 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // 1.  See also TESTFI.
 sil.TESTF = function ( $DESCR, FLAG, FLOC, SLOC ) {
     // test flag
-    const DESCR = this.d( $DESCR );
-
-    if ( DESCR.flags & FLAG ) {
+    if ( this.mem[ $DESCR + 1 ] & FLAG ) {
         this.jmp( SLOC );
     } else {
         this.jmp( FLOC );
@@ -4559,10 +4563,9 @@ sil.VCMPIC = function ( $DESCR1, N, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 1.  See also AEQL and VEQLC.
 sil.VEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
     // value fields equal test
-    const DESCR1 = this.d( $DESCR1 ),
-          DESCR2 = this.d( $DESCR2 );
+    const mem = this.mem;
 
-    if ( DESCR1.value === DESCR2.value ) {
+    if ( mem[ $DESCR1 + 2 ] === mem[ $DESCR2 + 2 ] ) {
         this.jmp( EQLOC );
     } else {
         this.jmp( NELOC );
@@ -4582,10 +4585,8 @@ sil.VEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 2.  See also AEQLC and VEQL.
 sil.VEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
     // value field equal to constant test
-    const DESCR = this.d( $DESCR );
-
-    assert( N >= 0 );
-    this.jmp( DESCR.value === N ? EQLOC : NELOC );
+    const loc = this.mem[ $DESCR + 2 ] === N ? EQLOC : NELOC;
+    this.jmp( loc );
 };
 
 //     ZERBLK is used to zero a block of I+1 descriptors.
