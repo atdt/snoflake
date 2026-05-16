@@ -9,7 +9,8 @@ const textDecoder = new TextDecoder( 'utf-8' );
 //     rewind?()
 //     drain?()
 //
-export function bufferedReader( bytes ) {
+export function bufferedReader( content ) {
+    const bytes = typeof content === 'string' ? new TextEncoder().encode( content ) : content;
     let pos = 0;
     return {
         readLine() {

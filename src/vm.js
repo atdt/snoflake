@@ -247,13 +247,13 @@ export class VM {
         const segments = [];
         if ( this.options.file ) {
             segments.push( {
-                reader: bufferedReader( loadBytes( this, this.options.file ) ),
+                reader: bufferedReader( this.loader.load( this.options.file ) ),
                 padReads: true,
             } );
         }
         if ( this.options.input && unitNum === UNITI ) {
             segments.push( {
-                reader: bufferedReader( loadBytes( this, this.options.input ) ),
+                reader: bufferedReader( this.loader.load( this.options.input ) ),
                 padReads: false,
             } );
         }
@@ -266,13 +266,4 @@ export class VM {
         }
         return this.units[ unitNum ] = new File( segments );
     }
-}
-
-// Coerce loader output to a Uint8Array view. Node returns Buffer, which is
-// already a Uint8Array. Browser and test loaders may return a string.
-function loadBytes( vm, filePath ) {
-    const content = vm.loader.load( filePath );
-    if ( typeof content === 'string' ) return new TextEncoder().encode( content );
-    if ( content instanceof Uint8Array ) return content;
-    throw new TypeError( 'Loader must return a string or Uint8Array' );
 }
