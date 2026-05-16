@@ -1043,7 +1043,7 @@ sil.ENDEX = function ( $DESCR ) {
     const I = this.d( $DESCR ).addr;
     // Normalize exit code and terminate main loop
     this.exitCode = I === 0 ? 0 : 1;
-    this.instructionPointer = -1;
+    this.jmp( -1 );
     return I === 0;
 };
 
@@ -3048,7 +3048,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     this.CSTACK += D;
 
     this.callbacks.push( {
-        dest: $DESCR !== undefined ? $DESCR : undefined,
+        dest: $DESCR,
         locs: $LOCs,
         fallthroughLoc,
     } );
@@ -3075,7 +3075,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         mem[ dst + 1 ] = mem[ $DESCRs + 1 ];
         mem[ dst + 2 ] = mem[ $DESCRs + 2 ];
     }
-    this.instructionPointer = $PROC;
+    this.jmp( $PROC );
 };
 
 //     RCOMP is used to compare two real numbers.  If R1 > R2,
@@ -3373,13 +3373,10 @@ sil.RRTURN = function ( $DESCR, N ) {
     this.CSTACK = A;
     this.OSTACK = this.i32[ A + D + 0 ];
 
-    let loc;
-    if ( typeof N === 'number' ) {
-        loc = Array.isArray( frame.locs )
+    const loc = Array.isArray( frame.locs )
             ? frame.locs[ N - 1 ]
             : ( N === 1 ? frame.locs : undefined );
-    }
-    this.instructionPointer = typeof loc === 'number' ? loc : frame.fallthroughLoc;
+    this.jmp( typeof loc === 'number' ? loc : frame.fallthroughLoc );
 };
 
 //     RSETFI is used to reset (delete) a flag from a descrip-
