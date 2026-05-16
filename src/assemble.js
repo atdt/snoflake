@@ -8,41 +8,27 @@ import { constants, defaults, hostStrings, streamActions, syntaxTables } from '.
 
 const SPECIFIER_SIZE = 2 * D;
 
-// Macros that emit data into the runtime image. They reserve their cells
-// in pass 1 and write resolved operands into them in pass 2.
+// These macros write data into the image, so pass 1 has to reserve space
+// for them before pass 2 can fill in their operands.
 const STORAGE_MACROS = new Set( [ 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ] );
 
-// Markers that occupy neither memory nor an instruction slot. A label on a
-// marker resolves to whatever the next real statement reserves.
+// These mark a location in the listing, but do not generate code or data.
 const MARKER_MACROS = new Set( [ 'LHERE', 'PROC', 'TITLE' ] );
 
-// Assembly is a pure function from a SIL listing to a runtime image. It
-// runs on a throwaway scratch VM whose mem/symbols become the snapshot
-// shipped to the runtime; the caller never sees that scratch state.
+// Build the image in a temporary VM. The VM gives us the same memory and
+// symbol helpers the runtime uses, but only its final memory and symbol table
+// are kept.
 //
-// Pass 1 walks the listing, reserves storage, and binds labels. Operand
-// values aren't computed yet -- forward labels haven't resolved -- so
-// reserveStorage looks only at sizes, not contents.
-//
-// Pass 2 replays storage macros so their now-resolvable operands land in
-// the cells reserved by pass 1. Instruction operands resolve only once,
-// when they're emitted into the image.
+// Pass 1 records labels and reserves data space. Pass 2 writes the data now
+// that forward references have labels to point at.
 export function assemble( program ) {
     const vm = new VM();
 
-    // The SIL listing references machine constants (DESCR, TTL, UNITI,
-    // ...) and the program-overridable defaults (STACK, OBSIZ, STSIZE)
-    // as named operands. Seed both into the scratch symbol table so
-    // resolveOperand can resolve them; loadImage carries the resolved
-    // values through to the runtime VM in image.symbols, where the SIL
-    // program's own assignments to STACK/OBSIZ/STSIZE will have won.
+    // Constants and defaults appear in SIL as names, just like labels.
     Object.assign( vm.symbols, constants, defaults );
 
-    // MDATA host strings (ALPHA, AMPST, COLSTR, QTSTR) live at the start
-    // of memory in the assembled image. Allocating them here -- rather
-    // than as part of vm.reset -- keeps a fresh runtime VM byte-empty:
-    // tests that drive macros directly against an empty memory layout
-    // don't pay for strings they don't reference.
+    // MDATA strings belong in the assembled image. Keeping them out of reset()
+    // lets low-level macro tests start with empty memory.
     for ( const name in hostStrings ) {
         vm.define( name, hostStrings[ name ] );
     }
@@ -50,6 +36,7 @@ export function assemble( program ) {
     const instructions = [],
           dataStart = vm.memPtr;
 
+    // Pass 1: bind labels and reserve storage.
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ];
         let location;
@@ -68,22 +55,20 @@ export function assemble( program ) {
 
     const dataEnd = vm.memPtr;
     vm.memPtr = dataStart;
-    try {
-        for ( const stmt of program ) {
-            if ( STORAGE_MACROS.has( stmt.macro ) ) {
-                sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
-            }
+
+    // Pass 2: write the storage macros into the reserved data segment.
+    for ( const stmt of program ) {
+        if ( STORAGE_MACROS.has( stmt.macro ) ) {
+            sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
         }
-        if ( vm.memPtr !== dataEnd ) {
-            throw new Error( 'Data replay changed assembled storage size' );
-        }
-    } finally {
-        vm.memPtr = dataEnd;
+    }
+    if ( vm.memPtr !== dataEnd ) {
+        throw new Error( 'Data replay changed assembled storage size' );
     }
 
     return {
         symbols: { ...vm.symbols },
-        memory: vm.mem.slice( 0, vm.memPtr ),
+        memory: vm.mem.slice( 0, dataEnd ),
         instructions: instructions.map( stmt => [
             stmt.label,
             stmt.macro,
@@ -92,10 +77,8 @@ export function assemble( program ) {
     };
 }
 
-// LHERE/PROC/TITLE all resolve to "wherever the next real statement is".
-// Skip past consecutive markers and dispatch on what comes next: storage
-// or EQU means a memory cell; an instruction (or end of program) means
-// the next instruction slot.
+// A marker label belongs to the next statement that actually occupies
+// memory or an instruction slot. Consecutive markers all name that same spot.
 function markerLocation( program, i, memPtr, instructionCount ) {
     let next = i + 1;
     while ( next < program.length && MARKER_MACROS.has( program[ next ].macro ) ) {
@@ -108,9 +91,8 @@ function markerLocation( program, i, memPtr, instructionCount ) {
     return instructionCount;
 }
 
-// Reserve enough memory for the data this storage macro will emit, but
-// don't fill it -- forward labels aren't bound yet. Returns the cell
-// address the label should resolve to.
+// Reserve the same amount of memory the storage macro will write in pass 2.
+// The current pointer is the address for the macro's label.
 function reserveStorage( vm, stmt ) {
     const ptr = vm.memPtr;
     switch ( stmt.macro ) {
@@ -136,8 +118,8 @@ function reserveStorage( vm, stmt ) {
     return ptr;
 }
 
-// SIL operands are parsed as data trees. Assembly is where symbols can
-// finally resolve, because forward labels have been bound by then.
+// The parser leaves expressions as small trees. Resolve them here, after
+// pass 1 has bound the labels.
 function argsFor( vm, stmt ) {
     return stmt.operands.map( operand => resolveOperand( vm, operand ) );
 }
@@ -148,13 +130,13 @@ function resolveOperand( vm, operand ) {
     }
 
     if ( operand && typeof operand === 'object' ) {
-        if ( Object.hasOwn( operand, 'symbol' ) ) {
+        if ( 'symbol' in operand ) {
             return resolveSymbol( vm, operand.symbol );
         }
-        if ( Object.hasOwn( operand, 'negate' ) ) {
+        if ( 'negate' in operand ) {
             return -resolveOperand( vm, operand.negate );
         }
-        if ( Object.hasOwn( operand, 'operator' ) ) {
+        if ( 'operator' in operand ) {
             const left = resolveOperand( vm, operand.operands[ 0 ] ),
                   right = resolveOperand( vm, operand.operands[ 1 ] );
             switch ( operand.operator ) {
@@ -170,12 +152,10 @@ function resolveOperand( vm, operand ) {
     return operand;
 }
 
-// Syntax-table names and stream-action keywords are not symbols -- they're
-// reserved tags that STREAM/CLERTB/PLUGTB consume by name. Pass them
-// through verbatim so the symbol table doesn't have to fake an entry for
-// each one.
+// Syntax table names and stream actions are command names, not labels. Leave
+// those alone; resolve every other name through the symbol table.
 function resolveSymbol( vm, name ) {
-    if ( Object.hasOwn( syntaxTables, name ) || streamActions.has( name ) ) {
+    if ( name in syntaxTables || streamActions.has( name ) ) {
         return name;
     }
     return vm.$( name );
