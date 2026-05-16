@@ -74,6 +74,20 @@ npm run demo
 Then open the URL it prints. The demo source under [`demo/`](demo/) is the
 shortest path to embedding Snoflake in a web page.
 
+About
+-----
+The goal of the project is to preserve, make accessible, and pay homage to a
+chapter of computing history; to be pleasurable and instructive to read and
+use; and to provide a hackable basis for experimentation. It is not the
+runtime you should use for serious work, but it is a runtime you _could_ use
+for _silly_ work. :o)
+
+The first 90% of this project was done by hand, mostly in 2012 with brief
+bursts of activity in the decade that followed, and got as far as having
+SNOBOL4 crash early during initialization. The next 90% consisted of debugging
+and clean-ups, completed with the assistance of agentic coding tools in a
+flurry of activity in April-May 2026.
+
 Dedication
 ----------
 This project is dedicated to my dad, Meir Livneh.
