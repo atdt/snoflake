@@ -11,9 +11,7 @@ const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 1024 * 1024;
 const MAX_WORDS = 256 * 1024 * 1024;
 
-// Scratch one-word buffer aliased as three typed views. Setters use it to
-// reject values that would be truncated. isInt32/isFloat32 use it for the
-// same check before storing.
+// Scratch one-word buffer viewed as uint, int, and float for range checks.
 const probeBuf = new ArrayBuffer( 4 ),
       probeF32 = new Float32Array( probeBuf ),
       probeI32 = new Int32Array( probeBuf ),
@@ -28,18 +26,15 @@ export function isInt32( value ) {
     return probeI32[ 0 ] === value;
 }
 
-// Test whether a value survives a Float32 round trip. Use the same tolerance
-// as the setter so callers and setters agree on what counts as overflow.
+// Check whether a value survives a Float32 round trip.
 export function isFloat32( value ) {
     probeF32[ 0 ] = value;
     return nearlyEqual( probeF32[ 0 ], value );
 }
 
 const DEFAULT_OPTIONS = {
-    // Fold SNOBOL source names and labels to uppercase during compilation.
     caseFold: true,
-    // Snoflake suppresses the SNOBOL4 startup banner, success/termination
-    // messages, and statistics summary by default. Toggle via -b / -s.
+    // Suppress the SNOBOL4 startup banner, success/termination messages, and statistics summary.
     banner: false,
     statistics: false,
 };
@@ -57,8 +52,6 @@ function wordsToBytes( words ) {
 export class VM {
     constructor( options ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
-        // I/O adapters default to Node. Hosts can pass their own writer or
-        // loader to capture output or provide preloaded source.
         this.stdout = this.options.stdout || nodeStdout;
         this.loader = this.options.loader || nodeLoader;
         this.reset();
@@ -72,10 +65,71 @@ export class VM {
         this.callbacks = [];
         this.units = {};
         this.INTSPC_BUFFER = null;
-        // Keep stack pointers as VM registers, not memory-backed descriptors,
-        // to avoid accidental overwrites by program macros.
+        // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
         this.OSTACK = 0;
+    }
+
+    run( image ) {
+        this.reset();
+        this.loadImage( image );
+
+        this.instructionPointer = 0;
+        this.applyHostSwitches();
+        this.interpret( this.compileInstructions( image.instructions ) );
+
+        return this.instructionPointer >= 0;
+    }
+
+    // Load the image's symbols and assembled memory snapshot.
+    loadImage( image ) {
+        if ( !image || !ArrayBuffer.isView( image.memory ) ) {
+            throw new Error( 'Malformed SNOBOL image' );
+        }
+
+        this.symbols = { ...image.symbols };
+        if ( image.memory.length > this.mem.length ) {
+            this.grow( image.memory.length );
+        }
+        this.mem.set( image.memory, 0 );
+        this.memPtr = image.memory.length;
+        // Minimal test images may omit syntax-table symbols.
+        bindSyntaxTables( ( name ) => this.symbols[ name ] ?? 0 );
+    }
+
+    applyHostSwitches() {
+        // LISTCL, BANRCL, and STATCL are descriptors in the loaded image.
+        // After loading, overwrite them from the VM options for this run.
+        for ( const symbol in HOST_SWITCHES ) {
+            if ( Object.hasOwn( this.symbols, symbol ) ) {
+                const option = HOST_SWITCHES[ symbol ],
+                      enabled = this.options[ option ] ? 1 : 0;
+                this.d( symbol ).addr = enabled;
+            }
+        }
+    }
+
+    // Compile each [label, macro, args] image entry into a bound call.
+    compileInstructions( instructions ) {
+        return instructions.map( stmt => {
+            const [ , macro, args ] = stmt,
+                  impl = sil[ macro ];
+
+            return impl.bind( this, ...args );
+        } );
+    }
+
+    interpret( instructions ) {
+        while ( this.instructionPointer >= 0 && this.instructionPointer < instructions.length ) {
+            instructions[ this.instructionPointer++ ]();
+        }
+    }
+
+    jmp( loc ) {
+        // Undefined or null branch operands are fall-through.
+        if ( typeof loc === 'number' ) {
+            this.instructionPointer = loc;
+        }
     }
 
     // SIL storage is word-addressed. These length-tracking views share one
@@ -94,7 +148,7 @@ export class VM {
         this.refreshMemoryViews();
     }
 
-    // Grow capacity only. this.memPtr remains the logical end of assembled memory.
+    // Grow memory capacity without changing memPtr.
     grow( minWords ) {
         let words = this.mem.length * 2;
         while ( words < minWords ) {
@@ -103,8 +157,7 @@ export class VM {
         this.buffer.resize( wordsToBytes( words ) );
     }
 
-    // Allocate zero-filled words from the logical frontier, not from typed-array
-    // length. mem.length is capacity and may be much larger than initialized data.
+    // Allocate zero-filled words from memPtr.
     alloc( size, value = 0 ) {
         if ( this.memPtr + size > this.mem.length ) {
             this.grow( this.memPtr + size );
@@ -213,83 +266,12 @@ export class VM {
         }
         return this.units[ unitNum ] = new File( segments );
     }
-
-    jmp( loc ) {
-        // Missing branch operands are undefined, or null from an empty list
-        // slot in the grammar. SIL treats them as fall-through.
-        if ( typeof loc === 'number' ) {
-            this.instructionPointer = loc;
-        }
-    }
-
-    // Load symbols and memory from an image. image.memory is already the
-    // assembled snapshot, including host strings and SIL data declarations.
-    loadImage( image ) {
-        if ( !image || !ArrayBuffer.isView( image.memory ) ) {
-            throw new Error( 'Malformed SNOBOL image' );
-        }
-
-        this.symbols = { ...image.symbols };
-        if ( image.memory.length > this.mem.length ) {
-            this.grow( image.memory.length );
-        }
-        this.mem.set( image.memory, 0 );
-        this.memPtr = image.memory.length;
-        // Symbols are now in place, so syntax-table PUT operands can resolve
-        // to addresses STREAM reads directly. Minimal test images may omit
-        // some symbols. Real images carry every PUT the static tables use.
-        bindSyntaxTables( ( name ) => this.symbols[ name ] ?? 0 );
-    }
-
-    run( image ) {
-        this.reset();
-        this.loadImage( image );
-
-        this.instructionPointer = 0;
-        this.applyHostSwitches();
-        this.interpret( this.compileInstructions( image.instructions ) );
-
-        return this.instructionPointer >= 0;
-    }
-
-    applyHostSwitches() {
-        // LISTCL, BANRCL, and STATCL are descriptors in the loaded image.
-        // After loading, overwrite them from the VM options for this run.
-        for ( const symbol in HOST_SWITCHES ) {
-            if ( Object.hasOwn( this.symbols, symbol ) ) {
-                const option = HOST_SWITCHES[ symbol ],
-                      enabled = this.options[ option ] ? 1 : 0;
-                this.d( symbol ).addr = enabled;
-            }
-        }
-    }
-
-    // Compile each [label, macro, args] image entry into a bound call. This
-    // keeps macro lookup and argument binding out of the dispatch loop.
-    compileInstructions( instructions ) {
-        return instructions.map( stmt => {
-            const impl = sil[ stmt[ 1 ] ],
-                  args = stmt[ 2 ];
-
-            return impl.bind( this, ...args );
-        } );
-    }
-
-    // Fall-through advances before dispatch. Branching macros overwrite
-    // instructionPointer, including explicit branches back to the same instruction.
-    interpret( instructions ) {
-        while ( this.instructionPointer >= 0 && this.instructionPointer < instructions.length ) {
-            const loc = this.instructionPointer;
-            this.instructionPointer = loc + 1;
-            instructions[ loc ]();
-        }
-    }
 }
 
 // Coerce loader output to a Uint8Array view. Node returns Buffer, which is
 // already a Uint8Array. Browser and test loaders may return a string.
-function loadBytes( vm, path ) {
-    const content = vm.loader.load( path );
+function loadBytes( vm, filePath ) {
+    const content = vm.loader.load( filePath );
     if ( typeof content === 'string' ) return new TextEncoder().encode( content );
     if ( content instanceof Uint8Array ) return content;
     throw new TypeError( 'Loader must return a string or Uint8Array' );

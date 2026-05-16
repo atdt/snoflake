@@ -1757,7 +1757,6 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
 // is equivalent to
 //      LOC  OP
 sil.LHERE = function () {
-    return this.instructionPointer + 1;
     // define location here
 };
 
@@ -4101,9 +4100,10 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         if ( put ) lastPut = put;
 
-        if ( action === Action.CONTIN ) continue;
-
         switch ( action ) {
+        case Action.CONTIN:
+            continue;
+
         case Action.GOTO:
             table = isByte ? next[ ch ] : fallback.next;
             puts = table.puts;
