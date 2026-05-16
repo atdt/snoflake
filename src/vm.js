@@ -1,6 +1,6 @@
 import { Descriptor, Specifier } from './datatypes.js';
 import { File, bufferedReader, stdinReader } from './file.js';
-import { nodeStdout, nodeStderr, nodeLoader } from './io.js';
+import { nodeStdout, nodeLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
 import { bindSyntaxTables, constants } from './syntax.js';
@@ -57,7 +57,6 @@ export class VM {
         // can inject its own writers and loader to redirect program output
         // or supply pre-loaded sources. See ./io.js.
         this.stdout = this.options.stdout || nodeStdout;
-        this.stderr = this.options.stderr || nodeStderr;
         this.loader = this.options.loader || nodeLoader;
         this.exitCode = 0;
         this.reset();
