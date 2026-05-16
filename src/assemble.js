@@ -1,5 +1,3 @@
-"use strict";
-
 import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';

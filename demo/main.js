@@ -1,5 +1,3 @@
-"use strict";
-
 import { runSnoflake } from './run-snoflake.js';
 
 const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),

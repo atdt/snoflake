@@ -1,5 +1,3 @@
-"use strict";
-
 import { str } from './string.js';
 
 const textDecoder = new TextDecoder( 'utf-8' );

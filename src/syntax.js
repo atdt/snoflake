@@ -1,5 +1,3 @@
-"use strict";
-
 import { D } from './datatypes.js';
 
 // &ALPHABET holds every byte value of the host character set, matching

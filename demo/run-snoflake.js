@@ -1,5 +1,3 @@
-"use strict";
-
 import { VM, image } from '../src/snobol.js';
 
 function captureWriter() {

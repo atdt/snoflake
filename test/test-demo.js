@@ -1,5 +1,3 @@
-"use strict";
-
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { runSnoflake } from '../demo/run-snoflake.js';

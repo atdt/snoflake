@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-"use strict";
-
 import { parseArgs } from 'node:util';
 import process from 'node:process';
 import { VM, image } from '../src/snobol.js';

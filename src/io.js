@@ -1,5 +1,3 @@
-"use strict";
-
 // I/O adapters that decouple the runtime from Node-specific globals so the
 // VM can be embedded in non-Node hosts (browsers, web workers, test
 // harnesses that want to capture output in-process).

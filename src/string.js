@@ -1,5 +1,3 @@
-"use strict";
-
 function pad( str, width, align, padChar = ' ' ) {
     if ( str.length >= width ) return str;
     return align === 'left'

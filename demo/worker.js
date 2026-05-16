@@ -1,5 +1,3 @@
-"use strict";
-
 import { VM, image, sil } from '../src/snobol.js';
 
 const sourcePath = 'demo.sno',

@@ -1,5 +1,3 @@
-"use strict";
-
 import { str } from './string.js';
 
 // SIL descriptor word width. Specifiers are two descriptors wide. This is

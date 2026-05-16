@@ -1,5 +1,3 @@
-"use strict";
-
 import { Descriptor, Specifier } from './datatypes.js';
 import { File, bufferedReader, stdinReader } from './file.js';
 import { nodeStdout, nodeStderr, nodeLoader } from './io.js';

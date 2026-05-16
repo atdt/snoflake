@@ -1,5 +1,3 @@
-"use strict";
-
 import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';

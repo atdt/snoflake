@@ -1,5 +1,3 @@
-"use strict";
-
 import { str } from './string.js';
 
 // Minimal FORTRAN IV `undigested' format processor used by OUTPUT and
