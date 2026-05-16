@@ -14,7 +14,7 @@ const ROOT = path.join( __dirname, '..' ),
 // Recognized error markers. Used both for the negative check in
 // exact/substring modes and the positive check in error mode. Adding a
 // marker is a deliberate runner change, not something tests can introduce
-// ad hoc; see test/programs/README.md.
+// ad hoc. See test/programs/README.md.
 const ERROR_MARKERS = [
       'ERROR IN SNOBOL4 SYSTEM',
       'Compilation error',

@@ -6,22 +6,30 @@ import { constants, defaults, hostStrings, streamActions, syntaxTables } from '.
 
 const SPECIFIER_SIZE = 2 * D;
 
-// These macros write data into the image, so pass 1 has to reserve space
-// for them before pass 2 can fill in their operands.
+// These macros write data into the image. Reserve their space before
+// resolving and writing their operands.
 const STORAGE_MACROS = new Set( [ 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ] );
 
 // These mark a location in the listing, but do not generate code or data.
 const MARKER_MACROS = new Set( [ 'LHERE', 'PROC', 'TITLE' ] );
 
-// Build the image in a temporary VM. The VM gives us the same memory and
-// symbol helpers the runtime uses, but only its final memory and symbol table
-// are kept.
-//
-// Pass 1 records labels and reserves data space. Pass 2 writes the data now
-// that forward references have labels to point at.
 export function assemble( program ) {
     const vm = new VM();
 
+    prepareImageVm( vm );
+
+    // Walk the listing twice: first to bind labels and reserve data, then to
+    // write data now that operands can resolve.
+    const dataStart = vm.memPtr,
+          instructions = bindLabelsAndReserveStorage( vm, program ),
+          dataEnd = vm.memPtr;
+
+    writeReservedStorage( vm, program, dataStart, dataEnd );
+
+    return imageFrom( vm, instructions, dataEnd );
+}
+
+function prepareImageVm( vm ) {
     // Constants and defaults appear in SIL as names, just like labels.
     Object.assign( vm.symbols, constants, defaults );
 
@@ -30,11 +38,13 @@ export function assemble( program ) {
     for ( const name in hostStrings ) {
         vm.define( name, hostStrings[ name ] );
     }
+}
 
-    const instructions = [],
-          dataStart = vm.memPtr;
+// Decide where every label points. Storage labels point into memory.
+// Executable labels point into the instruction array.
+function bindLabelsAndReserveStorage( vm, program ) {
+    const instructions = [];
 
-    // Pass 1: bind labels and reserve storage.
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ];
         let location;
@@ -51,10 +61,13 @@ export function assemble( program ) {
         if ( stmt.label ) vm.define( stmt.label, location );
     }
 
-    const dataEnd = vm.memPtr;
-    vm.memPtr = dataStart;
+    return instructions;
+}
 
-    // Pass 2: write the storage macros into the reserved data segment.
+// Rewind to the data segment and let storage macros write into the cells
+// reserved by bindLabelsAndReserveStorage().
+function writeReservedStorage( vm, program, dataStart, dataEnd ) {
+    vm.memPtr = dataStart;
     for ( const stmt of program ) {
         if ( STORAGE_MACROS.has( stmt.macro ) ) {
             sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
@@ -63,7 +76,10 @@ export function assemble( program ) {
     if ( vm.memPtr !== dataEnd ) {
         throw new Error( 'Data replay changed assembled storage size' );
     }
+}
 
+// Resolve instruction operands at the end so forward labels are available.
+function imageFrom( vm, instructions, dataEnd ) {
     return {
         symbols: { ...vm.symbols },
         memory: vm.mem.slice( 0, dataEnd ),
@@ -89,7 +105,7 @@ function markerLocation( program, i, memPtr, instructionCount ) {
     return instructionCount;
 }
 
-// Reserve the same amount of memory the storage macro will write in pass 2.
+// Reserve the same amount of memory the storage macro will later write.
 // The current pointer is the address for the macro's label.
 function reserveStorage( vm, stmt ) {
     const ptr = vm.memPtr;
@@ -116,8 +132,8 @@ function reserveStorage( vm, stmt ) {
     return ptr;
 }
 
-// The parser leaves expressions as small trees. Resolve them here, after
-// pass 1 has bound the labels.
+// The parser leaves expressions as small trees. Resolve them after labels
+// have been bound.
 function argsFor( vm, stmt ) {
     return stmt.operands.map( operand => resolveOperand( vm, operand ) );
 }
@@ -151,7 +167,7 @@ function resolveOperand( vm, operand ) {
 }
 
 // Syntax table names and stream actions are command names, not labels. Leave
-// those alone; resolve every other name through the symbol table.
+// those alone. Resolve every other name through the symbol table.
 function resolveSymbol( vm, name ) {
     if ( name in syntaxTables || streamActions.has( name ) ) {
         return name;

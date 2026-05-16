@@ -1,30 +1,21 @@
-// I/O adapters that decouple the runtime from Node-specific globals so the
-// VM can be embedded in non-Node hosts (browsers, web workers, test
-// harnesses that want to capture output in-process).
+// Small Node adapters for the VM defaults. Browser and test hosts pass their
+// own stdout writer or loader through VM options.
 //
-// Writer interface — used by SIL macros and File.write to emit program
-// output and runtime diagnostics:
+// Writer:
 //
 //     writer.write(line)
 //
-// Each call delivers one logical line, without a trailing newline. The
-// adapter is responsible for line termination appropriate to its sink. The
-// Node adapter delegates to console.log / console.error, which append '\n';
-// a browser adapter might do `pre.append(line + '\n')`.
+// Each call receives one logical line without a trailing newline. The adapter
+// decides how to terminate it.
 //
-// Loader interface — used by File to read source and input data:
+// Loader:
 //
 //     loader.load(path) -> Uint8Array | Buffer
 //
-// Synchronous, because File.readRecord is called from inside the dispatch
-// loop. Browser adapters typically preload sources into a map keyed by path.
+// Loading is synchronous because STREAD runs inside the VM dispatch loop.
 
 export const nodeStdout = {
     write( line ) { console.log( line ); }
-};
-
-export const nodeStderr = {
-    write( line ) { console.error( line ); }
 };
 
 export const nodeLoader = {

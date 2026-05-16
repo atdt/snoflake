@@ -16,10 +16,9 @@ export const hostStrings = {
     QTSTR   : "'",
 };
 
-// Machine parameters: PARMS-style names whose values are fixed by the
-// host environment and never reassigned by the SIL program. Macros may
-// import these directly; the assembler seeds them into its scratch
-// symbol table so SIL operands like `TTL+STTL` resolve.
+// Machine parameters: PARMS-style names whose values are fixed by the host.
+// Macros may import these directly. The assembler also seeds them into its
+// scratch symbol table so SIL operands like `TTL+STTL` resolve.
 export const constants = {
     ALPHSZ  : ALPHA.length,
     CPA     : 1,
@@ -45,10 +44,9 @@ export const constants = {
     MDATA   : -1,
 };
 
-// Defaults for symbols the SIL program assigns its own value to (the
-// stack base address, the variable bin count, the stack size). The
-// assembled image carries the program's chosen values; these are only
-// observable in unit tests that drive macros without running an image.
+// Defaults for symbols the SIL program assigns itself: stack base, variable
+// bin count, and stack size. The assembled image carries the program's chosen
+// values. These defaults are only visible in tests that drive macros directly.
 export const defaults = {
     STACK   : 2002 * D,
     OBSIZ   : 256,
@@ -134,14 +132,14 @@ export function match( characterClass, char ) {
         : characterClass === char;
 }
 
-export const Action = Object.freeze( {
+export const Action = {
     CONTIN: 0,
     STOPSH: 1,
     STOP:   2,
     ERROR:  3,
     RUNOUT: 4,
     GOTO:   5,
-} );
+};
 
 // Tables whose scanned tokens get uppercased in place when caseFold is on
 // (they consume identifiers: labels and variable names).
@@ -163,7 +161,7 @@ function emptyTable( foldable ) {
     };
 }
 
-// CLERTB rewrites byte rows; wider host code units remain a miss.
+// CLERTB rewrites byte rows. Wider host code units remain a miss.
 export function clearTable( table, key ) {
     table.puts.fill( 0 );
     table.actions.fill( Action[ key ] );
@@ -411,5 +409,5 @@ function bindTable( table, rows, resolveSymbol ) {
 
 // Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
 // name. They appear in operand position in the SIL listing but they are not
-// symbols -- they're tags interpreted by the macros themselves.
+// symbols. The macros interpret them as tags.
 export const streamActions = new Set( [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ] );

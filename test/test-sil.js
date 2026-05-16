@@ -1337,7 +1337,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         this.vm = new VM();
     } );
 
-    // CLERTB and PLUGTB mutate shared syntax tables in place; re-bind after
+    // CLERTB and PLUGTB mutate shared syntax tables in place. Re-bind after
     // each case so later tests see the static definitions.
     afterEach( function () {
         bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
@@ -1663,7 +1663,7 @@ describe( 'Input and Output Macros', function () {
         spec.update( ptr, 0, 0, 0, 6 );
 
         try {
-            // First read drains the (card-padded) source segment; SPEC.length
+            // First read drains the card-padded source segment. SPEC.length
             // stays at the requested width because card reads are fixed-column.
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );
             assert.equal( spec.length, 6 );
@@ -1671,7 +1671,7 @@ describe( 'Input and Output Macros', function () {
                 return String.fromCharCode( c );
             } ).join( '' ), 'SOURCE' );
 
-            // Second read falls through to the input segment; SPEC.length is
+            // Second read falls through to the input segment. SPEC.length is
             // updated to the actual record length so the caller sees DATA, not
             // a padded six-char field.
             sil.STREAD.call( this.vm, spec, unit, eof, error, success );

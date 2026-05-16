@@ -155,7 +155,11 @@ describe( 'SNOBOL Program Execution', function () {
 
     it( 'returns EOF when no input streams are configured', function () {
         const vm = new VM();
-        assert.equal( vm.openUnit( 5 ).read( 80 ), '' );
+        assert.deepEqual( vm.openUnit( 5 ).readRecord( 80 ), {
+            eof: true,
+            text: '',
+            padded: false,
+        } );
     } );
 
     it( 'opens interactive UNITI with a stdin segment after source and runtime input', function () {
@@ -462,7 +466,7 @@ describe( 'Program Execution', function () {
     } );
 
     it( 'loads the image memory snapshot directly into VM memory', function () {
-        // The image carries memory as a byte snapshot; vm.run copies it,
+        // The image carries memory as a byte snapshot. vm.run copies it.
         // it does not re-run the assembler. Stash a single descriptor
         // (31, 7, 9) at offset 0 and bind 'DS' to it.
         const image = {

@@ -6,8 +6,8 @@
 //
 // CSNOBOL4 is a useful reference implementation for sanity-checking that a
 // fixture's @expect block actually matches an independent SNOBOL4. A
-// disagreement is not proof that Snoflake (or the fixture) is wrong — see
-// test/programs/README.md — but it flags fixtures worth a second look.
+// disagreement is not proof that Snoflake or the fixture is wrong. See
+// test/programs/README.md. This only flags fixtures worth a second look.
 //
 // Usage:
 //   node tools/check-csnobol4.js                # check every fixture
@@ -19,7 +19,7 @@
 // Limitations:
 // - @options runtime flags are translated to CSNOBOL4 invocation flags
 //   when an equivalent exists (see csnobol4FlagsForOptions). A warning
-//   is printed for options whose semantics CSNOBOL4 cannot honor.
+//   is printed for options CSNOBOL4 cannot honor.
 // - The data-section banner extraction used by the mocha runner does not
 //   apply: CSNOBOL4 with -b prints program output verbatim (no banner, no
 //   "NORMAL TERMINATION" epilogue).
@@ -52,11 +52,11 @@ const ERROR_MARKERS = [
 const SEMANTIC_OPTION_KEYS = [ 'debug', 'watch' ];
 
 // Translate fixture @options into CSNOBOL4 command-line flags. Only options
-// with a clean CSNOBOL4 equivalent appear here; everything else falls into
+// with a clean CSNOBOL4 equivalent appear here. Everything else falls into
 // SEMANTIC_OPTION_KEYS and produces a WARN.
 function csnobol4FlagsForOptions( opts ) {
     const flags = [];
-    // -f toggles identifier folding; CSNOBOL4 defaults to folding ON, matching
+    // -f toggles identifier folding. CSNOBOL4 defaults to folding ON, matching
     // Snoflake, so caseFold:false maps to a single -f to turn it off.
     if ( opts.caseFold === false ) {
         flags.push( '-f' );
@@ -257,7 +257,7 @@ function checkOne( filePath, opts ) {
         // For `substring` we do not know what fragment of CSNOBOL4 stdout the
         // author meant to assert on, and `error` fixtures do not record a
         // full reference output. CSNOBOL4 errors (non-zero exit) are also
-        // never written back — that would silently bake in a regression.
+        // never written back. That would silently bake in a regression.
         if ( header.match !== 'exact' ) {
             return {
                 ok: false, title: header.title, warnings: warnings,

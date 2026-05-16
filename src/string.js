@@ -1,13 +1,11 @@
-function pad( str, width, align, padChar = ' ' ) {
-    if ( str.length >= width ) return str;
-    return align === 'left'
-        ? str.padEnd( width, padChar )
-        : str.padStart( width, padChar );
-}
-
 export const str = {
 
-    pad: pad,
+    pad: function ( str, width, align, padChar = ' ' ) {
+        if ( str.length >= width ) return str;
+        return align === 'left'
+            ? str.padEnd( width, padChar )
+            : str.padStart( width, padChar );
+    },
 
     encode: function ( s ) {
         const str = s.toString();

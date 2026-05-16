@@ -11,10 +11,9 @@ const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 1024 * 1024;
 const MAX_WORDS = 256 * 1024 * 1024;
 
-// Scratch one-word buffer aliased as three typed views, used both by the
-// typed setters (to reject values that don't survive the truncation) and by
-// the isInt32/isFloat32 predicates exposed for callers that want to check
-// before storing.
+// Scratch one-word buffer aliased as three typed views. Setters use it to
+// reject values that would be truncated. isInt32/isFloat32 use it for the
+// same check before storing.
 const probeBuf = new ArrayBuffer( 4 ),
       probeF32 = new Float32Array( probeBuf ),
       probeI32 = new Int32Array( probeBuf ),
@@ -29,9 +28,8 @@ export function isInt32( value ) {
     return probeI32[ 0 ] === value;
 }
 
-// Tests whether v survives the round-trip through 32-bit IEEE 754, using the
-// same tolerance as the typed setter so callers and setters agree on what
-// counts as overflow.
+// Test whether a value survives a Float32 round trip. Use the same tolerance
+// as the setter so callers and setters agree on what counts as overflow.
 export function isFloat32( value ) {
     probeF32[ 0 ] = value;
     return nearlyEqual( probeF32[ 0 ], value );
@@ -46,6 +44,12 @@ const DEFAULT_OPTIONS = {
     statistics: false,
 };
 
+const HOST_SWITCHES = {
+    LISTCL: 'listing',
+    BANRCL: 'banner',
+    STATCL: 'statistics',
+};
+
 function wordsToBytes( words ) {
     return words * WORD_SIZE;
 }
@@ -53,16 +57,15 @@ function wordsToBytes( words ) {
 export class VM {
     constructor( options ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
-        // I/O adapters: defaults target Node (console + node:fs); a host
-        // can inject its own writers and loader to redirect program output
-        // or supply pre-loaded sources. See ./io.js.
+        // I/O adapters default to Node. Hosts can pass their own writer or
+        // loader to capture output or provide preloaded source.
         this.stdout = this.options.stdout || nodeStdout;
         this.loader = this.options.loader || nodeLoader;
-        this.exitCode = 0;
         this.reset();
     }
 
     reset() {
+        this.exitCode = 0;
         this.instructionPointer = null;
         this.symbols = {};
         this.resetMemory();
@@ -165,9 +168,11 @@ export class VM {
     $( key ) { return this.resolve( key ); }
 
     specify( s, $SPEC ) {
-        const SPEC = this.s( $SPEC ), encoded = str.encode( s );
+        const text = s.toString(),
+              SPEC = this.s( $SPEC ),
+              encoded = str.encode( text );
         const ptr = this.alloc( encoded.length );
-        SPEC.update( ptr, 0, 0, 0, s.toString().length );
+        SPEC.update( ptr, 0, 0, 0, text.length );
         this.mem.set( encoded, ptr );
         return SPEC.ptr;
     }
@@ -181,14 +186,12 @@ export class VM {
     }
 
     // Resolve a SIL unit number to its backing File, building it on first
-    // access. Snoflake gives each unit a stream of one or more byte
-    // segments: the SIL source program (`--file`, card-padded) followed by
-    // optional runtime input (`--input`, length-preserving) on UNITI.
+    // access. A unit reads source first, then optional runtime input, then
+    // optional interactive stdin.
     openUnit( unitNum ) {
         if ( this.units[ unitNum ] ) return this.units[ unitNum ];
 
         const segments = [];
-        const readStdin = this.options.stdinReader || stdinReader;
         if ( this.options.file ) {
             segments.push( {
                 reader: bufferedReader( loadBytes( this, this.options.file ) ),
@@ -202,6 +205,7 @@ export class VM {
             } );
         }
         if ( this.options.interactive && unitNum === UNITI ) {
+            const readStdin = this.options.stdinReader || stdinReader;
             segments.push( {
                 reader: readStdin(),
                 padReads: false,
@@ -211,16 +215,15 @@ export class VM {
     }
 
     jmp( loc ) {
-        // Omitted optional branch operands arrive as undefined (or null from the
-        // PEG grammar's empty-list-slot rule); SIL specifies fall-through.
+        // Missing branch operands are undefined, or null from an empty list
+        // slot in the grammar. SIL treats them as fall-through.
         if ( typeof loc === 'number' ) {
             this.instructionPointer = loc;
         }
     }
 
-    // Hydrate the VM's symbols and memory from an image. The image's `memory`
-    // is the byte-for-byte assembled snapshot -- host string constants and SIL
-    // data declarations both live in it -- so loading is a copy.
+    // Load symbols and memory from an image. image.memory is already the
+    // assembled snapshot, including host strings and SIL data declarations.
     loadImage( image ) {
         if ( !image || !ArrayBuffer.isView( image.memory ) ) {
             throw new Error( 'Malformed SNOBOL image' );
@@ -232,10 +235,9 @@ export class VM {
         }
         this.mem.set( image.memory, 0 );
         this.memPtr = image.memory.length;
-        // Symbols are now in place, so the SIL syntax tables' PUT operands
-        // can be resolved to addresses STREAM reads directly. Symbols absent
-        // from a minimal image stay 0; a real image carries every PUT the
-        // static tables reference.
+        // Symbols are now in place, so syntax-table PUT operands can resolve
+        // to addresses STREAM reads directly. Minimal test images may omit
+        // some symbols. Real images carry every PUT the static tables use.
         bindSyntaxTables( ( name ) => this.symbols[ name ] ?? 0 );
     }
 
@@ -244,20 +246,26 @@ export class VM {
         this.loadImage( image );
 
         this.instructionPointer = 0;
-        // Host options override a few assembled SIL switches after data
-        // initialization. This keeps the historical SIL constants intact while
-        // giving the JS host control over banner, listing, and statistics output.
-        if ( Object.hasOwn( this.symbols, 'LISTCL' ) ) this.d( 'LISTCL' ).addr = this.options.listing ? 1 : 0;
-        if ( Object.hasOwn( this.symbols, 'BANRCL' ) ) this.d( 'BANRCL' ).addr = this.options.banner ? 1 : 0;
-        if ( Object.hasOwn( this.symbols, 'STATCL' ) ) this.d( 'STATCL' ).addr = this.options.statistics ? 1 : 0;
+        this.applyHostSwitches();
         this.interpret( this.compileInstructions( image.instructions ) );
 
-        return !( this.instructionPointer < 0 );
+        return this.instructionPointer >= 0;
     }
 
-    // Compile each [label, macro, args] image entry into a bound call.
-    // Resolving the macro and binding its operands once per run avoids
-    // per-dispatch lookup and apply() overhead in the interpreter loop.
+    applyHostSwitches() {
+        // LISTCL, BANRCL, and STATCL are descriptors in the loaded image.
+        // After loading, overwrite them from the VM options for this run.
+        for ( const symbol in HOST_SWITCHES ) {
+            if ( Object.hasOwn( this.symbols, symbol ) ) {
+                const option = HOST_SWITCHES[ symbol ],
+                      enabled = this.options[ option ] ? 1 : 0;
+                this.d( symbol ).addr = enabled;
+            }
+        }
+    }
+
+    // Compile each [label, macro, args] image entry into a bound call. This
+    // keeps macro lookup and argument binding out of the dispatch loop.
     compileInstructions( instructions ) {
         return instructions.map( stmt => {
             const impl = sil[ stmt[ 1 ] ],
@@ -278,9 +286,8 @@ export class VM {
     }
 }
 
-// Coerce loader output to a Uint8Array view. The Node loader returns a
-// Buffer (already a Uint8Array); browser/test loaders may return a plain
-// Uint8Array or a string.
+// Coerce loader output to a Uint8Array view. Node returns Buffer, which is
+// already a Uint8Array. Browser and test loaders may return a string.
 function loadBytes( vm, path ) {
     const content = vm.loader.load( path );
     if ( typeof content === 'string' ) return new TextEncoder().encode( content );

@@ -4,17 +4,19 @@ import { str } from './string.js';
 import { Action, clearTable, constants, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
 
-// Machine constants that macros consult at runtime. These have fixed
-// values across every program, so importing them keeps the symbol table
-// reserved for names the SIL program actually binds.
+// Fixed machine parameters. Keep these out of symbol lookup when a macro can
+// use the host value directly.
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
-const CPD = 3;  // Characters per descriptor cell (matches the historical
-                // IBM/360 layout, even though the JS encoding stores one
-                // character per Uint32 word).
+// Historical string-structure formulas count three characters per descriptor,
+// even though this port stores one character per Uint32 word.
+const CPD = 3;
 
 const sil = {};
 
+// INIT creates a few resident string structures by hand. STRING only builds
+// a specifier. This also writes the title descriptors and links the structure
+// into the variable bins.
 function internStringStructure( vm, $DESCR, $SPEC ) {
     const DESCR = vm.d( $DESCR ),
           SPEC = vm.s( $SPEC ),
@@ -40,12 +42,15 @@ function internStringStructure( vm, $DESCR, $SPEC ) {
     FRSGPT.addr += size;
 }
 
+// STREAM folds source tokens in ASCII. LOCAPV needs the same fold for
+// function names supplied as string data to DEFINE and OPSYN.
 function foldAsciiUpperString( str ) {
     return str.replace( /[a-z]/g, function ( ch ) {
         return String.fromCharCode( ch.charCodeAt( 0 ) - 32 );
     } );
 }
 
+// Read text from a SIL string structure, not from a plain specifier.
 function stringStructureText( vm, DESCR ) {
     const title = vm.d( DESCR.addr ),
           start = DESCR.addr + vm.$( 'BCDFLD' );
@@ -53,10 +58,8 @@ function stringStructureText( vm, DESCR ) {
     return str.decode( vm.mem.slice( start, start + title.value ) );
 }
 
-// SIL stack convention: CSTACK points D cells past the start of the most
-// recent entry. For a descriptor (width D), that's the entry's last cell.
-// For a specifier (width 2D), it's the cell D past the start. So a freshly
-// pushed entry of width W lives at [CSTACK_new - (W-D), CSTACK_new + D).
+// The assembler passes a bare operand for one stack item and an array for a
+// list. The stack macros handle both forms.
 function asArray( ARGs ) {
     return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
 }
@@ -523,10 +526,10 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 // 2.  Refer to Section 2.1 for a discussion of unit  reference
 // numbers.
 sil.BKSPCE = function ( _$DESCR ) {
-    // No-op stub. BKSPCE backs up one record on a unit; the SIL compiler
-    // never invokes this in practice and the historical card-deck record
-    // model doesn't fit Snoflake's stream-based file abstraction. Wire a
-    // real implementation when an actual caller appears.
+    // No-op stub. BKSPCE backs up one record on a unit. The SIL compiler
+    // does not call it, and the historical card-deck record model does not
+    // fit Snoflake's stream-based files. Add the real behavior when a caller
+    // needs it.
 };
 
 //     BRANCH  is used to alter the flow of program control by
@@ -721,7 +724,7 @@ sil.CLERTB = function ( TABLE, KEY ) {
 // 2.  Any  of  the  COPY  segments  can be used to incorporate
 // other machine-dependent data.
 sil.COPY = function ( _FILE ) {
-    // SIL COPY pulls in machine-dependent data; the JS runtime has none.
+    // SIL COPY pulls in machine-dependent data. The JS runtime has none.
 };
 
 //     CPYPAT is used to copy a pattern.  First set
@@ -1788,8 +1791,8 @@ sil.LHERE = function () {
 // case, LINK should branch to INTR10.
 // 3.  See also LOAD and UNLOAD.
 sil.LINK = function ( _$DESCR1, _$DESCR2, _$DESCR3, _$DESCR4, _FLOC, _SLOC ) {
-    // External function linkage isn't supported — branch to INTR10 per
-    // programming note 2.
+    // External function linkage is not supported. Programming note 2 says to
+    // branch to INTR10 in that case.
     this.jmp( this.$( 'INTR10' ) );
 };
 
@@ -1866,8 +1869,8 @@ sil.LINKOR = function ( $DESCR1, $DESCR2 ) {
 // specified by C21...C2L2.
 // 4.  See also LINK and UNLOAD.
 sil.LOAD = function ( _$DESCR, _$SPEC1, _$SPEC2, _FLOC, _SLOC ) {
-    // External function linkage isn't supported — branch to UNDF per
-    // programming note 2.
+    // External function linkage is not supported. Programming note 2 says to
+    // branch to UNDF in that case.
     this.jmp( this.$( 'UNDF' ) );
 };
 
@@ -2311,7 +2314,7 @@ sil.MOVBLK = function ( $DESCR1, $DESCR2, $DESCR3 ) {
           src = this.d( $DESCR2 ).addr + D,
           n = this.d( $DESCR3 ).addr;
 
-    // copyWithin handles the A1 < A2 overlap case (per spec) — no manual
+    // copyWithin handles the A1 < A2 overlap case from the spec. No manual
     // direction selection needed.
     this.mem.copyWithin( dst, src, src + n );
 };
@@ -2562,7 +2565,6 @@ sil.MULTC = function ( $DESCR1, $DESCR2, N ) {
 // descriptor are undefined.
 sil.ORDVST = function () {
     // order variable storage
-    return undefined;
 };
 
 //     OUTPUT  is  used to output a list of items according to
@@ -3030,7 +3032,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
           mem = this.mem,
           STACK_TOP = this.symbols.STACK + D * this.symbols.STSIZE;
 
-    // Save the old stack pointer (A0) at A+D; flags and value cleared so
+    // Save the old stack pointer (A0) at A+D. Flags and value are cleared so
     // the slot reads as a plain descriptor.
     mem[ this.CSTACK + D + 0 ] = this.OSTACK;
     mem[ this.CSTACK + D + 1 ] = 0;
@@ -3974,9 +3976,9 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
           encoded = str.encode( text );
     this.mem.set( encoded.subarray( 0, text.length ), SPEC.addr + SPEC.offset );
 
-    // Stream-mode segments report the actual record length back through
-    // SPEC.length; card-mode (padded) reads keep SPEC.length at the buffer
-    // width, so the caller continues to see fixed-column records.
+    // Stream-mode segments report the actual record length through SPEC.length.
+    // Card-mode reads keep SPEC.length at the buffer width, so the caller keeps
+    // seeing fixed-column records.
     if ( !record.padded ) {
         SPEC.length = text.length;
     }
@@ -4142,8 +4144,9 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         }
     }
 
-    // Scanned to end of input without a terminal row -- same as in-loop RUNOUT
-    // except the whole span is the token, so fold it if the table calls for it.
+    // Scanned to end of input without a terminal row. This is the same as
+    // in-loop RUNOUT, except the whole span is the token. Fold it if the table
+    // calls for that.
     STYPE.addr = lastPut;
     SPEC1.update( A, F, V, O, L );
     if ( foldable ) foldToken( mem, tokenStart, L );
@@ -4151,6 +4154,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     this.jmp( RUNOUT );
 };
 
+// Fold the accepted token in place. Syntax tables only fold ASCII letters.
 function foldToken( mem, start, length ) {
     const end = start + length;
     for ( let p = start; p < end; p++ ) {
@@ -4346,8 +4350,6 @@ sil.TESTFI = function ( $DESCR, FLAG, FLOC, SLOC ) {
 sil.TITLE = function () {
     // title assembly listing
 };
-
-sil.DBG = sil.TITLE; // nonstandard ;)
 
 //     TOP  is  used  to get to the top of a block of descrip-
 // tors.  Descriptors at A, A-D,...,A-(N*D) are  examined  suc-
@@ -4608,9 +4610,9 @@ sil.VEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
 // Programming Notes:
 // 1.  I is always positive.
 sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
-    // I+1 descriptors at A, A+D, ..., A+D*I — D*(I+1) cells starting at A.
-    // Zero is the same bit pattern across the int/uint/float views, so a
-    // raw mem.fill clears all three fields of every descriptor.
+    // I+1 descriptors at A, A+D, ..., A+D*I. That is D*(I+1) cells starting
+    // at A. Zero has the same bit pattern across int/uint/float views, so
+    // mem.fill clears all three fields of every descriptor.
     const start = this.d( $DESCR1 ).addr,
           end = start + this.d( $DESCR2 ).addr + D;
 

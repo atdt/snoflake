@@ -2,11 +2,12 @@ import { str } from './string.js';
 
 const textDecoder = new TextDecoder( 'utf-8' );
 
-// LineReader interface (duck-typed):
+// A line reader has the few operations the VM needs. Buffered files can
+// rewind. Stdin cannot. Readers that can be closed early expose drain().
 //
 //     readLine() -> Uint8Array | null   // null at EOF
-//     rewind?()                         // optional; absent on streaming sources
-//     drain?()                          // optional; signals "no more lines"
+//     rewind?()
+//     drain?()
 //
 export function bufferedReader( bytes ) {
     let pos = 0;
@@ -28,6 +29,8 @@ export function bufferedReader( bytes ) {
     };
 }
 
+// The default stdin reader is synchronous because STREAD runs inside the VM
+// dispatch loop. Hosts that need async input should inject their own reader.
 export function stdinReader() {
     let drained = false;
     return {
@@ -45,6 +48,8 @@ export function stdinReader() {
     };
 }
 
+// Read one byte at a time so we stop exactly at the next line break. Reading
+// more would steal bytes that belong to later STREAD calls.
 function readLineFromStdinSync() {
     const fs = globalThis.process &&
         globalThis.process.getBuiltinModule &&
@@ -72,11 +77,9 @@ function readLineFromStdinSync() {
     }
 }
 
-// A File is one logical input unit. It composes one or more segments, read
-// in order. Each segment carries its own padding policy: card-formatted
-// segments (the SIL source file) right-pad each record to the requested
-// length; stream segments (--input and stdin) preserve the actual record
-// length so callers can detect short lines.
+// A File is one logical input unit. It may be backed by several segments.
+// Source comes first, then runtime input, then interactive stdin. Source uses
+// fixed-width card records. Runtime input and stdin keep their real length.
 export class File {
     constructor( segments ) {
         this.segments = segments;
@@ -89,6 +92,8 @@ export class File {
             const line = reader.readLine();
             if ( line !== null ) {
                 const text = textDecoder.decode( line );
+                // Long records are cut to the caller's buffer. Card-mode
+                // records are padded to it.
                 if ( text.length > length ) {
                     return { eof: false, text: text.slice( 0, length ), padded: false };
                 }
@@ -100,10 +105,6 @@ export class File {
             this.idx++;
         }
         return { eof: true, text: '', padded: false };
-    }
-
-    read( length ) {
-        return this.readRecord( length ).text;
     }
 
     rewind() {
