@@ -1,3 +1,5 @@
+// Small string utilities shared across the runtime.
+
 export const str = {
 
     pad: function ( str, width, align, padChar = ' ' ) {

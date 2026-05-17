@@ -538,7 +538,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
         d1.addr = d2.addr - 9;
         sil.MOVBLK.call( this.vm, d1, d2, d3 );
         for ( let i = 0; i < 10; i++ ) {
-            const ptr = d1.addr + 3 + (3 * i);
+            const ptr = d1.addr + 3 + ( 3 * i );
             assert.deepEqual( this.vm.d( ptr ).raw(), [ i, i, i ] );
         }
     } );
@@ -644,7 +644,7 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         // F contains STTL
         di.update( 3, constants.STTL, 5 );
         sil.BKSIZE.call( this.vm, d1, d2 );
-        FV = 3 * (4 + Math.floor((di.value - 1) / 3 + 1));
+        FV = 3 * ( 4 + Math.floor( ( di.value - 1 ) / 3 + 1 ) );
         assert.deepEqual( d1.raw(), [ FV, 0, 0 ] );
 
         // F does not contain STTL
@@ -1980,7 +1980,7 @@ describe( 'Miscellaneous Macros', function () {
               TTL = constants.TTL;
         this.vm.define( 'TTL', TTL );
         for ( let i = 0; i < 10; i++ ) {
-            block.push(this.vm.d());
+            block.push( this.vm.d() );
         }
 
         // N = 6

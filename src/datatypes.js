@@ -1,3 +1,5 @@
+// Core SIL data types: descriptors and specifiers.
+
 import { str } from './string.js';
 
 // SIL descriptors are three words.

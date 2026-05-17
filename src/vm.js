@@ -1,3 +1,6 @@
+// The virtual machine: word-addressed memory, descriptor and specifier
+// accessors, and the dispatch loop that executes the assembled SIL macros.
+
 import { Descriptor, Specifier } from './datatypes.js';
 import { File, bufferedReader, stdinReader } from './file.js';
 import { defaultStdout, defaultLoader } from './io.js';

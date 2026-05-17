@@ -38,9 +38,9 @@ function serializeImage( image ) {
     return [
         'export default {',
         '  "symbols": ' + serializeSymbols( image.symbols ) + ',',
-        '  "memory": new Uint32Array([',
+        '  "memory": new Uint32Array( [',
         serializeMemory( image.memory ),
-        '  ]),',
+        '  ] ),',
         '  "instructions": [',
         serializeInstructions( image.instructions ),
         '  ]',

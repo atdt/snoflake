@@ -75,17 +75,17 @@ describe( 'Typed Getters', function () {
 
     it( 'uint', function () {
         this.vm.setUint( 0, 123 );
-        assert.equal( this.vm.getUint(0), 123 );
+        assert.equal( this.vm.getUint( 0 ), 123 );
     } );
 
     it( 'int', function () {
         this.vm.setInt( 0, -123 );
-        assert.equal( this.vm.getInt(0), -123 );
+        assert.equal( this.vm.getInt( 0 ), -123 );
     } );
 
     it( 'real', function () {
         this.vm.setReal( 0, Math.PI );
-        assert.equal( Math.floor( this.vm.getReal(0) ), 3 );
+        assert.equal( Math.floor( this.vm.getReal( 0 ) ), 3 );
     } );
 } );
 
@@ -96,7 +96,7 @@ describe( 'Symbol Binding', function () {
 
     it( 'simple', function () {
         this.vm.define( 'answer', 42 );
-        assert.equal( this.vm.resolve('answer'), 42 );
+        assert.equal( this.vm.resolve( 'answer' ), 42 );
     } );
 
     it( 'missing', function () {

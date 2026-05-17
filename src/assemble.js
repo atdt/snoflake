@@ -1,3 +1,6 @@
+// Two-pass assembler: lays out storage, resolves symbols, then writes the
+// SIL program's data and instructions into VM memory.
+
 import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';
@@ -8,10 +11,10 @@ const SPECIFIER_SIZE = 2 * D;
 
 // These macros write data into the image. Reserve their space before
 // resolving and writing their operands.
-const STORAGE_MACROS = new Set( [ 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ] );
+const STORAGE_MACROS = [ 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ];
 
 // These mark a location in the listing, but do not generate code or data.
-const MARKER_MACROS = new Set( [ 'LHERE', 'PROC', 'TITLE' ] );
+const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 
 export function assemble( program ) {
     const vm = new VM();
@@ -48,11 +51,11 @@ function bindLabelsAndReserveStorage( vm, program ) {
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ];
         let location;
-        if ( STORAGE_MACROS.has( stmt.macro ) ) {
+        if ( STORAGE_MACROS.includes( stmt.macro ) ) {
             location = reserveStorage( vm, stmt );
         } else if ( stmt.macro === 'EQU' ) {
             location = sil.EQU.apply( vm, argsFor( vm, stmt ) );
-        } else if ( MARKER_MACROS.has( stmt.macro ) ) {
+        } else if ( MARKER_MACROS.includes( stmt.macro ) ) {
             location = markerLocation( program, i, vm.memPtr, instructions.length );
         } else {
             location = instructions.length;
@@ -69,7 +72,7 @@ function bindLabelsAndReserveStorage( vm, program ) {
 function writeReservedStorage( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     for ( const stmt of program ) {
-        if ( STORAGE_MACROS.has( stmt.macro ) ) {
+        if ( STORAGE_MACROS.includes( stmt.macro ) ) {
             sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
         }
     }
@@ -95,12 +98,12 @@ function imageFrom( vm, instructions, dataEnd ) {
 // memory or an instruction slot. Consecutive markers all name that same spot.
 function markerLocation( program, i, memPtr, instructionCount ) {
     let next = i + 1;
-    while ( next < program.length && MARKER_MACROS.has( program[ next ].macro ) ) {
+    while ( next < program.length && MARKER_MACROS.includes( program[ next ].macro ) ) {
         next++;
     }
     if ( next < program.length ) {
         const macro = program[ next ].macro;
-        if ( STORAGE_MACROS.has( macro ) || macro === 'EQU' ) return memPtr;
+        if ( STORAGE_MACROS.includes( macro ) || macro === 'EQU' ) return memPtr;
     }
     return instructionCount;
 }
@@ -169,7 +172,7 @@ function resolveOperand( vm, operand ) {
 // Syntax table names and stream actions are command names, not labels. Leave
 // those alone. Resolve every other name through the symbol table.
 function resolveSymbol( vm, name ) {
-    if ( name in syntaxTables || streamActions.has( name ) ) {
+    if ( name in syntaxTables || streamActions.includes( name ) ) {
         return name;
     }
     return vm.$( name );

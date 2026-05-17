@@ -22,7 +22,7 @@ Header lines take one of two forms.
 
 **Single-line directive.** The value is the rest of the line, trimmed.
 
-```
+```snobol
 * @key value
 ```
 
@@ -30,7 +30,7 @@ Header lines take one of two forms.
 the runner strips the leading `* ` (or bare `*` for an empty payload line) and
 preserves the rest verbatim.
 
-```
+```snobol
 * @key >>>
 *   payload line 1
 *   payload line 2
@@ -83,7 +83,7 @@ Each line inside the block contributes one logical line of expected output.
 The runner strips the leading `* ` (or bare `*` for an empty payload line)
 and joins the payloads with `\n`, then appends a single trailing `\n`. So:
 
-```
+```snobol
 * @expect >>>
 * A
 * <<<
@@ -92,7 +92,7 @@ and joins the payloads with `\n`, then appends a single trailing `\n`. So:
 means `"A\n"`. To express a trailing blank line, include an explicit empty
 payload:
 
-```
+```snobol
 * @expect >>>
 * A
 *

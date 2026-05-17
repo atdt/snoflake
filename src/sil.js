@@ -1,3 +1,5 @@
+// JS implementations of the SIL macros.
+
 import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
@@ -750,7 +752,7 @@ sil.XINCLD = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     try {
         this.openUnit( unit ).includeSource( filename, this.loader );
         return this.jmp( SLOC );
-    } catch ( e ) {
+    } catch {
         return this.jmp( FLOC );
     }
 };
@@ -830,8 +832,8 @@ sil.XINCLD = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +-----------------------+
 sil.CPYPAT = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, $DESCR5, $DESCR6 ) {
     // copy pattern
-    function F1(X) { return X === 0 ? 0 : ( X + A4 ); }
-    function F2(X) { return X === 0 ? A5 : ( X + A4 ); }
+    function F1( X ) { return X === 0 ? 0 : ( X + A4 ); }
+    function F2( X ) { return X === 0 ? A5 : ( X + A4 ); }
 
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
@@ -1092,7 +1094,7 @@ sil.ENFILE = function ( $DESCR ) {
 sil.XOPENI = function ( $DESCR, $SPEC, FAIL ) {
     try {
         this.redirectInputUnit( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
-    } catch ( e ) {
+    } catch {
         return this.jmp( FAIL );
     }
 };
@@ -1100,7 +1102,7 @@ sil.XOPENI = function ( $DESCR, $SPEC, FAIL ) {
 sil.XOPENO = function ( $DESCR, $SPEC, FAIL ) {
     try {
         this.redirectOutputUnit( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
-    } catch ( e ) {
+    } catch {
         return this.jmp( FAIL );
     }
 };

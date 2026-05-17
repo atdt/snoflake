@@ -90,7 +90,7 @@ function resolveIncludePath( parentPath, includePath ) {
         if ( /^[a-z][a-z0-9+.-]*:/i.test( parentPath ) ) {
             return new URL( includePath, parentPath ).href;
         }
-    } catch ( e ) {
+    } catch {
         return null;
     }
 
@@ -130,7 +130,7 @@ export function createHostLoader() {
                     path: filePath,
                     content: this.load( filePath ),
                 };
-            } catch ( e ) {
+            } catch {
                 return null;
             }
         }

@@ -1,3 +1,6 @@
+// Syntax tables, host strings, and the machine-parameter constants the
+// SIL translator hands to the assembled image.
+
 import { D } from './datatypes.js';
 import { str } from './string.js';
 
@@ -7,7 +10,7 @@ const BYTE_VALUES = 256;
 let ALPHA = '';
 
 for ( let i = 0; i < BYTE_VALUES; i++ ) {
-    ALPHA += String.fromCharCode(i);
+    ALPHA += String.fromCharCode( i );
 }
 
 export const hostStrings = {
@@ -144,7 +147,7 @@ export const Action = {
 
 // Tables whose scanned tokens get uppercased in place when caseFold is on
 // (they consume identifiers: labels and variable names).
-const FOLDABLE_TABLES = new Set( [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ] );
+const FOLDABLE_TABLES = [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ];
 
 export function normalizeLookupByte( ch, caseFold ) {
     return caseFold ? str.foldAsciiUpperByte( ch ) : ch;
@@ -377,7 +380,7 @@ const tableDefinitions = {
 
 export const syntaxTables = {};
 for ( const name in tableDefinitions ) {
-    syntaxTables[ name ] = emptyTable( FOLDABLE_TABLES.has( name ) );
+    syntaxTables[ name ] = emptyTable( FOLDABLE_TABLES.includes( name ) );
 }
 
 // Resolve symbolic PUT and GOTO operands after the image symbols are loaded.
@@ -421,4 +424,4 @@ function bindTable( table, rows, resolveSymbol ) {
 // Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
 // name. They appear in operand position in the SIL listing but they are not
 // symbols. The macros interpret them as tags.
-export const streamActions = new Set( [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ] );
+export const streamActions = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];

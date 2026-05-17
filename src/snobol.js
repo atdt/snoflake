@@ -1,6 +1,5 @@
-// Public entry point. Re-exports the SIL runtime, the assembler, and the
-// generated SNOBOL4 image. Most hosts call run(options) or createVM(options);
-// low-level integrations can still construct VM directly.
+// Public entry point.
+
 import { createHostLoader } from './host.js';
 import { VM } from './vm.js';
 import snobolImage from './generated-snobol-image.js';

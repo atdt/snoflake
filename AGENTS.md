@@ -37,6 +37,11 @@ crystal-clear, beautiful, simple, and well-documented.
   comments until you have strong evidence.
 - Do not hand-edit `src/generated-snobol-image.js`. Regenerate it with
   `make build` when the translator or SIL input changes.
+- When reading commit diffs, exclude `src/generated-snobol-image.js` unless
+  the generated artifact itself is the subject of review; it is large and
+  pollutes context. For example:
+  `git show --stat -- . ':(exclude)src/generated-snobol-image.js'` and
+  `git diff HEAD~1..HEAD -- . ':(exclude)src/generated-snobol-image.js'`.
 - `make build` reads `external/v311-snoflake.sil`. Keep
   `external/v311.sil` as the historical baseline and compare against it when
   reviewing local SIL edits.

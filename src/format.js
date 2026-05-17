@@ -1,6 +1,7 @@
+// Minimal FORTRAN IV "undigested" format processor for OUTPUT and STPRNT.
+
 import { str } from './string.js';
 
-// Minimal FORTRAN IV "undigested" format processor for OUTPUT and STPRNT.
 // `data` is either a string for A fields or descriptors for I/F fields.
 export function formatRecord( template, data ) {
     if ( !template ) return '';

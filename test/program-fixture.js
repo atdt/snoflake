@@ -108,7 +108,9 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         try {
             parsed = JSON.parse( value );
         } catch ( e ) {
-            throw new Error( filePath + ': @options is not valid JSON: ' + e.message );
+            throw new Error( filePath + ': @options is not valid JSON: ' + e.message, {
+                cause: e,
+            } );
         }
         if ( parsed === null || typeof parsed !== 'object' || Array.isArray( parsed ) ) {
             throw new Error( filePath + ': @options must be a JSON object' );
