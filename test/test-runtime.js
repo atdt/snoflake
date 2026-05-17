@@ -316,11 +316,7 @@ describe( 'SNOBOL Program Execution', function () {
 
     it( 'returns EOF when no input streams are configured', function () {
         const vm = new VM();
-        assert.deepEqual( vm.openUnit( 5 ).readRecord( 80 ), {
-            eof: true,
-            text: '',
-            padded: false,
-        } );
+        assert.deepEqual( vm.openUnit( 5 ).readRecord( 80 ), { eof: true } );
     } );
 
     it( 'opens interactive UNITI with a stdin segment after source and runtime input', function () {
@@ -374,11 +370,7 @@ describe( 'SNOBOL Program Execution', function () {
             text: 'STDIN',
             padded: false,
         } );
-        assert.deepEqual( file.readRecord( 8 ), {
-            eof: true,
-            text: '',
-            padded: false,
-        } );
+        assert.deepEqual( file.readRecord( 8 ), { eof: true } );
     } );
 
     it( 'drains stdin without reading from fd 0 after close', function () {
@@ -404,13 +396,13 @@ function joinLines( lines ) {
 
 function bufferedLineReader( lines ) {
     let pos = 0,
-        drained = false;
+        closed = false;
     return {
         readLine() {
-            if ( drained || pos >= lines.length ) return null;
+            if ( closed || pos >= lines.length ) return null;
             return new TextEncoder().encode( lines[ pos++ ] );
         },
-        drain() { drained = true; },
+        close() { closed = true; },
     };
 }
 

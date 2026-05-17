@@ -11,6 +11,10 @@ const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 1024 * 1024;
 const MAX_WORDS = 256 * 1024 * 1024;
 
+function wordsToBytes( words ) {
+    return words * WORD_SIZE;
+}
+
 // Scratch one-word buffer viewed as uint, int, and float for range checks.
 const probeBuf = new ArrayBuffer( 4 ),
       probeF32 = new Float32Array( probeBuf ),
@@ -39,15 +43,13 @@ const DEFAULT_OPTIONS = {
     statistics: false,
 };
 
+// SNOBOL on/off flags the host can override after loading the image:
+// source listing, startup banner, end-of-run statistics.
 const HOST_SWITCHES = {
     LISTCL: 'listing',
     BANRCL: 'banner',
     STATCL: 'statistics',
 };
-
-function wordsToBytes( words ) {
-    return words * WORD_SIZE;
-}
 
 export class VM {
     constructor( options ) {
@@ -63,9 +65,12 @@ export class VM {
         this.symbols = {};
         this.resetMemory();
         this.callbacks = [];
-        this.units = {};
-        this.outputUnits = {};
-        this.INTSPC_BUFFER = null;
+        // Per-unit { input?: File, output?: Writer }. Entries persist across
+        // close so a closed input still returns EOF on subsequent reads.
+        this.units = new Map();
+        // Per-macro scratch storage. Keys are owned by sil.js; resetting the
+        // namespace invalidates any cached pointers that resetMemory orphaned.
+        this.scratch = {};
         // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
         this.OSTACK = 0;
@@ -112,10 +117,13 @@ export class VM {
 
     // Compile each [label, macro, args] image entry into a bound call.
     compileInstructions( instructions ) {
-        return instructions.map( stmt => {
+        return instructions.map( ( stmt, idx ) => {
             const [ , macro, args ] = stmt,
                   impl = sil[ macro ];
 
+            if ( !impl ) {
+                throw new Error( `Unknown SIL macro "${ macro }" at instruction ${ idx }` );
+            }
             return impl.bind( this, ...args );
         } );
     }
@@ -155,6 +163,11 @@ export class VM {
         while ( words < minWords ) {
             words *= 2;
         }
+        if ( words > MAX_WORDS ) {
+            throw new RangeError(
+                `Cannot grow VM memory beyond MAX_WORDS (${ MAX_WORDS }; requested ${ minWords })`
+            );
+        }
         this.buffer.resize( wordsToBytes( words ) );
     }
 
@@ -180,7 +193,7 @@ export class VM {
         if ( probeU32[ 0 ] !== value ) {
             throw new RangeError( 'Invalid Uint32: ' + JSON.stringify( value ) );
         }
-        this.mem[ ptr ] = probeU32[ 0 ];
+        this.mem[ ptr ] = value;
     }
 
     setInt( ptr, value ) {
@@ -188,7 +201,7 @@ export class VM {
         if ( probeI32[ 0 ] !== value ) {
             throw new RangeError( 'Invalid Int32: ' + JSON.stringify( value ) );
         }
-        this.i32[ ptr ] = probeI32[ 0 ];
+        this.i32[ ptr ] = value;
     }
 
     setReal( ptr, value ) {
@@ -196,15 +209,17 @@ export class VM {
         if ( !nearlyEqual( probeF32[ 0 ], value ) ) {
             throw new RangeError( 'Invalid Float32: ' + JSON.stringify( value ) );
         }
-        this.f32[ ptr ] = probeF32[ 0 ];
+        this.f32[ ptr ] = value;
     }
 
     define( symbol, value ) {
         if ( typeof value === 'string' ) {
-            const ptr = this.alloc( value.length ),
-                  encoded = str.encode( value );
+            // str.encode rounds the buffer up to a multiple of 3 words; trim
+            // back to the character count before storing.
+            const encoded = str.encode( value ).subarray( 0, value.length ),
+                  ptr = this.alloc( encoded.length );
             this.symbols[ symbol ] = ptr;
-            this.mem.set( encoded.subarray( 0, value.length ), ptr );
+            this.mem.set( encoded, ptr );
         } else {
             this.symbols[ symbol ] = value;
         }
@@ -242,8 +257,18 @@ export class VM {
     // Resolve a SIL unit number to its backing File, building it on first
     // access. A unit reads source first, then optional runtime input, then
     // optional interactive stdin.
+    unit( unitNum ) {
+        let entry = this.units.get( unitNum );
+        if ( !entry ) {
+            entry = {};
+            this.units.set( unitNum, entry );
+        }
+        return entry;
+    }
+
     openUnit( unitNum ) {
-        if ( this.units[ unitNum ] ) return this.units[ unitNum ];
+        const entry = this.unit( unitNum );
+        if ( entry.input ) return entry.input;
 
         const segments = [];
         if ( this.options.file ) {
@@ -266,7 +291,8 @@ export class VM {
                 padReads: false,
             } );
         }
-        return this.units[ unitNum ] = new File( segments );
+        entry.input = new File( segments );
+        return entry.input;
     }
 
     // An empty path means the optional INPUT/OUTPUT filename argument was
@@ -274,8 +300,9 @@ export class VM {
     redirectInputUnit( unitNum, filePath ) {
         const path = filePath.replace( / +$/, '' );
         if ( path === '' ) return;
-        this.units[ unitNum ]?.close();
-        this.units[ unitNum ] = new File( [ {
+        const entry = this.unit( unitNum );
+        entry.input?.close();
+        entry.input = new File( [ {
             reader: bufferedReader( this.loader.load( path ) ),
             padReads: false,
             path,
@@ -289,19 +316,22 @@ export class VM {
         if ( !writer ) {
             throw new Error( 'No file writer configured for this host' );
         }
-        this.outputUnits[ unitNum ]?.close();
-        this.outputUnits[ unitNum ] = writer;
+        const entry = this.unit( unitNum );
+        entry.output?.close();
+        entry.output = writer;
     }
 
     writeOutput( unitNum, line ) {
-        const writer = this.outputUnits[ unitNum ] || this.stdout;
+        const writer = this.units.get( unitNum )?.output || this.stdout;
         writer.write( line );
     }
 
-    // ENFILE keeps the closed input cached so subsequent reads see EOF.
     closeUnit( unitNum ) {
-        this.units[ unitNum ]?.close();
-        this.outputUnits[ unitNum ]?.close();
-        delete this.outputUnits[ unitNum ];
+        const entry = this.units.get( unitNum );
+        if ( !entry ) return;
+        entry.input?.close();
+        entry.output?.close();
+        // Keep entry.input (closed File yields EOF); drop the writer.
+        entry.output = null;
     }
 }
