@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "eslint",
+    "import",
+    "node",
+    "oxc",
+    "unicorn"
+  ],
+  "ignorePatterns": ["**/generated-*.js"],
+  "categories": {
+    "correctness": "error",
+    "perf": "warn"
+  },
+  "rules": {},
+  "env": {
+    "builtin": true
+  }
+}

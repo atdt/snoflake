@@ -1,7 +1,6 @@
 // Small string utilities shared across the runtime.
 
 export const str = {
-
     pad: function ( str, width, align, padChar = ' ' ) {
         if ( str.length >= width ) return str;
         return align === 'left'
