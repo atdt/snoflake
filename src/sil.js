@@ -3,51 +3,64 @@ import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
 import { Action, clearTable, constants, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
-
-// Fixed machine parameters. Keep these out of symbol lookup when a macro can
-// use the host value directly.
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
-// Historical string-structure formulas count three characters per descriptor,
-// even though this port stores one character per Uint32 word.
-const CPD = 3;
+const CPD = 3;  // Characters per descriptor
 
 const sil = {};
 
-// INIT creates a few resident string structures by hand. STRING only builds
-// a specifier. This also writes the title descriptors and links the structure
-// into the variable bins.
+// Allocate a string structure for the characters described by SPEC at FRSGPT,
+// point DESCR at it, and chain it onto its OBPTR hash bin so later lookups can
+// find it. Used by INIT to seed resident strings before STRING is available.
+//      Data Altered by internStringStructure:
+//                      +-------+-------+-------+
+//      DESCR           | FRSGPT   PTR      S   |
+//                      +-----------------------+
+//                      +-------+-------+-------+
+//      FRSGPT          | FRSGPT TTL+STTL  len  |
+//                      +-----------------------+
+//                      +-------+-------+-------+
+//      FRSGPT+D        |   0       0       S   |
+//                      +-----------------------+
+//                      +-------+-------+-------+
+//      FRSGPT+ATTRIB   |   0       0       0   |
+//                      +-----------------------+
+//                      +-------+-------+-------+
+//      FRSGPT+LNKFLD   |  bin      0       hM  |
+//                      +-----------------------+
+//                      +-------+-------+-------+-------+
+//      FRSGPT+BCDFLD   |     encoded characters ...    |
+//                      +-------------------------------+
+// On exit, FRSGPT is advanced past this structure.
 function internStringStructure( vm, $DESCR, $SPEC ) {
     const DESCR = vm.d( $DESCR ),
           SPEC = vm.s( $SPEC ),
           text = SPEC.specified,
           len = SPEC.length,
-          K = Math.abs( str.hash( 'K' + text ) % vm.$( 'OBSIZ' ) ) * D,
-          M = Math.abs( str.hash( 'M' + text ) % ( SIZLIM + 1 ) ),
+          S = vm.$( 'S' ),
+          ATTRIB = vm.$( 'ATTRIB' ),
+          LNKFLD = vm.$( 'LNKFLD' ),
+          BCDFLD = vm.$( 'BCDFLD' ),
+          // Primary hash. Picks which OBPTR bin the structure chains onto.
+          binByteOffset = Math.abs( str.hash( 'K' + text ) % vm.$( 'OBSIZ' ) ) * D,
+          // Secondary hash. Stored in LNKFLD as a cheap equality-class tag.
+          equalityHash = Math.abs( str.hash( 'M' + text ) % ( SIZLIM + 1 ) ),
           FRSGPT = vm.d( 'FRSGPT' ),
-          bin = vm.d( vm.d( 'OBPTR' ).addr + K + vm.$( 'LNKFLD' ) ),
-          ptr = FRSGPT.addr,
-          size = D + ( D * ( 3 + Math.floor( ( len - 1 ) / CPD + 1 ) ) ),
-          encoded = str.encode( text );
+          bin = vm.d( vm.d( 'OBPTR' ).addr + binByteOffset + LNKFLD ),
+          ptr = FRSGPT.addr;
 
-    DESCR.update( ptr, PTR, vm.$( 'S' ) );
+    DESCR.update( ptr, PTR, S );
     vm.d( ptr ).update( ptr, TTL + STTL, len );
-    vm.d( ptr + D ).update( 0, 0, vm.$( 'S' ) );
-    vm.d( ptr + vm.$( 'ATTRIB' ) ).update( 0, 0, 0 );
-    vm.d( ptr + vm.$( 'LNKFLD' ) ).update( bin.addr, 0, M );
-
-    vm.mem.set( encoded, ptr + vm.$( 'BCDFLD' ) );
+    vm.d( ptr + D ).update( 0, 0, S );
+    vm.d( ptr + ATTRIB ).update( 0, 0, 0 );
+    vm.d( ptr + LNKFLD ).update( bin.addr, 0, equalityHash );
+    vm.mem.set( str.encode( text ), ptr + BCDFLD );
 
     bin.addr = ptr;
-    FRSGPT.addr += size;
-}
 
-// STREAM folds source tokens in ASCII. LOCAPV needs the same fold for
-// function names supplied as string data to DEFINE and OPSYN.
-function foldAsciiUpperString( str ) {
-    return str.replace( /[a-z]/g, function ( ch ) {
-        return String.fromCharCode( ch.charCodeAt( 0 ) - 32 );
-    } );
+    // Advance FRSGPT past this structure (4 fixed descriptors followed by
+    // character descriptors).
+    FRSGPT.addr += ( 4 + Math.ceil( len / CPD ) ) * D;
 }
 
 // Read text from a SIL string structure, not from a plain specifier.
@@ -58,14 +71,9 @@ function stringStructureText( vm, DESCR ) {
     return str.decode( vm.mem.slice( start, start + title.value ) );
 }
 
-// The assembler passes a bare operand for one stack item and an array for a
-// list. The stack macros handle both forms.
 function asArray( ARGs ) {
     return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
 }
-
-// Hot descriptor macros use the assembled image convention directly:
-// descriptor operands are numeric memory addresses, not Descriptor wrappers.
 
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
@@ -1507,10 +1515,9 @@ sil.INCRV = function ( $DESCR, N ) {
 sil.INIT = function () {
     // initialize SNOBOL4 run
     const dynamicStorageSize = D * 50000,
-
-        FRSGPT = this.d( 'FRSGPT' ),
-        HDSGPT = this.d( 'HDSGPT' ),
-        TLSGP1 = this.d( 'TLSGP1' );
+          FRSGPT = this.d( 'FRSGPT' ),
+          HDSGPT = this.d( 'HDSGPT' ),
+          TLSGP1 = this.d( 'TLSGP1' );
 
     this.timeStart = new Date().getTime();
     FRSGPT.addr = this.alloc( dynamicStorageSize );
@@ -2055,11 +2062,11 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // names as string structures, so fall back to the same ASCII fold here
     // after preserving the exact descriptor match above.
     if ( this.options.caseFold && isFunctionPairList ) {
-        key = foldAsciiUpperString( stringStructureText( this, this.d( ptr3 ) ) );
+        key = str.foldAsciiUpper( stringStructureText( this, this.d( ptr3 ) ) );
 
         for ( i = 0; ; i++ ) {
             ptr = A + 6 + ( 6 * i );
-            candidate = foldAsciiUpperString( stringStructureText( this, this.d( ptr ) ) );
+            candidate = str.foldAsciiUpper( stringStructureText( this, this.d( ptr ) ) );
             if ( candidate === key ) {
                 i32[ ptr1 + 0 ] = ptr - 6;
                 mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
@@ -2625,13 +2632,13 @@ sil.ORDVST = function () {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also STPRNT.
-sil.OUTPUT = function ( _$DESCR, FORMAT, ARGs ) {
+sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
     const fmt = this.s( FORMAT ).specified,
-          descrs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this ),
+          descrs = asArray( ARGs ).map( this.d, this ),
           lines = printerLines( fmt, descrs, { stripCarriageControl: true } );
 
-    for ( const line of lines ) this.writeOutput( this.d( _$DESCR ).addr, line );
+    for ( const line of lines ) this.writeOutput( this.d( $DESCR ).addr, line );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -4151,7 +4158,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         case Action.STOPSH:
             STYPE.addr = lastPut;
             SPEC1.update( A, F, V, O, I );
-            if ( foldable ) foldToken( mem, tokenStart, I );
+            if ( foldable ) str.foldAsciiUpperInPlace( mem, tokenStart, I );
             SPEC2.update( A, F, V, O + I, L - I );
             this.jmp( SLOC );
             return;
@@ -4159,7 +4166,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         case Action.STOP:
             STYPE.addr = lastPut;
             SPEC1.update( A, F, V, O, I + 1 );
-            if ( foldable ) foldToken( mem, tokenStart, I + 1 );
+            if ( foldable ) str.foldAsciiUpperInPlace( mem, tokenStart, I + 1 );
             SPEC2.update( A, F, V, O + I + 1, L - I - 1 );
             this.jmp( SLOC );
             return;
@@ -4184,21 +4191,10 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // calls for that.
     STYPE.addr = lastPut;
     SPEC1.update( A, F, V, O, L );
-    if ( foldable ) foldToken( mem, tokenStart, L );
+    if ( foldable ) str.foldAsciiUpperInPlace( mem, tokenStart, L );
     SPEC2.update( A, F, V, O, 0 );
     this.jmp( RUNOUT );
 };
-
-// Fold the accepted token in place. Syntax tables only fold ASCII letters.
-function foldToken( mem, start, length ) {
-    const end = start + length;
-    for ( let p = start; p < end; p++ ) {
-        const c = mem[ p ];
-        if ( c >= 97 && c <= 122 ) {
-            mem[ p ] = c - 32;
-        }
-    }
-}
 
 //     STRING  is used to assemble a string and a specifier to
 // it.

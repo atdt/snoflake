@@ -33,6 +33,25 @@ export const str = {
         return decoded;
     },
 
+    // ASCII-only uppercase fold. Matches the SNOBOL4 source-fold rule: lower
+    // a-z map to upper, every other byte passes through unchanged.
+    foldAsciiUpper: function ( s ) {
+        return s.replace( /[a-z]/g, function ( ch ) {
+            return String.fromCharCode( ch.charCodeAt( 0 ) - 32 );
+        } );
+    },
+
+    // Same fold as foldAsciiUpper, applied in place to a slice of a buffer.
+    foldAsciiUpperInPlace: function ( buf, start, length ) {
+        const end = start + length;
+        for ( let p = start; p < end; p++ ) {
+            const c = buf[ p ];
+            if ( c >= 97 && c <= 122 ) {
+                buf[ p ] = c - 32;
+            }
+        }
+    },
+
     // An implementation of Jenkins's one-at-a-time hash
     // <http://en.wikipedia.org/wiki/Jenkins_hash_function>
     hash: function ( key ) {
