@@ -8,6 +8,7 @@
 //   node tools/bench-snoflake.js --root=tmp/worktree-before
 //   node tools/bench-snoflake.js --mode=cli --samples=5 --iterations=3
 //   node tools/bench-snoflake.js --all --json=tmp/bench.json
+//   node tools/bench-snoflake.js --validate=none tmp/probe.sno
 //
 // VM mode imports Snoflake once, then times repeated VM construction +
 // execution. CLI mode times cold process runs. Each sample runs every selected
@@ -113,7 +114,9 @@ function usage() {
         '  --all                use every test/programs/*.sno fixture',
         '  --json=PATH          also write machine-readable results',
         '',
-        'Fixture names may be bare names such as kalah-opening-search or paths.'
+        'Fixture names may be bare names such as kalah-opening-search.',
+        'Explicit .sno paths may also be profiled; pass --validate=none unless',
+        'the file uses the test/programs fixture header format.'
     ].join( '\n' ) );
 }
 
@@ -125,19 +128,56 @@ function parsePositiveInt( key, raw ) {
     return n;
 }
 
+function isExplicitPath( name ) {
+    return name.endsWith( '.sno' ) ||
+        name.includes( path.sep ) ||
+        ( path.sep === '\\' && name.includes( '/' ) );
+}
+
 function fixturePath( root, name ) {
-    if ( name.endsWith( '.sno' ) || name.includes( path.sep ) ) {
-        return path.isAbsolute( name ) ? name : path.join( root, name );
+    if ( isExplicitPath( name ) ) {
+        return {
+            filePath: path.isAbsolute( name ) ? name : path.join( root, name ),
+            allowAdHoc: true
+        };
     }
-    return path.join( root, 'test', 'programs', name + '.sno' );
+    return {
+        filePath: path.join( root, 'test', 'programs', name + '.sno' ),
+        allowAdHoc: false
+    };
 }
 
 function selectedFixtures( opts ) {
     if ( opts.all ) {
-        return loadCases().map( file => path.join( opts.root, 'test', 'programs', path.basename( file ) ) );
+        return loadCases().map( file => ( {
+            filePath: path.join( opts.root, 'test', 'programs', path.basename( file ) ),
+            allowAdHoc: false
+        } ) );
     }
     const names = opts.fixtures.length ? opts.fixtures : DEFAULT_FIXTURES;
     return names.map( name => fixturePath( opts.root, name ) );
+}
+
+function makeAdHocHeader( filePath ) {
+    return {
+        title: path.basename( filePath ),
+        options: {},
+        input: null,
+        expect: null,
+        match: null,
+        attribution: null
+    };
+}
+
+function loadHeader( selected ) {
+    try {
+        return parseHeader( selected.filePath );
+    } catch ( e ) {
+        if ( selected.allowAdHoc && /\bmissing required @title\b/.test( e.message ) ) {
+            return makeAdHocHeader( selected.filePath );
+        }
+        throw e;
+    }
 }
 
 function trimTrailingNewlines( s ) {
@@ -157,6 +197,10 @@ function validateOutput( fixture, stdout, stderr ) {
     const output = stdout + stderr,
           marker = findErrorMarker( output ),
           header = fixture.header;
+
+    if ( header.expect === null ) {
+        throw new Error( fixture.name + ': cannot validate an ad hoc program; pass --validate=none' );
+    }
 
     if ( header.match === 'error' ) {
         if ( marker === null ) {
@@ -199,8 +243,9 @@ function joinLines( lines ) {
 function prepareFixtures( opts ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
 
-    return selectedFixtures( opts ).map( function ( filePath ) {
-        const header = parseHeader( filePath ),
+    return selectedFixtures( opts ).map( function ( selected ) {
+        const filePath = selected.filePath,
+              header = loadHeader( selected ),
               name = path.basename( filePath, '.sno' );
         let inputPath = null;
 

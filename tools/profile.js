@@ -11,12 +11,14 @@
 // Usage:
 //   node tools/profile.js                                # default fixture suite
 //   node tools/profile.js kalah-opening-search           # one fixture
+//   node tools/profile.js tmp/probe.sno                  # ad hoc SNOBOL file
 //   node tools/profile.js --iterations=10 wang-theorem-prover
 //   node tools/profile.js --output=tmp/profiles/foo.txt  # custom report path
 //
 // All options other than --output are forwarded verbatim to
 // bench-snoflake.js, so anything that script accepts (--samples,
-// --iterations, --warmup, --all, --root, fixture names, etc.) works here.
+// --iterations, --warmup, --all, --root, fixture names, .sno paths, etc.)
+// works here.
 //
 // Reads tmp/profiles/<timestamp>.txt for the post-processed report and
 // prints its first 60 lines (Summary + JavaScript hot list).
@@ -59,7 +61,8 @@ function usage() {
         '',
         'Captures a V8 tick profile of bench-snoflake.js --mode=vm and writes a',
         'tick-processed report. Anything other than --output is forwarded to',
-        'bench-snoflake.js (try --help on it to see those options).',
+        'bench-snoflake.js (try --help on it to see those options). Explicit',
+        '.sno paths run as ad hoc programs with validation disabled by default.',
         '',
         'Defaults: ' + DEFAULTS.join( ' ' )
     ].join( '\n' ) );
