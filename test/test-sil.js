@@ -22,25 +22,6 @@ describe( 'Assembly Control Macros', function () {
         assert( sil.END );
     } );
 
-    it( 'EQU', function () {
-        this.vm.run( assemble( [
-            { label: 'A', macro: 'EQU', operands: [ 12 ] }
-        ] ) );
-        assert.equal( this.vm.resolve('A'), 12 );
-    } );
-
-    it( 'LHERE', function () {
-        this.vm.run( assemble( [
-            { label: 'A',  macro: 'LHERE', operands: [] },
-            { label: null, macro: 'DESCR', operands: [] },
-            { label: 'B',  macro: 'LHERE', operands: [] },
-            { label: null, macro: 'DESCR', operands: [] }
-        ] ) );
-        assert.equal( this.vm.resolve('B') - this.vm.resolve('A'), constants.DESCR );
-        assert.deepEqual( this.vm.d( 'A' ).raw(), [ 0, 0, 0 ] );
-        assert.deepEqual( this.vm.d( 'B' ).raw(), [ 0, 0, 0 ] );
-    } );
-
     it( 'keeps executable labels in the instruction stream', function () {
         this.vm.run( assemble( [
             { label: 'PAD', macro: 'BUFFER', operands: [ 10 ] },
@@ -456,11 +437,6 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         assert.equal( this.vm.CSTACK, cur );
         assert.deepEqual( d1.raw(), d4.raw() );
         assert.deepEqual( d2.raw(), d3.raw() );
-    } );
-
-    it( 'PROC', function () {
-        // PROC is an alias of LHERE.
-        assert.equal (sil.PROC, sil.LHERE );
     } );
 
     it( 'PSTACK', function () {

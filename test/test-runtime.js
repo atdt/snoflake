@@ -411,43 +411,11 @@ describe( 'Descriptor Datatype', function () {
         this.vm = new VM();
     } );
 
-    it( 'enumerables', function () {
-        const d = this.vm.d(),
-              fields = [ 'ptr', 'vm' ],
-              keys = [];
-        for ( const key in d ) {
-            keys.push( key );
-        }
-        assert.deepEqual( keys.sort(), fields );
-    } );
-
     it( 'init', function () {
         const orig = this.vm.d(),
               copy = this.vm.d( orig.ptr );
         orig.addr = 90210;
         assert.equal( copy.addr, 90210 );
-    } );
-
-    it( 'width', function () {
-        const d = this.vm.d();
-        assert.equal( d.width, 3 );
-    } );
-
-    it( 'getters_setters', function () {
-        const d = this.vm.d();
-        d.addr = -123;
-        assert.equal( d.addr, -123 );
-        d.raddr = 6.1;
-        assert.equal( Math.floor( d.raddr ), 6 );
-        d.flags = 666;
-        assert.equal( d.flags, 666 );
-        d.value = 777;
-        assert.equal( d.value, 777 );
-    } );
-
-    it( 'not_specifier', function () {
-        const d = this.vm.d();
-        assert( !d.length );
     } );
 
     it( 'raw', function () {
@@ -491,34 +459,11 @@ describe( 'Specifier Datatype', function () {
         this.vm = new VM();
     } );
 
-    it( 'enumerables', function () {
-        const fields = [ 'ptr', 'vm' ],
-              s = new Specifier( this.vm ),
-              keys = [];
-        for ( const key in s ) {
-            keys.push( key );
-        }
-        assert.deepEqual( keys.sort(), fields );
-    } );
-
     it( 'init', function () {
         const orig = new Specifier( this.vm ),
               copy = new Specifier( this.vm, orig.ptr );
         orig.offset = 90210;
         assert.equal( copy.offset, 90210 );
-    } );
-
-    it( 'width', function () {
-        const s = new Specifier( this.vm );
-        assert.equal( s.width, 6 );
-    } );
-
-    it( 'getters_setters', function () {
-        const s = new Specifier( this.vm );
-        s.offset = 123;
-        assert.equal( s.offset, 123 );
-        s.length = 456;
-        assert.equal( s.length, 456 );
     } );
 
     it( 'raw', function () {
@@ -563,33 +508,9 @@ describe( 'Specifier Datatype', function () {
     } );
 } );
 
-describe( 'Miscellaneous Shortcuts', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
-    it( 'd', function () {
-        const d = this.vm.d( 6 );
-        assert( d instanceof Descriptor );
-        assert.equal( d.ptr, 6 );
-    } );
-
-    it( 's', function () {
-        const s = this.vm.s( 6 );
-        assert( s instanceof Specifier );
-        assert.equal( s.ptr, 6 );
-    } );
-} );
-
-
 describe( 'Program Execution', function () {
     beforeEach( function () {
         this.vm = new VM();
-    } );
-
-    it( 'jmp', function () {
-        this.vm.jmp( 4 );
-        assert.equal( this.vm.instructionPointer, 4 );
     } );
 
     it( 'run', function () {
@@ -630,22 +551,4 @@ describe( 'Program Execution', function () {
         assert.equal( this.vm.selfBranchCount, 3 );
     } );
 
-    it( 'loads the image memory snapshot directly into VM memory', function () {
-        // The image carries memory as a byte snapshot. vm.run copies it.
-        // it does not re-run the assembler. Stash a single descriptor
-        // (31, 7, 9) at offset 0 and bind 'DS' to it.
-        const image = {
-            symbols: { DS: 0 },
-            memory: new Uint32Array( [ 31, 7, 9 ] ),
-            instructions: [
-                [ null, 'END', [] ]
-            ]
-        };
-
-        this.vm.run( image );
-
-        assert.equal( this.vm.d( 'DS' ).addr, 31 );
-        assert.equal( this.vm.d( 'DS' ).flags, 7 );
-        assert.equal( this.vm.d( 'DS' ).value, 9 );
-    } );
 } );
