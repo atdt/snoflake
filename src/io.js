@@ -4,19 +4,22 @@
 // Writer:
 //
 //     writer.write(line)
+//     writer.close()
 //
-// Each call receives one logical line without a trailing newline. The adapter
-// decides how to terminate it.
+// Each call receives one logical line without a trailing newline; the writer
+// appends the terminator. close() is idempotent and may be a no-op.
 //
 // Loader:
 //
 //     loader.load(path) -> Uint8Array | Buffer
 //     loader.loadInclude(parentPath, path) -> { path, content } | null
+//     loader.openOutput?(path) -> Writer
 //
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
 
 export const defaultStdout = {
-    write( line ) { console.log( line ); }
+    write( line ) { console.log( line ); },
+    close() {}
 };
 
 export const defaultLoader = {

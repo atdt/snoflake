@@ -1078,7 +1078,23 @@ sil.ENDEX = function ( $DESCR ) {
 // 2.  Refer  to Section 2.1 for a discussion of unit reference
 // numbers.
 sil.ENFILE = function ( $DESCR ) {
-    this.openUnit( this.d( $DESCR ).addr ).close();
+    this.closeUnit( this.d( $DESCR ).addr );
+};
+
+sil.XOPENI = function ( $DESCR, $SPEC, FAIL ) {
+    try {
+        this.redirectInputUnit( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
+    } catch ( e ) {
+        return this.jmp( FAIL );
+    }
+};
+
+sil.XOPENO = function ( $DESCR, $SPEC, FAIL ) {
+    try {
+        this.redirectOutputUnit( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
+    } catch ( e ) {
+        return this.jmp( FAIL );
+    }
 };
 
 //     EQU is used to assign, at assembly time, the value of N
@@ -2615,7 +2631,7 @@ sil.OUTPUT = function ( _$DESCR, FORMAT, ARGs ) {
           descrs = ( Array.isArray( ARGs ) ? ARGs : [ ARGs ] ).map( this.d, this ),
           lines = printerLines( fmt, descrs, { stripCarriageControl: true } );
 
-    for ( const line of lines ) this.stdout.write( line );
+    for ( const line of lines ) this.writeOutput( this.d( _$DESCR ).addr, line );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3943,7 +3959,9 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
               stripCarriageControl: formatHasLeadingCarriageControl( fmt )
           } );
 
-    for ( const line of lines ) this.stdout.write( line );
+    // OUTPUT array layout: head descriptor at A, unit number one descriptor later.
+    const unit = this.d( A + D ).addr;
+    for ( const line of lines ) this.writeOutput( unit, line );
     this.d( $DESCR1 ).addr = 1;
 };
 

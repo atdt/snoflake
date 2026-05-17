@@ -15,6 +15,10 @@
 *                       DFLSIZ from the caller.
 *        [PLB20]      — -INCLUDE / -COPY control cards read quoted source
 *                       files during compilation.
+*        [PLB4]       — INPUT and OUTPUT accept an optional fourth filename
+*                       argument.  This port preserves v311's third INPUT
+*                       argument as record length rather than importing the
+*                       later PLB51 options argument.
 *
        TITLE   'Table of Contents'
 *
@@ -1442,7 +1446,7 @@ CTLCR3 LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
        OUTPUT  OUTPUT,EJECTF	   Eject page
        BRANCH  CMTCLR		   Join terminal processing
 *_
-CTLCR4 LEXCMP  XSP,INCLSP,,CTLCR5 Is it INCLUDE?		[PLB20]
+CTLCR4 LEXCMP  XSP,INCLSP,,CTLCR5	Is it INCLUDE?		[PLB20]
        LEXCMP  XSP,COPYSP,CMTCLR,,CMTCLR			[PLB20]
 *				   Is it COPY?			[PLB20]
 CTLCR5 STREAM  XSP,TEXTSP,FRWDTB,COMP3,COMP3			[PLB20]
@@ -3790,18 +3794,22 @@ FIELD1 MOVV    DT1CL,XPTR	   Set up data type
 *---------------------------------------------------------------------*
        TITLE   'Input and Output'
 *
-*      INPUT(V,U,L)
+*      INPUT(V,U,L,N)						[PLB4]
 *
-READ   PROC    ,		   INPUT(V,U,L)
+READ   PROC    ,		   INPUT(V,U,L,N)		[PLB4]
        RCALL   XPTR,IND,,FAIL	   Get variable
        PUSH    XPTR		   Save variable
        RCALL   YPTR,INTVAL,,FAIL   Get unit
        PUSH    YPTR		   Save unit
        RCALL   ZPTR,INTVAL,,FAIL   Get length
-       POP     (YPTR,XPTR)	   Restore unit and variable
+       PUSH    ZPTR		   Save length			[PLB4]
+       RCALL   TPTR,VARVAL,,FAIL   Get optional filename	[PLB4]
+       LOCSP   XSP,TPTR		   Get specifier for filename	[PLB4]
+       POP     (ZPTR,YPTR,XPTR)	   Restore length, unit, and variable [PLB4]
        ACOMPC  YPTR,0,,READ5,UNTERR
 *				   Check for defaulted unit
-READ6  ACOMPC  ZPTR,0,READ2,,LENERR
+READ6  XOPENI  YPTR,XSP,FAIL	   Tell I/O routines about filename [PLB4]
+       ACOMPC  ZPTR,0,READ2,,LENERR
 *				   Check for defaulted length
        LOCAPT  TPTR,INSATL,YPTR,READ4
 *				   Look for default length
@@ -3823,17 +3831,21 @@ READ5  SETAC   YPTR,UNITI	   Set up default unit
 *_
 *---------------------------------------------------------------------*
 *
-*      OUTPUT(V,U,F)
+*      OUTPUT(V,U,F,N)						[PLB4]
 *
-PRINT  PROC    ,		   OUTPUT(V,U,F)
+PRINT  PROC    ,		   OUTPUT(V,U,F,N)		[PLB4]
        RCALL   XPTR,IND,,FAIL	   Get variable
        PUSH    XPTR		   Save variable
        RCALL   YPTR,INTVAL,,FAIL   Get unit
        PUSH    YPTR		   Save unit
        RCALL   ZPTR,VARVAL,,FAIL   Get format
-       POP     (YPTR,XPTR)	   Restore unit and variable
+       PUSH    ZPTR		   Save format			[PLB4]
+       RCALL   TPTR,VARVAL,,FAIL   Get optional filename	[PLB4]
+       LOCSP   XSP,TPTR		   Get specifier for filename	[PLB4]
+       POP     (ZPTR,YPTR,XPTR)	   Restore format, unit, and variable [PLB4]
        ACOMPC  YPTR,0,,PRINT5,UNTERR
-PRINT6 AEQLC   ZPTR,0,PRINT2	   Check for defaulted format
+PRINT6 XOPENO  YPTR,XSP,FAIL	   Tell I/O routines about filename [PLB4]
+       AEQLC   ZPTR,0,PRINT2	   Check for defaulted format
        LOCAPT  TPTR,OTSATL,YPTR,PRINT4
 *				   Insert length
 PRINT3 LOCAPV  ZPTR,OUTATL,XPTR,PRINT1
@@ -5937,7 +5949,7 @@ OPSYFN DESCR   OPSYN,0,3
        DESCR   0,0,0
 POSFN  DESCR   POS,0,1
        DESCR   0,0,0
-PRINFN DESCR   PRINT,0,3
+PRINFN DESCR   PRINT,0,4						[PLB4]
        DESCR   0,0,0
 PROTFN DESCR   PROTO,0,1
        DESCR   0,0,0
@@ -5945,7 +5957,7 @@ REMDFN DESCR   REMDR,0,2
        DESCR   0,0,0
 RPLAFN DESCR   RPLACE,0,3
        DESCR   0,0,0
-READFN DESCR   READ,0,3
+READFN DESCR   READ,0,4						[PLB4]
        DESCR   0,0,0
 REWNFN DESCR   REWIND,0,1
        DESCR   0,0,0
@@ -6040,7 +6052,7 @@ FNLIST DESCR   FNLIST,TTL+MARK,FNCPLE-FNLIST-DESCR
        DESCR   GTSP,0,0
        DESCR   IDENFN,FNC,0	   IDENT(V1,V2)
        DESCR   IDENSP,0,0
-       DESCR   READFN,FNC,0	   INPUT(V,N,L)
+       DESCR   READFN,FNC,0	   INPUT(V,U,L,N)		[PLB4]
        DESCR   INSP,0,0
        DESCR   INTGFN,FNC,0	   INTEGER(V)
        DESCR   INTGSP,0,0
@@ -6064,7 +6076,7 @@ FNLIST DESCR   FNLIST,TTL+MARK,FNCPLE-FNLIST-DESCR
        DESCR   NNYSP,0,0
        DESCR   OPSYFN,FNC,0	   OPSYN(F1,F2,N)
        DESCR   OPSNSP,0,0
-       DESCR   PRINFN,FNC,0	   OUTPUT(V,N,F)
+       DESCR   PRINFN,FNC,0	   OUTPUT(V,U,F,N)		[PLB4]
        DESCR   OUTSP,0,0
        DESCR   POSFN,FNC,0	   POS(N)
        DESCR   POSSP,0,0

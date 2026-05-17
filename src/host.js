@@ -103,6 +103,24 @@ export function createHostLoader() {
             return hostReadFileSync( filePath );
         },
 
+        openOutput( filePath ) {
+            const fs = nodeFs();
+            if ( !fs ) {
+                throw new Error( 'No file writer configured for this host' );
+            }
+
+            let fd = fs.openSync( filePath, 'w' );
+            return {
+                write( line ) { fs.writeSync( fd, line + '\n' ); },
+                close() {
+                    if ( fd !== null ) {
+                        fs.closeSync( fd );
+                        fd = null;
+                    }
+                },
+            };
+        },
+
         loadInclude( parentPath, includePath ) {
             const filePath = resolveIncludePath( parentPath, includePath );
             if ( filePath === null || !hostFileExists( filePath ) ) return null;

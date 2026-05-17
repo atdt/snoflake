@@ -2,6 +2,7 @@
 import assert from 'node:assert';
 import childProcess from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
@@ -279,6 +280,40 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( output, 'SHARED\nNESTED\nCOPY\n' );
     } );
 
+    it( 'supports PLB4 filename arguments for INPUT and OUTPUT', function () {
+        const dir = fs.mkdtempSync( path.join( os.tmpdir(), 'snoflake-plb4-' ) ),
+              programFile = path.join( dir, 'program.sno' ),
+              inputFile = path.join( dir, 'records.txt' ),
+              outputFile = path.join( dir, 'records.out' ),
+              stdout = captureWriter(),
+              quote = s => "'" + s.replace( /'/g, "''" ) + "'";
+
+        fs.writeFileSync( inputFile, 'ALPHA\nBETA\n' );
+        fs.writeFileSync( programFile, [
+            '          INPUT("INVAR", 7, 20, ' + quote( inputFile ) + ')',
+            '          OUTPUT("LOG", 8, "(A)", ' + quote( outputFile ) + ')',
+            'READ      CARD = INVAR :F(DONE)',
+            '          OUTPUT = CARD',
+            '          LOG = "FILE:" CARD :(READ)',
+            'DONE      LOG = "EOF"',
+            'END',
+            ''
+        ].join( '\n' ) );
+
+        try {
+            const vm = createVM( {
+                file: programFile,
+                stdout,
+            } );
+            vm.run( image );
+
+            assert.equal( joinLines( stdout.lines ), 'ALPHA\nBETA\n' );
+            assert.equal( fs.readFileSync( outputFile, 'utf8' ), 'FILE:ALPHA\nFILE:BETA\nEOF\n' );
+        } finally {
+            fs.rmSync( dir, { recursive: true, force: true } );
+        }
+    } );
+
     it( 'returns EOF when no input streams are configured', function () {
         const vm = new VM();
         assert.deepEqual( vm.openUnit( 5 ).readRecord( 80 ), {
@@ -358,7 +393,8 @@ describe( 'SNOBOL Program Execution', function () {
 function captureWriter() {
     return {
         lines: [],
-        write( line ) { this.lines.push( line ); }
+        write( line ) { this.lines.push( line ); },
+        close() {}
     };
 }
 

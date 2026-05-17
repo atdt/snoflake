@@ -64,6 +64,7 @@ export class VM {
         this.resetMemory();
         this.callbacks = [];
         this.units = {};
+        this.outputUnits = {};
         this.INTSPC_BUFFER = null;
         // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
@@ -266,5 +267,41 @@ export class VM {
             } );
         }
         return this.units[ unitNum ] = new File( segments );
+    }
+
+    // An empty path means the optional INPUT/OUTPUT filename argument was
+    // defaulted; leave the unit's existing binding untouched.
+    redirectInputUnit( unitNum, filePath ) {
+        const path = filePath.replace( / +$/, '' );
+        if ( path === '' ) return;
+        this.units[ unitNum ]?.close();
+        this.units[ unitNum ] = new File( [ {
+            reader: bufferedReader( this.loader.load( path ) ),
+            padReads: false,
+            path,
+        } ] );
+    }
+
+    redirectOutputUnit( unitNum, filePath ) {
+        const path = filePath.replace( / +$/, '' );
+        if ( path === '' ) return;
+        const writer = this.loader.openOutput?.( path );
+        if ( !writer ) {
+            throw new Error( 'No file writer configured for this host' );
+        }
+        this.outputUnits[ unitNum ]?.close();
+        this.outputUnits[ unitNum ] = writer;
+    }
+
+    writeOutput( unitNum, line ) {
+        const writer = this.outputUnits[ unitNum ] || this.stdout;
+        writer.write( line );
+    }
+
+    // ENFILE keeps the closed input cached so subsequent reads see EOF.
+    closeUnit( unitNum ) {
+        this.units[ unitNum ]?.close();
+        this.outputUnits[ unitNum ]?.close();
+        delete this.outputUnits[ unitNum ];
     }
 }
