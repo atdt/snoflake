@@ -1,4 +1,5 @@
 import { D } from './datatypes.js';
+import { str } from './string.js';
 
 // &ALPHABET holds every byte value of the host character set, matching
 // CSNOBOL4 and the original IBM/360 ALPHSZ = 256.
@@ -144,6 +145,16 @@ export const Action = {
 // Tables whose scanned tokens get uppercased in place when caseFold is on
 // (they consume identifiers: labels and variable names).
 const FOLDABLE_TABLES = new Set( [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ] );
+
+export function normalizeLookupByte( ch, caseFold ) {
+    return caseFold ? str.foldAsciiUpperByte( ch ) : ch;
+}
+
+export function normalizeToken( table, mem, start, length, caseFold ) {
+    if ( caseFold && table.foldable ) {
+        str.foldAsciiUpperInPlace( mem, start, length );
+    }
+}
 
 // Bound tables have one row for each byte value, plus an ELSE row for wider
 // JavaScript code units.

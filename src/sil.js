@@ -1,7 +1,7 @@
 import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
-import { Action, clearTable, constants, syntaxTables } from './syntax.js';
+import { Action, clearTable, constants, normalizeLookupByte, normalizeToken, syntaxTables } from './syntax.js';
 import { isFloat32, isInt32 } from './vm.js';
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
@@ -4131,11 +4131,10 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     let table = syntaxTables[ TABLE ];
     let puts = table.puts, actions = table.actions, next = table.next;
     let fallback = table.fallback;
-    let foldable = caseFold && table.foldable;
     let lastPut = 0;
 
     for ( let I = 0; I < L; I++ ) {
-        const ch = mem[ tokenStart + I ];
+        const ch = normalizeLookupByte( mem[ tokenStart + I ], caseFold );
         const isByte = ch < byteValues;
         const put = isByte ? puts[ ch ] : fallback.put;
         const action = isByte ? actions[ ch ] : fallback.action;
@@ -4152,13 +4151,12 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             actions = table.actions;
             next = table.next;
             fallback = table.fallback;
-            foldable = caseFold && table.foldable;
             continue;
 
         case Action.STOPSH:
             STYPE.addr = lastPut;
             SPEC1.update( A, F, V, O, I );
-            if ( foldable ) str.foldAsciiUpperInPlace( mem, tokenStart, I );
+            normalizeToken( table, mem, tokenStart, I, caseFold );
             SPEC2.update( A, F, V, O + I, L - I );
             this.jmp( SLOC );
             return;
@@ -4166,7 +4164,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
         case Action.STOP:
             STYPE.addr = lastPut;
             SPEC1.update( A, F, V, O, I + 1 );
-            if ( foldable ) str.foldAsciiUpperInPlace( mem, tokenStart, I + 1 );
+            normalizeToken( table, mem, tokenStart, I + 1, caseFold );
             SPEC2.update( A, F, V, O + I + 1, L - I - 1 );
             this.jmp( SLOC );
             return;
@@ -4187,11 +4185,10 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     }
 
     // Scanned to end of input without a terminal row. This is the same as
-    // in-loop RUNOUT, except the whole span is the token. Fold it if the table
-    // calls for that.
+    // in-loop RUNOUT, except the whole span is the token.
     STYPE.addr = lastPut;
     SPEC1.update( A, F, V, O, L );
-    if ( foldable ) str.foldAsciiUpperInPlace( mem, tokenStart, L );
+    normalizeToken( table, mem, tokenStart, L, caseFold );
     SPEC2.update( A, F, V, O, 0 );
     this.jmp( RUNOUT );
 };
