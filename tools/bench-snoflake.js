@@ -228,7 +228,7 @@ async function createRunner( opts ) {
 function runVm( SNOBOL, fixture ) {
     const stdout = captureWriter(),
           stderr = captureWriter(),
-          vm = new SNOBOL.VM( {
+          vm = SNOBOL.createVM( {
               ...fixture.header.options,
               file: fixture.filePath,
               input: fixture.inputPath || undefined,

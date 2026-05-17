@@ -85,6 +85,32 @@ export class File {
     constructor( segments ) {
         this.segments = segments;
         this.idx = 0;
+        this.includedFiles = new Set();
+    }
+
+    include( content, path ) {
+        this.segments.splice( this.idx, 0, {
+            reader: bufferedReader( content ),
+            padReads: true,
+            path,
+        } );
+    }
+
+    includeSource( filename, loader ) {
+        const parentPath = this.segments[ this.idx ]?.path,
+              includePath = filename.replace( / +$/, '' ),
+              included = loader.loadInclude?.( parentPath, includePath ) ?? null;
+
+        if ( included === null ) {
+            throw new Error( 'Cannot open INCLUDE file: ' + includePath );
+        }
+
+        if ( this.includedFiles.has( included.path ) ) {
+            return;
+        }
+
+        this.include( included.content, included.path );
+        this.includedFiles.add( included.path );
     }
 
     readRecord( length ) {

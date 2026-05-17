@@ -1,5 +1,5 @@
-// Small Node adapters for the VM defaults. Browser and test hosts pass their
-// own stdout writer or loader through VM options.
+// Host-neutral defaults. Browser, Node, and test hosts can pass their own
+// stdout writer or loader through VM options.
 //
 // Writer:
 //
@@ -11,23 +11,20 @@
 // Loader:
 //
 //     loader.load(path) -> Uint8Array | Buffer
+//     loader.loadInclude(parentPath, path) -> { path, content } | null
 //
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
 
-export const nodeStdout = {
+export const defaultStdout = {
     write( line ) { console.log( line ); }
 };
 
-export const nodeLoader = {
-    load( path ) {
-        const fs = globalThis.process &&
-            globalThis.process.getBuiltinModule &&
-            globalThis.process.getBuiltinModule( 'fs' );
+export const defaultLoader = {
+    load( _path ) {
+        throw new Error( 'No file loader configured for this host' );
+    },
 
-        if ( !fs ) {
-            throw new Error( 'No file loader configured for this host' );
-        }
-
-        return fs.readFileSync( path );
+    loadInclude( _parentPath, _filename ) {
+        return null;
     }
 };

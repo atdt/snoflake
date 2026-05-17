@@ -13,6 +13,8 @@
 *                       so RAW = INPUT reports the actual line length
 *                       even when &TRIM = 0, instead of inheriting
 *                       DFLSIZ from the caller.
+*        [PLB20]      — -INCLUDE / -COPY control cards read quoted source
+*                       files during compilation.
 *
        TITLE   'Table of Contents'
 *
@@ -1434,11 +1436,23 @@ CTLCR1 LEXCMP  XSP,LISTSP,CTLCR3,,CTLCR3
 CTLCR2 SETAC   LLIST,0		   Zero left listing as default
        BRANCH  CMTCLR		   Join terminal processing
 *_
-CTLCR3 LEXCMP  XSP,EJCTSP,CMTCLR,,CMTCLR
+CTLCR3 LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
 *				   Is it EJECT?
        AEQLC   LISTCL,0,,CMTCLR    Skip eject if not listing
        OUTPUT  OUTPUT,EJECTF	   Eject page
        BRANCH  CMTCLR		   Join terminal processing
+*_
+CTLCR4 LEXCMP  XSP,INCLSP,,CTLCR5 Is it INCLUDE?		[PLB20]
+       LEXCMP  XSP,COPYSP,CMTCLR,,CMTCLR			[PLB20]
+*				   Is it COPY?			[PLB20]
+CTLCR5 STREAM  XSP,TEXTSP,FRWDTB,COMP3,COMP3			[PLB20]
+*				   Get to next nonblank character [PLB20]
+       AEQLC   STYPE,NBTYP,COMP3   Verify nonbreak		[PLB20]
+       STREAM  XSP,TEXTSP,ELEMTB,CMTCLR,CMTCLR			[PLB20]
+*				   Get value			[PLB20]
+       AEQLC   STYPE,QLITYP,CMTCLR Must be quoted literal	[PLB20]
+       XINCLD  UNIT,XSP,COMP5,CMTCLR				[PLB20]
+*				   Process include		[PLB20]
 *_
 *---------------------------------------------------------------------*
 *
@@ -6265,6 +6279,7 @@ FUNTSP STRING  'FUNCTION'
 GESP   STRING  'GE'
 GTSP   STRING  'GT'
 IDENSP STRING  'IDENT'
+INCLSP STRING  'INCLUDE'					[PLB20]
 INSP   STRING  'INPUT'
 INTGSP STRING  'INTEGER'
 ITEMSP STRING  'ITEM'

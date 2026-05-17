@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { Action, D, VM, assemble, bindSyntaxTables, constants, defaults, sil, str, syntaxTables } from '../src/snobol.js';
+import { Action, D, VM, assemble, bindSyntaxTables, constants, createVM, defaults, sil, str, syntaxTables } from '../src/snobol.js';
 import process from "node:process";
 
 //
@@ -1455,7 +1455,7 @@ describe( 'Macros that Operate on Tree Nodes', function () {
 
 describe( 'Input and Output Macros', function () {
     beforeEach( function () {
-        this.vm = new VM();
+        this.vm = createVM();
     } );
 
     it( 'BKSPCE', function () { // stub

@@ -1,6 +1,6 @@
 import { Descriptor, Specifier } from './datatypes.js';
 import { File, bufferedReader, stdinReader } from './file.js';
-import { nodeStdout, nodeLoader } from './io.js';
+import { defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
 import { bindSyntaxTables, constants } from './syntax.js';
@@ -52,8 +52,8 @@ function wordsToBytes( words ) {
 export class VM {
     constructor( options ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
-        this.stdout = this.options.stdout || nodeStdout;
-        this.loader = this.options.loader || nodeLoader;
+        this.stdout = this.options.stdout || defaultStdout;
+        this.loader = this.options.loader || defaultLoader;
         this.reset();
     }
 
@@ -249,6 +249,7 @@ export class VM {
             segments.push( {
                 reader: bufferedReader( this.loader.load( this.options.file ) ),
                 padReads: true,
+                path: this.options.file,
             } );
         }
         if ( this.options.input && unitNum === UNITI ) {

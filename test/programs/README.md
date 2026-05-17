@@ -65,8 +65,8 @@ Validation enforced by the runner:
   supported way to feed runtime `INPUT(...)` reads, which keeps tests
   hermetic.
 
-Other recognized keys (`caseFold`, …) are passed through to
-`SNOBOL.VM(options)` exactly as `snoflake` does today.
+Other recognized keys (`caseFold`, ...) are passed through to
+`createVM(options)` exactly as `snoflake` does today.
 
 ### `@input`
 

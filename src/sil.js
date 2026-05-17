@@ -727,6 +727,26 @@ sil.COPY = function ( _FILE ) {
     // SIL COPY pulls in machine-dependent data. The JS runtime has none.
 };
 
+sil.XINCLD = function ( $DESCR, $SPEC, FLOC, SLOC ) {
+    const unit = this.d( $DESCR ).addr;
+    let filename = this.s( $SPEC ).specified;
+
+    if (
+        filename.length >= 2 &&
+        ( ( filename[ 0 ] === "'" && filename[ filename.length - 1 ] === "'" ) ||
+          ( filename[ 0 ] === '"' && filename[ filename.length - 1 ] === '"' ) )
+    ) {
+        filename = filename.slice( 1, -1 );
+    }
+
+    try {
+        this.openUnit( unit ).includeSource( filename, this.loader );
+        return this.jmp( SLOC );
+    } catch ( e ) {
+        return this.jmp( FLOC );
+    }
+};
+
 //     CPYPAT is used to copy a pattern.  First set
 //      R1 = A1
 //      R2 = A2

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import process from 'node:process';
-import { VM, image } from '../src/snobol.js';
+import { run } from '../src/snobol.js';
 
 const { values, positionals } = parseArgs( {
     args: process.argv.slice( 2 ),
@@ -23,7 +23,7 @@ const { values, positionals } = parseArgs( {
     strict: true,
 } );
 
-const vm = new VM( {
+const result = run( {
     file:        values.file ?? positionals[ 0 ],
     input:       values.input,
     interactive: values.interactive,
@@ -33,5 +33,4 @@ const vm = new VM( {
     listing:     values.listing,
 } );
 
-vm.run( image );
-process.exitCode = vm.exitCode;
+process.exitCode = result.exitCode;

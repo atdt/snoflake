@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VM, image } from '../src/snobol.js';
+import { image, createVM } from '../src/snobol.js';
 import { parseHeader, loadCases } from './program-fixture.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -58,7 +58,7 @@ function runProgram( filePath, header ) {
 
     const stdout = captureWriter();
     const stderr = captureWriter();
-    const vm = new VM( { ...opts, stdout: stdout, stderr: stderr } );
+    const vm = createVM( { ...opts, stdout: stdout, stderr: stderr } );
     try {
         vm.run( image );
     } catch ( e ) {

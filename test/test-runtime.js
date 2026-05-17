@@ -4,7 +4,7 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VM, Descriptor, Specifier, File, assemble, constants, sil, str, stdinReader } from '../src/snobol.js';
+import { VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
 import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -133,6 +133,99 @@ describe( 'Memory Management', function () {
 } );
 
 describe( 'SNOBOL Program Execution', function () {
+    it( 'runs source text through the public API', function () {
+        const stdout = captureWriter(),
+              result = run( {
+                  source: " OUTPUT = 'SOURCE API'\nEND\n",
+                  stdout
+              } );
+
+        assert.equal( joinLines( stdout.lines ), 'SOURCE API\n' );
+        assert.equal( result.exitCode, 0 );
+        assert( result.vm instanceof VM );
+    } );
+
+    it( 'prefers source text over file loading', function () {
+        const stdout = captureWriter(),
+              result = run( {
+                  file: 'missing-file.sno',
+                  source: " OUTPUT = 'SOURCE WINS'\nEND\n",
+                  stdout
+              } );
+
+        assert.equal( joinLines( stdout.lines ), 'SOURCE WINS\n' );
+        assert.equal( result.vm.options.file, 'source.sno' );
+    } );
+
+    it( 'creates a VM with host file loading by default', function () {
+        const root = path.join( __dirname, '..' ),
+              programFile = path.join( root, 'tmp', 'test-create-vm-file.sno' ),
+              stdout = captureWriter();
+
+        fs.mkdirSync( path.dirname( programFile ), { recursive: true } );
+        fs.writeFileSync( programFile, " OUTPUT = 'CREATE VM'\nEND\n" );
+
+        const vm = createVM( {
+            file: programFile,
+            stdout
+        } );
+
+        vm.run( image );
+
+        assert.equal( joinLines( stdout.lines ), 'CREATE VM\n' );
+    } );
+
+    it( 'resolves INCLUDE relative to the including file through createVM', function () {
+        const root = path.join( __dirname, '..' ),
+              dir = path.join( root, 'tmp', 'test-create-vm-include' ),
+              libDir = path.join( dir, 'lib' ),
+              mainFile = path.join( dir, 'main.sno' ),
+              nestedFile = path.join( libDir, 'nested.sno' ),
+              stdout = captureWriter();
+
+        fs.mkdirSync( libDir, { recursive: true } );
+        fs.writeFileSync( nestedFile, " OUTPUT = 'CREATE INCLUDE'\n" );
+        fs.writeFileSync( mainFile, "-INCLUDE 'lib/nested.sno'\nEND\n" );
+
+        const vm = createVM( {
+            file: mainFile,
+            stdout
+        } );
+
+        vm.run( image );
+
+        assert.equal( joinLines( stdout.lines ), 'CREATE INCLUDE\n' );
+    } );
+
+    it( 'keeps a custom loader authoritative', function () {
+        const stdout = captureWriter(),
+              vm = createVM( {
+                  file: 'virtual.sno',
+                  stdout,
+                  loader: {
+                      load( filePath ) {
+                          assert.equal( filePath, 'virtual.sno' );
+                          return " OUTPUT = 'CUSTOM LOADER'\nEND\n";
+                      }
+                  }
+              } );
+
+        vm.run( image );
+
+        assert.equal( joinLines( stdout.lines ), 'CUSTOM LOADER\n' );
+    } );
+
+    it( 'imports the root module without eager Node builtin access', function () {
+        childProcess.execFileSync( process.execPath, [
+            '--input-type=module',
+            '-e',
+            "globalThis.process.getBuiltinModule = undefined; await import('./src/snobol.js');"
+        ], {
+            cwd: path.join( __dirname, '..' ),
+            encoding: 'utf8'
+        } );
+    } );
+
     it( 'accepts a positional source file path', function () {
         const root = path.join( __dirname, '..' ),
               programFile = path.join( root, 'tmp', 'test-positional-source.sno' );
@@ -151,6 +244,39 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( output, 'POSITIONAL\n' );
         assert( !output.includes( 'ERR_INVALID_ARG_TYPE' ) );
         assert( !output.includes( 'ERROR IN SNOBOL4 SYSTEM' ) );
+    } );
+
+    it( 'interpolates INCLUDE and COPY source files once', function () {
+        const root = path.join( __dirname, '..' ),
+              dir = path.join( root, 'tmp', 'test-include' ),
+              libDir = path.join( dir, 'lib' ),
+              mainFile = path.join( dir, 'main.sno' ),
+              sharedFile = path.join( libDir, 'shared.sno' ),
+              nestedFile = path.join( libDir, 'nested.sno' ),
+              copyFile = path.join( dir, 'copy.sno' );
+
+        fs.mkdirSync( libDir, { recursive: true } );
+        fs.writeFileSync( sharedFile, " OUTPUT = 'SHARED'\n-INCLUDE 'nested.sno'\n" );
+        fs.writeFileSync( nestedFile, " OUTPUT = 'NESTED'\n" );
+        fs.writeFileSync( copyFile, " OUTPUT = 'COPY'\n" );
+        fs.writeFileSync( mainFile, [
+            "-INCLUDE 'lib/shared.sno'",
+            '-COPY "copy.sno"',
+            "-INCLUDE 'lib/shared.sno'",
+            "-INCLUDE 'lib/shared.sno '",
+            'END',
+            ''
+        ].join( '\n' ) );
+
+        const output = childProcess.execFileSync( process.execPath, [
+            'bin/snoflake.js',
+            '--file=tmp/test-include/main.sno'
+        ], {
+            cwd: root,
+            encoding: 'utf8'
+        } );
+
+        assert.equal( output, 'SHARED\nNESTED\nCOPY\n' );
     } );
 
     it( 'returns EOF when no input streams are configured', function () {
@@ -228,6 +354,17 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( reader.readLine(), null );
     } );
 } );
+
+function captureWriter() {
+    return {
+        lines: [],
+        write( line ) { this.lines.push( line ); }
+    };
+}
+
+function joinLines( lines ) {
+    return lines.length === 0 ? '' : lines.join( '\n' ) + '\n';
+}
 
 function bufferedLineReader( lines ) {
     let pos = 0,

@@ -47,17 +47,17 @@ continues runtime `INPUT` reads from standard input after the source and any
 Snoflake is a standard ES module:
 
 ```js
-import SNOBOL from '@ath0/snoflake';
+import { run } from '@ath0/snoflake';
 
-const vm = new SNOBOL.VM( { file: 'hello.sno', interactive: true } );
-vm.run( SNOBOL.image );
+const result = run( { file: 'hello.sno', interactive: true } );
+process.exitCode = result.exitCode;
 ```
 
-The `VM` constructor accepts options for selecting the source file, input
-file, interactive stdin, output streams, and a custom `loader` for resolving
-file reads. See [`bin/snoflake.js`](bin/snoflake.js) for the CLI's use of the
-API and [`demo/run-snoflake.js`](demo/run-snoflake.js) for an in-memory
-example.
+For advanced embedding, `createVM(options)` returns a configured VM while
+`new VM(options)` remains the low-level, host-neutral machine. Options select
+the source file, source text, input file, interactive stdin, output streams,
+and custom loaders. See [`demo/run-snoflake.js`](demo/run-snoflake.js) for an
+in-memory browser example.
 
 ### Browser
 

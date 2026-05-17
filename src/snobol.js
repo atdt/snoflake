@@ -1,5 +1,10 @@
 // Public entry point. Re-exports the SIL runtime, the assembler, and the
-// generated SNOBOL4 image. Hosts construct a VM and call vm.run(image).
+// generated SNOBOL4 image. Most hosts call run(options) or createVM(options);
+// low-level integrations can still construct VM directly.
+import { createHostLoader } from './host.js';
+import { VM } from './vm.js';
+import snobolImage from './generated-snobol-image.js';
+
 export * from './io.js';
 export * from './datatypes.js';
 export * from './file.js';
@@ -9,4 +14,47 @@ export * from './format.js';
 export * from './sil.js';
 export * from './assemble.js';
 export * from './vm.js';
-export { default as image } from './generated-snobol-image.js';
+export { snobolImage as image };
+
+const DEFAULT_SOURCE_PATH = 'source.sno';
+
+function sourceLoader( source, sourcePath, baseLoader ) {
+    return {
+        load( filePath ) {
+            if ( filePath === sourcePath ) return source;
+            return baseLoader.load( filePath );
+        },
+
+        loadInclude( parentPath, includePath ) {
+            return baseLoader.loadInclude?.( parentPath, includePath ) ?? null;
+        }
+    };
+}
+
+export function createVM( options = {} ) {
+    const opts = { ...options };
+
+    if ( Object.hasOwn( opts, 'source' ) ) {
+        const source = opts.source,
+              sourcePath = opts.sourcePath || DEFAULT_SOURCE_PATH,
+              baseLoader = opts.loader || createHostLoader();
+
+        delete opts.source;
+        delete opts.sourcePath;
+        opts.file = sourcePath;
+        opts.loader = sourceLoader( source, sourcePath, baseLoader );
+    } else if ( !opts.loader ) {
+        opts.loader = createHostLoader();
+    }
+
+    return new VM( opts );
+}
+
+export function run( options = {} ) {
+    const vm = createVM( options );
+    vm.run( snobolImage );
+    return {
+        vm,
+        exitCode: vm.exitCode,
+    };
+}
