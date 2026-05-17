@@ -4462,9 +4462,15 @@ sil.TRIMSP = function ( $SPEC1, $SPEC2 ) {
           SPEC2 = this.s( $SPEC2 );
 
     SPEC1.read( SPEC2 );
-    while ( /[\u0020\u0000]$/.test( SPEC1.specified ) ) {
-        SPEC1.length--;
+    const mem = this.mem,
+          base = SPEC1.addr + SPEC1.offset;
+    let len = SPEC1.length;
+    while ( len > 0 ) {
+        const b = mem[ base + len - 1 ];
+        if ( b !== 0x20 && b !== 0x00 ) break;
+        len--;
     }
+    SPEC1.length = len;
 };
 
 //     UNLOAD is used to unload an external function.  C1...CL

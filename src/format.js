@@ -158,6 +158,6 @@ export function formatHasLeadingCarriageControl( template ) {
 export function printerLines( template, data, { stripCarriageControl } ) {
     return formatRecord( template, data ).split( '\n' ).map( line => {
         if ( stripCarriageControl && /^[10+ ]/.test( line ) ) line = line.slice( 1 );
-        return line.replace( /\u0000+/g, '' );
+        return line.replaceAll( '\0', '' );
     } );
 }

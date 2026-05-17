@@ -169,7 +169,7 @@ function emptyTable( foldable ) {
     return {
         puts:     new Int32Array( BYTE_VALUES ),
         actions:  new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
-        next:     new Array( BYTE_VALUES ).fill( null ),
+        next:     Array.from( { length: BYTE_VALUES }, () => null ),
         fallback: emptyEntry(),
         foldable,
     };

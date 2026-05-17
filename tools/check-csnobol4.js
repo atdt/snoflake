@@ -307,7 +307,7 @@ function resolveFixtureArgs( args ) {
         if ( fs.existsSync( candidate ) ) {
             return candidate;
         }
-        if ( !/\.sno$/.test( a ) ) {
+        if ( !a.endsWith( '.sno' ) ) {
             const withExt = path.join( fixture.PROGRAMS_DIR, a + '.sno' );
             if ( fs.existsSync( withExt ) ) {
                 return withExt;

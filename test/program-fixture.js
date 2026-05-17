@@ -164,7 +164,7 @@ function loadCases() {
         return [];
     }
     return fs.readdirSync( PROGRAMS_DIR )
-        .filter( function ( name ) { return /\.sno$/.test( name ); } )
+        .filter( function ( name ) { return name.endsWith( '.sno' ); } )
         .sort()
         .map( function ( name ) { return path.join( PROGRAMS_DIR, name ); } );
 }
