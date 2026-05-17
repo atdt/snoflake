@@ -74,7 +74,7 @@ function createSession( source ) {
 
     vm.reset();
     vm.loadImage( image );
-    vm.instructionPointer = 0;
+    vm.ip = 0;
     if ( Object.hasOwn( vm.symbols, 'LISTCL' ) ) vm.d( 'LISTCL' ).addr = 0;
     if ( Object.hasOwn( vm.symbols, 'BANRCL' ) ) vm.d( 'BANRCL' ).addr = 0;
     if ( Object.hasOwn( vm.symbols, 'STATCL' ) ) vm.d( 'STATCL' ).addr = 0;
@@ -95,16 +95,16 @@ function runUntilBlocked() {
     try {
         const { vm, instructions } = session;
 
-        while ( vm.instructionPointer >= 0 && vm.instructionPointer < instructions.length ) {
-            const loc = vm.instructionPointer;
-            vm.instructionPointer = loc + 1;
+        while ( vm.ip >= 0 && vm.ip < instructions.length ) {
+            const loc = vm.ip;
+            vm.ip = loc + 1;
 
             try {
                 instructions[ loc ]();
             } catch ( e ) {
                 if ( e instanceof InputNeeded ) {
                     // Retry this STREAD after the page posts the next input line.
-                    vm.instructionPointer = loc;
+                    vm.ip = loc;
                     return;
                 }
                 throw e;

@@ -3071,7 +3071,7 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // 9.  See also SELBRA.
 sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
-    const fallthroughLoc = this.instructionPointer,
+    const fallthroughLoc = this.ip,
           mem = this.mem,
           STACK_TOP = this.symbols.STACK + D * this.symbols.STSIZE;
 
@@ -4006,7 +4006,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
     if ( record.eof ) {
         DESCR.addr = 0;
         // Avoid jumping to ourselves on EOF, which would loop forever.
-        const currentLoc = this.instructionPointer - 1;
+        const currentLoc = this.ip - 1;
         if ( typeof EOF === 'number' && this.mem[ EOF ] === currentLoc ) {
             return;
         }

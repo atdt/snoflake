@@ -64,7 +64,7 @@ export class VM {
 
     reset() {
         this.exitCode = 0;
-        this.instructionPointer = null;
+        this.ip = null;
         this.symbols = {};
         this.resetMemory();
         this.callbacks = [];
@@ -83,11 +83,11 @@ export class VM {
         this.reset();
         this.loadImage( image );
 
-        this.instructionPointer = 0;
+        this.ip = 0;
         this.applyHostSwitches();
         this.interpret( this.compileInstructions( image.instructions ) );
 
-        return this.instructionPointer >= 0;
+        return this.ip >= 0;
     }
 
     // Load the image's symbols and assembled memory snapshot.
@@ -132,15 +132,15 @@ export class VM {
     }
 
     interpret( instructions ) {
-        while ( this.instructionPointer >= 0 && this.instructionPointer < instructions.length ) {
-            instructions[ this.instructionPointer++ ]();
+        while ( this.ip >= 0 && this.ip < instructions.length ) {
+            instructions[ this.ip++ ]();
         }
     }
 
     jmp( loc ) {
         // Undefined or null branch operands are fall-through.
         if ( typeof loc === 'number' ) {
-            this.instructionPointer = loc;
+            this.ip = loc;
         }
     }
 
