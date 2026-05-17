@@ -16,7 +16,12 @@ test-bun:
 
 test-all: test-node test-deno test-bun
 
-build:
+# Regenerate the standalone SIL parser from build/sil-grammar.peg. The
+# generated parser is committed so the runtime never depends on Peggy.
+build-parser:
+	@npx peggy -o ./build/generated-sil-parser.js --format es ./build/sil-grammar.peg
+
+build: build-parser
 	@node ./build/build-image.js >| ./src/generated-snobol-image.js
 
 run:
@@ -54,4 +59,4 @@ release: release-check
 	git push origin master "$$tag"; \
 	gh release create "$$tag" --verify-tag --title "$$tag" --generate-notes
 
-.PHONY: test test-node test-deno test-bun test-all build run profile bench bench-vs-csnobol4 release-check release
+.PHONY: test test-node test-deno test-bun test-all build build-parser run profile bench bench-vs-csnobol4 release-check release

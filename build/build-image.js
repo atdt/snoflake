@@ -1,5 +1,4 @@
 // Translate SIL source into the JavaScript runtime image.
-import peggy from 'peggy';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -7,10 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 // The public entry imports the generated image this script overwrites.
 import { assemble } from '../src/assemble.js';
+// Pre-generated standalone parser. Regenerate via `make build-parser`
+// when `sil-grammar.peg` changes; Peggy is only needed at that step.
+import { parse as parseSil } from './generated-sil-parser.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const sourcePath = path.join( __dirname, '..', 'external', 'v311-snoflake.sil' );
-const grammarPath = path.join( __dirname, 'sil-grammar.peg' );
 
 const listing = parseSource();
 const image = assemble( listing );
@@ -19,10 +20,8 @@ const code = generatedFileProlog() + serializeImage( image );
 process.stdout.write( code );
 
 function parseSource() {
-    const grammar = fs.readFileSync( grammarPath, 'utf8' );
     const source = fs.readFileSync( sourcePath, 'utf8' );
-
-    return peggy.generate( grammar ).parse( source );
+    return parseSil( source );
 }
 
 function generatedFileProlog() {

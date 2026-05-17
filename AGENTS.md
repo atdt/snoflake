@@ -11,8 +11,11 @@ crystal-clear, beautiful, simple, and well-documented.
 ## Repository Structure
 
 - `bin/snoflake.js`: CLI entry point for running a SNOBOL source file.
-- `build/`: SIL grammar (`sil-grammar.peg`) and build script (`build-image.js`)
-  that emit `src/generated-snobol-image.js`.
+- `build/`: SIL grammar (`sil-grammar.peg`), standalone Peggy-generated
+  parser (`generated-sil-parser.js`), and build script (`build-image.js`)
+  that together emit `src/generated-snobol-image.js`. The committed parser
+  keeps Peggy a build-only concern; regenerate it via `make build-parser`
+  when the grammar changes (`make build` runs this automatically).
 - `external/`: Upstream SIL and syntax-table sources.
   - `v311.sil`: Untouched historical reference source.
   - `v311-snoflake.sil`: Snoflake's working SIL input for translation. Began
@@ -73,7 +76,8 @@ crystal-clear, beautiful, simple, and well-documented.
 - `npx mocha test/test-programs.js`: run only the program-level tests.
 - `npx mocha test/test-sil.js`: run a specific unit test file.
 - `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
-- `make build`: regenerate `src/generated-snobol-image.js`.
+- `make build`: regenerate `build/generated-sil-parser.js` (via
+  `make build-parser`) and then `src/generated-snobol-image.js`.
 - `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
 - `make bench` (or `node tools/bench-snoflake.js [opts]`): run the
   Snoflake benchmark harness against a default fixture suite. Pass `-h`
