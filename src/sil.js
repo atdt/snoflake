@@ -453,16 +453,15 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
     // append specifier
     const SPEC1 = this.s( $SPEC1 ),
           SPEC2 = this.s( $SPEC2 ),
-          A1 = SPEC1.addr,
-          O1 = SPEC1.offset,
-          STR1 = SPEC1.specified,
-          STR2 = SPEC2.specified;
+          L1 = SPEC1.length,
+          L2 = SPEC2.length,
+          dst = SPEC1.addr + SPEC1.offset + L1,
+          src = SPEC2.addr + SPEC2.offset;
 
-    const combined = STR1 + STR2,
-          encoded = str.encode( combined );
-
-    this.mem.set( encoded, A1 + O1 );
-    SPEC1.length = combined.length;
+    // Programming note 2 guarantees enough storage after SPEC1's last char.
+    // copyWithin has memmove semantics, so overlap with SPEC2 is safe.
+    this.mem.copyWithin( dst, src, src + L2 );
+    SPEC1.length = L1 + L2;
 };
 
 //     ARRAY is used to assemble an array of descriptors.
@@ -3862,8 +3861,9 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 
     // The empty alternative covers L=0, which spec note 3 says yields 0.0.
     // The `+ '0'` lets parseFloat accept a trailing decimal point like "12.".
-    if ( /^([+-]?0*\d+\.\d*|)$/.test( SPEC.specified ) ) {
-        DESCR.raddr = parseFloat( SPEC.specified + '0', 10 );
+    const s = SPEC.specified;
+    if ( /^([+-]?0*\d+\.\d*|)$/.test( s ) ) {
+        DESCR.raddr = parseFloat( s + '0', 10 );
         DESCR.flags = 0;
         DESCR.value = this.$( 'R' );
         this.jmp( SLOC );
