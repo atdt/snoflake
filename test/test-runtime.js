@@ -217,12 +217,16 @@ describe( 'SNOBOL Program Execution', function () {
     } );
 
     it( 'imports the root module without eager Node builtin access', function () {
-        childProcess.execFileSync( process.execPath, [
-            '--input-type=module',
-            '-e',
-            "globalThis.process.getBuiltinModule = undefined; await import('./src/snobol.js');"
-        ], {
-            cwd: path.join( __dirname, '..' ),
+        const root = path.join( __dirname, '..' ),
+              probe = path.join( root, 'tmp', 'test-no-eager-builtin.mjs' );
+
+        fs.mkdirSync( path.dirname( probe ), { recursive: true } );
+        fs.writeFileSync( probe,
+            "globalThis.process.getBuiltinModule = undefined;\n"
+            + "await import('../src/snobol.js');\n" );
+
+        childProcess.execFileSync( process.execPath, [ probe ], {
+            cwd: root,
             encoding: 'utf8'
         } );
     } );
