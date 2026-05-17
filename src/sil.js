@@ -1522,7 +1522,7 @@ sil.INIT = function () {
     this.timeStart = new Date().getTime();
     FRSGPT.addr = this.alloc( dynamicStorageSize );
     HDSGPT.addr = FRSGPT.addr;
-    TLSGP1.addr = this.alloc( dynamicStorageSize );
+    TLSGP1.addr = FRSGPT.addr + dynamicStorageSize;
 
     [
         [ 'ENDPTR', 'ENDSP' ],

@@ -8,7 +8,7 @@ import { bindSyntaxTables, constants } from './syntax.js';
 const { UNITI } = constants;
 
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
-const INITIAL_WORDS = 1024 * 1024;
+const INITIAL_WORDS = 512 * 1024;
 const MAX_WORDS = 256 * 1024 * 1024;
 
 function wordsToBytes( words ) {

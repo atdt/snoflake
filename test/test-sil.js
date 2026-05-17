@@ -1752,6 +1752,10 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
         this.vm.d( 'OBPTR' ).update( obstart - this.vm.$( 'LNKFLD' ), constants.PTR, this.vm.$( 'S' ) );
 
         sil.INIT.call( this.vm );
+        assert.equal( this.vm.d( 'TLSGP1' ).addr - this.vm.d( 'HDSGPT' ).addr, D * 50000 );
+        assert.equal( this.vm.memPtr, this.vm.d( 'TLSGP1' ).addr );
+        assert( this.vm.d( 'FRSGPT' ).addr < this.vm.d( 'TLSGP1' ).addr );
+
         const ptr = this.vm.d( 'ENDPTR' );
         sil.LOCSP.call( this.vm, spec, ptr );
 
