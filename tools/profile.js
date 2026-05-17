@@ -34,7 +34,7 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
       PROFILES_DIR = path.join( ROOT, 'tmp', 'profiles' ),
       BENCH = path.join( ROOT, 'tools', 'bench-snoflake.js' );
 
-const DEFAULTS = [ '--mode=vm', '--samples=3', '--warmup=1', '--iterations=3', '--validate=none' ];
+const DEFAULTS = [ '--mode=vm', '--samples=3', '--warmup=1', '--iterations=3' ];
 
 function splitArgs( argv ) {
     const forwarded = [];

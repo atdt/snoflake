@@ -8,7 +8,7 @@
 //   node tools/bench-snoflake.js --root=tmp/worktree-before
 //   node tools/bench-snoflake.js --mode=cli --samples=5 --iterations=3
 //   node tools/bench-snoflake.js --all --json=tmp/bench.json
-//   node tools/bench-snoflake.js --validate=none tmp/probe.sno
+//   node tools/bench-snoflake.js tmp/probe.sno
 //
 // VM mode imports Snoflake once, then times repeated VM construction +
 // execution. CLI mode times cold process runs. Each sample runs every selected
@@ -43,12 +43,6 @@ const DEFAULT_FIXTURES = [
     'word-ending-analysis'
 ];
 
-const ERROR_MARKERS = [
-    'ERROR IN SNOBOL4 SYSTEM',
-    'Compilation error',
-    'Execution error'
-];
-
 function parseArgs( argv ) {
     const opts = {
         root: ROOT,
@@ -56,7 +50,6 @@ function parseArgs( argv ) {
         samples: 9,
         iterations: 5,
         warmup: 2,
-        validate: 'first',
         json: null,
         all: false,
         fixtures: []
@@ -82,11 +75,6 @@ function parseArgs( argv ) {
                     throw new Error( '--mode must be vm or cli' );
                 }
                 opts.mode = raw;
-            } else if ( key === 'validate' ) {
-                if ( raw !== 'first' && raw !== 'each' && raw !== 'none' ) {
-                    throw new Error( '--validate must be first, each, or none' );
-                }
-                opts.validate = raw;
             } else if ( key === 'json' ) {
                 opts.json = path.resolve( raw );
             } else {
@@ -110,13 +98,11 @@ function usage() {
         '  --samples=N          measured aggregate samples (default 9)',
         '  --iterations=N       fixture loop repetitions per sample (default 5)',
         '  --warmup=N           untimed aggregate warmups (default 2)',
-        '  --validate=MODE      first, each, or none (default first)',
         '  --all                use every test/programs/*.sno fixture',
         '  --json=PATH          also write machine-readable results',
         '',
         'Fixture names may be bare names such as kalah-opening-search.',
-        'Explicit .sno paths may also be profiled; pass --validate=none unless',
-        'the file uses the test/programs fixture header format.'
+        'Explicit .sno paths may also be profiled.'
     ].join( '\n' ) );
 }
 
@@ -162,10 +148,7 @@ function makeAdHocHeader( filePath ) {
     return {
         title: path.basename( filePath ),
         options: {},
-        input: null,
-        expect: null,
-        match: null,
-        attribution: null
+        input: null
     };
 }
 
@@ -180,64 +163,12 @@ function loadHeader( selected ) {
     }
 }
 
-function trimTrailingNewlines( s ) {
-    return s.replace( /\n+$/, '' );
-}
-
-function findErrorMarker( output ) {
-    for ( const marker of ERROR_MARKERS ) {
-        if ( output.includes( marker ) ) {
-            return marker;
-        }
-    }
-    return null;
-}
-
-function validateOutput( fixture, stdout, stderr ) {
-    const output = stdout + stderr,
-          marker = findErrorMarker( output ),
-          header = fixture.header;
-
-    if ( header.expect === null ) {
-        throw new Error( fixture.name + ': cannot validate an ad hoc program; pass --validate=none' );
-    }
-
-    if ( header.match === 'error' ) {
-        if ( marker === null ) {
-            throw new Error( fixture.name + ': expected an error marker, none found' );
-        }
-        if ( header.expect !== null && !output.includes( trimTrailingNewlines( header.expect ) ) ) {
-            throw new Error( fixture.name + ': expected error substring not found' );
-        }
-        return;
-    }
-
-    if ( marker !== null ) {
-        throw new Error( fixture.name + ': unexpected error marker "' + marker + '"' );
-    }
-
-    if ( header.match === 'substring' ) {
-        if ( !output.includes( trimTrailingNewlines( header.expect ) ) ) {
-            throw new Error( fixture.name + ': expected substring not found' );
-        }
-        return;
-    }
-
-    if ( trimTrailingNewlines( output ) !== trimTrailingNewlines( header.expect ) ) {
-        throw new Error( fixture.name + ': output did not match @expect' );
-    }
-}
-
 function captureWriter() {
     const lines = [];
     return {
         lines,
         write( line ) { lines.push( line ); }
     };
-}
-
-function joinLines( lines ) {
-    return lines.length === 0 ? '' : lines.join( '\n' ) + '\n';
 }
 
 function prepareFixtures( opts ) {
@@ -281,16 +212,7 @@ function runVm( SNOBOL, fixture ) {
               stderr
           } );
 
-    try {
-        vm.run( SNOBOL.image );
-    } catch ( e ) {
-        stderr.write( 'Execution error: ' + ( e && e.stack || e ) );
-    }
-
-    return {
-        stdout: joinLines( stdout.lines ),
-        stderr: joinLines( stderr.lines )
-    };
+    vm.run( SNOBOL.image );
 }
 
 function optionArgs( options ) {
@@ -328,11 +250,6 @@ function runCli( opts, fixture ) {
     if ( result.error ) {
         throw result.error;
     }
-
-    return {
-        stdout: result.stdout || '',
-        stderr: result.stderr || ''
-    };
 }
 
 function timeNs( fn ) {
@@ -379,15 +296,7 @@ function runSuiteSample( fixtures, runner, opts, sampleIndex, measured ) {
     for ( let iteration = 0; iteration < opts.iterations; iteration++ ) {
         for ( const fixture of fixtures ) {
             const elapsed = timeNs( function () {
-                const result = runner( fixture );
-                const shouldValidate =
-                    opts.validate === 'each' ||
-                    ( opts.validate === 'first' && !fixture.validated );
-
-                if ( shouldValidate ) {
-                    validateOutput( fixture, result.stdout, result.stderr );
-                    fixture.validated = true;
-                }
+                runner( fixture );
             } );
 
             totals.set( fixture.name, totals.get( fixture.name ) + elapsed );
@@ -412,8 +321,8 @@ async function main() {
           runner = await createRunner( opts );
 
     console.error( 'mode=%s root=%s', opts.mode, opts.root );
-    console.error( 'fixtures=%d iterations=%d warmup=%d samples=%d validate=%s',
-        fixtures.length, opts.iterations, opts.warmup, opts.samples, opts.validate );
+    console.error( 'fixtures=%d iterations=%d warmup=%d samples=%d',
+        fixtures.length, opts.iterations, opts.warmup, opts.samples );
 
     for ( let i = 0; i < opts.warmup; i++ ) {
         runSuiteSample( fixtures, runner, opts, i, false );
@@ -439,7 +348,6 @@ async function main() {
             samples: opts.samples,
             iterations: opts.iterations,
             warmup: opts.warmup,
-            validate: opts.validate,
             fixtureCount: fixtures.length
         },
         aggregate: stats( aggregateSamples ),

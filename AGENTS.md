@@ -77,9 +77,8 @@ crystal-clear, beautiful, simple, and well-documented.
 - `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
 - `make bench` (or `node tools/bench-snoflake.js [opts]`): run the
   Snoflake benchmark harness against a default fixture suite. Pass `-h`
-  for full options. To benchmark an arbitrary `.sno` program, pass its path
-  explicitly and disable fixture-output validation, e.g.
-  `node tools/bench-snoflake.js --validate=none tmp/example.sno`.
+  for full options. To benchmark an arbitrary `.sno` program, pass its
+  path explicitly, e.g. `node tools/bench-snoflake.js tmp/example.sno`.
 - `make bench-vs-csnobol4` (or `node tools/bench-vs-csnobol4.js [opts]`):
   wall-clock comparison against CSNOBOL4. Requires `snobol4` on PATH;
   override with `--snobol4=PATH`.
@@ -90,8 +89,7 @@ crystal-clear, beautiful, simple, and well-documented.
   path is logged at the end. Forward any `bench-snoflake.js` flag to
   scope the profile (e.g. `node tools/profile.js --iterations=10
   kalah-opening-search`). To profile an arbitrary `.sno` program, pass its
-  path directly, e.g. `node tools/profile.js tmp/example.sno`; `profile.js`
-  defaults to `--validate=none`.
+  path directly, e.g. `node tools/profile.js tmp/example.sno`.
 
 ### Sample debug commands
 
