@@ -1,14 +1,19 @@
-// Two-pass assembler: lays out storage, resolves symbols, then writes the
-// SIL program's data and instructions into VM memory.
+// Two-pass assembler:
+//
+// - Pass 1 walks the listing, runs each assembly-time macro, and binds every
+//   label to its target slot.
+// - Pass 2 re-runs the assembly-time macros with all symbols bound so any data
+//   they write reflects the final symbol values.
+//
+// The result is a VM image containing a memory snapshot, an instruction list,
+// and a resolved symbol table.
 
 import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { constants, defaults, hostStrings, streamActions, syntaxTables } from './syntax.js';
 
-// Assembly-time macros whose return value is what their label binds to.
-// Storage macros claim memory and return its address. EQU returns a value
-// directly. Pass 1 runs each macro to bind its label. Pass 2 reruns the
-// storage macros to write their real data once every symbol is bound.
+// Assembly-time macros run during assembly, not execution. They return the
+// value their label binds to. Storage macros (all but EQU) also claim memory.
 const ASSEMBLY_MACROS = [ 'ARRAY', 'BUFFER', 'DESCR', 'EQU', 'FORMAT', 'SPEC', 'STRING' ];
 
 // These mark a location in the listing, but do not generate code or data.
@@ -17,46 +22,45 @@ const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 export function assemble( program ) {
     const vm = new VM();
 
-    prepareImageVm( vm );
-
-    // Walk the listing twice: first to bind labels and reserve data, then to
-    // write data now that operands can resolve.
-    const dataStart = vm.memPtr,
-          instructions = bindLabelsAndReserveStorage( vm, program ),
-          dataEnd = vm.memPtr;
-
-    writeReservedStorage( vm, program, dataStart, dataEnd );
-
-    return imageFrom( vm, instructions, dataEnd );
-}
-
-function prepareImageVm( vm ) {
-    // Constants and defaults appear in SIL as names, just like labels.
     Object.assign( vm.symbols, constants, defaults );
-
-    // MDATA strings belong in the assembled image. Keeping them out of reset()
-    // lets low-level macro tests start with empty memory.
     for ( const name in hostStrings ) {
         vm.define( name, hostStrings[ name ] );
     }
+
+    const dataStart = vm.memPtr,
+          instructions = bindLabels( vm, program ),
+          dataEnd = vm.memPtr;
+
+    writeStorage( vm, program, dataStart, dataEnd );
+
+    return {
+        symbols: { ...vm.symbols },
+        memory: vm.mem.slice( 0, dataEnd ),
+        // Resolve instruction operands now, with every label bound.
+        instructions: instructions.map( stmt => [
+            stmt.label,
+            stmt.macro,
+            argsFor( vm, stmt )
+        ] ),
+    };
 }
 
-// Decide where every label points. Storage labels point into memory.
-// EQU labels point at a computed value. Executable labels point into the
-// instruction array. Assembly-time macros return whatever their label
-// should bind to, so the macro itself sources both the label value and
-// (for storage) the memPtr advance.
-function bindLabelsAndReserveStorage( vm, program ) {
+// Decide where every label points.
+function bindLabels( vm, program ) {
     const instructions = [];
 
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ];
         let location;
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
-            location = reserveAssemblyStatement( vm, stmt );
+            // Assembly-time macros decide the label value.
+            // Storage macros also claim memory.
+            location = getAssemblyMacroLocation( vm, stmt );
         } else if ( MARKER_MACROS.includes( stmt.macro ) ) {
-            location = markerLocation( program, i, vm.memPtr, instructions.length );
+            // Markers alias the next memory or instruction slot.
+            location = getMarkerMacroLocation( program, i, vm.memPtr, instructions.length );
         } else {
+            // Executable labels point into the instruction array.
             location = instructions.length;
             instructions.push( stmt );
         }
@@ -66,12 +70,11 @@ function bindLabelsAndReserveStorage( vm, program ) {
     return instructions;
 }
 
-// Run a storage or EQU macro to claim memory and discover the label's
-// location. Operands that reference forward labels throw during symbol
-// lookup. We treat such operands as zero so the macro can run to claim
-// its memory. Pass 2 reruns the macro with every symbol bound and
-// overwrites the data.
-function reserveAssemblyStatement( vm, stmt ) {
+// Run an assembly-time macro and return the value its label binds to. Operands
+// that reference forward labels throw during symbol lookup. We treat such
+// operands as zero so the macro can run to claim its memory. Whatever data the
+// macro writes will be overwritten in pass 2 with every symbol bound.
+function getAssemblyMacroLocation( vm, stmt ) {
     const args = stmt.operands.map( operand => {
         try { return resolveOperand( vm, operand ); }
         catch { return 0; }
@@ -79,9 +82,9 @@ function reserveAssemblyStatement( vm, stmt ) {
     return sil[ stmt.macro ].apply( vm, args );
 }
 
-// Rewind to the data segment and let storage macros write into the cells
-// claimed by the first pass, now with every symbol resolved.
-function writeReservedStorage( vm, program, dataStart, dataEnd ) {
+// Rewind to the data segment and re-run the assembly-time macros with every
+// symbol bound. Storage macros write into the cells they claimed in pass 1.
+function writeStorage( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     for ( const stmt of program ) {
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
@@ -93,30 +96,18 @@ function writeReservedStorage( vm, program, dataStart, dataEnd ) {
     }
 }
 
-// Resolve instruction operands at the end so forward labels are available.
-function imageFrom( vm, instructions, dataEnd ) {
-    return {
-        symbols: { ...vm.symbols },
-        memory: vm.mem.slice( 0, dataEnd ),
-        instructions: instructions.map( stmt => [
-            stmt.label,
-            stmt.macro,
-            argsFor( vm, stmt )
-        ] ),
-    };
-}
-
 // A marker label belongs to the next statement that actually occupies
 // memory or an instruction slot. Consecutive markers all name that same spot.
-function markerLocation( program, i, memPtr, instructionCount ) {
-    let next = i + 1;
-    while ( next < program.length && MARKER_MACROS.includes( program[ next ].macro ) ) {
-        next++;
+function getMarkerMacroLocation( program, i, memPtr, instructionCount ) {
+    for ( let j = i + 1; j < program.length; j++ ) {
+        const macro = program[ j ].macro;
+        if ( !MARKER_MACROS.includes( macro ) ) {
+            return ASSEMBLY_MACROS.includes( macro )
+                ? memPtr
+                : instructionCount;
+        }
     }
-    if ( next < program.length && ASSEMBLY_MACROS.includes( program[ next ].macro ) ) {
-        return memPtr;
-    }
-    return instructionCount;
+    throw new Error( 'Marker has no following anchor' );
 }
 
 // The parser leaves expressions as small trees. Resolve them after labels
