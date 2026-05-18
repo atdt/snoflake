@@ -1,17 +1,15 @@
 // Two-pass assembler: lays out storage, resolves symbols, then writes the
 // SIL program's data and instructions into VM memory.
 
-import { D } from './datatypes.js';
 import { VM } from './vm.js';
 import { sil } from './sil.js';
-import { str } from './string.js';
 import { constants, defaults, hostStrings, streamActions, syntaxTables } from './syntax.js';
 
-const SPECIFIER_SIZE = 2 * D;
-
-// These macros write data into the image. Reserve their space before
-// resolving and writing their operands.
-const STORAGE_MACROS = [ 'ARRAY', 'BUFFER', 'DESCR', 'FORMAT', 'SPEC', 'STRING' ];
+// Assembly-time macros whose return value is what their label binds to.
+// Storage macros claim memory and return its address. EQU returns a value
+// directly. Pass 1 runs each macro to bind its label. Pass 2 reruns the
+// storage macros to write their real data once every symbol is bound.
+const ASSEMBLY_MACROS = [ 'ARRAY', 'BUFFER', 'DESCR', 'EQU', 'FORMAT', 'SPEC', 'STRING' ];
 
 // These mark a location in the listing, but do not generate code or data.
 const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
@@ -44,17 +42,18 @@ function prepareImageVm( vm ) {
 }
 
 // Decide where every label points. Storage labels point into memory.
-// Executable labels point into the instruction array.
+// EQU labels point at a computed value. Executable labels point into the
+// instruction array. Assembly-time macros return whatever their label
+// should bind to, so the macro itself sources both the label value and
+// (for storage) the memPtr advance.
 function bindLabelsAndReserveStorage( vm, program ) {
     const instructions = [];
 
     for ( let i = 0; i < program.length; i++ ) {
         const stmt = program[ i ];
         let location;
-        if ( STORAGE_MACROS.includes( stmt.macro ) ) {
-            location = reserveStorage( vm, stmt );
-        } else if ( stmt.macro === 'EQU' ) {
-            location = sil.EQU.apply( vm, argsFor( vm, stmt ) );
+        if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
+            location = reserveAssemblyStatement( vm, stmt );
         } else if ( MARKER_MACROS.includes( stmt.macro ) ) {
             location = markerLocation( program, i, vm.memPtr, instructions.length );
         } else {
@@ -67,12 +66,25 @@ function bindLabelsAndReserveStorage( vm, program ) {
     return instructions;
 }
 
+// Run a storage or EQU macro to claim memory and discover the label's
+// location. Operands that reference forward labels throw during symbol
+// lookup. We treat such operands as zero so the macro can run to claim
+// its memory. Pass 2 reruns the macro with every symbol bound and
+// overwrites the data.
+function reserveAssemblyStatement( vm, stmt ) {
+    const args = stmt.operands.map( operand => {
+        try { return resolveOperand( vm, operand ); }
+        catch { return 0; }
+    } );
+    return sil[ stmt.macro ].apply( vm, args );
+}
+
 // Rewind to the data segment and let storage macros write into the cells
-// reserved by bindLabelsAndReserveStorage().
+// claimed by the first pass, now with every symbol resolved.
 function writeReservedStorage( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     for ( const stmt of program ) {
-        if ( STORAGE_MACROS.includes( stmt.macro ) ) {
+        if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
             sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
         }
     }
@@ -101,38 +113,10 @@ function markerLocation( program, i, memPtr, instructionCount ) {
     while ( next < program.length && MARKER_MACROS.includes( program[ next ].macro ) ) {
         next++;
     }
-    if ( next < program.length ) {
-        const macro = program[ next ].macro;
-        if ( STORAGE_MACROS.includes( macro ) || macro === 'EQU' ) return memPtr;
+    if ( next < program.length && ASSEMBLY_MACROS.includes( program[ next ].macro ) ) {
+        return memPtr;
     }
     return instructionCount;
-}
-
-// Reserve the same amount of memory the storage macro will later write.
-// The current pointer is the address for the macro's label.
-function reserveStorage( vm, stmt ) {
-    const ptr = vm.memPtr;
-    switch ( stmt.macro ) {
-        case 'ARRAY':
-            vm.alloc( argsFor( vm, stmt )[ 0 ] * D );
-            break;
-        case 'BUFFER':
-            vm.alloc( argsFor( vm, stmt )[ 0 ] );
-            break;
-        case 'DESCR':
-            vm.alloc( D );
-            break;
-        case 'FORMAT':
-        case 'STRING':
-            vm.alloc( SPECIFIER_SIZE + str.encode( argsFor( vm, stmt )[ 0 ] ).length );
-            break;
-        case 'SPEC':
-            vm.alloc( SPECIFIER_SIZE );
-            break;
-        default:
-            throw new Error( 'Unknown storage macro: ' + stmt.macro );
-    }
-    return ptr;
 }
 
 // The parser leaves expressions as small trees. Resolve them after labels
