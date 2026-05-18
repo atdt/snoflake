@@ -16,7 +16,7 @@ describe( 'SIL build pipeline', function () {
         assert.deepEqual( listing[ 0 ], {
             label: null,
             macro: 'GETAC',
-            operands: [ { symbol: 'TVAL' }, { symbol: 'PDLPTR' } ]
+            operands: [ { type: 'symbol', name: 'TVAL' }, { type: 'symbol', name: 'PDLPTR' } ]
         } );
     } );
 

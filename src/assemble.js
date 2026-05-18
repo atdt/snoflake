@@ -116,32 +116,17 @@ function argsFor( vm, stmt ) {
     return stmt.operands.map( operand => resolveOperand( vm, operand ) );
 }
 
-function resolveOperand( vm, operand ) {
-    if ( Array.isArray( operand ) ) {
-        return operand.map( item => resolveOperand( vm, item ) );
+function resolveOperand( vm, op ) {
+    if ( !op || typeof op !== 'object' ) return op;
+    switch ( op.type ) {
+        case 'symbol': return resolveSymbol( vm, op.name );
+        case 'negate': return -resolveOperand( vm, op.operand );
+        case 'add':    return resolveOperand( vm, op.left ) + resolveOperand( vm, op.right );
+        case 'sub':    return resolveOperand( vm, op.left ) - resolveOperand( vm, op.right );
+        case 'mul':    return resolveOperand( vm, op.left ) * resolveOperand( vm, op.right );
+        case 'list':   return op.items.map( item => resolveOperand( vm, item ) );
     }
-
-    if ( operand && typeof operand === 'object' ) {
-        if ( 'symbol' in operand ) {
-            return resolveSymbol( vm, operand.symbol );
-        }
-        if ( 'negate' in operand ) {
-            return -resolveOperand( vm, operand.negate );
-        }
-        if ( 'operator' in operand ) {
-            const left = resolveOperand( vm, operand.operands[ 0 ] ),
-                  right = resolveOperand( vm, operand.operands[ 1 ] );
-            switch ( operand.operator ) {
-                case '+': return left + right;
-                case '-': return left - right;
-                case '*': return left * right;
-            }
-            throw new Error( 'Unknown SIL operand operator: ' + operand.operator );
-        }
-        throw new Error( 'Unknown SIL operand: ' + JSON.stringify( operand ) );
-    }
-
-    return operand;
+    throw new Error( 'Unknown SIL operand: ' + JSON.stringify( op ) );
 }
 
 // Syntax table names and stream actions are command names, not labels. Leave

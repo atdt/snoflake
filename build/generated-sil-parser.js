@@ -253,21 +253,22 @@ function peg$parse(input, options) {
   var peg$f7 = function() { return null; };
   var peg$f8 = function(head, operator, term) { return { operator: operator, term: term }; };
   var peg$f9 = function(head, tail) {
+    var typeFor = { '+': 'add', '-': 'sub' };
     return tail.reduce( function ( left, node ) {
-        return { operator: node.operator, operands: [ left, node.term ] };
+        return { type: typeFor[ node.operator ], left: left, right: node.term };
     }, head );
 };
   var peg$f10 = function(head, operator, term) { return { operator: operator, term: term }; };
   var peg$f11 = function(head, tail) {
     return tail.reduce( function ( left, node ) {
-        return { operator: node.operator, operands: [ left, node.term ] };
+        return { type: 'mul', left: left, right: node.term };
     }, head );
 };
   var peg$f12 = function(operator, argument) {
     if ( operator === '+' ) {
         return argument;
     }
-    return { negate: argument };
+    return { type: 'negate', operand: argument };
 };
   var peg$f13 = function(literal) {
     literal = literal.join( '' );
@@ -278,14 +279,14 @@ function peg$parse(input, options) {
 };
   var peg$f15 = function(head, v) { return v; };
   var peg$f16 = function(head, tail) {
-    var result = [];
+    var items = [];
 
     if ( head !== undefined || tail.length ) {
         tail.unshift( head );
-        result = tail;
+        items = tail;
     }
 
-    return result;
+    return { type: 'list', items: items };
 };
   var peg$f17 = function(head, tail) { return head + tail.join( '' ); };
   var peg$f18 = function(label) {
@@ -293,7 +294,7 @@ function peg$parse(input, options) {
 };
   var peg$f19 = function(head, tail) {
     var name = head + tail.join( '' );
-    return { symbol: name };
+    return { type: 'symbol', name: name };
 };
   var peg$f20 = function(head, tail) {
     return head + tail.join( '' );

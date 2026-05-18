@@ -26,9 +26,9 @@ describe( 'Assembly Control Macros', function () {
         this.vm.run( assemble( [
             { label: 'PAD', macro: 'BUFFER', operands: [ 10 ] },
             { label: 'DS',  macro: 'DESCR',  operands: [] },
-            { label: null,  macro: 'BRANCH', operands: [ { symbol: 'LBL' } ] },
-            { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 11 ] },
-            { label: 'LBL', macro: 'SETAC',  operands: [ { symbol: 'DS' }, 22 ] },
+            { label: null,  macro: 'BRANCH', operands: [ { type: 'symbol', name: 'LBL' } ] },
+            { label: null,  macro: 'SETAC',  operands: [ { type: 'symbol', name: 'DS' }, 11 ] },
+            { label: 'LBL', macro: 'SETAC',  operands: [ { type: 'symbol', name: 'DS' }, 22 ] },
             { label: null,  macro: 'END',    operands: [] }
         ] ) );
 
@@ -40,8 +40,8 @@ describe( 'Assembly Control Macros', function () {
 
     it( 'resolves forward labels in assembled descriptor data', function () {
         this.vm.run( assemble( [
-            { label: 'DS',    macro: 'DESCR', operands: [ { symbol: 'VALUE' } ] },
-            { label: 'SP',    macro: 'SPEC',  operands: [ { symbol: 'VALUE' }, 0, 0, 0, 0 ] },
+            { label: 'DS',    macro: 'DESCR', operands: [ { type: 'symbol', name: 'VALUE' } ] },
+            { label: 'SP',    macro: 'SPEC',  operands: [ { type: 'symbol', name: 'VALUE' }, 0, 0, 0, 0 ] },
             { label: 'VALUE', macro: 'EQU',   operands: [ 123 ] },
             { label: null,    macro: 'END',   operands: [] }
         ] ) );
@@ -103,9 +103,9 @@ describe( 'Branch Macros', function () {
     it( 'BRANCH', function () {
         this.vm.run( assemble( [
             { label: 'DS',  macro: 'DESCR',  operands: [] },
-            { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 22 ] },
-            { label: null,  macro: 'BRANCH', operands: [ { symbol: 'LBL' } ] },
-            { label: null,  macro: 'SETAC',  operands: [ { symbol: 'DS' }, 33 ] },
+            { label: null,  macro: 'SETAC',  operands: [ { type: 'symbol', name: 'DS' }, 22 ] },
+            { label: null,  macro: 'BRANCH', operands: [ { type: 'symbol', name: 'LBL' } ] },
+            { label: null,  macro: 'SETAC',  operands: [ { type: 'symbol', name: 'DS' }, 33 ] },
             { label: 'LBL', macro: 'LHERE',  operands: [] },
             { label: null,  macro: 'END',    operands: [] }
         ] ) );

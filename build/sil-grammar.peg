@@ -70,8 +70,9 @@ expr "expression"
 additive
   = head:multiplicative tail:( operator:[+-] term:multiplicative { return { operator: operator, term: term }; } )*
 {
+    var typeFor = { '+': 'add', '-': 'sub' };
     return tail.reduce( function ( left, node ) {
-        return { operator: node.operator, operands: [ left, node.term ] };
+        return { type: typeFor[ node.operator ], left: left, right: node.term };
     }, head );
 }
 
@@ -79,7 +80,7 @@ multiplicative
   = head:unary tail:( operator:"*" term:unary { return { operator: operator, term: term }; } )*
 {
     return tail.reduce( function ( left, node ) {
-        return { operator: node.operator, operands: [ left, node.term ] };
+        return { type: 'mul', left: left, right: node.term };
     }, head );
 }
 
@@ -89,7 +90,7 @@ unary
     if ( operator === '+' ) {
         return argument;
     }
-    return { negate: argument };
+    return { type: 'negate', operand: argument };
 }
   / primary
 
@@ -112,14 +113,14 @@ integer "integer"
 list "list operand"
   = '(' head:variable tail:( ',' v:variable? { return v; } )* ')'
 {
-    var result = [];
+    var items = [];
 
     if ( head !== undefined || tail.length ) {
         tail.unshift( head );
-        result = tail;
+        items = tail;
     }
 
-    return result;
+    return { type: 'list', items: items };
 }
 
 blank
@@ -136,7 +137,7 @@ name "name"
   = head:[A-Z] tail:[A-Z0-9]*
 {
     var name = head + tail.join( '' );
-    return { symbol: name };
+    return { type: 'symbol', name: name };
 }
 
 macro "macro"
