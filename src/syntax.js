@@ -368,19 +368,26 @@ const tableDefinitions = {
     ]
 };
 
-export const syntaxTables = {};
-for ( const name in tableDefinitions ) {
-    syntaxTables[ name ] = emptyTable( FOLDABLE_TABLES.includes( name ) );
+export const tableNames = new Set( Object.keys( tableDefinitions ) );
+
+// Build a fresh per-VM map of empty syntax tables. Each VM owns its own
+// tables so CLERTB and PLUGTB mutations don't bleed across instances.
+export function buildSyntaxTables() {
+    const tables = {};
+    for ( const name in tableDefinitions ) {
+        tables[ name ] = emptyTable( FOLDABLE_TABLES.includes( name ) );
+    }
+    return tables;
 }
 
 // Resolve symbolic PUT and GOTO operands after the image symbols are loaded.
-export function bindSyntaxTables( resolveSymbol ) {
+export function bindSyntaxTables( tables, resolveSymbol ) {
     for ( const name in tableDefinitions ) {
-        bindTable( syntaxTables[ name ], tableDefinitions[ name ], resolveSymbol );
+        bindTable( tables, tables[ name ], tableDefinitions[ name ], resolveSymbol );
     }
 }
 
-function bindTable( table, rows, resolveSymbol ) {
+function bindTable( tables, table, rows, resolveSymbol ) {
     table.puts.fill( 0 );
     table.actions.fill( Action.RUNOUT );
     table.next.fill( null );
@@ -398,7 +405,7 @@ function bindTable( table, rows, resolveSymbol ) {
             return { put, action: Action[ actionName ], next: null };
         }
 
-        return { put, action: Action.GOTO, next: syntaxTables[ actionName ] };
+        return { put, action: Action.GOTO, next: tables[ actionName ] };
     }
 
     for ( let code = 0; code < BYTE_VALUES; code++ ) {

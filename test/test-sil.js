@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { Action, D, VM, assemble, bindSyntaxTables, constants, createVM, defaults, sil, str, syntaxTables } from '../src/snobol.js';
+import { Action, D, VM, assemble, bindSyntaxTables, constants, createVM, defaults, sil, str } from '../src/snobol.js';
 import process from "node:process";
 
 //
@@ -1201,7 +1201,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'FLITYP', 6 );
-        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+        bindSyntaxTables( this.vm.syntaxTables, ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'INTGTB', -1, -2, -3 );
 
         assert.equal( s1.specified, '43.2' );
@@ -1217,7 +1217,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
-        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+        bindSyntaxTables( this.vm.syntaxTables, ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'IBLKTB', error, runout, sloc );
 
         assert.equal( this.vm.ip, 2 );
@@ -1236,7 +1236,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         this.vm.define( 'STYPE', stype.ptr );
         this.vm.define( 'EQTYP', 4 );
-        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+        bindSyntaxTables( this.vm.syntaxTables, ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'IBLKTB', error, runout, sloc );
 
         assert.equal( this.vm.ip, 3 );
@@ -1255,7 +1255,7 @@ describe( 'Macros that Operate on Specifiers', function () {
               sloc = 3;
 
         this.vm.define( 'STYPE', stype.ptr );
-        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+        bindSyntaxTables( this.vm.syntaxTables, ( n ) => this.vm.symbols[ n ] ?? 0 );
         sil.STREAM.call( this.vm, s1, s2, 'INTGTB', error, runout, sloc );
 
         assert.equal( this.vm.ip, error );
@@ -1313,16 +1313,10 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         this.vm = new VM();
     } );
 
-    // CLERTB and PLUGTB mutate shared syntax tables in place. Re-bind after
-    // each case so later tests see the static definitions.
-    afterEach( function () {
-        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
-    } );
-
     it( 'CLERTB resolves a table id and fills character entries', function () {
         sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
 
-        const { actions, fallback } = syntaxTables.SNABTB;
+        const { actions, fallback } = this.vm.syntaxTables.SNABTB;
         assert.equal( actions.length, constants.ALPHSZ );
         assert.deepEqual( fallback, { put: 0, action: Action.RUNOUT, next: null } );
         for ( let code = 0; code < constants.ALPHSZ; code++ ) {
@@ -1332,9 +1326,9 @@ describe( 'Macros that Operate on Syntax Tables', function () {
 
     it( 'binds non-byte fallback separately from byte slots', function () {
         this.vm.define( 'NBTYP', 77 );
-        bindSyntaxTables( ( n ) => this.vm.symbols[ n ] ?? 0 );
+        bindSyntaxTables( this.vm.syntaxTables, ( n ) => this.vm.symbols[ n ] ?? 0 );
 
-        const table = syntaxTables.FRWDTB;
+        const table = this.vm.syntaxTables.FRWDTB;
         assert.equal( table.actions.length, constants.ALPHSZ );
         assert.equal( table.puts.length, constants.ALPHSZ );
         assert.equal( table.next.length, constants.ALPHSZ );
@@ -1350,7 +1344,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
         sil.PLUGTB.call( this.vm, 'SNABTB', 'STOP', spec );
 
-        const { actions } = syntaxTables.SNABTB;
+        const { actions } = this.vm.syntaxTables.SNABTB;
         assert.equal( actions[ 'A'.charCodeAt( 0 ) ], Action.STOP );
         assert.equal( actions[ 'Z'.charCodeAt( 0 ) ], Action.STOP );
         assert.equal( actions[ 'B'.charCodeAt( 0 ) ], Action.ERROR );
@@ -1365,7 +1359,7 @@ describe( 'Macros that Operate on Syntax Tables', function () {
         sil.CLERTB.call( this.vm, 'SNABTB', 'ERROR' );
         sil.PLUGTB.call( this.vm, 'SNABTB', 'STOP', spec );
 
-        const { actions, next } = syntaxTables.SNABTB;
+        const { actions, next } = this.vm.syntaxTables.SNABTB;
         assert.equal( actions[ 'A'.charCodeAt( 0 ) ], Action.STOP );
         assert.equal( next.length, constants.ALPHSZ );
         assert.equal( next[ 0x130 ], undefined );

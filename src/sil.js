@@ -3,7 +3,7 @@
 import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
-import { Action, clearTable, constants, normalizeLookupByte, normalizeToken, syntaxTables } from './syntax.js';
+import { Action, clearTable, constants, normalizeLookupByte, normalizeToken } from './syntax.js';
 import { isFloat32, isInt32 } from './datatypes.js';
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
@@ -659,7 +659,7 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
 // 2.  See also PLUGTB.
 sil.CLERTB = function ( TABLE, KEY ) {
     // clear syntax table
-    clearTable( syntaxTables[ TABLE ], KEY );
+    clearTable( this.syntaxTables[ TABLE ], KEY );
 };
 
 //     COPY is used to copy a file of  machine-dependent  data
@@ -2685,7 +2685,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
 sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
     // plug syntax table
     const SPEC = this.s( $SPEC ),
-          { actions, next } = syntaxTables[ TABLE ],
+          { actions, next } = this.syntaxTables[ TABLE ],
           code = Action[ KEY ];
 
     for ( let i = 0; i < SPEC.length; i++ ) {
@@ -4130,7 +4130,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     const caseFold = this.options.caseFold;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
-    let table = syntaxTables[ TABLE ];
+    let table = this.syntaxTables[ TABLE ];
     let puts = table.puts, actions = table.actions, next = table.next;
     let fallback = table.fallback;
     let lastPut = 0;

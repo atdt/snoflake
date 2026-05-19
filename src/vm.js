@@ -5,7 +5,7 @@ import { Descriptor, Specifier, isFloat32, isInt32, isUint32 } from './datatypes
 import { UnitTable, defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { bindSyntaxTables } from './syntax.js';
+import { bindSyntaxTables, buildSyntaxTables } from './syntax.js';
 
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 512 * 1024;
@@ -50,6 +50,7 @@ export class VM {
         } );
         // INTSPC's local conversion buffer, lazily allocated on first use.
         this.intspcBuf = null;
+        this.syntaxTables = buildSyntaxTables();
         // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
         this.OSTACK = 0;
@@ -79,7 +80,7 @@ export class VM {
         this.mem.set( image.memory, 0 );
         this.memPtr = image.memory.length;
         // Minimal test images may omit syntax-table symbols.
-        bindSyntaxTables( ( name ) => this.symbols[ name ] ?? 0 );
+        bindSyntaxTables( this.syntaxTables, ( name ) => this.symbols[ name ] ?? 0 );
     }
 
     applyHostSwitches() {

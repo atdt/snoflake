@@ -10,7 +10,7 @@
 
 import { VM } from './vm.js';
 import { sil } from './sil.js';
-import { constants, defaults, hostStrings, streamActions, syntaxTables } from './syntax.js';
+import { constants, defaults, hostStrings, streamActions, tableNames } from './syntax.js';
 
 // Assembly-time macros run during assembly, not execution. They return the
 // value their label binds to. Storage macros (all but EQU) also claim memory.
@@ -131,7 +131,7 @@ function resolveOperand( vm, op ) {
 
 // Syntax-table and stream-action names are literal tokens, not symbols.
 function resolveName( vm, name ) {
-    if ( name in syntaxTables || streamActions.includes( name ) ) {
+    if ( tableNames.has( name ) || streamActions.includes( name ) ) {
         return name;
     }
     return vm.$( name );
