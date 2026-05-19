@@ -1,7 +1,7 @@
 // The virtual machine: word-addressed memory, descriptor and specifier
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
-import { Descriptor, Specifier } from './datatypes.js';
+import { Descriptor, Specifier, isFloat32, isInt32, isUint32 } from './datatypes.js';
 import { UnitTable, defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
@@ -13,33 +13,6 @@ const MAX_WORDS = 256 * 1024 * 1024;
 
 function wordsToBytes( words ) {
     return words * WORD_SIZE;
-}
-
-// Scratch one-word buffer viewed as uint, int, and float for range checks.
-const probeBuf = new ArrayBuffer( 4 ),
-      probeF32 = new Float32Array( probeBuf ),
-      probeI32 = new Int32Array( probeBuf ),
-      probeU32 = new Uint32Array( probeBuf );
-
-// JS-native Float64 results lose precision on the way into a Float32 cell.
-// Accept any value that round-trips within delta.
-function nearlyEqual( a, b ) {
-    return a === b || Math.abs( a - b ) < 0.001;
-}
-
-export function isUint32( value ) {
-    probeU32[ 0 ] = value;
-    return probeU32[ 0 ] === value;
-}
-
-export function isInt32( value ) {
-    probeI32[ 0 ] = value;
-    return probeI32[ 0 ] === value;
-}
-
-export function isFloat32( value ) {
-    probeF32[ 0 ] = value;
-    return nearlyEqual( probeF32[ 0 ], value );
 }
 
 const DEFAULT_OPTIONS = {

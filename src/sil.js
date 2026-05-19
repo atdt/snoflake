@@ -4,7 +4,7 @@ import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
 import { Action, clearTable, constants, normalizeLookupByte, normalizeToken, syntaxTables } from './syntax.js';
-import { isFloat32, isInt32 } from './vm.js';
+import { isFloat32, isInt32 } from './datatypes.js';
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
 const CPD = 3;  // Characters per descriptor
