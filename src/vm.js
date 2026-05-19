@@ -28,6 +28,11 @@ function nearlyEqual( a, b ) {
     return a === b || Math.abs( a - b ) < 0.001;
 }
 
+export function isUint32( value ) {
+    probeU32[ 0 ] = value;
+    return probeU32[ 0 ] === value;
+}
+
 export function isInt32( value ) {
     probeI32[ 0 ] = value;
     return probeI32[ 0 ] === value;
@@ -192,24 +197,21 @@ export class VM {
     getReal( ptr )        { return this.f32[ ptr ]; }
 
     setUint( ptr, value ) {
-        probeU32[ 0 ] = value;
-        if ( probeU32[ 0 ] !== value ) {
+        if ( !isUint32( value ) ) {
             throw new RangeError( 'Invalid Uint32: ' + JSON.stringify( value ) );
         }
         this.mem[ ptr ] = value;
     }
 
     setInt( ptr, value ) {
-        probeI32[ 0 ] = value;
-        if ( probeI32[ 0 ] !== value ) {
+        if ( !isInt32( value ) ) {
             throw new RangeError( 'Invalid Int32: ' + JSON.stringify( value ) );
         }
         this.i32[ ptr ] = value;
     }
 
     setReal( ptr, value ) {
-        probeF32[ 0 ] = value;
-        if ( !nearlyEqual( probeF32[ 0 ], value ) ) {
+        if ( !isFloat32( value ) ) {
             throw new RangeError( 'Invalid Float32: ' + JSON.stringify( value ) );
         }
         this.f32[ ptr ] = value;
