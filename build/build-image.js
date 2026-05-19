@@ -6,9 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 // The public entry imports the generated image this script overwrites.
 import { assemble } from '../src/assemble.js';
-// Pre-generated standalone parser. Regenerate via `make build-parser`
-// when `sil-grammar.peg` changes; Peggy is only needed at that step.
-import { parse as parseSil } from './generated-sil-parser.js';
+// Handwritten SIL parser. Its AST shape mirrors build/sil-grammar.peg.
+import { parse as parseSil } from './sil-parser.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const sourcePath = path.join( __dirname, '..', 'external', 'v311-snoflake.sil' );
