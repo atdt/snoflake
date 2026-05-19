@@ -2,6 +2,7 @@
 // match. Tests auto-generated from the table in section 4.1 of S4D58.
 
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { match } from '../src/snobol.js';
 
 describe( 'Character Classes', function () {

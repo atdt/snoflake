@@ -3,6 +3,7 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { image, createVM } from '../src/snobol.js';
 import { parseHeader, loadCases } from './program-fixture.js';
@@ -64,7 +65,7 @@ function runProgram( filePath, header ) {
     } catch ( e ) {
         // Treat thrown runtime errors as recognized error output so the
         // assertion logic ('Execution error' marker) can react instead of
-        // failing the whole mocha process.
+        // failing the whole test process.
         stderr.write( 'Execution error: ' + ( e && e.stack || e ) );
     }
     return joinLines( stdout.lines ) + joinLines( stderr.lines );

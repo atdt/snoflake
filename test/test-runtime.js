@@ -4,6 +4,7 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
 import process from "node:process";
@@ -42,26 +43,22 @@ describe( 'String Encoding', function () {
 } );
 
 describe( 'Typed Setters', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'uint', function () {
-        const vm = this.vm;
+        const vm = new VM();
         assert.throws( function () {
             vm.setUint( 0, -4 );
         }, 'RangeError' );
     } );
 
     it( 'int', function () {
-        const vm = this.vm;
+        const vm = new VM();
         assert.throws( function () {
             vm.setUint( 0, 4.2 );
         }, 'RangeError' );
     } );
 
     it( 'real', function () {
-        const vm = this.vm;
+        const vm = new VM();
         assert.throws( function () {
             vm.setReal( 0, 10e100 );
         }, 'RangeError' );
@@ -69,38 +66,34 @@ describe( 'Typed Setters', function () {
 } );
 
 describe( 'Typed Getters', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'uint', function () {
-        this.vm.setUint( 0, 123 );
-        assert.equal( this.vm.getUint( 0 ), 123 );
+        const vm = new VM();
+        vm.setUint( 0, 123 );
+        assert.equal( vm.getUint( 0 ), 123 );
     } );
 
     it( 'int', function () {
-        this.vm.setInt( 0, -123 );
-        assert.equal( this.vm.getInt( 0 ), -123 );
+        const vm = new VM();
+        vm.setInt( 0, -123 );
+        assert.equal( vm.getInt( 0 ), -123 );
     } );
 
     it( 'real', function () {
-        this.vm.setReal( 0, Math.PI );
-        assert.equal( Math.floor( this.vm.getReal( 0 ) ), 3 );
+        const vm = new VM();
+        vm.setReal( 0, Math.PI );
+        assert.equal( Math.floor( vm.getReal( 0 ) ), 3 );
     } );
 } );
 
 describe( 'Symbol Binding', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'simple', function () {
-        this.vm.define( 'answer', 42 );
-        assert.equal( this.vm.resolve( 'answer' ), 42 );
+        const vm = new VM();
+        vm.define( 'answer', 42 );
+        assert.equal( vm.resolve( 'answer' ), 42 );
     } );
 
     it( 'missing', function () {
-        const vm = this.vm;
+        const vm = new VM();
         assert.throws( function () {
             vm.resolve( 'missing' );
         }, 'ReferenceError' );
@@ -109,10 +102,6 @@ describe( 'Symbol Binding', function () {
 } );
 
 describe( 'Memory Management', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'alloc', function () {
         const vm = new VM(),
               ptr = vm.alloc( 3 );
@@ -411,19 +400,17 @@ function bufferedLineReader( lines ) {
 }
 
 describe( 'Descriptor Datatype', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'init', function () {
-        const orig = this.vm.d(),
-              copy = this.vm.d( orig.ptr );
+        const vm = new VM(),
+              orig = vm.d(),
+              copy = vm.d( orig.ptr );
         orig.addr = 90210;
         assert.equal( copy.addr, 90210 );
     } );
 
     it( 'raw', function () {
-        const d = this.vm.d();
+        const vm = new VM(),
+              d = vm.d();
         d.addr = 6;
         d.flags = 7;
         d.value = 8;
@@ -431,7 +418,9 @@ describe( 'Descriptor Datatype', function () {
     } );
 
     it( 'read', function () {
-        const src = this.vm.d(), dst = this.vm.d();
+        const vm = new VM(),
+              src = vm.d(),
+              dst = vm.d();
         src.update( 6, 7, 8 );
         dst.read( src );
         assert.deepEqual( dst.raw(), src.raw() );
@@ -459,19 +448,17 @@ describe( 'Descriptor Datatype', function () {
 } );
 
 describe( 'Specifier Datatype', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'init', function () {
-        const orig = new Specifier( this.vm ),
-              copy = new Specifier( this.vm, orig.ptr );
+        const vm = new VM(),
+              orig = new Specifier( vm ),
+              copy = new Specifier( vm, orig.ptr );
         orig.offset = 90210;
         assert.equal( copy.offset, 90210 );
     } );
 
     it( 'raw', function () {
-        const s = new Specifier( this.vm );
+        const vm = new VM(),
+              s = new Specifier( vm );
         s.addr = 6;
         s.flags = 7;
         s.value = 8;
@@ -481,22 +468,25 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'read', function () {
-        const src = new Specifier( this.vm ),
-              dst = new Specifier( this.vm );
+        const vm = new VM(),
+              src = new Specifier( vm ),
+              dst = new Specifier( vm );
         src.update( 6, 7, 8, 9, 10 );
         dst.read( src );
         assert.deepEqual( dst.raw(), src.raw() );
     } );
 
     it( 'update', function () {
-        const s = new Specifier( this.vm );
+        const vm = new VM(),
+              s = new Specifier( vm );
         s.update( 6, 7, 8, 9, 10 );
         assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
     } );
 
     it( 'eq', function () {
-        const s1 = new Specifier( this.vm ),
-              s2 = new Specifier( this.vm );
+        const vm = new VM(),
+              s1 = new Specifier( vm ),
+              s2 = new Specifier( vm );
 
         s1.update( 6, 7, 8, 9, 10 );
         s2.update( 6, 7, 8, 9, 10 );
@@ -507,24 +497,22 @@ describe( 'Specifier Datatype', function () {
     } );
 
     it( 'specified', function () {
-        const s = this.vm.s( sil.STRING.call( this.vm, '안녕' ) );
+        const vm = new VM(),
+              s = vm.s( sil.STRING.call( vm, '안녕' ) );
         assert.equal( s.specified, '안녕' ); 
     } );
 } );
 
 describe( 'Program Execution', function () {
-    beforeEach( function () {
-        this.vm = new VM();
-    } );
-
     it( 'run', function () {
-        this.vm.run( assemble( [
+        const vm = new VM();
+        vm.run( assemble( [
             { label: 'A',  macro: 'EQU', operands: [ 11 ] },
             { label: 'B',  macro: 'EQU', operands: [ 17 ] },
             { label: null, macro: 'END', operands: [] },
         ] ) );
-        assert.equal( this.vm.resolve( 'A' ), 11 );
-        assert.equal( this.vm.resolve( 'B' ), 17 );
+        assert.equal( vm.resolve( 'A' ), 11 );
+        assert.equal( vm.resolve( 'B' ), 17 );
     } );
 
     it( 'honors an explicit branch to the current instruction', function () {
@@ -536,7 +524,8 @@ describe( 'Program Execution', function () {
         };
 
         try {
-            this.vm.run( {
+            const vm = new VM();
+            vm.run( {
                 symbols: {},
                 memory: new Uint32Array( 0 ),
                 instructions: [
@@ -544,6 +533,7 @@ describe( 'Program Execution', function () {
                     [ null, 'END', [] ],
                 ],
             } );
+            assert.equal( vm.selfBranchCount, 3 );
         } finally {
             if ( previous === undefined ) {
                 delete sil.TEST_SELF_BRANCH;
@@ -551,8 +541,6 @@ describe( 'Program Execution', function () {
                 sil.TEST_SELF_BRANCH = previous;
             }
         }
-
-        assert.equal( this.vm.selfBranchCount, 3 );
     } );
 
 } );

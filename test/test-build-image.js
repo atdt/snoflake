@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import peggy from 'peggy';
 import { assemble } from '../src/snobol.js';

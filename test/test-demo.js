@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
+import { describe, it } from 'node:test';
 import { runSnoflake } from '../demo/run-snoflake.js';
 
 describe( 'browser demo runner', function () {

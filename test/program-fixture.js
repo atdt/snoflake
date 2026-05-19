@@ -1,7 +1,7 @@
 'use strict';
 
 // Shared parser for the fixture format documented in test/programs/README.md.
-// Both the mocha runner (test/test-programs.js) and the CSNOBOL4 cross-check
+// Both the test runner (test/test-programs.js) and the CSNOBOL4 cross-check
 // helper (tools/check-csnobol4.js) consume fixtures through this module so the
 // two stay in lockstep.
 

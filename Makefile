@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-MOCHA_GLOB := 'test/**/*.js'
+TEST_GLOB := ./test/test-*.js
 VERSION ?= patch
 
 test: test-node
@@ -9,10 +9,10 @@ test-node:
 	@npm test
 
 test-deno:
-	@deno run -A npm:mocha --timeout 10000 $(MOCHA_GLOB)
+	@deno test -A $(TEST_GLOB)
 
 test-bun:
-	@bun x mocha --timeout 10000 $(MOCHA_GLOB)
+	@bun test $(TEST_GLOB)
 
 test-all: test-node test-deno test-bun
 

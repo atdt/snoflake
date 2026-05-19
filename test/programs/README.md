@@ -3,7 +3,7 @@
 `test/programs/` holds end-to-end SNOBOL test programs. Each `*.sno` file is a
 single test case: a runnable SNOBOL program with an embedded header that
 declares the test's title, runtime options, optional stdin, expected output,
-and match mode. The mocha runner at `test/test-programs.js` enumerates the
+and match mode. The Node test runner at `test/test-programs.js` enumerates the
 directory and emits one `it(...)` per file.
 
 These tests complement the focused unit tests in `test/test-*.js`. Use a
@@ -44,7 +44,7 @@ silently dropping expectations.
 
 | Directive  | Form       | Required                          | Purpose                                                   |
 |------------|------------|-----------------------------------|-----------------------------------------------------------|
-| `@title`   | single     | yes                               | Used as the mocha test name.                              |
+| `@title`   | single     | yes                               | Used as the test name.                                    |
 | `@options` | single     | no                                | JSON object merged into `snoflake`'s options.               |
 | `@input`   | multi-line | no                                | Lines written to a tmp file; runner wires up `input` opt. |
 | `@expect`  | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                          |
@@ -249,7 +249,7 @@ expected empty line.
 ## Running
 
 `npm test` picks up `test/test-programs.js` along with the rest of the suite.
-Each `.sno` file becomes one mocha `it(...)` named by its `@title`.
+Each `.sno` file becomes one `it(...)` named by its `@title`.
 
 ## CSNOBOL4 cross-check
 

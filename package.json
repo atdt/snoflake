@@ -26,11 +26,10 @@
     "url": "git+https://github.com/atdt/snoflake.git"
   },
   "devDependencies": {
-    "mocha": "^12.0.0-beta-10",
     "peggy": "^4.2.0"
   },
   "scripts": {
     "demo": "node demo/server.js",
-    "test": "mocha"
+    "test": "node --test test/test-*.js"
   }
 }

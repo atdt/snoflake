@@ -20,7 +20,7 @@
 // - @options runtime flags are translated to CSNOBOL4 invocation flags
 //   when an equivalent exists (see csnobol4FlagsForOptions). A warning
 //   is printed for options CSNOBOL4 cannot honor.
-// - The data-section banner extraction used by the mocha runner does not
+// - The data-section banner extraction used by the Node test runner does not
 //   apply: CSNOBOL4 with -b prints program output verbatim (no banner, no
 //   "NORMAL TERMINATION" epilogue).
 
@@ -38,7 +38,7 @@ const ROOT = path.join( __dirname, '..' ),
 const SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
 
 // Match the runner's error-marker list so a CSNOBOL4 run that triggers any
-// of these is treated the same way the mocha runner would.
+// of these is treated the same way the Node test runner would.
 const ERROR_MARKERS = [
       'ERROR IN SNOBOL4 SYSTEM',
       'Compilation error',
@@ -137,7 +137,7 @@ function checkAgainstExpect( header, run ) {
     const marker = findErrorMarker( combined );
 
     if ( header.match === 'error' ) {
-        // The mocha runner accepts either an error marker OR a non-zero exit
+        // The Node test runner accepts either an error marker OR a non-zero exit
         // as evidence of an "error". CSNOBOL4 reliably exits non-zero on
         // execution errors but does not print the Snoflake-specific markers,
         // so check both.
