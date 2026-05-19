@@ -24,6 +24,9 @@ const probeBuf = new ArrayBuffer( 4 ),
       probeI32 = new Int32Array( probeBuf ),
       probeU32 = new Uint32Array( probeBuf );
 
+// Float32 storage cannot hold a Float64 with more than 24 bits of mantissa.
+// Tolerate a small round-trip delta so JS-native arithmetic results can be
+// stored in VM real cells.
 function nearlyEqual( a, b ) {
     return a === b || Math.abs( a - b ) < 0.001;
 }
@@ -38,7 +41,6 @@ export function isInt32( value ) {
     return probeI32[ 0 ] === value;
 }
 
-// Check whether a value survives a Float32 round trip.
 export function isFloat32( value ) {
     probeF32[ 0 ] = value;
     return nearlyEqual( probeF32[ 0 ], value );
