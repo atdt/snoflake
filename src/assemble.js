@@ -119,7 +119,7 @@ function argsFor( vm, stmt ) {
 function resolveOperand( vm, op ) {
     if ( !op || typeof op !== 'object' ) return op;
     switch ( op.type ) {
-        case 'symbol': return resolveSymbol( vm, op.name );
+        case 'symbol': return resolveName( vm, op.name );
         case 'negate': return -resolveOperand( vm, op.operand );
         case 'add':    return resolveOperand( vm, op.left ) + resolveOperand( vm, op.right );
         case 'sub':    return resolveOperand( vm, op.left ) - resolveOperand( vm, op.right );
@@ -129,9 +129,8 @@ function resolveOperand( vm, op ) {
     throw new Error( 'Unknown SIL operand: ' + JSON.stringify( op ) );
 }
 
-// Syntax table names and stream actions are command names, not labels. Leave
-// those alone. Resolve every other name through the symbol table.
-function resolveSymbol( vm, name ) {
+// Syntax-table and stream-action names are literal tokens, not symbols.
+function resolveName( vm, name ) {
     if ( name in syntaxTables || streamActions.includes( name ) ) {
         return name;
     }
