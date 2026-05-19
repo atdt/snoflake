@@ -41,16 +41,12 @@ export const defaultLoader = {
 // Per-unit { input?: File, output?: Writer }. Entries persist across close
 // so a closed input still returns EOF on subsequent reads.
 export class UnitTable {
-    // Reads vm.options, vm.loader, and vm.stdout. Holds a back-reference
-    // rather than a snapshot so hosts can rebind stdout after construction.
-    constructor( vm ) {
-        this.vm = vm;
+    constructor( { options, loader, stdout } ) {
+        this.options = options;
+        this.loader = loader;
+        this.stdout = stdout;
         this.units = new Map();
     }
-
-    get options() { return this.vm.options; }
-    get loader()  { return this.vm.loader; }
-    get stdout()  { return this.vm.stdout; }
 
     // Open a SIL unit's input File, building it on first access. A unit reads
     // source first, then optional runtime input, then optional interactive

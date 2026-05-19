@@ -1475,13 +1475,13 @@ describe( 'Input and Output Macros', function () {
         const unit = this.vm.d(),
               format = sil.FORMAT.call( this.vm, '(37H1SNOBOL4 (VERSION 3.11, MAY 19, 1975)/8H+_______)' ),
               logs = [],
-              oldStdout = this.vm.stdout;
+              oldStdout = this.vm.units.stdout;
 
-        this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
+        this.vm.units.stdout = { write: function ( line ) { logs.push( line ); } };
         try {
             sil.OUTPUT.call( this.vm, unit.ptr, format );
         } finally {
-            this.vm.stdout = oldStdout;
+            this.vm.units.stdout = oldStdout;
         }
 
         assert.deepEqual( logs, [
@@ -1500,7 +1500,7 @@ describe( 'Input and Output Macros', function () {
               formatBase = this.vm.alloc( 20 ),
               item = sil.STRING.call( this.vm, 'HELLO' ),
               logs = [],
-              oldStdout = this.vm.stdout,
+              oldStdout = this.vm.units.stdout,
               format = '(1H0,A)';
 
         block.addr = this.vm.alloc( 9 );
@@ -1511,11 +1511,11 @@ describe( 'Input and Output Macros', function () {
             this.vm.mem[ formatBase + ( 4 * D ) + i ] = format.charCodeAt( i );
         }
 
-        this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
+        this.vm.units.stdout = { write: function ( line ) { logs.push( line ); } };
         try {
             sil.STPRNT.call( this.vm, key.ptr, block.ptr, item );
         } finally {
-            this.vm.stdout = oldStdout;
+            this.vm.units.stdout = oldStdout;
         }
 
         assert.deepEqual( logs, [ 'HELLO' ] );
@@ -1527,7 +1527,7 @@ describe( 'Input and Output Macros', function () {
               formatBase = this.vm.alloc( 40 ),
               item = sil.STRING.call( this.vm, 'HELLO' ),
               logs = [],
-              oldStdout = this.vm.stdout,
+              oldStdout = this.vm.units.stdout,
               format = '(" " PAUSE,100A1)';
 
         block.addr = this.vm.alloc( 9 );
@@ -1538,11 +1538,11 @@ describe( 'Input and Output Macros', function () {
             this.vm.mem[ formatBase + ( 4 * D ) + i ] = format.charCodeAt( i );
         }
 
-        this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
+        this.vm.units.stdout = { write: function ( line ) { logs.push( line ); } };
         try {
             sil.STPRNT.call( this.vm, key.ptr, block.ptr, item );
         } finally {
-            this.vm.stdout = oldStdout;
+            this.vm.units.stdout = oldStdout;
         }
 
         assert.deepEqual( logs, [ 'HELLO' ] );
@@ -1554,7 +1554,7 @@ describe( 'Input and Output Macros', function () {
               formatBase = this.vm.alloc( 20 ),
               item = sil.STRING.call( this.vm, '0 DATA' ),
               logs = [],
-              oldStdout = this.vm.stdout,
+              oldStdout = this.vm.units.stdout,
               format = '(121A1)';
 
         block.addr = this.vm.alloc( 9 );
@@ -1565,11 +1565,11 @@ describe( 'Input and Output Macros', function () {
             this.vm.mem[ formatBase + ( 4 * D ) + i ] = format.charCodeAt( i );
         }
 
-        this.vm.stdout = { write: function ( line ) { logs.push( line ); } };
+        this.vm.units.stdout = { write: function ( line ) { logs.push( line ); } };
         try {
             sil.STPRNT.call( this.vm, key.ptr, block.ptr, item );
         } finally {
-            this.vm.stdout = oldStdout;
+            this.vm.units.stdout = oldStdout;
         }
 
         assert.deepEqual( logs, [ '0 DATA' ] );

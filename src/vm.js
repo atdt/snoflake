@@ -60,7 +60,6 @@ const HOST_SWITCHES = {
 export class VM {
     constructor( options ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
-        this.stdout = this.options.stdout || defaultStdout;
         this.loader = this.options.loader || defaultLoader;
         this.reset();
     }
@@ -71,7 +70,11 @@ export class VM {
         this.symbols = {};
         this.resetMemory();
         this.callbacks = [];
-        this.units = new UnitTable( this );
+        this.units = new UnitTable( {
+            options: this.options,
+            loader: this.loader,
+            stdout: this.options.stdout || defaultStdout,
+        } );
         // Per-macro scratch storage. Keys are owned by sil.js; resetting the
         // namespace invalidates any cached pointers that resetMemory orphaned.
         this.scratch = {};
