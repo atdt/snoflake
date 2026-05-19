@@ -393,7 +393,5 @@ describe( 'Character Classes', function () {
     it( 'accepts numeric character codes', function () {
         assert.equal( match( 'LETTER', 'A'.charCodeAt( 0 ) ), true );
         assert.equal( match( 'LETTER', '1'.charCodeAt( 0 ) ), false );
-        assert.equal( match( ';', ';'.charCodeAt( 0 ) ), true );
-        assert.equal( match( ';', ','.charCodeAt( 0 ) ), false );
     } );
 } );

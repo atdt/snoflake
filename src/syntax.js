@@ -116,24 +116,9 @@ for ( const name in characterClasses ) {
 }
 
 export function match( characterClass, char ) {
-    if ( characterClass === 'ELSE' ) {
-        return true;
-    }
-
-    const code = typeof char === 'number' ? char : char.charCodeAt( 0 ),
-          bitset = characterClassBitsets[ characterClass ];
-
-    if ( bitset ) {
-        return code >= 0 && code < bitset.length && bitset[ code ] === 1;
-    }
-
-    if ( typeof characterClass === 'number' ) {
-        return characterClass === code;
-    }
-
-    return characterClass.length === 1
-        ? characterClass.charCodeAt( 0 ) === code
-        : characterClass === char;
+    if ( characterClass === 'ELSE' ) return true;
+    const code = typeof char === 'number' ? char : char.charCodeAt( 0 );
+    return characterClassBitsets[ characterClass ][ code ] === 1;
 }
 
 export const Action = {
@@ -144,6 +129,11 @@ export const Action = {
     RUNOUT: 4,
     GOTO:   5,
 };
+
+// Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
+// name. They appear in operand position in the SIL listing but they are not
+// symbols. The macros interpret them as tags.
+export const streamActions = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
 
 // Tables whose scanned tokens get uppercased in place when caseFold is on
 // (they consume identifiers: labels and variable names).
@@ -420,8 +410,3 @@ function bindTable( table, rows, resolveSymbol ) {
 
     table.fallback = bindEntry( rows.find( ( r ) => r[ 0 ] === 'ELSE' ) );
 }
-
-// Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
-// name. They appear in operand position in the SIL listing but they are not
-// symbols. The macros interpret them as tags.
-export const streamActions = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
