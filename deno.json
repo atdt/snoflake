@@ -1,8 +1,21 @@
 {
   "nodeModulesDir": "auto",
   "lint": {
+    "exclude": ["**/generated-*.js"],
     "rules": {
       "exclude": ["no-control-regex"]
     }
+  },
+  "fmt": {
+    "indentWidth": 4,
+    "lineWidth": 79,
+    "proseWrap": "always",
+    "semiColons": true,
+    "singleQuote": true,
+    "spaceAround": true,
+    "useBraces": "whenNotSingleLine",
+    "useTabs": false,
+    "include": ["src/", "tools/", "test/", "build/"],
+    "exclude": ["**/generated-*.js"]
   }
 }
