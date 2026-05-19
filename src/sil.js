@@ -749,7 +749,7 @@ sil.XINCLD = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     }
 
     try {
-        this.openUnit( unit ).includeSource( filename, this.loader );
+        this.units.open( unit ).includeSource( filename, this.loader );
         return this.jmp( SLOC );
     } catch {
         return this.jmp( FLOC );
@@ -1087,12 +1087,12 @@ sil.ENDEX = function ( $DESCR ) {
 // 2.  Refer  to Section 2.1 for a discussion of unit reference
 // numbers.
 sil.ENFILE = function ( $DESCR ) {
-    this.closeUnit( this.d( $DESCR ).addr );
+    this.units.close( this.d( $DESCR ).addr );
 };
 
 sil.XOPENI = function ( $DESCR, $SPEC, FAIL ) {
     try {
-        this.redirectInputUnit( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
+        this.units.redirectInput( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
     } catch {
         return this.jmp( FAIL );
     }
@@ -1100,7 +1100,7 @@ sil.XOPENI = function ( $DESCR, $SPEC, FAIL ) {
 
 sil.XOPENO = function ( $DESCR, $SPEC, FAIL ) {
     try {
-        this.redirectOutputUnit( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
+        this.units.redirectOutput( this.d( $DESCR ).addr, this.s( $SPEC ).specified );
     } catch {
         return this.jmp( FAIL );
     }
@@ -2639,7 +2639,7 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
           descrs = asArray( ARGs ).map( this.d, this ),
           lines = printerLines( fmt, descrs, { stripCarriageControl: true } );
 
-    for ( const line of lines ) this.writeOutput( this.d( $DESCR ).addr, line );
+    for ( const line of lines ) this.units.write( this.d( $DESCR ).addr, line );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3247,7 +3247,7 @@ sil.RESETF = function ( $DESCR, FLAG ) {
 // numbers.
 // 2.  See also BKSPCE and ENFILE.
 sil.REWIND = function ( $DESCR ) {
-    this.openUnit( this.d( $DESCR ).addr ).rewind();
+    this.units.open( this.d( $DESCR ).addr ).rewind();
 };
 
 //     RLINT is used to convert a real number to  an  integer.
@@ -3970,7 +3970,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 
     // OUTPUT array layout: head descriptor at A, unit number one descriptor later.
     const unit = this.d( A + D ).addr;
-    for ( const line of lines ) this.writeOutput( unit, line );
+    for ( const line of lines ) this.units.write( unit, line );
     this.d( $DESCR1 ).addr = 1;
 };
 
@@ -4000,7 +4000,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
 sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
-          file = this.openUnit( DESCR.addr );
+          file = this.units.open( DESCR.addr );
 
     const record = file.readRecord( SPEC.length );
     if ( record.eof ) {

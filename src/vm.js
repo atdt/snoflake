@@ -2,13 +2,10 @@
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
 import { Descriptor, Specifier } from './datatypes.js';
-import { File, bufferedReader, stdinReader } from './file.js';
-import { defaultStdout, defaultLoader } from './io.js';
+import { UnitTable, defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
-import { bindSyntaxTables, constants } from './syntax.js';
-
-const { UNITI } = constants;
+import { bindSyntaxTables } from './syntax.js';
 
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 512 * 1024;
@@ -74,9 +71,7 @@ export class VM {
         this.symbols = {};
         this.resetMemory();
         this.callbacks = [];
-        // Per-unit { input?: File, output?: Writer }. Entries persist across
-        // close so a closed input still returns EOF on subsequent reads.
-        this.units = new Map();
+        this.units = new UnitTable( this );
         // Per-macro scratch storage. Keys are owned by sil.js; resetting the
         // namespace invalidates any cached pointers that resetMemory orphaned.
         this.scratch = {};
@@ -260,84 +255,4 @@ export class VM {
         return ptr instanceof Specifier ? ptr : new Specifier( this, ptr );
     }
 
-    // Resolve a SIL unit number to its backing File, building it on first
-    // access. A unit reads source first, then optional runtime input, then
-    // optional interactive stdin.
-    unit( unitNum ) {
-        let entry = this.units.get( unitNum );
-        if ( !entry ) {
-            entry = {};
-            this.units.set( unitNum, entry );
-        }
-        return entry;
-    }
-
-    openUnit( unitNum ) {
-        const entry = this.unit( unitNum );
-        if ( entry.input ) return entry.input;
-
-        const segments = [];
-        if ( this.options.file ) {
-            segments.push( {
-                reader: bufferedReader( this.loader.load( this.options.file ) ),
-                padReads: true,
-                path: this.options.file,
-            } );
-        }
-        if ( this.options.input && unitNum === UNITI ) {
-            segments.push( {
-                reader: bufferedReader( this.loader.load( this.options.input ) ),
-                padReads: false,
-            } );
-        }
-        if ( this.options.interactive && unitNum === UNITI ) {
-            const readStdin = this.options.stdinReader || stdinReader;
-            segments.push( {
-                reader: readStdin(),
-                padReads: false,
-            } );
-        }
-        entry.input = new File( segments );
-        return entry.input;
-    }
-
-    // An empty path means the optional INPUT/OUTPUT filename argument was
-    // defaulted; leave the unit's existing binding untouched.
-    redirectInputUnit( unitNum, filePath ) {
-        const path = filePath.replace( / +$/, '' );
-        if ( path === '' ) return;
-        const entry = this.unit( unitNum );
-        entry.input?.close();
-        entry.input = new File( [ {
-            reader: bufferedReader( this.loader.load( path ) ),
-            padReads: false,
-            path,
-        } ] );
-    }
-
-    redirectOutputUnit( unitNum, filePath ) {
-        const path = filePath.replace( / +$/, '' );
-        if ( path === '' ) return;
-        const writer = this.loader.openOutput?.( path );
-        if ( !writer ) {
-            throw new Error( 'No file writer configured for this host' );
-        }
-        const entry = this.unit( unitNum );
-        entry.output?.close();
-        entry.output = writer;
-    }
-
-    writeOutput( unitNum, line ) {
-        const writer = this.units.get( unitNum )?.output || this.stdout;
-        writer.write( line );
-    }
-
-    closeUnit( unitNum ) {
-        const entry = this.units.get( unitNum );
-        if ( !entry ) return;
-        entry.input?.close();
-        entry.output?.close();
-        // Keep entry.input (closed File yields EOF); drop the writer.
-        entry.output = null;
-    }
 }

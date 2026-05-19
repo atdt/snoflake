@@ -1,12 +1,13 @@
-// Host-neutral defaults. Browser, Node, and test hosts can pass their own
-// stdout writer or loader through VM options.
+// Host-neutral I/O. Browser, Node, and test hosts pass their own stdout
+// writer or loader through VM options. UnitTable wires those into the SIL
+// unit-number namespace used by INPUT/OUTPUT/STREAD.
 //
 // Writer:
 //
 //     writer.write(line)
 //     writer.close()
 //
-// Each call receives one logical line without a trailing newline; the writer
+// Each call receives one logical line without a trailing newline. The writer
 // appends the terminator. close() is idempotent and may be a no-op.
 //
 // Loader:
@@ -16,6 +17,11 @@
 //     loader.openOutput?(path) -> Writer
 //
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
+
+import { File, bufferedReader, stdinReader } from './file.js';
+import { constants } from './syntax.js';
+
+const { UNITI } = constants;
 
 export const defaultStdout = {
     write( line ) { console.log( line ); },
@@ -31,3 +37,99 @@ export const defaultLoader = {
         return null;
     }
 };
+
+// Per-unit { input?: File, output?: Writer }. Entries persist across close
+// so a closed input still returns EOF on subsequent reads.
+export class UnitTable {
+    // Reads vm.options, vm.loader, and vm.stdout. Holds a back-reference
+    // rather than a snapshot so hosts can rebind stdout after construction.
+    constructor( vm ) {
+        this.vm = vm;
+        this.units = new Map();
+    }
+
+    get options() { return this.vm.options; }
+    get loader()  { return this.vm.loader; }
+    get stdout()  { return this.vm.stdout; }
+
+    // Open a SIL unit's input File, building it on first access. A unit reads
+    // source first, then optional runtime input, then optional interactive
+    // stdin.
+    open( unitNum ) {
+        const entry = this.#ensure( unitNum );
+        if ( entry.input ) return entry.input;
+
+        const segments = [];
+        if ( this.options.file ) {
+            segments.push( {
+                reader: bufferedReader( this.loader.load( this.options.file ) ),
+                padReads: true,
+                path: this.options.file,
+            } );
+        }
+        if ( this.options.input && unitNum === UNITI ) {
+            segments.push( {
+                reader: bufferedReader( this.loader.load( this.options.input ) ),
+                padReads: false,
+            } );
+        }
+        if ( this.options.interactive && unitNum === UNITI ) {
+            const readStdin = this.options.stdinReader || stdinReader;
+            segments.push( {
+                reader: readStdin(),
+                padReads: false,
+            } );
+        }
+        entry.input = new File( segments );
+        return entry.input;
+    }
+
+    // An empty path means the optional INPUT/OUTPUT filename argument was
+    // defaulted. Leave the unit's existing binding untouched.
+    redirectInput( unitNum, filePath ) {
+        const path = filePath.replace( / +$/, '' );
+        if ( path === '' ) return;
+        const entry = this.#ensure( unitNum );
+        entry.input?.close();
+        entry.input = new File( [ {
+            reader: bufferedReader( this.loader.load( path ) ),
+            padReads: false,
+            path,
+        } ] );
+    }
+
+    redirectOutput( unitNum, filePath ) {
+        const path = filePath.replace( / +$/, '' );
+        if ( path === '' ) return;
+        const writer = this.loader.openOutput?.( path );
+        if ( !writer ) {
+            throw new Error( 'No file writer configured for this host' );
+        }
+        const entry = this.#ensure( unitNum );
+        entry.output?.close();
+        entry.output = writer;
+    }
+
+    write( unitNum, line ) {
+        const writer = this.units.get( unitNum )?.output || this.stdout;
+        writer.write( line );
+    }
+
+    close( unitNum ) {
+        const entry = this.units.get( unitNum );
+        if ( !entry ) return;
+        entry.input?.close();
+        entry.output?.close();
+        // Keep entry.input. A closed File yields EOF. Drop the writer.
+        entry.output = null;
+    }
+
+    #ensure( unitNum ) {
+        let entry = this.units.get( unitNum );
+        if ( !entry ) {
+            entry = {};
+            this.units.set( unitNum, entry );
+        }
+        return entry;
+    }
+}
