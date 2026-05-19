@@ -48,9 +48,8 @@ export class VM {
             loader: this.loader,
             stdout: this.options.stdout || defaultStdout,
         } );
-        // Per-macro scratch storage. Keys are owned by sil.js; resetting the
-        // namespace invalidates any cached pointers that resetMemory orphaned.
-        this.scratch = {};
+        // INTSPC's local conversion buffer, lazily allocated on first use.
+        this.intspcBuf = null;
         // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
         this.OSTACK = 0;

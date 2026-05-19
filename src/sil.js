@@ -1672,10 +1672,10 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
           I_str = DESCR.addr.toString(),
           encoded = str.encode( I_str );
 
-    if ( this.scratch.intspc === undefined ) {
-        this.scratch.intspc = this.alloc( 255 );
+    if ( this.intspcBuf === null ) {
+        this.intspcBuf = this.alloc( 255 );
     }
-    SPEC.update( this.scratch.intspc, 0, 0, 0, I_str.length );
+    SPEC.update( this.intspcBuf, 0, 0, 0, I_str.length );
     this.mem.set( encoded, SPEC.addr + SPEC.offset );
 };
 
