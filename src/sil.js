@@ -3750,17 +3750,15 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
         return this.jmp( FLOC );
     }
 
-    DESCR.update( 0, 0, I );
-    try {
-        DESCR.addr = val;
-        this.jmp( SLOC );
-    } catch ( e ) {
-        if ( e instanceof RangeError ) {
-            DESCR.addr = 0;
-            return this.jmp( FLOC );
-        }
-        throw( e );
+    if ( !isInt32( val ) ) {
+        DESCR.update( 0, 0, I );
+        DESCR.addr = 0;
+        return this.jmp( FLOC );
     }
+
+    DESCR.update( 0, 0, I );
+    DESCR.addr = val;
+    this.jmp( SLOC );
 };
 
 //     SPEC is used to assemble a specifier.
