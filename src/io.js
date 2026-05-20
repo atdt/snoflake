@@ -13,7 +13,7 @@
 // Loader:
 //
 //     loader.load(path) -> Uint8Array | Buffer
-//     loader.loadInclude(parentPath, path) -> { path, content } | null
+//     loader.loadInclude(path) -> { path, content } | null
 //     loader.openOutput?(path) -> Writer
 //
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
@@ -29,11 +29,12 @@ export const defaultStdout = {
 };
 
 export const defaultLoader = {
-    load( _path ) {
-        throw new Error( 'No file loader configured for this host' );
+    load( path ) {
+        throw new Error( 'No file loader configured for this host: ' + path );
     },
 
-    loadInclude( _parentPath, _filename ) {
+    loadInclude( includePath ) {
+        void includePath;
         return null;
     }
 };

@@ -2,6 +2,7 @@
 import { parseArgs } from 'node:util';
 import process from 'node:process';
 import { run } from '../src/snobol.js';
+import { createHostLoader } from '../src/host.js';
 
 const { values, positionals } = parseArgs( {
     args: process.argv.slice( 2 ),
@@ -18,6 +19,9 @@ const { values, positionals } = parseArgs( {
         // -s emits the program statistics summary at exit.
         statistics:      { type: 'boolean', short: 's' },
         listing:         { type: 'boolean' },
+        // -I adds a directory to the SNOLIB search path for -INCLUDE
+        // lookups. Repeatable.
+        snolib:          { type: 'string', short: 'I', multiple: true },
     },
     allowPositionals: true,
     strict: true,
@@ -31,6 +35,7 @@ const result = run( {
     banner:      values.banner,
     statistics:  values.statistics,
     listing:     values.listing,
+    loader:      createHostLoader( { snolib: values.snolib } ),
 } );
 
 process.exitCode = result.exitCode;

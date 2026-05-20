@@ -4,7 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { Action, D, VM, assemble, bindSyntaxTables, constants, createVM, defaults, sil, str } from '../src/snobol.js';
+import { createHostLoader } from '../src/host.js';
 import process from "node:process";
+
+// VM wired to the host filesystem, for tests that read or write real files.
+function createFileVM() {
+    return createVM( { loader: createHostLoader() } );
+}
 
 //
 // Test Cases
@@ -1471,7 +1477,7 @@ describe( 'Input and Output Macros', function () {
     } );
 
     it( 'ENFILE makes subsequent reads return EOF', function () {
-        const vm = createVM();
+        const vm = createFileVM();
         const file = path.join( os.tmpdir(), 'snoflake-enfile-' + process.pid + '.sno' ),
               unit = vm.d(),
               spec = vm.s(),
@@ -1614,7 +1620,7 @@ describe( 'Input and Output Macros', function () {
     } );
 
     it( 'STREAD', function () {
-        const vm = createVM();
+        const vm = createFileVM();
         const file = path.join( os.tmpdir(), 'snoflake-stread-' + process.pid + '.sno' ),
               unit = vm.d(),
               spec = vm.s(),
@@ -1661,7 +1667,7 @@ describe( 'Input and Output Macros', function () {
     } );
 
     it( 'STREAD reads source then runtime input, with mode-appropriate length handling', function () {
-        const vm = createVM();
+        const vm = createFileVM();
         const sourceFile = path.join( os.tmpdir(), 'snoflake-stread-source-' + process.pid + '.sno' ),
               inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-' + process.pid + '.txt' ),
               unit = vm.d(),
@@ -1702,7 +1708,7 @@ describe( 'Input and Output Macros', function () {
     } );
 
     it( 'STREAD keeps runtime INPUT record length without discarding significant blanks', function () {
-        const vm = createVM();
+        const vm = createFileVM();
         const inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-blanks-' + process.pid + '.txt' ),
               unit = vm.d(),
               spec = vm.s(),
@@ -1728,7 +1734,7 @@ describe( 'Input and Output Macros', function () {
     } );
 
     it( 'STREAD treats an empty runtime INPUT record as data, not EOF', function () {
-        const vm = createVM();
+        const vm = createFileVM();
         const inputFile = path.join( os.tmpdir(), 'snoflake-stread-input-empty-' + process.pid + '.txt' ),
               unit = vm.d(),
               spec = vm.s(),

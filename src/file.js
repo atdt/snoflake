@@ -144,9 +144,8 @@ export class File {
     }
 
     includeSource( filename, loader ) {
-        const parentPath = this.segments[ this.idx ]?.path,
-              includePath = filename.replace( / +$/, '' ),
-              included = loader.loadInclude?.( parentPath, includePath ) ?? null;
+        const includePath = filename.replace( / +$/, '' ),
+              included = loader.loadInclude?.( includePath ) ?? null;
 
         if ( included === null ) {
             throw new Error( 'Cannot open INCLUDE file: ' + includePath );

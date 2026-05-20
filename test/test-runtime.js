@@ -7,6 +7,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
+import { createHostLoader } from '../src/host.js';
 import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -147,7 +148,7 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( result.vm.options.file, 'source.sno' );
     } );
 
-    it( 'creates a VM with host file loading by default', function () {
+    it( 'creates a VM that loads a file through an explicit host loader', function () {
         const root = path.join( __dirname, '..' ),
               programFile = path.join( root, 'tmp', 'test-create-vm-file.sno' ),
               stdout = captureWriter();
@@ -157,6 +158,7 @@ describe( 'SNOBOL Program Execution', function () {
 
         const vm = createVM( {
             file: programFile,
+            loader: createHostLoader(),
             stdout
         } );
 
@@ -165,26 +167,54 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), 'CREATE VM\n' );
     } );
 
-    it( 'resolves INCLUDE relative to the including file through createVM', function () {
+    it( 'resolves INCLUDE relative to the current working directory', function () {
+        // CSNOBOL4 alignment: the first entry in the INCLUDE search list is
+        // the process CWD, not the including file's directory.
         const root = path.join( __dirname, '..' ),
-              dir = path.join( root, 'tmp', 'test-create-vm-include' ),
-              libDir = path.join( dir, 'lib' ),
+              dir = path.join( root, 'tmp', 'test-cwd-include' ),
+              stdout = captureWriter();
+
+        fs.mkdirSync( dir, { recursive: true } );
+        fs.writeFileSync( path.join( dir, 'nested.sno' ), " OUTPUT = 'CWD INCLUDE'\n" );
+        fs.writeFileSync( path.join( dir, 'main.sno' ), "-INCLUDE 'nested.sno'\nEND\n" );
+
+        const orig = process.cwd();
+        process.chdir( dir );
+        try {
+            const vm = createVM( { file: 'main.sno', loader: createHostLoader(), stdout } );
+            vm.run( image );
+        } finally {
+            process.chdir( orig );
+        }
+
+        assert.equal( joinLines( stdout.lines ), 'CWD INCLUDE\n' );
+    } );
+
+    it( 'resolves INCLUDE files through SNOLIB', function () {
+        const root = path.join( __dirname, '..' ),
+              dir = path.join( root, 'tmp', 'test-snolib-include' ),
+              libDir = path.join( dir, 'library' ),
+              nestedLibDir = path.join( dir, 'nested-library' ),
               mainFile = path.join( dir, 'main.sno' ),
-              nestedFile = path.join( libDir, 'nested.sno' ),
+              firstFile = path.join( libDir, 'first.sno' ),
+              secondFile = path.join( nestedLibDir, 'second.sno' ),
               stdout = captureWriter();
 
         fs.mkdirSync( libDir, { recursive: true } );
-        fs.writeFileSync( nestedFile, " OUTPUT = 'CREATE INCLUDE'\n" );
-        fs.writeFileSync( mainFile, "-INCLUDE 'lib/nested.sno'\nEND\n" );
+        fs.mkdirSync( nestedLibDir, { recursive: true } );
+        fs.writeFileSync( mainFile, "-INCLUDE 'first.sno'\nEND\n" );
+        fs.writeFileSync( firstFile, " OUTPUT = 'SNOLIB FIRST'\n-INCLUDE 'second.sno'\n" );
+        fs.writeFileSync( secondFile, " OUTPUT = 'SNOLIB SECOND'\n" );
 
         const vm = createVM( {
             file: mainFile,
+            loader: createHostLoader( { snolib: [ libDir, nestedLibDir ] } ),
             stdout
         } );
 
         vm.run( image );
 
-        assert.equal( joinLines( stdout.lines ), 'CREATE INCLUDE\n' );
+        assert.equal( joinLines( stdout.lines ), 'SNOLIB FIRST\nSNOLIB SECOND\n' );
     } );
 
     it( 'keeps a custom loader authoritative', function () {
@@ -243,30 +273,29 @@ describe( 'SNOBOL Program Execution', function () {
     it( 'interpolates INCLUDE and COPY source files once', function () {
         const root = path.join( __dirname, '..' ),
               dir = path.join( root, 'tmp', 'test-include' ),
-              libDir = path.join( dir, 'lib' ),
               mainFile = path.join( dir, 'main.sno' ),
-              sharedFile = path.join( libDir, 'shared.sno' ),
-              nestedFile = path.join( libDir, 'nested.sno' ),
+              sharedFile = path.join( dir, 'shared.sno' ),
+              nestedFile = path.join( dir, 'nested.sno' ),
               copyFile = path.join( dir, 'copy.sno' );
 
-        fs.mkdirSync( libDir, { recursive: true } );
+        fs.mkdirSync( dir, { recursive: true } );
         fs.writeFileSync( sharedFile, " OUTPUT = 'SHARED'\n-INCLUDE 'nested.sno'\n" );
         fs.writeFileSync( nestedFile, " OUTPUT = 'NESTED'\n" );
         fs.writeFileSync( copyFile, " OUTPUT = 'COPY'\n" );
         fs.writeFileSync( mainFile, [
-            "-INCLUDE 'lib/shared.sno'",
+            "-INCLUDE 'shared.sno'",
             '-COPY "copy.sno"',
-            "-INCLUDE 'lib/shared.sno'",
-            "-INCLUDE 'lib/shared.sno '",
+            "-INCLUDE 'shared.sno'",
+            "-INCLUDE 'shared.sno '",
             'END',
             ''
         ].join( '\n' ) );
 
         const output = childProcess.execFileSync( process.execPath, [
-            'bin/snoflake.js',
-            '--file=tmp/test-include/main.sno'
+            path.join( root, 'bin/snoflake.js' ),
+            '--file=main.sno'
         ], {
-            cwd: root,
+            cwd: dir,
             encoding: 'utf8'
         } );
 
@@ -296,6 +325,7 @@ describe( 'SNOBOL Program Execution', function () {
         try {
             const vm = createVM( {
                 file: programFile,
+                loader: createHostLoader(),
                 stdout,
             } );
             vm.run( image );

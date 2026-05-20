@@ -1,6 +1,6 @@
 // Public entry point.
 
-import { createHostLoader } from './host.js';
+import { defaultLoader } from './io.js';
 import { VM } from './vm.js';
 import snobolImage from './generated-snobol-image.js';
 
@@ -24,8 +24,8 @@ function sourceLoader( source, sourcePath, baseLoader ) {
             return baseLoader.load( filePath );
         },
 
-        loadInclude( parentPath, includePath ) {
-            return baseLoader.loadInclude?.( parentPath, includePath ) ?? null;
+        loadInclude( includePath ) {
+            return baseLoader.loadInclude?.( includePath ) ?? null;
         }
     };
 }
@@ -36,14 +36,14 @@ export function createVM( options = {} ) {
     if ( Object.hasOwn( opts, 'source' ) ) {
         const source = opts.source,
               sourcePath = opts.sourcePath || DEFAULT_SOURCE_PATH,
-              baseLoader = opts.loader || createHostLoader();
+              baseLoader = opts.loader || defaultLoader;
 
         delete opts.source;
         delete opts.sourcePath;
         opts.file = sourcePath;
         opts.loader = sourceLoader( source, sourcePath, baseLoader );
     } else if ( !opts.loader ) {
-        opts.loader = createHostLoader();
+        opts.loader = defaultLoader;
     }
 
     return new VM( opts );
