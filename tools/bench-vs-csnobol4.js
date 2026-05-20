@@ -133,20 +133,31 @@ function bench( opts, name ) {
     const csTimes = [];
     const sfTimes = [];
     for ( let i = 0; i < opts.iterations; i++ ) {
-        csTimes.push( timeRun( opts.snobol4, [ '-b', filePath ], input, opts.root ) );
-        sfTimes.push( timeRun( process.execPath, [ snoflake, filePath ], input, opts.root ) );
+        csTimes.push(
+            timeRun( opts.snobol4, [ '-b', filePath ], input, opts.root ),
+        );
+        sfTimes.push(
+            timeRun(
+                process.execPath,
+                [ snoflake, filePath ],
+                input,
+                opts.root,
+            ),
+        );
     }
     return {
         name: name,
         csMin: Math.min( ...csTimes ),
         csMed: median( csTimes ),
         sfMin: Math.min( ...sfTimes ),
-        sfMed: median( sfTimes )
+        sfMed: median( sfTimes ),
     };
 }
 
 function fmt( ms ) {
-    return ( ms < 1000 ? ms.toFixed( 0 ) + ' ms' : ( ms / 1000 ).toFixed( 2 ) + ' s' ).padStart( 9 );
+    return ( ms < 1000
+        ? ms.toFixed( 0 ) + ' ms'
+        : ( ms / 1000 ).toFixed( 2 ) + ' s' ).padStart( 9 );
 }
 
 function main() {
@@ -197,9 +208,12 @@ function main() {
         }
     }
     console.log();
-    console.log( 'aggregate (sum of mins): csnobol4 %s  snoflake %s  ratio %sx',
-        fmt( totals.cs ), fmt( totals.sf ),
-        ( totals.sf / totals.cs ).toFixed( 1 ) );
+    console.log(
+        'aggregate (sum of mins): csnobol4 %s  snoflake %s  ratio %sx',
+        fmt( totals.cs ),
+        fmt( totals.sf ),
+        ( totals.sf / totals.cs ).toFixed( 1 ),
+    );
 }
 
 main();

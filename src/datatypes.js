@@ -89,7 +89,9 @@ export class Descriptor {
     }
 
     raw() {
-        return Array.from( this.vm.mem.subarray( this.ptr, this.ptr + this.rawLength ) );
+        return Array.from(
+            this.vm.mem.subarray( this.ptr, this.ptr + this.rawLength ),
+        );
     }
 
     toString() {
@@ -97,7 +99,7 @@ export class Descriptor {
         const props = {
             A: this.addr,
             F: this.flags,
-            V: this.value
+            V: this.value,
         };
         if ( this.width === 6 ) {
             props.O = this.offset;

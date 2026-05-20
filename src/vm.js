@@ -145,7 +145,7 @@ export class VM {
         }
         if ( words > MAX_WORDS ) {
             throw new RangeError(
-                `Cannot grow VM memory beyond MAX_WORDS (${ MAX_WORDS }; requested ${ minWords })`
+                `Cannot grow VM memory beyond MAX_WORDS (${MAX_WORDS}; requested ${minWords})`,
             );
         }
         this.buffer.resize( wordsToBytes( words ) );
@@ -230,5 +230,4 @@ export class VM {
     s( ptr ) {
         return ptr instanceof Specifier ? ptr : new Specifier( this, ptr );
     }
-
 }

@@ -91,19 +91,22 @@ function runUnderCsnobol4( filePath, header ) {
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
     // Cap wall-clock and output size so a runaway fixture does not hang the
     // helper or trip ENOBUFS on stdout.
-    const args = [ '-b' ].concat( csnobol4FlagsForOptions( header.options ), [ filePath ] );
+    const args = [ '-b' ].concat( csnobol4FlagsForOptions( header.options ), [
+        filePath,
+    ] );
     const result = childProcess.spawnSync( SNOBOL4_BIN, args, {
-          cwd: ROOT,
-          input: inputBuf,
-          encoding: 'utf8',
-          timeout: 10000,
-          maxBuffer: 16 * 1024 * 1024,
-          killSignal: 'SIGKILL'
+        cwd: ROOT,
+        input: inputBuf,
+        encoding: 'utf8',
+        timeout: 10000,
+        maxBuffer: 16 * 1024 * 1024,
+        killSignal: 'SIGKILL',
     } );
     if ( result.error ) {
         let msg;
         if ( result.error.code === 'ENOENT' ) {
-            msg = SNOBOL4_BIN + ' not found in PATH (set $SNOBOL4 to override)';
+            msg = SNOBOL4_BIN +
+                ' not found in PATH (set $SNOBOL4 to override)';
         } else if ( result.error.code === 'ETIMEDOUT' ) {
             msg = 'CSNOBOL4 timed out after 10s';
         } else if ( result.error.code === 'ENOBUFS' ) {

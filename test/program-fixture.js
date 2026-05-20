@@ -62,14 +62,19 @@ function parseHeader( filePath ) {
                 } else if ( bl.slice( 0, 2 ) === '* ' ) {
                     blockLines.push( bl.slice( 2 ) );
                 } else {
-                    throw new Error( filePath + ':' + ( i + 1 ) +
-                        ': malformed line in @' + key + ' block: ' + JSON.stringify( bl ) );
+                    throw new Error(
+                        filePath + ':' + ( i + 1 ) +
+                            ': malformed line in @' + key + ' block: ' +
+                            JSON.stringify( bl ),
+                    );
                 }
                 i++;
             }
             if ( i >= lines.length ) {
-                throw new Error( filePath + ':' + ( blockStart + 1 ) +
-                    ': unterminated @' + key + ' block' );
+                throw new Error(
+                    filePath + ':' + ( blockStart + 1 ) +
+                        ': unterminated @' + key + ' block',
+                );
             }
             value = blockLines.join( '\n' ) + '\n';
         } else {
@@ -82,8 +87,13 @@ function parseHeader( filePath ) {
     if ( header.title === null ) {
         throw new Error( filePath + ': missing required @title' );
     }
-    if ( ( header.match === 'exact' || header.match === 'substring' ) && header.expect === null ) {
-        throw new Error( filePath + ': @expect is required for @match ' + header.match );
+    if (
+        ( header.match === 'exact' || header.match === 'substring' ) &&
+        header.expect === null
+    ) {
+        throw new Error(
+            filePath + ': @expect is required for @match ' + header.match,
+        );
     }
 
     return header;
@@ -108,25 +118,39 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         try {
             parsed = JSON.parse( value );
         } catch ( e ) {
-            throw new Error( filePath + ': @options is not valid JSON: ' + e.message, {
-                cause: e,
-            } );
+            throw new Error(
+                filePath + ': @options is not valid JSON: ' + e.message,
+                {
+                    cause: e,
+                },
+            );
         }
-        if ( parsed === null || typeof parsed !== 'object' || Array.isArray( parsed ) ) {
+        if (
+            parsed === null || typeof parsed !== 'object' ||
+            Array.isArray( parsed )
+        ) {
             throw new Error( filePath + ': @options must be a JSON object' );
         }
         if ( 'file' in parsed ) {
-            throw new Error( filePath + ': @options must not set "file" (reserved by runner)' );
+            throw new Error(
+                filePath +
+                    ': @options must not set "file" (reserved by runner)',
+            );
         }
         if ( 'input' in parsed ) {
-            throw new Error( filePath + ': @options must not set "input" (use @input block)' );
+            throw new Error(
+                filePath +
+                    ': @options must not set "input" (use @input block)',
+            );
         }
         header.options = parsed;
         return;
     }
     if ( key === 'input' ) {
         if ( !isBlock ) {
-            throw new Error( filePath + ': @input must use the multi-line block form' );
+            throw new Error(
+                filePath + ': @input must use the multi-line block form',
+            );
         }
         header.input = value;
         return;
@@ -150,8 +174,11 @@ function applyDirective( filePath, header, key, value, isBlock ) {
             throw new Error( filePath + ': @match must be single-line' );
         }
         if ( VALID_MATCH_MODES.indexOf( value ) === -1 ) {
-            throw new Error( filePath + ': @match must be one of ' +
-                VALID_MATCH_MODES.join( '|' ) + ' (got ' + JSON.stringify( value ) + ')' );
+            throw new Error(
+                filePath + ': @match must be one of ' +
+                    VALID_MATCH_MODES.join( '|' ) + ' (got ' +
+                    JSON.stringify( value ) + ')',
+            );
         }
         header.match = value;
         return;

@@ -111,7 +111,9 @@ export function formatRecord( template, data ) {
         } else if ( code === 'I' ) {
             const iw = parseDigits();
             const descr = nextDescr();
-            const val = descr ? descr.addr : ( parseInt( strData.slice( pos ), 10 ) || 0 );
+            const val = descr
+                ? descr.addr
+                : ( parseInt( strData.slice( pos ), 10 ) || 0 );
             out += str.pad( String( val ), iw );
         } else if ( code === 'F' ) {
             const fw = parseDigits();
@@ -121,7 +123,9 @@ export function formatRecord( template, data ) {
                 fd = parseDigits();
             }
             const descr = nextDescr();
-            const fval = descr ? descr.raddr : ( parseFloat( strData.slice( pos ) ) || 0 );
+            const fval = descr
+                ? descr.raddr
+                : ( parseFloat( strData.slice( pos ) ) || 0 );
             const ftxt = fd ? fval.toFixed( fd ) : String( fval );
             out += str.pad( ftxt, fw );
         } else if ( /[A-Za-z]/.test( code ) ) {

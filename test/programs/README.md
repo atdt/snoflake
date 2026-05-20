@@ -7,8 +7,8 @@ and match mode. The Node test runner at `test/test-programs.js` enumerates the
 directory and emits one `it(...)` per file.
 
 These tests complement the focused unit tests in `test/test-*.js`. Use a
-program-level test when the behavior under test is observable only by running
-a full SNOBOL program through `snoflake`; use a focused unit test when the
+program-level test when the behavior under test is observable only by running a
+full SNOBOL program through `snoflake`; use a focused unit test when the
 behavior can be exercised at a single macro or helper.
 
 ## File format
@@ -26,8 +26,8 @@ Header lines take one of two forms.
 * @key value
 ```
 
-**Multi-line block.** Each line inside the block is `* ` followed by payload;
-the runner strips the leading `* ` (or bare `*` for an empty payload line) and
+**Multi-line block.** Each line inside the block is `*` followed by payload;
+the runner strips the leading `*` (or bare `*` for an empty payload line) and
 preserves the rest verbatim.
 
 ```snobol
@@ -57,13 +57,12 @@ JSON object. As a matter of convention, keep this on one line.
 
 Validation enforced by the runner:
 
-- Must parse as a JSON object. Arrays, strings, numbers, booleans, and
-  `null` are rejected.
-- `file` is reserved for the runner (which sets it to the fixture path) and
-  is rejected if present in `@options`.
+- Must parse as a JSON object. Arrays, strings, numbers, booleans, and `null`
+  are rejected.
+- `file` is reserved for the runner (which sets it to the fixture path) and is
+  rejected if present in `@options`.
 - `input` is rejected in `@options`. Inline `@input` blocks are the only
-  supported way to feed runtime `INPUT(...)` reads, which keeps tests
-  hermetic.
+  supported way to feed runtime `INPUT(...)` reads, which keeps tests hermetic.
 
 Other recognized keys (`caseFold`, ...) are passed through to
 `createVM(options)` exactly as `snoflake` does today.
@@ -71,17 +70,16 @@ Other recognized keys (`caseFold`, ...) are passed through to
 ### `@input`
 
 The inline `@input` block is the only supported way to feed runtime
-`INPUT(...)` reads. If present, the block payload is written to a tmp file
-and the runner sets `"input": "<path>"` in the merged options object. Tests
-without an `@input` block should not reference `INPUT`. The runner rejects
-`input` in `@options` (see above), so `@input` and `@options.input` cannot
-coexist.
+`INPUT(...)` reads. If present, the block payload is written to a tmp file and
+the runner sets `"input": "<path>"` in the merged options object. Tests without
+an `@input` block should not reference `INPUT`. The runner rejects `input` in
+`@options` (see above), so `@input` and `@options.input` cannot coexist.
 
 ### `@expect` block contents
 
-Each line inside the block contributes one logical line of expected output.
-The runner strips the leading `* ` (or bare `*` for an empty payload line)
-and joins the payloads with `\n`, then appends a single trailing `\n`. So:
+Each line inside the block contributes one logical line of expected output. The
+runner strips the leading `*` (or bare `*` for an empty payload line) and joins
+the payloads with `\n`, then appends a single trailing `\n`. So:
 
 ```snobol
 * @expect >>>
@@ -111,10 +109,10 @@ Optional single-line free text crediting the source of the program (e.g.
 
 Match modes:
 
-- **`exact`** (default): the `@expect` block must equal the *data section* of
+- **`exact`** (default): the `@expect` block must equal the _data section_ of
   `snoflake`'s stdout. The data section runs from the line after the
   `NO ERRORS DETECTED IN SOURCE PROGRAM` banner up to the line before the
-  `NORMAL TERMINATION AT LEVEL` epilogue. The runner anchors on the *last*
+  `NORMAL TERMINATION AT LEVEL` epilogue. The runner anchors on the _last_
   `NORMAL TERMINATION AT LEVEL` occurrence after the success banner so a
   program that prints the phrase itself does not truncate the data section.
   Interior blank lines are preserved; only the final trailing newline of the
@@ -128,7 +126,7 @@ Match modes:
   brittle or the test is intentionally loose. The same error-marker check
   applies as in `exact`.
 
-- **`error`**: assert the run *did* produce one of the recognized error
+- **`error`**: assert the run _did_ produce one of the recognized error
   markers. If `@expect` is present, it is matched as a substring against the
   captured stdout/stderr.
 
@@ -141,8 +139,8 @@ and the positive check in `error`:
 - `Compilation error`
 - `Execution error`
 
-Adding a new marker is a deliberate change to the runner, not something
-tests can introduce ad hoc.
+Adding a new marker is a deliberate change to the runner, not something tests
+can introduce ad hoc.
 
 On mismatch, the runner dumps full actual output to
 `tmp/test-programs/<name>.actual` and references the path in the assertion
@@ -243,8 +241,8 @@ For input-driven fixtures, put stdin in an `@input` block rather than in
 `@options`. If the historical program assumes fixed-width card input, either
 preserve the significant blanks in the `@input` block or make the program trim
 only the display copy while matching against the fixed-width data. Be explicit
-about blank output lines in `@expect`; a bare `*` line inside the block means an
-expected empty line.
+about blank output lines in `@expect`; a bare `*` line inside the block means
+an expected empty line.
 
 ## Running
 
@@ -266,7 +264,7 @@ node tools/check-csnobol4.js --update FIX    # rewrite @expect with CSNOBOL4 std
 
 `--update` only rewrites `@match exact` fixtures whose CSNOBOL4 run did not
 error; `substring` and `error` fixtures are left untouched with a skip note.
-`@options` runtime flags (`caseFold`, …) are not translated to
-CSNOBOL4 invocation flags — fixtures that set them get a `WARN` line so
-disagreements are not mis-attributed. Mismatched runs are dumped to
+`@options` runtime flags (`caseFold`, …) are not translated to CSNOBOL4
+invocation flags — fixtures that set them get a `WARN` line so disagreements
+are not mis-attributed. Mismatched runs are dumped to
 `tmp/check-csnobol4/<name>.actual`. Override the binary with `SNOBOL4=<path>`.

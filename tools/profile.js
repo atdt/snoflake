@@ -34,7 +34,12 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
       PROFILES_DIR = path.join( ROOT, 'tmp', 'profiles' ),
       BENCH = path.join( ROOT, 'tools', 'bench-snoflake.js' );
 
-const DEFAULTS = [ '--mode=vm', '--samples=3', '--warmup=1', '--iterations=3' ];
+const DEFAULTS = [
+    '--mode=vm',
+    '--samples=3',
+    '--warmup=1',
+    '--iterations=3',
+];
 
 function splitArgs( argv ) {
     const forwarded = [];
@@ -80,7 +85,11 @@ function readIsolates( dir ) {
     if ( !fs.existsSync( dir ) ) {
         return new Set();
     }
-    return new Set( fs.readdirSync( dir ).filter( name => name.startsWith( 'isolate-' ) && name.endsWith( '-v8.log' ) ) );
+    return new Set(
+        fs.readdirSync( dir ).filter( ( name ) =>
+            name.startsWith( 'isolate-' ) && name.endsWith( '-v8.log' )
+        ),
+    );
 }
 
 function runBench( forwarded ) {
@@ -93,7 +102,9 @@ function runBench( forwarded ) {
         throw result.error;
     }
     if ( result.status !== 0 ) {
-        throw new Error( 'bench-snoflake.js exited with status ' + result.status );
+        throw new Error(
+            'bench-snoflake.js exited with status ' + result.status,
+        );
     }
 }
 
@@ -107,7 +118,10 @@ function processIsolate( isolatePath ) {
         throw result.error;
     }
     if ( result.status !== 0 ) {
-        throw new Error( '--prof-process exited with status ' + result.status + '\n' + result.stderr );
+        throw new Error(
+            '--prof-process exited with status ' + result.status + '\n' +
+                result.stderr,
+        );
     }
     return result.stdout;
 }

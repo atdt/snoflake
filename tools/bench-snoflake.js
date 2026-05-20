@@ -156,7 +156,10 @@ function loadHeader( selected ) {
     try {
         return parseHeader( selected.filePath );
     } catch ( e ) {
-        if ( selected.allowAdHoc && /\bmissing required @title\b/.test( e.message ) ) {
+        if (
+            selected.allowAdHoc &&
+            /\bmissing required @title\b/.test( e.message )
+        ) {
             return makeAdHocHeader( selected.filePath );
         }
         throw e;
@@ -321,8 +324,13 @@ async function main() {
           runner = await createRunner( opts );
 
     console.error( 'mode=%s root=%s', opts.mode, opts.root );
-    console.error( 'fixtures=%d iterations=%d warmup=%d samples=%d',
-        fixtures.length, opts.iterations, opts.warmup, opts.samples );
+    console.error(
+        'fixtures=%d iterations=%d warmup=%d samples=%d',
+        fixtures.length,
+        opts.iterations,
+        opts.warmup,
+        opts.samples,
+    );
 
     for ( let i = 0; i < opts.warmup; i++ ) {
         runSuiteSample( fixtures, runner, opts, i, false );
