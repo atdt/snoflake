@@ -1,6 +1,5 @@
 // Core SIL data types: descriptors and specifiers, plus predicates for the
-// value domains of descriptor fields (Int32 addr, Float32 raddr, Uint32 flags
-// and value).
+// value domains of descriptor fields.
 
 import { str } from './string.js';
 
@@ -106,16 +105,13 @@ export class Descriptor {
             props.L = this.length;
         }
 
-        [ 'A', 'F', 'V', 'O', 'L' ].forEach( function ( k ) {
+        for ( const k of [ 'A', 'F', 'V', 'O', 'L' ] ) {
             if ( k in props ) {
-                fields.push( k + '=' + props[k] );
+                fields.push( `${k}=${props[ k ]}` );
             }
-        } );
+        }
 
-        return [
-            '<', this.name, '@', this.ptr, ' ',
-                fields.join( ', ' ), '>'
-        ].join( '' );
+        return `<${this.name}@${this.ptr} ${fields.join( ', ' )}>`;
     }
 }
 
