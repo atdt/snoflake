@@ -1,27 +1,27 @@
 // Small string utilities shared across the runtime.
 
 export const str = {
-    pad: function ( str, width, align, padChar = ' ' ) {
-        if ( str.length >= width ) return str;
+    pad( text, width, align, padChar = ' ' ) {
+        if ( text.length >= width ) return text;
         return align === 'left'
-            ? str.padEnd( width, padChar )
-            : str.padStart( width, padChar );
+            ? text.padEnd( width, padChar )
+            : text.padStart( width, padChar );
     },
 
-    encode: function ( s ) {
-        const str = s.toString();
-        const len = str.length;
+    encode( s ) {
+        const text = s.toString();
+        const len = text.length;
         const paddedLen = len + ( len % 3 === 0 ? 0 : 3 - ( len % 3 ) );
         const encoded = new Uint32Array( paddedLen );
 
         for ( let i = 0; i < len; i++ ) {
-            encoded[ i ] = str.charCodeAt( i );
+            encoded[ i ] = text.charCodeAt( i );
         }
 
         return encoded;
     },
 
-    decode: function ( encoded ) {
+    decode( encoded ) {
         let end = encoded.length;
         while ( end > 0 && encoded[ end - 1 ] === 0 ) {
             end--;
@@ -34,17 +34,17 @@ export const str = {
         return decoded;
     },
 
-    foldAsciiUpperByte: function ( c ) {
+    foldAsciiUpperByte( c ) {
         return ( c >= 97 && c <= 122 ) ? c - 32 : c;
     },
 
-    foldAsciiUpper: function ( s ) {
-        return s.replace( /[a-z]/g, function ( ch ) {
-            return String.fromCharCode( ch.charCodeAt( 0 ) - 32 );
-        } );
+    foldAsciiUpper( s ) {
+        return s.replace( /[a-z]/g, ( ch ) =>
+            String.fromCharCode( ch.charCodeAt( 0 ) - 32 )
+        );
     },
 
-    foldAsciiUpperInPlace: function ( buf, start, length ) {
+    foldAsciiUpperInPlace( buf, start, length ) {
         const end = start + length;
         for ( let p = start; p < end; p++ ) {
             buf[ p ] = str.foldAsciiUpperByte( buf[ p ] );
@@ -53,7 +53,7 @@ export const str = {
 
     // An implementation of Jenkins's one-at-a-time hash
     // <http://en.wikipedia.org/wiki/Jenkins_hash_function>
-    hash: function ( key ) {
+    hash( key ) {
         let hash = 0, i = key.length;
         while ( i-- ) {
             hash += key.charCodeAt( i );
