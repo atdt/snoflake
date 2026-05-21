@@ -1,0 +1,10 @@
+* @title Gimpel CODE function test
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, TEST_CODE.SNO; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* CODE
+* CODE OK
+* <<<
+  OUTPUT = CODE(" X = 1 ") :S(OK)F(ERR)
+OK OUTPUT = "CODE OK" :(END)
+ERR OUTPUT = "CODE FAIL" :(END)
+END
