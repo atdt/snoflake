@@ -4,7 +4,7 @@
 *	   BALREV('F(X)') returns '(X)F' instead of ')X(F'
 *	   like a simple reversal.
 *
-*-INCLUDE "reverse.inc"
+-INCLUDE "REVERSE.INC"
 	DEFINE('BALREV(S)')			:(BALREV_END)
 BALREV	BALREV  =  REPLACE(REVERSE(S), ')(', '()')
 						:(RETURN)

@@ -8,7 +8,7 @@
 *		ORSORT(",LISO,LIST,LISTER,ABC")
 *	   is equivalent to
 *		"ABC" | ("LIS" ("O" | "T" | "TER"))
-* 
+*
 *	   The first character of LIST is used as the delimiter
 *	   character between substrings.
 *
@@ -22,16 +22,24 @@
 *
 *	      LIST_P = OR(LIST)		 ;* assume LIST is very large
 *	      P = POS(0) *LIST_P RPOS(0) ;* fast pattern concatenation
-* 
+*
 -INCLUDE "OR.INC"
-	DEFINE('ORSORT(LIST)BC,I,ANCSEIZE,T,WORD') :(ORSORT_END)
+	DEFINE('ORSORT(LIST)BC,ANCSEIZE,WORD,SORTED,SCAN,INSERTED'
++	',CURRENT')				:(ORSORT_END)
 ORSORT	LIST    LEN(1) . BC			:F(FRETURN)
 	ANCSEIZE  =  POS(0) BC (BREAK(BC) | REM) . WORD
-	T = TABLE(SIZE(LIST) / 5)
 ORS_0	LIST     ANCSEIZE =			:F(ORS_1)
-	T[WORD] = 1				:(ORS_0)
-ORS_1	T = SORT(T)				:F(RETURN)
-ORS_2	I = I + 1
-	ORSORT = ORSORT BC T[I,1]		:S(ORS_2)
-	ORSORT = OR(ORSORT)			:S(RETURN)F(FRETURN)
+	SORTED    (BC WORD) (BC | RPOS(0))	:S(ORS_0)
+	SCAN = SORTED
+	SORTED =
+	INSERTED =
+ORS_2	SCAN      LEN(1) (BREAK(BC) | REM) . CURRENT  = :F(ORS_4)
+	DIFFER(INSERTED)			:S(ORS_3)
+	LGT(CURRENT,WORD)			:F(ORS_3)
+	SORTED = SORTED BC WORD
+	INSERTED = 1
+ORS_3	SORTED = SORTED BC CURRENT		:(ORS_2)
+ORS_4	DIFFER(INSERTED)			:S(ORS_0)
+	SORTED = SORTED BC WORD			:(ORS_0)
+ORS_1	ORSORT = OR(SORTED)			:S(RETURN)F(FRETURN)
 ORSORT_END
