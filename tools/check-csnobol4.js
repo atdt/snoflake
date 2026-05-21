@@ -85,9 +85,35 @@ function semanticOptionWarnings( opts ) {
     return keys.length ? keys : null;
 }
 
+// Historical SNOBOL4 (and snoflake) treats the source file as a single
+// stream: lines after the END statement are not source, they are runtime
+// INPUT data, available to the program through the same unit as INPUT.
+// CSNOBOL4 disables this by default (its -r flag toggles it), so a fixture
+// that stores its runtime data after END is invisible to the reference
+// implementation unless we splice it back onto stdin.
+function postEndInput( filePath ) {
+    const raw = fs.readFileSync( filePath, 'utf8' );
+    const lines = raw.split( '\n' );
+    // Match the source-level END statement: bare "END" with no leading
+    // whitespace, optionally followed by a label/comment. Conservative on
+    // purpose — anything fancier is a hand-edit.
+    for ( let i = 0; i < lines.length; i++ ) {
+        if ( /^END(\s|$)/.test( lines[ i ] ) ) {
+            const rest = lines.slice( i + 1 ).join( '\n' );
+            return rest === '' ? '' : rest;
+        }
+    }
+    return '';
+}
+
 function runUnderCsnobol4( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
-    const inputBuf = header.input === null ? '' : header.input;
+    const postEnd = postEndInput( filePath );
+    const headerInput = header.input === null ? '' : header.input;
+    // Mirror snoflake's stream layout: post-END source, then the @input
+    // block. The empty-string short-circuit keeps fixtures without post-END
+    // data byte-identical to the previous behavior.
+    const inputBuf = postEnd === '' ? headerInput : postEnd + headerInput;
     const env = { ...process.env };
     env.SNOLIB = env.SNOLIB ? env.SNOLIB + path.delimiter + GIMPEL_LIB_DIR : GIMPEL_LIB_DIR;
     // -b suppresses the CSNOBOL4 startup banner so stdout is exactly the
