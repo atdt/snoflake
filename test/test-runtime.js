@@ -27,18 +27,18 @@ describe( 'String Encoding', function () {
         assert.deepEqual( Array.from( str.encode( 'ab' ) ), [ 97, 98, 0 ] );
     } );
 
-    it( 'decode', function () {
-        assert.deepEqual( str.decode( [ 2361, 2366, 2351 ] ), 'हाय' );
+    it( 'decode reads the requested logical span', function () {
+        assert.deepEqual( str.decode( [ 0, 2361, 2366, 2351, 0 ], 1, 3 ), 'हाय' );
     } );
 
     it( 'decode preserves raw UTF-16 code units', function () {
-        assert.equal( str.decode( [ 0xFEFF, 65 ] ), '\uFEFFA' );
-        assert.equal( str.decode( [ 0xD800 ] ), '\uD800' );
+        assert.equal( str.decode( [ 0xFEFF, 65 ], 0, 2 ), '\uFEFFA' );
+        assert.equal( str.decode( [ 0xD800 ], 0, 1 ), '\uD800' );
     } );
 
-    it( 'decode ignores descriptor padding without mutating input', function () {
+    it( 'decode preserves logical trailing zero bytes', function () {
         const encoded = [ 97, 98, 0 ];
-        assert.equal( str.decode( encoded ), 'ab' );
+        assert.equal( str.decode( encoded, 0, 3 ), 'ab\0' );
         assert.deepEqual( encoded, [ 97, 98, 0 ] );
     } );
 } );
@@ -146,6 +146,22 @@ describe( 'SNOBOL Program Execution', function () {
 
         assert.equal( joinLines( stdout.lines ), 'SOURCE WINS\n' );
         assert.equal( result.vm.options.file, 'source.sno' );
+    } );
+
+    it( 'preserves trailing NUL bytes in logical strings', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                ' &ALPHABET LEN(1) . T',
+                ' OUTPUT = SIZE("A" T)',
+                'END',
+                ''
+            ].join( '\n' ),
+            stdout
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '2\n' );
     } );
 
     it( 'creates a VM that loads a file through an explicit host loader', function () {

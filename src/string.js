@@ -21,14 +21,10 @@ export const str = {
         return encoded;
     },
 
-    decode( encoded ) {
-        let end = encoded.length;
-        while ( end > 0 && encoded[ end - 1 ] === 0 ) {
-            end--;
-        }
-
+    decode( encoded, start, length ) {
         let decoded = '';
-        for ( let i = 0; i < end; i++ ) {
+        const end = start + length;
+        for ( let i = start; i < end; i++ ) {
             decoded += String.fromCharCode( encoded[ i ] );
         }
         return decoded;

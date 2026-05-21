@@ -1246,7 +1246,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         assert.equal( s.specified, '42' );
         assert.notEqual( s.addr, original );
-        assert.equal( str.decode( vm.mem.slice( original, original + 3 ) ), 'abc' );
+        assert.equal( str.decode( vm.mem, original, 3 ), 'abc' );
     } );
 
     it( 'LOCSP', function () {

@@ -16,7 +16,7 @@ function stringStructureText( vm, DESCR ) {
     const title = vm.d( DESCR.addr ),
           start = DESCR.addr + vm.$( 'BCDFLD' );
 
-    return str.decode( vm.mem.slice( start, start + title.value ) );
+    return str.decode( vm.mem, start, title.value );
 }
 
 function asArray( ARGs ) {
@@ -1204,8 +1204,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
           start = SPEC.addr + SPEC.offset + SPEC.length,
-          stop = start + DESCR.addr,
-          string = str.decode( this.mem.slice( start, stop ) );
+          string = str.decode( this.mem, start, DESCR.addr );
     let j,
         stack;
 
@@ -3888,9 +3887,9 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
           A = DESCR2.addr,
           A2 = this.d( A + ( 2 * D ) ).addr,
           M = this.d( A2 ).value,
-          fmt = str.decode( this.mem.slice( A2 + ( 4 * D ), A2 + ( 4 * D + M ) ) ),
+          fmt = str.decode( this.mem, A2 + ( 4 * D ), M ),
           SPEC = this.s( $SPEC ),
-          item = str.decode( this.mem.slice( SPEC.addr + SPEC.offset, SPEC.addr + SPEC.offset + SPEC.length ) ),
+          item = str.decode( this.mem, SPEC.addr + SPEC.offset, SPEC.length ),
           lines = printerLines( fmt, item, {
               stripCarriageControl: formatHasLeadingCarriageControl( fmt )
           } );

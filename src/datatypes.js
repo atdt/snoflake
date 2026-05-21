@@ -127,10 +127,9 @@ export class Specifier extends Descriptor {
     set length( n ) { this.vm.setUint( this.ptr + 4, n ); }
 
     get specified() {
-        const start = this.addr + this.offset,
-              end = start + this.length;
+        const start = this.addr + this.offset;
 
-        return str.decode( this.vm.mem.slice( start, end ) );
+        return str.decode( this.vm.mem, start, this.length );
     }
 
     update( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {
