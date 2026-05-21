@@ -1,0 +1,28 @@
+* @title Gimpel MFREAD multi-file interleaved reading
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 9.6 (MFREAD)
+* @expect >>>
+* A:apple
+* B:banana
+* A:apricot
+* B:blueberry
+* A:avocado
+* B:blackberry
+* B:boysenberry
+* A-again:apple
+* <<<
+-INCLUDE "MFREAD.INC"
+*  Interleave reads from two named data files. MFREAD associates each
+*  unit number with its filename on the first call and keeps a separate
+*  buffer + EOF counter per unit, so reads from A and B do not collide.
+LOOP	X = MFREAD(, 8, 'MFA.IN')	:F(B_TURN)
+	OUTPUT = 'A:' X
+B_TURN	Y = MFREAD(, 9, 'MFB.IN')	:F(REW)
+	OUTPUT = 'B:' Y			:(LOOP)
+*  REWIND clears the per-unit state so the next MFREAD on that unit
+*  re-opens the file from the top, demonstrated by re-reading A's
+*  first line after both streams have been exhausted.
+REW	REWIND(8)
+	X = MFREAD(, 8, 'MFA.IN')	:F(DONE)
+	OUTPUT = 'A-again:' X
+DONE
+END
