@@ -1,0 +1,41 @@
+* @title Gimpel additional string functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 3.2, 3.3, 3.6, 3.8, 3.9, 3.12, 3.13, 3.14, and 3.16; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* ...SNOBOL
+* SNOBOL...
+* ELPMAS
+* (X)F
+* BOL
+* AGT true
+* LEXGT true
+* RIGHT LEFT
+* 'DON' "'" 'T'
+* <<<
+-INCLUDE "LPAD.INC"
+-INCLUDE "RPAD.INC"
+-INCLUDE "REVERSE.INC"
+-INCLUDE "BALREV.INC"
+-INCLUDE "SUBSTR.INC"
+-INCLUDE "BLEND.INC"
+-INCLUDE "DIFF.INC"
+-INCLUDE "LEXGT.INC"
+-INCLUDE "AGT.INC"
+-INCLUDE "SWAP.INC"
+-INCLUDE "QUOTE.INC"
+	OUTPUT = LPAD('SNOBOL', 9, '.')
+	OUTPUT = RPAD('SNOBOL', 9, '.')
+	OUTPUT = REVERSE('SAMPLE')
+	OUTPUT = BALREV('F(X)')
+	OUTPUT = SUBSTR('SNOBOL', 4, 3)
+	AGT('banana', 'Apple')			:S(AGT_OK)F(AGT_BAD)
+AGT_OK	OUTPUT = 'AGT true'			:(LEX_TEST)
+AGT_BAD	OUTPUT = 'AGT false'			:(LEX_TEST)
+LEX_TEST LEXGT('b', 'A')			:S(LEX_OK)F(LEX_BAD)
+LEX_OK	OUTPUT = 'LEXGT true'			:(SWAP_TEST)
+LEX_BAD	OUTPUT = 'LEXGT false'			:(SWAP_TEST)
+SWAP_TEST A = 'LEFT'
+	B = 'RIGHT'
+	SWAP(.A, .B)
+	OUTPUT = A ' ' B
+	OUTPUT = QUOTE("DON'T")
+END

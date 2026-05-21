@@ -1,0 +1,28 @@
+* @title Gimpel sorting functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 13.1, 13.2, and 13.7; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* APPLE,DATE,FIG,KIWI,PEAR
+* APPLE,DATE,FIG,KIWI,PEAR
+* ,APPLE,DATE,FIG,KIWI,PEAR,
+* <<<
+-INCLUDE "SWAP.INC"
+-INCLUDE "BSORT.INC"
+-INCLUDE "HSORT.INC"
+-INCLUDE "SSORT.INC"
+-INCLUDE "STRINGOU.INC"
+	A = ARRAY(5)
+	A<1> = 'PEAR'; A<2> = 'FIG'; A<3> = 'APPLE'; A<4> = 'KIWI'; A<5> = 'DATE'
+	BSORT(A,1,5)
+	OUTPUT = STRINGOUT(A, ',')
+	B = ARRAY(5)
+	B<1> = 'PEAR'; B<2> = 'FIG'; B<3> = 'APPLE'; B<4> = 'KIWI'; B<5> = 'DATE'
+	HSORT(B,1,5)
+	OUTPUT = STRINGOUT(B, ',')
+	SS = ','
+	SS = SSORT(SS,'PEAR')
+	SS = SSORT(SS,'FIG')
+	SS = SSORT(SS,'APPLE')
+	SS = SSORT(SS,'KIWI')
+	SS = SSORT(SS,'DATE')
+	OUTPUT = SS
+END

@@ -1,0 +1,14 @@
+* @title Gimpel BCD to EBCDIC character conversion
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, BCD_EBCD.SNO; Catspaw SNOBOL4+ program diskette
+* @input >>>
+* #@%<&
+* ABC#@
+* <<<
+* @expect >>>
+* ='()+
+* ABC='
+* <<<
+* BCD_EBCD - one-line program to convert BCD input to EBCDIC.
+*
+L	OUTPUT = REPLACE(INPUT, "#@%<&", "='()+")	:S(L)
+END

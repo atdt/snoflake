@@ -1,0 +1,23 @@
+* @title Gimpel conversion functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 2.1, 2.3, 2.4, 2.5, 2.9, and 2.10; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* aLGORITHMS iN snobol4!
+* MCMLXXVI
+* FF
+* 255
+* ONE THOUSAND AND NINE HUNDRED AND SEVENTY-SIX
+* 3/24/71
+* <<<
+-INCLUDE "UPLO.INC"
+-INCLUDE "ROMAN.INC"
+-INCLUDE "BASEB.INC"
+-INCLUDE "BASE10.INC"
+-INCLUDE "SPELL.INC"
+-INCLUDE "MDY.INC"
+	OUTPUT = UPLO('Algorithms In SNOBOL4!')
+	OUTPUT = ROMAN(1976)
+	OUTPUT = BASEB(255,16)
+	OUTPUT = BASE10('FF',16)
+	OUTPUT = SPELL(1976)
+	OUTPUT = MDY(71,83)
+END

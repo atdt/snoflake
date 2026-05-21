@@ -6,11 +6,15 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { image, createVM } from '../src/snobol.js';
+import { createHostLoader } from '../src/host.js';
 import { parseHeader, loadCases } from './program-fixture.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const ROOT = path.join( __dirname, '..' ),
-      TMP_DIR = path.join( ROOT, 'tmp', 'test-programs' );
+      TMP_DIR = path.join( ROOT, 'tmp', 'test-programs' ),
+      GIMPEL_LIB_DIR = path.join( __dirname, 'programs', 'gimpel' );
+
+const gimpelLoader = createHostLoader( { snolib: [ GIMPEL_LIB_DIR ] } );
 
 // Recognized error markers. Used both for the negative check in
 // exact/substring modes and the positive check in error mode. Adding a
@@ -50,7 +54,7 @@ function trimTrailingNewlines( s ) {
 function runProgram( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
     const name = path.basename( filePath, '.sno' );
-    const opts = { ...header.options, file: filePath };
+    const opts = { ...header.options, file: filePath, loader: gimpelLoader };
     if ( header.input !== null ) {
         const inputPath = path.join( TMP_DIR, name + '.input' );
         fs.writeFileSync( inputPath, header.input );

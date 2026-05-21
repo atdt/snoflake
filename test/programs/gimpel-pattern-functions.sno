@@ -1,0 +1,45 @@
+* @title Gimpel pattern helper functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 8.1, 8.3, 8.4, 8.5, 8.8, and 8.10; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* FIELD1-FIELD2
+* TAIL
+* (B(C)D)
+* A(")"B)
+* BAER
+* BAER
+* ANCHOR
+* LIST
+* LLLA
+* <<<
+-INCLUDE "BRKREM.INC"
+-INCLUDE "BAL.INC"
+-INCLUDE "FASTBAL.INC"
+-INCLUDE "LIKE.INC"
+-INCLUDE "NOT.INC"
+-INCLUDE "OR.INC"
+-INCLUDE "ORSORT.INC"
+-INCLUDE "ORBREAK.INC"
+	S = 'FIELD1,FIELD2'
+	S BRKREM(',') . X ',' REM . Y
+	OUTPUT = X '-' Y
+	S = 'TAIL'
+	S BRKREM(',') . X RPOS(0)
+	OUTPUT = X
+	S = 'A(B(C)D)E'
+	S BREAK('(') BAL('()', '"') . X REM
+	OUTPUT = X
+	S = 'A(")"B),C'
+	S FASTBAL('()', '"', ',') . X ','
+	OUTPUT = X
+	'THE BAER WENT' ARB LIKE('BEAR') . X ARB
+	OUTPUT = X
+	'CAT' POS(0) NOT('DOG') REM . X
+	OUTPUT = X
+	P = OR(',ABLE,ACTOR,ANCHOR,BAKER,BULL')
+	'XXANCHORYY' ARB *P . X ARB
+	OUTPUT = X
+	P = ORSORT(',LISO,LIST,LISTER,ABC')
+	'XXLISTYY' ARB *P . X ARB
+	OUTPUT = X
+	OUTPUT = ORBREAK(',LISO,LIST,LISTER,ABC')
+END

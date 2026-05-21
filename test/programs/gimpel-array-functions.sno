@@ -1,0 +1,26 @@
+* @title Gimpel array helper functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 4.3, 4.4, 4.6, 4.7, and 4.5; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* DOG,CAT,EEL,APE
+* APE,CAT
+* CAT,EEL
+* 11,22,33,44
+* 3
+* <<<
+-INCLUDE "SEQ.INC"
+-INCLUDE "AI.INC"
+-INCLUDE "AOPA.INC"
+-INCLUDE "TRUNC.INC"
+-INCLUDE "STRINGOU.INC"
+-INCLUDE "FIND.INC"
+	A = ARRAY(4)
+	A<1> = 'DOG'; A<2> = 'CAT'; A<3> = 'EEL'; A<4> = 'APE'
+	I = ARRAY(2); I<1> = 4; I<2> = 2
+	OUTPUT = STRINGOUT(A, ',')
+	OUTPUT = STRINGOUT(AI(A,I), ',')
+	OUTPUT = STRINGOUT(TRUNC(A,2,3), ',')
+	B = ARRAY(4); B<1> = 1; B<2> = 2; B<3> = 3; B<4> = 4
+	C = ARRAY(4); C<1> = 10; C<2> = 20; C<3> = 30; C<4> = 40
+	OUTPUT = STRINGOUT(AOPA(B,'+',C), ',')
+	OUTPUT = FIND(A,'LGT')
+END

@@ -1,0 +1,36 @@
+* @title Gimpel combinatoric functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 12.1, 12.4, 15.1, and 15.2; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* 15
+* 252
+* 8
+* ABCD
+* CBAD
+* AABN
+* AANB
+* ANAB
+* NAAB
+* ABAN
+* ABNA
+* ANBA
+* NABA
+* BAAN
+* BANA
+* BNAA
+* NBAA
+* <<<
+-INCLUDE "COMB.INC"
+-INCLUDE "DECOMB.INC"
+-INCLUDE "PERMUTAT.INC"
+-INCLUDE "REORDER.INC"
+-INCLUDE "ORDER.INC"
+	OUTPUT = COMB(6,2)
+	OUTPUT = COMB(10,5)
+	OUTPUT = DECOMB('135')
+	OUTPUT = PERMUTATION('ABCD',0)
+	OUTPUT = PERMUTATION('ABCD',5)
+	OS = ORDER('BANA')
+	S = OS
+RLOOP	OUTPUT = S
+	S = REORDER(S,OS)	:S(RLOOP)
+END

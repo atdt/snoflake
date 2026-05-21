@@ -1,0 +1,18 @@
+* @title Gimpel string cracking and array concatenation
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 4.1 and 4.8; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* ALPHA/BETA/GAMMA
+* S/N/O
+* RED,GREEN,BLUE,YELLOW
+* <<<
+-INCLUDE "CRACK.INC"
+-INCLUDE "CATA.INC"
+-INCLUDE "STRINGOU.INC"
+	A = CRACK('ALPHA,BETA,GAMMA', ',')
+	OUTPUT = STRINGOUT(A, '/')
+	B = CRACK('SNO')
+	OUTPUT = STRINGOUT(B, '/')
+	C = ARRAY(2); C<1> = 'RED'; C<2> = 'GREEN'
+	D = ARRAY(2); D<1> = 'BLUE'; D<2> = 'YELLOW'
+	OUTPUT = STRINGOUT(CATA(C,D), ',')
+END

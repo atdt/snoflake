@@ -1,0 +1,27 @@
+* @title Gimpel numeric and deterministic random functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 15.4, 16.1, 16.3, and 16.7; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* -4
+* -3
+* 3
+* 4
+* 1
+* 7
+* 2
+* CDBA
+* BIG
+* <<<
+-INCLUDE "FLOOR.INC"
+-INCLUDE "RANDOM.INC"
+-INCLUDE "RPERMUTE.INC"
+-INCLUDE "RSELECT.INC"
+	OUTPUT = FLOOR(-3.2)
+	OUTPUT = CEIL(-3.2)
+	OUTPUT = FLOOR(3.8)
+	OUTPUT = CEIL(3.8)
+	OUTPUT = RANDOM(10)
+	OUTPUT = RANDOM(10)
+	OUTPUT = RANDOM(10)
+	OUTPUT = RPERMUTE('ABCD')
+	OUTPUT = RSELECT('|A|#3#BIG|CAT')
+END

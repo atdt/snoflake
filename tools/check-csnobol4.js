@@ -33,7 +33,8 @@ import process from "node:process";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const ROOT = path.join( __dirname, '..' ),
-      TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' );
+      TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' ),
+      GIMPEL_LIB_DIR = path.join( ROOT, 'test', 'programs', 'gimpel' );
 
 const SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
 
@@ -87,6 +88,8 @@ function semanticOptionWarnings( opts ) {
 function runUnderCsnobol4( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
     const inputBuf = header.input === null ? '' : header.input;
+    const env = { ...process.env };
+    env.SNOLIB = env.SNOLIB ? env.SNOLIB + path.delimiter + GIMPEL_LIB_DIR : GIMPEL_LIB_DIR;
     // -b suppresses the CSNOBOL4 startup banner so stdout is exactly the
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
     // Cap wall-clock and output size so a runaway fixture does not hang the
@@ -96,6 +99,7 @@ function runUnderCsnobol4( filePath, header ) {
     ] );
     const result = childProcess.spawnSync( SNOBOL4_BIN, args, {
         cwd: ROOT,
+        env,
         input: inputBuf,
         encoding: 'utf8',
         timeout: 10000,

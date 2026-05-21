@@ -1,0 +1,24 @@
+* @title Gimpel stack and field name-return functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 5.5 and 5.9; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+*
+* top
+* bottom
+* right
+* changed
+* <<<
+-INCLUDE "PUSH.INC"
+-INCLUDE "FLD.INC"
+	PUSH('bottom')
+	PUSH('top')
+	N = TOP()
+	OUTPUT = $N
+	OUTPUT = POP()
+	OUTPUT = POP()
+	DATA('PAIR(LEFT,RIGHT)')
+	P = PAIR('left', 'right')
+	N = .FLD(P, 2)
+	OUTPUT = $N
+	$N = 'changed'
+	OUTPUT = RIGHT(P)
+END

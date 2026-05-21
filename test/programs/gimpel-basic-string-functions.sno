@@ -1,0 +1,26 @@
+* @title Gimpel basic string functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 3.1, 3.4, 3.5, 3.7, 3.11, and 3.15; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* A1B2C3
+* MSSSS
+* BLNOOS
+* 3
+* BB
+* DEABC
+* MISP
+* <<<
+-INCLUDE "BLEND.INC"
+-INCLUDE "DIFF.INC"
+-INCLUDE "ORDER.INC"
+-INCLUDE "COUNT.INC"
+-INCLUDE "REPL.INC"
+-INCLUDE "ROTATER.INC"
+-INCLUDE "SKIM.INC"
+	OUTPUT = BLEND('ABC','123')
+	OUTPUT = DIFF('MISSISSIPPI','IP')
+	OUTPUT = ORDER('SNOBOL')
+	OUTPUT = COUNT('BANANANA','ANA')
+	OUTPUT = REPL('AAAA','AA','B')
+	OUTPUT = ROTATER('ABCDE',2)
+	OUTPUT = SKIM('MISSISSIPPI')
+END

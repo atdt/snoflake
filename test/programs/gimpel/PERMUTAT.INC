@@ -1,0 +1,13 @@
+* PERMUTATE.inc - PERMUTATION(S,I) will return the Ith permutation of
+*		  the string S.
+*
+	DEFINE('PERMUTATION(S,I)RADIX,T,S1,N')
+						:(PERMUTATION_END)
+PERMUTATION
+	PERMUTATION  =  EQ(I,0)  PERMUTATION S	:S(RETURN)
+	S   LEN(1) . T  =			:F(FRETURN)
+	RADIX  =  RADIX + 1
+	N  =  REMDR(I,RADIX)
+	PERMUTATION    RTAB(N) . S1  =  S1  T
+	I  =  I / RADIX				:(PERMUTATION)
+PERMUTATION_END

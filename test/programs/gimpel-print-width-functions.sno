@@ -1,0 +1,17 @@
+* @title Gimpel print-width helper functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 10.4, 10.5, and 10.6; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* 5
+* 5
+* [A  B  C]
+* [A B C]
+* <<<
+-INCLUDE "SPACING.INC"
+-INCLUDE "MINP.INC"
+-INCLUDE "PAD.INC"
+	OUTPUT = SPACING('A B C')
+	JUSTIFY = 1
+	OUTPUT = MINP('A  B  C')
+	OUTPUT = '[' PAD('A B C', 7) ']'
+	OUTPUT = '[' PAD('A   B   C', 5) ']'
+END

@@ -1,0 +1,28 @@
+* @title Gimpel list reading functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 5.1 and 5.2; Catspaw SNOBOL4+ program diskette
+* @input >>>
+* one
+* two
+* STOP
+* alpha
+* beta
+* END
+* <<<
+* @expect >>>
+* one
+* two
+* beta
+* alpha
+* <<<
+-INCLUDE "READL.INC"
+-INCLUDE "READRL.INC"
+	L = READL(POS(0) 'STOP')
+RL1	IDENT(L)				:S(RL2)
+	OUTPUT = VALUE(L)
+	L = NEXT(L)				:(RL1)
+RL2	L = READRL(POS(0) 'END')
+RL3	IDENT(L)				:S(DONE)
+	OUTPUT = VALUE(L)
+	L = NEXT(L)				:(RL3)
+DONE
+END
