@@ -1,0 +1,56 @@
+* @title Gimpel Random Poem Generator
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 16.9; expected output verbatim from Program 16.9 (RPOEM)
+* @input >>>
+* <PROP>::=action|duration|hunger|feeling|activity|movement|
+* motion|notion|endurance|tenderness|age|taste|bounty|goodness
+* <GEN>::=time|nature|age|wisdom|war|peace|power|energy|earth|
+* love|beauty|charity|faith|hope|thought|strength|night|
+* piety|heart|land|evil
+* <SPEC>::=flower|tree|dove|star|cloud|twig|pond|dog|goat|
+* muffin|petal|wagon wheel|gate|trap|lark|raven|drop|dish|spoon|
+* spark|bone|brain|tooth|face|rake|shovel|book|cover|whistle
+* <PREP>::=on|up|over|under|within|beside|of|in
+* <TVERB>::=revere|worship|understand|beseech|control|provoke|
+* heal|pursue|strengthen|become|kill|arouse|becalm|ensnare
+* <IVERB>::=sing|talk|run|aspire|twiddle|think|gurgle|ponder|
+* wiggle|bend|simmer|bask|break|tumble|dance|whistle|squawk
+* <ADJ>::=gentle|frail|happy|sorrowful|mournful|gay|rusty|
+* frolicking|wanton|lustful|timid|pensive|timorous|moody
+* <AUX>::=may|can|shall|should|must|doth
+* <NOUN>::=a <ADJ> <SPEC>|a <SPEC> of <GEN>|the <PROP> of a
+*  <SPEC>|the <SPEC> <PREP> <NOUN>|<GEN> <PREP> <GEN>|<GEN>'s
+*  <PROP>|<ADJ> <GEN>|the <PROP> of <GEN>
+* <RPOEM>::=A =ADJ= =SPEC= <AUX> <IVERB> <PREP> =NOUN=/And <AUX>
+*  <TVERB> <NOUN>./But <NOUN> <TVERB>s <NOUN>/While (NOUN)
+*  <TVERB>s the (ADJ) (SPEC)./
+* END
+* <<<
+* @expect >>>
+* A lustful twig can twiddle up the tenderness of a spoon
+* And can kill the motion of wisdom.
+* But the brain beside gay power heals the action of earth
+* While the tenderness of a spoon heals the lustful twig.
+*
+* A happy muffin shall bask under earth of night
+* And can ensnare the pond up charity of earth.
+* But the activity of charity strengthens sorrowful faith
+* While earth of night beseechs the happy muffin.
+*
+* A wanton gate may gurgle under the gate of the age of a star
+* And should worship a gay shovel.
+* But frail wisdom ensnares the endurance of night
+* While the gate of the age of a star pursues the wanton gate.
+*
+* A moody cloud shall ponder over the motion of a shovel
+* And should beseech the goodness of beauty.
+* But war over nature worships a wanton goat
+* While the motion of a shovel strengthens the moody cloud.
+*
+* <<<
+-INCLUDE "RSENTENC.INC"
+
+RPOEM	RPOEM = RSENTENCE('<RPOEM>')
+RPOEM_1	RPOEM BREAK('/') . OUTPUT '/' =	:S(RPOEM_1)
+	OUTPUT =
+	N = LT(N,3) N + 1			:S(RPOEM)
+END
