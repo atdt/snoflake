@@ -90,7 +90,6 @@
 	&DUMP	= 0
 	&FTRACE	= 0
 	&FULLSCAN = 1
-	&STLIMIT = 50000
 	&TRACE	= 0
 	&TRIM	= 1
 	LCASE = 'abcdefghijklmnopqrstuvwxyz'

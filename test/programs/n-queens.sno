@@ -65,7 +65,7 @@
 * N queens problem
 * Set N to the desired number.  The program prints out all solution boards.
 		N = 5
-		NM1 = N - 1; NP1 = N + 1; NSZ = N * NP1; &STLIMIT = 10 ** 9; &ANCHOR = 1
+		NM1 = N - 1; NP1 = N + 1; NSZ = N * NP1; &ANCHOR = 1
 		DEFINE('SOLVE(B)I')
 * This pattern tests if the first queen attacks any of the others:
 		TEST = BREAK('Q') 'Q' (ARBNO(LEN(N) '-') LEN(N) 'Q'

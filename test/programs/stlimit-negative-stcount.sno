@@ -1,0 +1,12 @@
+* @title Negative &STLIMIT stops &STCOUNT increments
+* @expect UNCHANGED
+        &STLIMIT = -1
+        BEFORE = &STCOUNT
+        I = 0
+LOOP    I = I + 1
+        LT(I,5)                                                 :S(LOOP)
+        EQ(BEFORE,&STCOUNT)                                     :S(SAME)
+        OUTPUT = 'CHANGED ' BEFORE ' ' &STCOUNT
+        :(END)
+SAME    OUTPUT = 'UNCHANGED'
+END

@@ -15,6 +15,8 @@
 *                       DFLSIZ from the caller.
 *        [PLB20]      — -INCLUDE / -COPY control cards read quoted source
 *                       files during compilation.
+*        [PLB38]      — &STLIMIT defaults to -1.  Negative &STLIMIT means
+*                       unlimited execution and suppresses &STCOUNT increments.
 *        [PLB4]       — INPUT and OUTPUT accept an optional fourth filename
 *                       argument.  This port preserves v311's third INPUT
 *                       argument as record length rather than importing the
@@ -1589,6 +1591,7 @@ INIT   PROC    ,		   Statement initialization procedure
        GETD    XCL,OCBSCL,OCICL    Get statement data
        MOVA    STNOCL,XCL	   Update &STNO
        SETAV   FRTNCL,XCL	   Set up failure offset
+       ACOMPC  EXLMCL,0,,,RTNUL3   Done if &STLIMIT < 0		[PLB38]
        ACOMP   EXNOCL,EXLMCL,EXEX,EXEX
 *				   Check &STLIMIT
        INCRA   EXNOCL,1 	   Increment &STCOUNT
@@ -5364,7 +5367,7 @@ TRIMCL DESCR   0,0,I		   &TRIM
        DESCR   TRMSP,0,0
 TRAPCL DESCR   0,0,I		   &TRACE
        DESCR   TRCESP,0,0
-EXLMCL DESCR   50000,0,I	   &STLIMIT
+EXLMCL DESCR   -1,0,I		   &STLIMIT			[PLB38]
        DESCR   STLMSP,0,0
 OUTSW  DESCR   1,0,I		   &OUTPUT
        DESCR   OUTSP,0,0
