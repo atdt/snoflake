@@ -910,8 +910,20 @@ describe( 'Macros that Modify Flag Fields of Descriptors', function () {
 
 
 describe( 'Macros that Perform Integer Arithmetic on Address Fields', function () {
-    it( 'DIVIDE', function () { // stub
-        assert( sil.DIVIDE ); 
+    it( 'DIVIDE truncates toward zero and preserves type fields', function () {
+        const vm = new VM(),
+              d1 = vm.d(),
+              d2 = vm.d(),
+              d3 = vm.d();
+
+        d2.update( -7, 44, 55 );
+        d3.addr = 3;
+        sil.DIVIDE.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+
+        assert.equal( d1.addr, -2 );
+        assert.equal( d1.flags, 44 );
+        assert.equal( d1.value, 55 );
+        assert.equal( vm.ip, 9 );
     } );
 
     it( 'EXPINT', function () { // stub
@@ -965,8 +977,22 @@ describe( 'Macros that Deal with Real Numbers', function () {
         assert( sil.ADREAL ); 
     } );
 
-    it( 'DVREAL', function () { // stub
-        assert( sil.DVREAL ); 
+    it( 'DVREAL divides real values and preserves type fields', function () {
+        const vm = new VM(),
+              d1 = vm.d(),
+              d2 = vm.d(),
+              d3 = vm.d();
+
+        d2.raddr = 7.5;
+        d2.flags = 44;
+        d2.value = 55;
+        d3.raddr = 2.5;
+        sil.DVREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+
+        assert.equal( d1.raddr, 3 );
+        assert.equal( d1.flags, 44 );
+        assert.equal( d1.value, 55 );
+        assert.equal( vm.ip, 9 );
     } );
 
     it( 'EXREAL', function () { // stub
@@ -981,8 +1007,22 @@ describe( 'Macros that Deal with Real Numbers', function () {
         assert( sil.MNREAL ); 
     } );
 
-    it( 'MPREAL', function () { // stub
-        assert( sil.MPREAL ); 
+    it( 'MPREAL multiplies real values and preserves type fields', function () {
+        const vm = new VM(),
+              d1 = vm.d(),
+              d2 = vm.d(),
+              d3 = vm.d();
+
+        d2.raddr = 1.5;
+        d2.flags = 44;
+        d2.value = 55;
+        d3.raddr = 2;
+        sil.MPREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+
+        assert.equal( d1.raddr, 3 );
+        assert.equal( d1.flags, 44 );
+        assert.equal( d1.value, 55 );
+        assert.equal( vm.ip, 9 );
     } );
 
     it( 'RCOMP', function () { // stub
@@ -993,12 +1033,42 @@ describe( 'Macros that Deal with Real Numbers', function () {
         assert( sil.REALST ); 
     } );
 
-    it( 'RLINT', function () { // stub
-        assert( sil.RLINT ); 
+    it( 'RLINT discards the fractional part', function () {
+        const vm = new VM(),
+              d1 = vm.d(),
+              d2 = vm.d();
+
+        vm.define( 'I', 6 );
+
+        d2.raddr = -3.2;
+        sil.RLINT.call( vm, d1.ptr, d2.ptr, 7, 9 );
+        assert.equal( d1.addr, -3 );
+        assert.equal( d1.flags, 0 );
+        assert.equal( d1.value, 6 );
+        assert.equal( vm.ip, 9 );
+
+        d2.raddr = 3.8;
+        sil.RLINT.call( vm, d1.ptr, d2.ptr, 7, 9 );
+        assert.deepEqual( d1.raw(), [ 3, 0, 6 ] );
+        assert.equal( vm.ip, 9 );
     } );
 
-    it( 'SBREAL', function () { // stub
-        assert( sil.SBREAL ); 
+    it( 'SBREAL subtracts real values and preserves type fields', function () {
+        const vm = new VM(),
+              d1 = vm.d(),
+              d2 = vm.d(),
+              d3 = vm.d();
+
+        d2.raddr = 5.5;
+        d2.flags = 44;
+        d2.value = 55;
+        d3.raddr = 2.25;
+        sil.SBREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+
+        assert.equal( d1.raddr, 3.25 );
+        assert.equal( d1.flags, 44 );
+        assert.equal( d1.value, 55 );
+        assert.equal( vm.ip, 9 );
     } );
 
     it( 'SPREAL', function () {

@@ -947,10 +947,10 @@ sil.DIVIDE = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           I = DESCR3.addr;
 
     if ( I === 0 ) {
-        this.jmp( FLOC );
+        return this.jmp( FLOC );
     }
 
-    DESCR1.addr = Math.floor( A / I );
+    DESCR1.addr = Math.trunc( A / I );
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -983,11 +983,13 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           DESCR3 = this.d( $DESCR3 ),
           newRaddr = DESCR2.raddr / DESCR3.raddr;
 
-    if ( !isFloat32( newRaddr ) ) {
+    if ( DESCR3.raddr === 0 || !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
     DESCR1.raddr = newRaddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
 };
 
@@ -2382,6 +2384,8 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     }
 
     DESCR1.raddr = newRaddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
 };
 
@@ -3199,7 +3203,7 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
     // convert real number to integer
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
-          newAddr = Math.floor( DESCR2.raddr );
+          newAddr = Math.trunc( DESCR2.raddr );
 
     if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );
@@ -3392,13 +3396,15 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 ),
           DESCR3 = this.d( $DESCR3 ),
-          newRaddr = DESCR2.raddr - DESCR3.addr;
+          newRaddr = DESCR2.raddr - DESCR3.raddr;
 
     if ( !isFloat32( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
     DESCR1.raddr = newRaddr;
+    DESCR1.flags = DESCR2.flags;
+    DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
 };
 
