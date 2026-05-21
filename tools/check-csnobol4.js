@@ -94,11 +94,17 @@ function runUnderCsnobol4( filePath, header ) {
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
     // Cap wall-clock and output size so a runaway fixture does not hang the
     // helper or trip ENOBUFS on stdout.
+    //
+    // Run with cwd = GIMPEL_LIB_DIR so fixtures that open shared data files
+    // via INPUT(...,'NAME') (e.g. PHRASES.IN) find them. CSNOBOL4 resolves
+    // runtime INPUT() filenames against cwd, not against SNOLIB. The source
+    // file is passed as an absolute path so the change of cwd does not break
+    // its lookup.
     const args = [ '-b' ].concat( csnobol4FlagsForOptions( header.options ), [
-        filePath,
+        path.resolve( filePath ),
     ] );
     const result = childProcess.spawnSync( SNOBOL4_BIN, args, {
-        cwd: ROOT,
+        cwd: GIMPEL_LIB_DIR,
         env,
         input: inputBuf,
         encoding: 'utf8',
