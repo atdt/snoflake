@@ -11,60 +11,6 @@ const CPD = 3;  // Characters per descriptor
 
 const sil = {};
 
-// Allocate a string structure for the characters described by SPEC at FRSGPT,
-// point DESCR at it, and chain it onto its OBPTR hash bin so later lookups can
-// find it. Used by INIT to seed resident strings before STRING is available.
-//      Data Altered by internStringStructure:
-//                      +-------+-------+-------+
-//      DESCR           | FRSGPT   PTR      S   |
-//                      +-----------------------+
-//                      +-------+-------+-------+
-//      FRSGPT          | FRSGPT TTL+STTL  len  |
-//                      +-----------------------+
-//                      +-------+-------+-------+
-//      FRSGPT+D        |   0       0       S   |
-//                      +-----------------------+
-//                      +-------+-------+-------+
-//      FRSGPT+ATTRIB   |   0       0       0   |
-//                      +-----------------------+
-//                      +-------+-------+-------+
-//      FRSGPT+LNKFLD   |  bin      0       hM  |
-//                      +-----------------------+
-//                      +-------+-------+-------+-------+
-//      FRSGPT+BCDFLD   |     encoded characters ...    |
-//                      +-------------------------------+
-// On exit, FRSGPT is advanced past this structure.
-function internStringStructure( vm, $DESCR, $SPEC ) {
-    const DESCR = vm.d( $DESCR ),
-          SPEC = vm.s( $SPEC ),
-          text = SPEC.specified,
-          len = SPEC.length,
-          S = vm.$( 'S' ),
-          ATTRIB = vm.$( 'ATTRIB' ),
-          LNKFLD = vm.$( 'LNKFLD' ),
-          BCDFLD = vm.$( 'BCDFLD' ),
-          // Primary hash. Picks which OBPTR bin the structure chains onto.
-          binByteOffset = Math.abs( str.hash( 'K' + text ) % vm.$( 'OBSIZ' ) ) * D,
-          // Secondary hash. Stored in LNKFLD as a cheap equality-class tag.
-          equalityHash = Math.abs( str.hash( 'M' + text ) % ( SIZLIM + 1 ) ),
-          FRSGPT = vm.d( 'FRSGPT' ),
-          bin = vm.d( vm.d( 'OBPTR' ).addr + binByteOffset + LNKFLD ),
-          ptr = FRSGPT.addr;
-
-    DESCR.update( ptr, PTR, S );
-    vm.d( ptr ).update( ptr, TTL + STTL, len );
-    vm.d( ptr + D ).update( 0, 0, S );
-    vm.d( ptr + ATTRIB ).update( 0, 0, 0 );
-    vm.d( ptr + LNKFLD ).update( bin.addr, 0, equalityHash );
-    vm.mem.set( str.encode( text ), ptr + BCDFLD );
-
-    bin.addr = ptr;
-
-    // Advance FRSGPT past this structure (4 fixed descriptors followed by
-    // character descriptors).
-    FRSGPT.addr += ( 4 + Math.ceil( len / CPD ) ) * D;
-}
-
 // Read text from a SIL string structure, not from a plain specifier.
 function stringStructureText( vm, DESCR ) {
     const title = vm.d( DESCR.addr ),
