@@ -48,7 +48,7 @@ S_END
 +	TERM '-' *E S('SUB')  |  TERM
 	STMT  =  POS(0)  IDEN  '='  *E  S('ASGN')  RPOS(0)
 READ	S  =  TRIM(INPUT)			:F(END)
-REMOVE_BLANKS	S  ANY(' ' CHAR(9))  =			:S(REMOVE_BLANKS)
+REMOVE_BLANKS	S  ' '  =				:S(REMOVE_BLANKS)
 	TEMP_NO    =  0
 	S   STMT				:S(READ)
 	OUTPUT  =  '***  ERROR IN '   S		:(READ)
