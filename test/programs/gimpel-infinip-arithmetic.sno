@@ -1,0 +1,31 @@
+* @title Gimpel INFINIP infinite-precision arithmetic
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 15.3 (INFINIP)
+* @expect >>>
+* BIG + BIG    = 222222222222222222222
+* BIG - BIG    = 0
+* BIG * 4      = 444444444444444444444
+* BIG / 4      = 27777777777777777777
+* REMDR(BIG,7) = 6
+* MED1 * MED2  = 7407407405925925926
+* MED1 + MED2  = 5555555555
+* 20!          = 2432902008176640000
+* <<<
+	&STLIMIT = 10000000
+-INCLUDE "INFINIP.INC"
+	BIG  = '111111111111111111111'
+	MED1 = '2222222222'
+	MED2 = '3333333333'
+	OUTPUT = 'BIG + BIG    = ' BIG + BIG
+	OUTPUT = 'BIG - BIG    = ' BIG - BIG
+	OUTPUT = 'BIG * 4      = ' BIG * 4
+	OUTPUT = 'BIG / 4      = ' BIG / 4
+	OUTPUT = 'REMDR(BIG,7) = ' REMDR(BIG, 7)
+	OUTPUT = 'MED1 * MED2  = ' MED1 * MED2
+	OUTPUT = 'MED1 + MED2  = ' MED1 + MED2
+	FACT = 1
+	N = 1
+FACT_LOOP	FACT = FACT * N
+	N = N + 1
+	LE(N, 20)				:S(FACT_LOOP)
+	OUTPUT = '20!          = ' FACT
+END
