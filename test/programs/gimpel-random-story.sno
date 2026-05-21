@@ -1,0 +1,132 @@
+* @title Gimpel Random Story Generator
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 13.5; Catspaw SNOBOL4+ program diskette
+* @input >>>
+* <OPENING>::=<TIME> there was a =CHAR= who went to <PLACE> and
+*  bought a =PET=.  On the way home they came upon a =BARRIER=
+*  which the (PET) was afraid to cross.  The (CHAR) said "(PET),
+*  (PET), jump over the (BARRIER) or I won't get home tonight."
+* <TIME>::=Once upon a time|Once|Long ago in a small village|
+* In days gone by in a little town by the river
+* <PLACE>::=market|a pet store|a super market|town|the city
+* <BARRIER>::=fence|ditch|fallen tree|large rock|stream|brook
+* <PET>::=dog|cat|parrot|pony
+* <REFUSAL>::= But the (LAST) would not.  The (CHAR)
+*  <EXCURSION> and she met a (SUBJ).  She said, "(SUBJ), (SUBJ),
+*  (VERB) (LAST), (LIST) and I shan't get home tonight."
+* <EXCURSION>::=went down the path|went over a hill|went by
+*  <OBJECT> and then <EXCURSION>|went toward <OBJECT>|
+* went over hill and dale|went near <OBJECT>|went on the road to
+*  <OBJECT>|went for (RANDOM(20) + 1) miles
+* <OBJECT>::=the <COLOR> <THING>
+* <COLOR>::=white|blue|red|yellow|grey|black|dark|green|orange
+* <THING>::=mill|tavern|church|school|house|meadow|rock|barn
+* <PERSUADED>::= The (SUBJ) knew the (CHAR) and, in fact,
+*  had been saved by her from a wild <WILD_AN>.  So the (LIST)
+*  and the (CHAR) got home that night.
+* <CHAR>::=little old woman|little old lady|kind grandmother|
+* kind old aunt|little girl dressed in red|retired seamstress|
+* nice old lady|little girl green
+* <DOM_AN>::=cow|pig|horse|sheep|chicken
+* <WILD_AN>::=lion|giraffe|tiger|camel|ostrich|rhinoceros
+* <ANIMAL>::=<DOM_AN>|<WILD_AN>|<PET>
+* <HUMAN>::=farmer|girl|policeman|hunter|man|boy
+* <A>::=<HUMAN>|<ANIMAL>
+* <CUT>::=cut|slice|snip|slash
+* <CUTTER>::=knife|scissor|sword|dagger
+* <BEE>::=bee|wasp|horse-fly
+* <HURT>::=bite|frighten|scare|kick|eat
+* END
+* <ANIMAL> <HURT> <HUMAN>
+* <CUTTER> <CUT> <A>
+* <A> break <CUTTER>
+* water drown <A>
+* <A> drink water
+* fire burn <A>
+* smoke suffocate <A>
+* <BEE> sting <A>
+* <A> swat <BEE>
+* wind blow-out fire
+* wind disperse smoke
+* smoke pollute wind
+* smoke smother fire
+* <HUMAN> disperse smoke
+* <A> spill liquor
+* liquor intoxicate <A>
+* <HUMAN> slay <WILD_AN>
+* <WILD_AN> eat <HUMAN>
+* END
+* <<<
+* @match exact
+* @expect >>>
+* Long ago in a small village there was a little old
+* lady who went to a pet store and bought a cat.  On
+* the way home they came upon a ditch which the cat was
+* afraid to cross.  The little old lady said "cat, cat,
+* jump over the ditch or I won't get home tonight." But
+* the cat would not.  The little old lady went over hill
+* and dale and she met a water.  She said, "water, water,
+* drown cat,   cat won't jump over the ditch and I shan't
+* get home tonight." But the water would not.  The little
+* old lady went on the road to the red school and she
+* met a man.  She said, "man, man, drink water,  water
+* won't drown the cat,   cat won't jump over the ditch
+* and I shan't get home tonight." But the man would not.
+* The little old lady went toward the blue church and
+* she met a lion.  She said, "lion, lion, eat man,  man
+* won't drink the water,  water won't drown the cat,
+* cat won't jump over the ditch and I shan't get home
+* tonight." But the lion would not.  The little old lady
+* went toward the yellow rock and she met a smoke.  She
+* said, "smoke, smoke, suffocate lion,  lion won't eat
+* the man,  man won't drink the water,  water won't drown
+* the cat,   cat won't jump over the ditch and I shan't
+* get home tonight." But the smoke would not.  The little
+* old lady went toward the blue house and she met a girl.
+* She said, "girl, girl, disperse smoke,  smoke won't
+* suffocate the lion,  lion won't eat the man,  man won't
+* drink the water,  water won't drown the cat,   cat
+* won't jump over the ditch and I shan't get home tonight."
+* The girl knew the little old lady and, in fact, had
+* been saved by her from a wild ostrich.  So the  girl
+* began to disperse the smoke; the  smoke began to suffocate
+* the lion; the  lion began to eat the man; the  man
+* began to drink the water; the  water began to drown
+* the cat; the   cat began to jump over the ditch and
+* the little old lady got home that night.
+* <<<
+-INCLUDE "RSENTENC.INC"
+	ACTIONS  =  TABLE()
+	BB = BREAK(' ')
+	SB = SPAN(' ')
+READ_PHRASE
+	X  =  TRIM(INPUT)			:F(BEGIN_STORY)
+	IDENT(X,'END')				:S(BEGIN_STORY)
+	X  (BB SB BB) . SUBJ_VERB  SB  REM . OBJS
+	OBJS  =  OBJS  '|'
+READ_PH1
+	OBJS  POS(0) '<' ARB . VAR '>'  =  RSENT_TBL<VAR>
+	OBJS   POS(0)  '|'  =			:S(READ_PH1)
+	OBJS   BREAK('|') . OBJ  '|'  =		:F(READ_PHRASE)
+	ACTIONS<OBJ>  =  ACTIONS<OBJ> '|' SUBJ_VERB
+						:(READ_PH1)
+BEGIN_STORY	RSTORY  =   RSENTENCE('<OPENING>')
+	LIST  =  '  ' PET " won't jump over the " BARRIER
+	LAST  =  PET
+	&MAXLNGTH  =  30000
+NEW_AGENT
+	TRY  =  0
+RETRY	TRY  =  TRY + 1  LT(TRY,10)		:F(REQUEST)
+	ALTS  =  ACTIONS<LAST>
+	RSENTENCE(RSELECT(ALTS))  BB . SUBJ  SB  REM . VERB
+	RSTORY  ' ' SUBJ ' '			:S(RETRY)
+	RSTORY  ' ' VERB ' '			:S(RETRY)
+REQUEST	RSTORY  =  RSTORY  RSENTENCE('<REFUSAL>')
+	LIST =  ' ' SUBJ " won't " VERB ' the ' LAST ", " LIST
+	LAST  =  SUBJ
+	LT(SIZE(LIST), 175)			:S(NEW_AGENT)
+FIN1	LIST  "won't"  =  "began to"		:S(FIN1)
+FIN2	LIST  ','      =  "; the"		:S(FIN2)
+	RSTORY  =  RSTORY  RSENTENCE('<PERSUADED>')
+OUT	RSTORY  (LEN(50) BB) . OUTPUT  SB  =	:S(OUT)
+	OUTPUT  =  RSTORY
+END

@@ -1,0 +1,55 @@
+* @title Gimpel L1 Compiler
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 15.3; Catspaw SNOBOL4+ program diskette
+* @input >>>
+* A = (B - C * D) / 10
+* <<<
+* @match exact
+* @expect >>>
+*  LOAD C
+*  MUL D
+*  STORE TEMP1
+*  LOAD B
+*  SUB TEMP1
+*  STORE TEMP2
+*  LOAD TEMP2
+*  DIV 10
+*  STORE TEMP3
+*  LOAD TEMP3
+*  STORE A
+* <<<
+-INCLUDE "PUSH.INC"
+-INCLUDE "TEMP.INC"
+	DEFINE('S(NAME)')
+	DEFINE('S_(NAME)T')			:(S_END)
+S	S  =  EVAL("NULL . *S_('" NAME "')")	:(RETURN)
+S_	S_  =  .DUMMY			:($('S_' NAME))
+
+S_NEG	OUTPUT  =  ' LOADN '  POP()
+	OUTPUT  =  ' STORE '  PUSH(TEMP())	:(NRETURN)
+
+S_ADD	;S_SUB ;S_MUL ;S_DIV
+	T       =  POP()
+	OUTPUT  =  ' LOAD '  POP()
+	OUTPUT  =  ' ' NAME ' ' T
+	OUTPUT  =  ' STORE '  PUSH(TEMP())	:(NRETURN)
+
+S_ASGN	OUTPUT  =  ' LOAD '  POP()
+	OUTPUT  =  ' STORE '  POP()		:(NRETURN)
+S_END
+	LET  =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+	DIGITS  =  '0123456789'
+	IDEN  =  (ANY(LET) (SPAN(LET DIGITS) | '')) . *PUSH()
+	INTEGER  =  SPAN(DIGITS) . *PUSH()
+	PRIMARY  =  IDEN | INTEGER | '(' *E ')'
+	FACTOR  =  PRIMARY  |  '-' PRIMARY  S('NEG')
+	TERM  =  FACTOR '*' *TERM S('MUL')  |
++	FACTOR '/' *TERM S('DIV')  |  FACTOR
+	E   =   TERM '+' *E S('ADD')  |
++	TERM '-' *E S('SUB')  |  TERM
+	STMT  =  POS(0)  IDEN  '='  *E  S('ASGN')  RPOS(0)
+READ	S  =  TRIM(INPUT)			:F(END)
+REMOVE_BLANKS	S  ANY(' ' CHAR(9))  =			:S(REMOVE_BLANKS)
+	TEMP_NO    =  0
+	S   STMT				:S(READ)
+	OUTPUT  =  '***  ERROR IN '   S		:(READ)
+END

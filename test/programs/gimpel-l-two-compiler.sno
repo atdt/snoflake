@@ -1,0 +1,57 @@
+* @title Gimpel L2 Compiler
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 15.5; Catspaw SNOBOL4+ program diskette
+* @input >>>
+* if x > y then x = x + a(i+1) + z else y = x - y / z
+* <<<
+* @match exact
+* @expect >>>
+*  LOAD 1,x
+*  SUB 1,y
+*  BRLE 1,LBL.1
+*  LOAD 1,i
+*  ADD 1,=1
+*  LOAD 2,a(1)
+*  FADD 2,z
+*  LOAD 3,x
+*  FADD 3,2
+*  STORE 3,x
+*  BR LBL.2
+* LBL.1
+*  LOAD 1,y
+*  FDIV 1,z
+*  LOAD 2,x
+*  FSUB 2,1
+*  STORE 2,y
+* LBL.2
+* <<<
+	&FULLSCAN = 1
+	&TRACE = 1000
+	TRACE('STCOUNT')
+
+-INCLUDE "POL.INC"
+-INCLUDE "TR.INC"
+-INCLUDE "TUPLE.INC"
+
+READ	S  =  TRIM(INPUT)			:F(END)
+*
+* Convert input to Polish form.
+*
+	S STMT				:F(ERR)
+	POLISH = POP() ","
+*
+* Convert Polish to 4-tuples
+*
+	T = TR()
+*
+* Convert 4-tuples to machine code
+*
+GENLOOP	T POS(0) (BREAKX('/') '//') . TUP =	:F(READ)
+	TUP BREAK(',') . OP ','
++	((BREAK(',') . ARG1 ',' BREAK(',') . ARG2 ','
++	  BREAKX('/') . ARG3) |
++	(BREAK('/') . ARG1 "" . ARG2 "" . ARG3)) '//'
++						 :F(ERR2)
+	TUPLE(OP,ARG1,ARG2,ARG3)		:(GENLOOP)
+ERR	OUTPUT  =  '***  ERROR IN '   S		:(READ)
+ERR2	OUTPUT	=  '***  ERROR IN '   TUP	:(READ)
+END
