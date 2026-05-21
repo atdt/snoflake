@@ -45,7 +45,7 @@ S_CPUSH	PUSH(ARG)				:(NRETURN)
 S_END
 	AL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 	NU = '0123456789'
-	BL  =  SPAN(' ' CHAR(9)) | NULL
+	BL  =  SPAN(' ') | NULL
 	IDEN = (ANY(AL) (SPAN(AL NU) | '')) . *PUSH()  BL
 	INTEGER = SPAN('0123456789') . *PUSH()  BL
 	ADDOP = ANY('+-') . *PUSH()  BL
