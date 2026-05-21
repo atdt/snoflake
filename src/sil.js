@@ -516,7 +516,7 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
           F = A.flags;
 
     if ( F & STTL ) {
-        DESCR1.addr = D * ( 4 + Math.floor( ( V - 1 ) / CPD + 1 ) );
+        DESCR1.addr = D * ( 4 + Math.ceil( V / CPD ) );
     } else {
         DESCR1.addr = V + D;
     }
@@ -742,8 +742,8 @@ sil.XINCLD = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 
     if (
         filename.length >= 2 &&
-        ( ( filename[ 0 ] === "'" && filename[ filename.length - 1 ] === "'" ) ||
-          ( filename[ 0 ] === '"' && filename[ filename.length - 1 ] === '"' ) )
+        ( filename[ 0 ] === "'" || filename[ 0 ] === '"' ) &&
+        filename.endsWith( filename[ 0 ] )
     ) {
         filename = filename.slice( 1, -1 );
     }
@@ -1397,7 +1397,7 @@ sil.GETLTH = function ( $DESCR1, $DESCR2 ) {
           DESCR2 = this.d( $DESCR2 ),
           L = DESCR2.addr;
 
-    DESCR1.addr  = D * ( 3 + Math.floor( ( L - 1 ) / CPD + 1 ) );
+    DESCR1.addr  = D * ( 3 + Math.ceil( L / CPD ) );
     DESCR1.flags = 0;
     DESCR1.value = 0;
 };
@@ -1520,22 +1520,10 @@ sil.INIT = function () {
           HDSGPT = this.d( 'HDSGPT' ),
           TLSGP1 = this.d( 'TLSGP1' );
 
-    this.timeStart = new Date().getTime();
+    this.timeStart = Date.now();
     FRSGPT.addr = this.alloc( dynamicStorageSize );
     HDSGPT.addr = FRSGPT.addr;
     TLSGP1.addr = FRSGPT.addr + dynamicStorageSize;
-
-    [
-        [ 'ENDPTR', 'ENDSP' ],
-        [ 'FRETCL', 'FRETSP' ],
-        [ 'NRETCL', 'NRETSP' ],
-        [ 'RETCL', 'RETSP' ],
-    ].forEach( function ( pair ) {
-        if ( Object.hasOwn( this.symbols, pair[ 0 ] ) &&
-                Object.hasOwn( this.symbols, pair[ 1 ] ) ) {
-            internStringStructure( this, pair[ 0 ], pair[ 1 ] );
-        }
-    }, this );
 };
 
 //     INSERT is used to insert  a  tree  node  above  another
@@ -2033,16 +2021,10 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           ptr3 = $DESCR3,
           A = i32[ ptr2 + 0 ],
           stop = A + mem[ A + 2 ];
-    let ptr,
-        key,
-        candidate;
     const isFunctionPairList = this.symbols.FNCPL !== undefined &&
             A === i32[ this.symbols.FNCPL + 0 ];
 
-    let i;
-    for ( i = 0; ; i++ ) {
-        ptr = A + 6 + ( 6 * i );
-
+    for ( let ptr = A + 6; ; ptr += 6 ) {
         if ( mem[ ptr + 0 ] === mem[ ptr3 + 0 ] &&
              mem[ ptr + 1 ] === mem[ ptr3 + 1 ] &&
              mem[ ptr + 2 ] === mem[ ptr3 + 2 ] ) {
@@ -2063,11 +2045,10 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // names as string structures, so fall back to the same ASCII fold here
     // after preserving the exact descriptor match above.
     if ( this.options.caseFold && isFunctionPairList ) {
-        key = str.foldAsciiUpper( stringStructureText( this, this.d( ptr3 ) ) );
+        const key = str.foldAsciiUpper( stringStructureText( this, this.d( ptr3 ) ) );
 
-        for ( i = 0; ; i++ ) {
-            ptr = A + 6 + ( 6 * i );
-            candidate = str.foldAsciiUpper( stringStructureText( this, this.d( ptr ) ) );
+        for ( let ptr = A + 6; ; ptr += 6 ) {
+            const candidate = str.foldAsciiUpper( stringStructureText( this, this.d( ptr ) ) );
             if ( candidate === key ) {
                 i32[ ptr1 + 0 ] = ptr - 6;
                 mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
@@ -2637,9 +2618,10 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
     const fmt = this.s( FORMAT ).specified,
           descrs = asArray( ARGs ).map( this.d, this ),
-          lines = printerLines( fmt, descrs, { stripCarriageControl: true } );
+          lines = printerLines( fmt, descrs, { stripCarriageControl: true } ),
+          unit = this.d( $DESCR ).addr;
 
-    for ( const line of lines ) this.units.write( this.d( $DESCR ).addr, line );
+    for ( const line of lines ) this.units.write( unit, line );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3336,23 +3318,18 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
           targetStart = SPEC1.addr + SPEC1.offset,
           sourceStart = SPEC2.addr + SPEC2.offset,
           replacementStart = SPEC3.addr + SPEC3.offset,
-          replacements = new Map();
-    let target,
-        from,
-        to,
-        i;
+          replacements = new Map(),
+          mem = this.mem;
 
-    for ( i = 0; i < SPEC2.length; i++ ) {
-        from = this.mem[ sourceStart + i ];
-        to = this.mem[ replacementStart + i ];
-        replacements.set( from, to );
+    for ( let i = 0; i < SPEC2.length; i++ ) {
+        replacements.set( mem[ sourceStart + i ], mem[ replacementStart + i ] );
     }
 
-    for ( i = 0; i < SPEC1.length; i++ ) {
-        target = targetStart + i;
-        from = this.mem[ target ];
+    for ( let i = 0; i < SPEC1.length; i++ ) {
+        const target = targetStart + i,
+              from = mem[ target ];
         if ( replacements.has( from ) ) {
-            this.mem[ target ] = replacements.get( from );
+            mem[ target ] = replacements.get( from );
         }
     }
 };

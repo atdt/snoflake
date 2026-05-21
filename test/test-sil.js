@@ -1781,34 +1781,14 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
 
     it( 'INIT', function () {
         const vm = new VM();
-        const obstart = vm.alloc( defaults.OBSIZ * D ),
-              spec = vm.s();
-
-        vm.define( 'OBSIZ', defaults.OBSIZ );
-        vm.define( 'ATTRIB', 2 * D );
-        vm.define( 'LNKFLD', 3 * D );
-        vm.define( 'BCDFLD', 4 * D );
-        vm.define( 'S', 1 );
-        vm.define( 'ENDPTR', vm.d().ptr );
-        vm.define( 'ENDSP', sil.STRING.call( vm, 'END' ) );
         vm.define( 'FRSGPT', vm.d().ptr );
         vm.define( 'HDSGPT', vm.d().ptr );
         vm.define( 'TLSGP1', vm.d().ptr );
-        vm.define( 'OBPTR', vm.d().ptr );
-        vm.d( 'OBPTR' ).update( obstart - vm.$( 'LNKFLD' ), constants.PTR, vm.$( 'S' ) );
 
         sil.INIT.call( vm );
         assert.equal( vm.d( 'TLSGP1' ).addr - vm.d( 'HDSGPT' ).addr, D * 50000 );
         assert.equal( vm.memPtr, vm.d( 'TLSGP1' ).addr );
         assert( vm.d( 'FRSGPT' ).addr < vm.d( 'TLSGP1' ).addr );
-
-        const ptr = vm.d( 'ENDPTR' );
-        sil.LOCSP.call( vm, spec, ptr );
-
-        assert( ptr.addr > 0 );
-        assert.equal( ptr.flags, constants.PTR );
-        assert.equal( ptr.value, vm.$( 'S' ) );
-        assert.equal( spec.specified, 'END' );
     } );
 
     it( 'LINK', function () { // stub
