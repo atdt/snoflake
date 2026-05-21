@@ -1,0 +1,67 @@
+* @title Gimpel ASM360, PLI_STMT, and ONCE pattern matchers
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 8 (ONCE 8.6, ASM360 8.11, PLI_STMT 8.12); Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* NAME:[L]
+* OPERATION:[MVI]
+* OPERAND:[3,L'ABC]
+* COMMENT:['THIS IS A COMMENT']
+* NAME:[LBL]
+* OPERATION:[AIF]
+* OPERAND:[('A B' EQ T'X).LAB]
+* COMMENT:[HERE]
+* STMT1:[A=B;]
+* REST:[ /* ; not here */ C='D;E'; F=G]
+* PLAIN:[AB]
+* ONCE:[B]
+* ONCE-USED:[no match]
+* <<<
+-INCLUDE "ASM360.INC"
+-INCLUDE "PLI_STMT.INC"
+-INCLUDE "ONCE.INC"
+
+* ASM360 — book example from p. 160. Operand quote-balancing must ignore
+* the apostrophe in L'ABC per the IBM360 assembler manual rule.
+        LINE = "L MVI 3,L'ABC 'THIS IS A COMMENT'"
+        LINE ASM360                                     :F(EFAIL1)
+        OUTPUT = 'NAME:[' NAME ']'
+        OUTPUT = 'OPERATION:[' OPERATION ']'
+        OUTPUT = 'OPERAND:[' OPERAND ']'
+        OUTPUT = 'COMMENT:[' COMMENT ']'                :(NEXT1)
+EFAIL1  OUTPUT = 'ASM360 FAILED'
+
+* Conditional assembly operation (AIF): the operand may contain a
+* parenthesized logical expression with embedded blanks and an
+* attribute apostrophe (T'X), both of which the F3C field handles.
+NEXT1   LINE = "LBL  AIF   ('A B' EQ T'X).LAB  HERE"
+        LINE ASM360                                     :F(EFAIL2)
+        OUTPUT = 'NAME:[' NAME ']'
+        OUTPUT = 'OPERATION:[' OPERATION ']'
+        OUTPUT = 'OPERAND:[' OPERAND ']'
+        OUTPUT = 'COMMENT:[' COMMENT ']'                :(NEXT2)
+EFAIL2  OUTPUT = 'ASM360 FAILED 2'
+
+* PLI_STMT — terminate at the first semicolon that is not inside a
+* quoted literal or /* ... */ comment.
+NEXT2   S = "A=B; /* ; not here */ C='D;E'; F=G"
+        S PLI.STMT                                      :F(EFAIL3)
+        OUTPUT = 'STMT1:[' STMT ']'
+        S PLI.STMT REM . REST
+        OUTPUT = 'REST:[' REST ']'                      :(NEXT3)
+EFAIL3  OUTPUT = 'PLI_STMT FAILED'
+
+* ONCE — pattern that succeeds the first time it is matched and fails
+* forever after. The book (p. 154) gives the example
+*       'AAAB' 'A' ONCE() 'B' | 'B'
+* which matches the bare 'B' alternative: ONCE() poisons the leading
+* 'A' path after its first visit so the unanchored scan cannot reach
+* 'AB' at cursor 2 (which a plain 'A' 'B' would have found).
+NEXT3   M = 'no match'
+        'AAAB' ('A' 'B') . M
+        OUTPUT = 'PLAIN:[' M ']'
+        M = 'no match'
+        'AAAB' ('A' ONCE() 'B' | 'B') . M
+        OUTPUT = 'ONCE:[' M ']'
+        M = 'no match'
+        'AAAB' ('A' ONCE() 'B') . M
+        OUTPUT = 'ONCE-USED:[' M ']'
+END
