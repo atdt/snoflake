@@ -1,0 +1,21 @@
+* @title Gimpel FORTREAD FORTRAN statement reader
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 9.2 (FORTREAD), which is built on Chapter 9.1 (READ)
+* @input >>>
+* C This is a comment card
+*       X = 1
+*       Y = X +
+*      *2 +
+*      *3
+* C Another comment between statements
+*       Z = Y
+* <<<
+* @expect >>>
+* [      X = 1]
+* [      Y = X +2 +3]
+* [      Z = Y]
+* <<<
+-INCLUDE "FORTREAD.INC"
+LOOP	S = FORTREAD()				:F(DONE)
+	OUTPUT = '[' S ']'			:(LOOP)
+DONE
+END

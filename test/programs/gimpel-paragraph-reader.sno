@@ -1,0 +1,25 @@
+* @title Gimpel PARAGRAPH text reader
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 9.3 (PARAGRAPH), built on Chapter 9.1 (READ)
+* @input >>>
+* First paragraph starts here.
+* It has two lines.
+* This is sentence three.
+*
+* Second paragraph here.
+* Continues.
+*    indented should not start a new paragraph attempt
+* Final.
+* <<<
+* @expect >>>
+* <First paragraph starts here.  It has two lines.  This is sentence three.>
+* <Second paragraph here.  Continues.>
+* skip:    indented should not start a new paragraph attempt
+* skip: Final.
+* <<<
+-INCLUDE "PARAGRAP.INC"
+LOOP	P = PARAGRAPH(POS(0) ANY('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))	:F(NEXT)
+	OUTPUT = '<' P '>'			:(LOOP)
+NEXT	LINE = READ()				:F(DONE)
+	OUTPUT = 'skip: ' LINE			:(NEXT)
+DONE
+END

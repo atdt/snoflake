@@ -1,0 +1,23 @@
+* @title Gimpel SNOREAD SNOBOL4 statement reader
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 9.4 (SNOREAD), built on Chapters 9.1 (READ) and 8.4 (FASTBAL)
+* @input >>>
+* LABEL X = 1
+*  Y = "STRING; WITH ; SEMIS"
+*  Z = X + Y; W = Z * 2
+*  OUTPUT = W
+* +   "continuation"
+* END
+* <<<
+* @expect >>>
+* <LABEL X = 1;>
+* < Y = "STRING; WITH ; SEMIS";>
+* < Z = X + Y;>
+* < W = Z * 2;>
+* < OUTPUT = W    "continuation";>
+* <END;>
+* <<<
+-INCLUDE "SNOREAD.INC"
+LOOP	S = SNOREAD()				:F(DONE)
+	OUTPUT = '<' S '>'			:(LOOP)
+DONE
+END

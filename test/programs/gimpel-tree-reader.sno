@@ -1,0 +1,16 @@
+* @title Gimpel TREEREAD level-indented tree reader
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 9.5 (TREEREAD)
+* @input >>>
+* 1 A
+*  2 B
+*   3 D
+*   3 E
+*  2 C
+*   3 F
+* <<<
+* @expect >>>
+* A,2,B,2,D,,E,,C,1,F,,
+* <<<
+-INCLUDE "TREEREAD.INC"
+	OUTPUT = TREEREAD(1)
+END

@@ -1,0 +1,29 @@
+* @title Gimpel PUT, FORTPUT, and SNOPUT line writers
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 9.7 (PUT), 9.8 (FORTPUT), 9.9 (PEEL), and 9.10 (SNOPUT)
+* @expect >>>
+* -- PUT --
+* line one                                                                TST    1
+* line two                                                                TST    2
+* -- FORTPUT (with continuation) --
+*       X = A + B                                                         TST    3
+*       LONGVAR = 1234567890 + 1234567890 + 1234567890 + 1234567890 + 1234TST    4
+*      1567890 + 1234567890 + 1234567890 + 1234567890 + 1234567890        TST    5
+* -- SNOPUT --
+* LABEL X = "literal" Y = (1 + 2) Z = X Y                                 TST    6
+* LONG  LIST = ITEM1, ITEM2, ITEM3, ITEM4, ITEM5, ITEM6, ITEM7, ITEM8,    TST    7
+* +ITEM9, ITEM10                                                          TST    8
+* <<<
+-INCLUDE "FORTPUT.INC"
+-INCLUDE "SNOPUT.INC"
+	DETACH(.PUNCH)
+	PUT_LABEL = 'TST'
+	OUTPUT = '-- PUT --'
+	PUT('line one')
+	PUT('line two')
+	OUTPUT = '-- FORTPUT (with continuation) --'
+	FORTPUT('      X = A + B')
+	FORTPUT('      LONGVAR = 1234567890 + 1234567890 + 1234567890 + 1234567890 + 1234567890 + 1234567890 + 1234567890 + 1234567890 + 1234567890')
+	OUTPUT = '-- SNOPUT --'
+	SNOPUT('LABEL X = "literal" Y = (1 + 2) Z = X Y')
+	SNOPUT('LONG  LIST = ITEM1, ITEM2, ITEM3, ITEM4, ITEM5, ITEM6, ITEM7, ITEM8, ITEM9, ITEM10')
+END
