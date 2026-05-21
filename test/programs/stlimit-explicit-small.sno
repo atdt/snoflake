@@ -1,5 +1,5 @@
 * @title Explicit small &STLIMIT still limits execution
-* @match substring
+* @match error
 * @expect LIMIT ON STATEMENT EXECUTION EXCEEDED
         &STLIMIT = 2
 LOOP    I = I + 1

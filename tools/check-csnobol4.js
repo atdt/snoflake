@@ -39,12 +39,16 @@ const ROOT = path.join( __dirname, '..' ),
 const SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
 
 // Match the runner's error-marker list so a CSNOBOL4 run that triggers any
-// of these is treated the same way the Node test runner would.
+// of these is treated the same way the Node test runner would. Matched
+// case-insensitively so the same list catches snoflake (uppercase) and
+// CSNOBOL4 (mixed case) error text. ' at level ' catches the IBM-spec
+// runtime-error preamble emitted by both implementations.
 const ERROR_MARKERS = [
       'ERROR IN SNOBOL4 SYSTEM',
       'Compilation error',
       'Execution error',
-      'Aborting: exceeded'
+      'Aborting: exceeded',
+      ' at level '
 ];
 
 // Options that almost certainly change observable behavior under Snoflake but
@@ -70,8 +74,9 @@ function trimTrailingNewlines( s ) {
 }
 
 function findErrorMarker( output ) {
+    const lower = output.toLowerCase();
     for ( let i = 0; i < ERROR_MARKERS.length; i++ ) {
-        if ( output.indexOf( ERROR_MARKERS[ i ] ) !== -1 ) {
+        if ( lower.indexOf( ERROR_MARKERS[ i ].toLowerCase() ) !== -1 ) {
             return ERROR_MARKERS[ i ];
         }
     }
@@ -189,8 +194,11 @@ function checkAgainstExpect( header, run ) {
             return { ok: false, message: 'expected an error, none observed (exit 0, no marker)' };
         }
         if ( header.expect !== null ) {
-            const needle = trimTrailingNewlines( header.expect );
-            if ( combined.indexOf( needle ) === -1 ) {
+            // Case-insensitive: error-message text is implementation-formatted
+            // (snoflake uppercase, CSNOBOL4 mixed case), and the fixture
+            // describes the semantic content, not the formatting.
+            const needle = trimTrailingNewlines( header.expect ).toLowerCase();
+            if ( combined.toLowerCase().indexOf( needle ) === -1 ) {
                 return { ok: false, message: 'expected substring not found in error output: ' +
                     JSON.stringify( needle ) };
             }

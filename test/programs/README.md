@@ -69,11 +69,15 @@ Other recognized keys (`caseFold`, ...) are passed through to
 
 ### `@input`
 
-The inline `@input` block is the only supported way to feed runtime
-`INPUT(...)` reads. If present, the block payload is written to a tmp file and
-the runner sets `"input": "<path>"` in the merged options object. Tests without
-an `@input` block should not reference `INPUT`. The runner rejects `input` in
-`@options` (see above), so `@input` and `@options.input` cannot coexist.
+The inline `@input` block feeds the program's default `INPUT` stream
+(unit 5). If present, the block payload is written to a tmp file and the
+runner sets `"input": "<path>"` in the merged options object. The runner
+rejects `input` in `@options` (see above), so `@input` and
+`@options.input` cannot coexist.
+
+Fixtures that need to read additional named data files at runtime can
+open them via SNOBOL's `INPUT(.VAR, U, , 'NAME')` association — see
+[Loading shared data files](#loading-shared-data-files) below.
 
 ### `@expect` block contents
 
@@ -133,14 +137,30 @@ Match modes:
 #### Recognized error markers
 
 The same fixed list is used for both the negative check in `exact`/`substring`
-and the positive check in `error`:
+and the positive check in `error`. Matches are case-insensitive so the same
+list catches snoflake (IBM-spec uppercase) and CSNOBOL4 (mixed case) error
+text:
 
 - `ERROR IN SNOBOL4 SYSTEM`
 - `Compilation error`
 - `Execution error`
+- ` at level ` — catches the IBM-spec runtime-error preamble
+  `ERROR NN IN STATEMENT NN AT LEVEL NN` emitted by both implementations
 
 Adding a new marker is a deliberate change to the runner, not something tests
 can introduce ad hoc.
+
+In `error` mode, the `@expect` substring is also matched case-insensitively.
+Error-message formatting differs between implementations (snoflake uppercase,
+CSNOBOL4 mixed); the fixture describes semantic content, not formatting.
+
+#### Picking between `substring` and `error`
+
+For a fixture that asserts an expected runtime error (e.g. an explicit
+`&STLIMIT` violation), use `@match error`. `@match substring` requires a
+clean exit, which CSNOBOL4 does not produce on runtime errors — the cross-
+check helper would reject it even though snoflake's in-process run accepts
+it.
 
 On mismatch, the runner dumps full actual output to
 `tmp/test-programs/<name>.actual` and references the path in the assertion
@@ -197,6 +217,62 @@ Error-path test:
  OUTPUT = NOSUCH(1)
 END
 ```
+
+## Loading shared data files
+
+A fixture can open named data files at runtime through the standard
+`INPUT(.VAR, U, , 'NAME')` association. The loader resolves `'NAME'`
+against the SNOLIB search path — the same lookup `-INCLUDE` uses — so a
+file committed under `test/programs/gimpel/` (or wherever `gimpelLoader`
+points) is found by bare name regardless of the test runner's cwd.
+
+This is the right idiom when the program needs:
+
+- a shared data file used by several fixtures (e.g. `PHRASES.IN`,
+  `RSEASON.IN`),
+- multiple distinct input streams interleaved (e.g. `MFREAD`),
+- or a program written faithful to its historical original, which opens
+  files by name rather than reading raw stdin.
+
+### Switching `INPUT` back to the `@input` stream
+
+To rebind the `INPUT` variable to the runtime stdin stream after consuming
+a file, use the unit-rebind idiom:
+
+```snobol
+        INPUT(.INPUT, 8, , 'PHRASES.IN')   ; bind INPUT to unit 8 = file
+-INCLUDE "PHRASE.INC"                       ; consumes phrases via INPUT
+        INPUT(.INPUT, 5)                    ; rebind INPUT to unit 5 (stdin)
+```
+
+Unit 5 still holds the runtime-input segment carried over from
+compilation, so the rebind is a pure INATL association change with no
+file open. Subsequent reads of `INPUT` continue from the `@input` block.
+
+Use unit 8 or higher (not 6 or 7) for the data file: CSNOBOL4 reserves
+unit 6 for `OUTPUT` and unit 7 for `PUNCH`, and rebinding either to an
+input file makes subsequent writes to that stream fail.
+
+### Writable scratch files
+
+Programs that need a writable temporary file (e.g. the two-pass ASM
+fixture's `tmp/ASMTEMP` scratch listing) should write under a `tmp/`
+prefix. The repo-wide `tmp/` gitignore covers both the top-level
+`tmp/` (the snoflake test runner's cwd) and `test/programs/gimpel/tmp/`
+(the CSNOBOL4 cross-check helper's cwd). The cross-check helper
+pre-creates the latter so the fixture's first `OUTPUT(...)` to a
+`tmp/`-prefixed path can open the file.
+
+### Post-`END` source data
+
+Historical SNOBOL4 (and snoflake) treats the source file as a single
+stream: lines after the `END` statement are not source, they are runtime
+`INPUT` data read off the same unit. CSNOBOL4 disables this by default
+(its `-r` flag toggles it). The cross-check helper detects post-`END`
+source and prepends it to the `@input` block when piping stdin to
+CSNOBOL4, so a fixture relying on this layout (e.g. the original Duquet
+ELIZA distribution, whose conversation script sits after `END`) runs
+under both implementations.
 
 ## Adding fixtures
 

@@ -20,10 +20,16 @@ const gimpelLoader = createHostLoader( { snolib: [ GIMPEL_LIB_DIR ] } );
 // exact/substring modes and the positive check in error mode. Adding a
 // marker is a deliberate runner change, not something tests can introduce
 // ad hoc. See test/programs/README.md.
+//
+// Markers are matched case-insensitively so the same list catches errors
+// from snoflake (IBM-spec uppercase) and CSNOBOL4 (mixed case). The
+// ' at level ' marker catches the runtime-error preamble "ERROR NN IN
+// STATEMENT NN AT LEVEL NN" emitted by both implementations.
 const ERROR_MARKERS = [
       'ERROR IN SNOBOL4 SYSTEM',
       'Compilation error',
-      'Execution error'
+      'Execution error',
+      ' at level '
 ];
 
 function captureWriter() {
@@ -39,8 +45,9 @@ function joinLines( lines ) {
 }
 
 function findErrorMarker( output ) {
+    const lower = output.toLowerCase();
     for ( let i = 0; i < ERROR_MARKERS.length; i++ ) {
-        if ( output.indexOf( ERROR_MARKERS[ i ] ) !== -1 ) {
+        if ( lower.indexOf( ERROR_MARKERS[ i ].toLowerCase() ) !== -1 ) {
             return ERROR_MARKERS[ i ];
         }
     }
@@ -95,8 +102,11 @@ function assertProgram( filePath, header, output ) {
             fail( filePath, output, 'expected an error marker, none found' );
         }
         if ( header.expect !== null ) {
-            const needle = trimTrailingNewlines( header.expect );
-            if ( output.indexOf( needle ) === -1 ) {
+            // Case-insensitive: error-message text is implementation-formatted
+            // (snoflake uppercase vs. CSNOBOL4 mixed case), and the fixture
+            // describes the semantic content, not the formatting.
+            const needle = trimTrailingNewlines( header.expect ).toLowerCase();
+            if ( output.toLowerCase().indexOf( needle ) === -1 ) {
                 fail( filePath, output,
                     'expected substring not found in error output: ' + JSON.stringify( needle ) );
             }
