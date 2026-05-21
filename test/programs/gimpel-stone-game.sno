@@ -1,0 +1,130 @@
+* @title Gimpel Stone game self-play (programmed responses)
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 17.3 (STONE); Catspaw SNOBOL4+ program diskette
+* @input >>>
+* <GOOD>::=excellent|wonderful|nice|careful|impeccable|shrewd|
+* clever|nifty|good|smart|skillful|cunning|witty|fine|
+* splendid|elegant|#5#very <GOOD>|bright|brainy|brilliant|sharp|
+* keen|nimble-witted|slick|sly|astute|penetrating
+* <LETMESEE>::=<THOUGHT>|<MUMBLE>|<MUMBLE> <THOUGHT>|<THOUGHT>
+*  <MUMBLE>
+* <MUMBLE>::=Hmmm|Ahh|Well Well|Gosh|Gee|OK|Oh man|Let's see|
+* Wait a minute|Interesting|Wow|Wowee|Yipes|Zowee|Whoosh|
+* #5#<MUMBLE> <MUMBLE>|#6#<MUMBLE>...
+* <THOUGHT>::=<LETME> <CONSIDER> <THIS>
+* <LETME>::=I think I'll|let me|I need time to|I'm going to
+*  have to
+* <CONSIDER>::=consider|contemplate|mull over|#4#<THINK> about
+* <THINK>::=think|see|cogitate|meditate
+* <THIS>::=this|this one|the situation|this problem|this here
+* <P1>::=maneuver|strategem|tactic|play|move
+* <P2>::=performance|game|effort
+* <P3>::=play|strategy
+* <P13>::=<P1>s|<P3>
+* <P23>::=<P2>|<P3>
+* <P123>::=<P1>s|<P2>|<P3>
+* <PRAISE>::=<THANKS> for the game, <NICEGAME>
+* <THANKS>::=Thanks|Thank you|Thank you very much
+* <NICEGAME>::=I admired the <GOOD> <P123> on your part|
+* that was <GOOD> <P3> on your part|your <P1>s were quite
+*  <GOOD>|it was a pleasure to play against one so <GOOD>|I
+*  enjoyed your <GOOD> <P123>|I enjoyed particularly that last
+*  <GOOD> <P1>
+* <STUPID>::=stupid|dumb|blundering|thick-headed|sad|
+* thick-skulled|silly|ludicrous|witless|poor|ponderous|
+* brainless|foolish|bungling|heavy-handed|graceless|clumsy
+* <FOOL>::=fool|dolt|idiot|oaf|blockhead|chump|ass|moron|ninny|
+* nincompoop|chump|dunce|bonehead|fathead|imbecile|jerk|baboon
+* <INSULT>::=You <STUPID> <FOOL>|I have never seen such <STUPID>
+*  <P13>|Your <STUPID> <P23> befits a <STUPID> <FOOL>|
+* Your <STUPID> <P1>s indicate that you are a <STUPID>
+*  <FOOL>|A <STUPID> <FOOL> is not so <STUPID> as you|
+* Your <P23> marks you as a <STUPID> <FOOL>|Your <P1>s are
+*  less than <GOOD>
+* END
+* NO
+* 5
+* 0
+* 2
+* 1
+* 1
+* 1
+* Q
+* <<<
+* @expect >>>
+* Do you want the rules?
+* No. of stones (odd) = 
+* Winner's Parity (0...1) = 
+* Maximum Take = 
+* There are 5 stones in the pile.
+* How many do you want? 
+* I think I'll contemplate this one
+* I think I'll take just one.
+* There are 3 stones in the pile.
+* How many do you want? 
+* I need time to think about this problem
+* I think I'll take just one.
+* There are 1 stones in the pile.
+* How many do you want? 
+* You have 3 stones and I have 2 stones
+* That means I win
+* Your tactics are less than shrewd
+* Would you like to change the game, or quit(Q)? 
+* <<<
+-INCLUDE "PHRASE.INC"
+-INCLUDE "QUEST.INC"
+	DEFINE('SDA(NSTONES,PARITY,MAX)A,I,OPAR,P,J')
+						:(SDA_END)
+SDA	SDA  =  ARRAY('0:' NSTONES ',0:1' , 'L')
+	SDA<0,PARITY>  =  'W'
+SDA_1	I  =  I + 1  LT(I,NSTONES)		:F(RETURN)
+	P  =  -1
+SDA_2	P  =  P + 1  LT(P,1)			:F(SDA_1)
+	OPAR  =  REMDR(NSTONES - I - P, 2)
+	J  =  0
+SDA_3	J  =  J + 1  LT(J,MAX)			:F(SDA_2)
+	IDENT(SDA<I - J, OPAR>, 'L')		:F(SDA_3)
+	SDA<I,P>  =  J				:(SDA_2)
+SDA_END
+	QUEST('Do you want the rules?/(NO)NEWG|(YES)') :S($LABEL)
+STONE_1	OUTPUT = 'There are N stones in a pile (where N is odd) and let each'
+	OUTPUT = 'player take, on each move, either 1, 2, ..., or K stones'
+	OUTPUT = 'from the pile.  When the pile is exhausted, the player'
+	OUTPUT = 'with an odd number of stones wins.'
+	OUTPUT =
+NEWG	QUEST('No. of stones (odd) = /NSTONES(1...1000)')
+	EQ(REMDR(NSTONES,2),0)			:S(NEWG)
+	QUEST("Winner's Parity (0...1) = /P(0...1)")
+	QUEST("Maximum Take = /MAX(2...1000)")
+OLDG	NS  =  NSTONES
+	MAXA  =  MAX
+	A  =  SDA(NS,P,MAX)
+	HIM = 0
+	ME  =  0
+HIS_TURN
+	OUTPUT  =  'There are ' NS ' stones in the pile.'
+	MAXA  =  GT(MAXA,NS)  NS
+	QUEST('How many do you want? /K(1...MAXA)')
+	NS  =  NS - K  ;  HIM  =  HIM + K
+	EQ(NS,0)				:S(TOTALIZE)
+MY_TURN
+	K  =  A<NS,REMDR(ME,2)>
+	K  =  IDENT(K,'L')  1
+	NS  =  NS - K
+	ME  =  ME + K
+	OUTPUT  =  LETMESEE()
+	S  =  K ' stones.'
+	S  =  EQ(K,1)  'just one.'
+	OUTPUT  =  "I think I'll take " S
+	EQ(NS,0)				:F(HIS_TURN)
+TOTALIZE
+	OUTPUT = 'You have ' HIM ' stones and I have ' ME ' stones'
+	EQ(REMDR(HIM,2),P)			:S(HE_WINS)
+	OUTPUT  =  'That means I win'
+	OUTPUT  =  INSULT()			:(CHANGE)
+HE_WINS
+	OUTPUT  =  'That means you win'
+	OUTPUT  =  PRAISE()
+CHANGE
+	QUEST('Would you like to change the game, or quit(Q)? /'
++	'(YES)NEWG|(NO)OLDG|(Q)END') :($LABEL)
+END
