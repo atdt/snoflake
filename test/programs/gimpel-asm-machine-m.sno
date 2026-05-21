@@ -1,0 +1,77 @@
+* @title Gimpel ASM assembler for machine M
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 18.1 (ASM); Catspaw SNOBOL4+ program diskette
+* @input >>>
+*         LOAD 1,X
+*         ADD 1,Y
+*         STORE 1,Z
+* X       LOAD 0,0
+* Y       LOAD 0,0
+* Z       LOAD 0,0
+* <<<
+* @expect >>>
+*                21 1 0 0003              LOAD 1,X  
+*                31 1 0 0004              ADD 1,Y  
+*                22 1 0 0005              STORE 1,Z  
+*                21 0 0 0000      X       LOAD 0,0  
+*                21 0 0 0000      Y       LOAD 0,0  
+*                21 0 0 0000      Z       LOAD 0,0  
+* <<<
+-MODULE ASM
+-INCLUDE "RPAD.INC"
+-INCLUDE "LPAD.INC"
+-INCLUDE "BASEB.INC"
+*  Detach PUNCH so the binary card stream is suppressed; only the
+*  human-readable assembly listing on OUTPUT is checked.  Snoflake
+*  routes an unassociated PUNCH to stdout, CSNOBOL4 silently drops
+*  it, and the fixture should agree across both.
+	DETACH(.PUNCH)
+	LIST  =  'LOAD 21,STORE 22,ADD 31,FADD 71,SUB 32,'
++	'FSUB 72,MUL 33,FMUL 73,DIV 34,FDIV 74,LOADA 2A,LOADN 2F,'
++	'BR A0,BRGT A1,BRLT A2,BREQ A3,BRNE A4,BRGE A5,BRLE A6,'
+
+	OPS  =  TABLE()
+OPS_INIT	LIST  BREAK(' ') . OP ' ' BREAK(',') . CODE ',' =
++						:F(INIT1)
+	OPS<OP>  =  CODE			:(OPS_INIT)
+INIT1	SYMS  =  TABLE()
+	LABEL.L  =  BREAK(' ') . L SPAN(' ')
+	LOC  =  0
+	OUTPUT(.DISK,10,,'tmp/ASMTEMP')
+PASS1	X  =  INPUT  ' '			:F(INIT2)
+	DISK  =  X
+	X  LABEL.L  =
+	SYMS<L DIFFER(L)>  =  BASEB(LOC,16)
+	LOC  =  DIFFER(X)  LOC + 1		:(PASS1)
+INIT2	REWIND(10)
+	DETACH(.DISK)
+	INPUT(.DISK,10,,'tmp/ASMTEMP')
+	NO_OP  =  POS(0)  BREAK(' ')  SPAN(' ')  RPOS(0)
+	P.OP.AC.A.X  =  NULL $ OP $ AC $ A $ X   NULL . CAUSE
++	POS(0)   BREAK(' ')   SPAN(' ')
++	BREAK(' ') . OP   SPAN(' ')
++	(BREAK(' ,') . AC   ','  |  NULL)
++	BREAK('( ') . A
++	('('  BREAK(')') . X  ')'  |  NULL)
+	DEFINE('CVTSYM(SYM,TABLE,LENGTH,TYPE)')	:(CVTSYM_END)
+CVTSYM	SYM  =  INTEGER(SYM)  BASEB(SYM,16)	:S(CVTSYM_1)
+	SYM  =  TABLE<SYM>
+	CAUSE  =  IDENT(SYM,NULL) 'U' TYPE ' '
+CVTSYM_1
+	SYM  =  LPAD(SYM,LENGTH,'0')
+	CVTSYM  =  LE(SIZE(SYM), LENGTH)  SYM	:S(RETURN)
+	CAUSE  =  CAUSE  'L'  TYPE  ' '
+	SYM  =					:(CVTSYM_1)
+CVTSYM_END
+PASS2	CAUSE  =  'S '
+	LINE  =  DISK  ' '			:F(END)
+	LINE   NO_OP				:S(PASS2A)
+	LINE   P.OP.AC.A.X
+	OP  =  CVTSYM(OP,OPS,2,'O')
+	AC  =  CVTSYM(AC,SYMS,1,'R')
+	X   =  CVTSYM(X, SYMS,1,'X')
+	A   =  CVTSYM(A, SYMS,4,'A')
+	PUNCH  =  OP  AC  X  A
+	OUTPUT  =  RPAD(CAUSE,15)  OP ' ' AC ' ' X ' ' A
++	'      '  LINE				:(PASS2)
+PASS2A	OUTPUT = DUPL(' ',32)  LINE		:(PASS2)
+END

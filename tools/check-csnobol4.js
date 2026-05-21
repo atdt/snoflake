@@ -108,6 +108,11 @@ function postEndInput( filePath ) {
 
 function runUnderCsnobol4( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
+    // Pre-create a writable tmp/ subdirectory inside the CSNOBOL4 cwd so a
+    // fixture that opens OUTPUT(...,'tmp/SCRATCH') (e.g. ASM uses 'tmp/ASMTEMP'
+    // for the pass-1 intermediate listing) can open its file.  The dir is
+    // gitignored via the repo-wide tmp/ rule.
+    fs.mkdirSync( path.join( GIMPEL_LIB_DIR, 'tmp' ), { recursive: true } );
     const postEnd = postEndInput( filePath );
     const headerInput = header.input === null ? '' : header.input;
     // Mirror snoflake's stream layout: post-END source, then the @input
