@@ -1,0 +1,42 @@
+* @title Gimpel RSEASON baseball simulation
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 16.10 (RSEASON); 1927 New York Yankees lineup from Table 16.4
+* @input >>>
+* 648, 231, 36, 23,  6,  62
+* 526, 150, 20, 11,  3,  25
+* 540, 192, 29,  8, 60, 138
+* 584, 218, 52, 18, 47, 109
+* 516, 174, 47,  9,  8,  45
+* 570, 176, 29,  8, 18,  69
+* 387, 104, 24,  3,  2,  27
+* 251,  69,  9,  3,  7,  54
+* 500,  50,  5,  1,  2,  10
+* <<<
+* @expect >>>
+* Total runs per season
+* ---------------------
+* 885
+* 998
+* 982
+* 995
+* 1062
+* 1045
+* 974
+* 975
+* 1012
+* 1006
+* Mean: 993
+* <<<
+	&STLIMIT = 10000000
+-INCLUDE "RSEASON.INC"
+	SEASONS = 10
+	GAMES = 154
+	SUM = 0
+	N = 1
+	OUTPUT = "Total runs per season"
+	OUTPUT = "---------------------"
+RSEAS_1	RUNS = RSEASON(GAMES)
+	OUTPUT = RUNS
+	SUM = SUM + RUNS
+	N = NE(N,SEASONS) N + 1			:S(RSEAS_1)
+	OUTPUT = "Mean: " SUM / SEASONS
+END
