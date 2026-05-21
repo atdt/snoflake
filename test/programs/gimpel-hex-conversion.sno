@@ -1,0 +1,15 @@
+* @title Gimpel hexadecimal string conversion
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 2.6 (HEX) and 2.7 (CH); Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* 414243
+* 534E4F424F4C
+* ABC
+* SNOBOL
+* <<<
+-INCLUDE "CH.INC"
+-INCLUDE "HEX.INC"
+	OUTPUT = HEX('ABC')
+	OUTPUT = HEX('SNOBOL')
+	OUTPUT = CH(HEX('ABC'))
+	OUTPUT = CH(HEX('SNOBOL'))
+END
