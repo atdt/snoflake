@@ -131,7 +131,7 @@ function resolveOperand( vm, op ) {
 
 // Syntax-table and stream-action names are literal tokens, not symbols.
 function resolveName( vm, name ) {
-    if ( tableNames.has( name ) || streamActions.includes( name ) ) {
+    if ( tableNames.includes( name ) || streamActions.includes( name ) ) {
         return name;
     }
     return vm.$( name );

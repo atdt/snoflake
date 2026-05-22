@@ -474,10 +474,7 @@ sil.BKSIZE = function ( $DESCR1, $DESCR2 ) {
 // 2.  Refer to Section 2.1 for a discussion of unit  reference
 // numbers.
 sil.BKSPCE = function ( _$DESCR ) {
-    // No-op stub. BKSPCE backs up one record on a unit. The SIL compiler
-    // does not call it, and the historical card-deck record model does not
-    // fit Snoflake's stream-based files. Add the real behavior when a caller
-    // needs it.
+    // backspace record
 };
 
 //     BRANCH  is used to alter the flow of program control by
@@ -4555,12 +4552,9 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
     this.mem.fill( 0, start, end );
 };
 
-//     RAISE2 copies the string addressed by SPEC1 into the buffer
-// addressed by SPEC2, raising any ASCII lowercase letter to its
-// uppercase counterpart along the way.  If at least one byte was
-// raised, transfer is to the following instruction.  Otherwise (the
-// source was already all upper case) transfer is to FLOC, so the
-// caller can fall back to the original string.
+//     RAISE2 copies SPEC1's bytes to SPEC2, raising ASCII lowercase
+// to upper case.  If nothing was raised (the source was already all
+// upper case), transfer is to FLOC.
 //      Data Input to RAISE2:
 //               +-------+-------+-------+-------+-------+
 //      SPEC1    |  A1                      O1       N   |
@@ -4576,12 +4570,7 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
 //      A2+O2    |  C1'     ...     CN'  |
 //               +-----------------------+
 // Programming Notes:
-// 1.  Ported from CSNOBOL4's RAISE2 [PLB86], which is a C host helper
-// invoked via XCALLC.  Snoflake folds it into the regular SIL macro
-// set since the JS implementation language doesn't need a separate
-// host-call boundary.  Called from VPXPTR as part of the VARVUP
-// [PLB28..30] case-folded name path.
-// 2.  Callers gate on &CASE before invoking; RAISE2 does not.
+// 1.  Ported from CSNOBOL4's RAISE2 [PLB86].
 sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
     const src = this.s( $SPEC1 ),
           dst = this.s( $SPEC2 ),

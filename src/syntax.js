@@ -147,16 +147,18 @@ export function normalizeToken( table, mem, start, length, caseFold ) {
 
 // Bound tables have one row for each byte value, plus an ELSE row for wider
 // JavaScript code units.
-function emptyEntry() {
-    return { put: 0, action: Action.RUNOUT, next: null };
-}
+const emptyEntry = {
+    put: 0,
+    action: Action.RUNOUT,
+    next: null
+};
 
 function emptyTable( foldable, foldsLookups ) {
     return {
         puts:     new Int32Array( BYTE_VALUES ),
         actions:  new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
         next:     Array.from( { length: BYTE_VALUES }, () => null ),
-        fallback: emptyEntry(),
+        fallback: emptyEntry,
         foldable,
         foldsLookups,
     };
@@ -167,7 +169,7 @@ export function clearTable( table, key ) {
     table.puts.fill( 0 );
     table.actions.fill( Action[ key ] );
     table.next.fill( null );
-    table.fallback = emptyEntry();
+    table.fallback = emptyEntry;
 }
 
 const tableDefinitions = {
@@ -365,7 +367,7 @@ const tableDefinitions = {
     ]
 };
 
-export const tableNames = new Set( Object.keys( tableDefinitions ) );
+export const tableNames = Object.keys( tableDefinitions );
 
 // Build a fresh per-VM map of empty syntax tables. Each VM owns its own
 // tables so CLERTB and PLUGTB mutations don't bleed across instances.
@@ -392,11 +394,11 @@ function bindTable( tables, table, rows, resolveSymbol ) {
     table.puts.fill( 0 );
     table.actions.fill( Action.RUNOUT );
     table.next.fill( null );
-    table.fallback = emptyEntry();
+    table.fallback = emptyEntry;
 
     function bindEntry( row ) {
         if ( !row ) {
-            return emptyEntry();
+            return emptyEntry;
         }
 
         const [ , putName, actionName ] = row;

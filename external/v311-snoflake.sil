@@ -22,29 +22,10 @@
 *                       argument as record length rather than importing the
 *                       later PLB51 options argument.
 *        [PLB28..30]  — Case-folded name resolution via VARVUP/VPXPTR.
-*                       OPSYN (and any future call site that needs to
-*                       resolve a runtime-supplied function or variable
-*                       name) goes through VARVUP, which calls VARVAL
-*                       and then VPXPTR.  VPXPTR allocates a scratch
-*                       string via CONVAR, raises it via the RAISE2
-*                       extension macro, and installs the upper-cased
-*                       variant through GNVARS so the canonical name
-*                       reaches FNCPL/INATL/OUTATL.  When &CASE is 0
-*                       VARVUP skips VPXPTR and returns the original
-*                       XPTR via RTXNAM -- VARVUP degenerates to VARVAL.
-*        [RAISE2]     — Copies one specifier to another, folding
+*        [PLB86]      — Copies one specifier to another, folding
 *                       lowercase ASCII to upper case along the way.
-*                       Ported from CSNOBOL4's RAISE2 [PLB86] -- a C
-*                       host helper invoked via XCALLC -- but folded
-*                       into the regular SIL macro set since the JS
-*                       implementation language doesn't need a
-*                       separate host-call boundary.
 *        [PLB86]      — Pattern-class scanning bypasses STREAM-level case
-*                       folding.  CSNOBOL4 routes ANY/NOTANY through the
-*                       host XANY helper; snoflake keeps STREAM but flags
-*                       SNABTB as runtime-keyed so the lookup byte isn't
-*                       folded when scanning a user-supplied character
-*                       class.
+*                       folding.
 *
        TITLE   'Table of Contents'
 *
