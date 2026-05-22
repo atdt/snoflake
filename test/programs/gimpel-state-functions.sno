@@ -1,0 +1,17 @@
+* @title Gimpel state functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 14.7; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* A
+* B
+* A
+* B
+* <<<
+-INCLUDE "STATEF.INC"
+	STATEF('FLIP()', 'FLIP_A')
+	OUTPUT = FLIP()
+	OUTPUT = FLIP()
+	OUTPUT = FLIP()
+	OUTPUT = FLIP()			:(END)
+FLIP_A	FLIP = 'A'			:(RET('FLIP_B'))
+FLIP_B	FLIP = 'B'			:(RET('FLIP_A'))
+END

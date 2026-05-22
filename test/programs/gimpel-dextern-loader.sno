@@ -1,0 +1,15 @@
+* @title Gimpel dynamically loaded functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 14.2
+* @expect >>>
+* HAHA
+* [OK]
+* BYBY
+* <<<
+-INCLUDE "DEXTERN.INC"
+	INPUT(.LIB_FILE, 8, , 'DEXLIB.IN')
+	DEXTERN('DOUBLE(X)')
+	DEXTERN('WRAP(X)')
+	OUTPUT = DOUBLE('HA')
+	OUTPUT = WRAP('OK')
+	OUTPUT = DOUBLE('BY')
+END

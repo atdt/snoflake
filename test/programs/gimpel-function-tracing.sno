@@ -1,0 +1,18 @@
+* @title Gimpel automatic function tracing
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 14.3; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* CALL
+* RET
+* AA
+* <<<
+-INCLUDE "FTRACE.INC"
+	DEFINE('FTR_CALL()')
+	DEFINE('FTR_RET()')
+	DEFINE('TWICE(X)')
+	OUTPUT = TWICE('A')
+	&TRACE = 0
+	OPSYN('DEFINE','DEFINE.')	:(END)
+FTR_CALL OUTPUT = 'CALL'		:(RETURN)
+FTR_RET	OUTPUT = 'RET'			:(RETURN)
+TWICE	TWICE = X X			:(RETURN)
+END

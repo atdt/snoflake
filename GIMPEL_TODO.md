@@ -281,8 +281,16 @@ cluster cleanly).
   Catspaw `-INCLUDE "STRINGOUT.INC"` is patched to the 8.3-truncated
   `STRINGOU.INC` filename used elsewhere in the test/programs/gimpel/
   tree.
-- **Ch 14** function manipulation: `DEXTERN`, `FTRACE`, `INSULATE`,
-  `STATEF`, `STACK`, `PHYSICAL`.
+- **Ch 14** function manipulation: `DEXTERN`, `FTRACE`, `INSULATE`, `STATEF`,
+  `STACK`, and `PHYSICAL` covered by `gimpel-dextern-loader.sno`,
+  `gimpel-function-tracing.sno`,
+  `gimpel-insulate-anchor.sno`, `gimpel-state-functions.sno`,
+  `gimpel-generated-stack-functions.sno`, and
+  `gimpel-physical-quantities.sno`. Keep `STACK` and `STATEF` in separate
+  fixtures: both define a `LINK` datatype, but with different field order.
+  `DEXTERN.INC` uses unit 8 as the concrete `LIB_` file designator and
+  `DEXLIB.IN` keeps a literal space after each function label because the
+  book's loader pattern is `LBL (' ' | RPOS(0))`.
 - **Ch 15** real-math `ARC`, `LOG`, `RAISE`, `TRIG` covered by
   `gimpel-real-math-functions.sno`. The fixture prints scaled integer
   values to avoid last-bit/formatting drift between snoflake and CSNOBOL4.

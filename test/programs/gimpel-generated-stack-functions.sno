@@ -1,0 +1,18 @@
+* @title Gimpel generated stack functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 14.8; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* CHANGED
+* ONE
+* RED
+* <<<
+-INCLUDE "STACK.INC"
+	STACK('A')
+	STACK('B')
+	PUSHA('ONE')
+	PUSHA('TWO')
+	PUSHB('RED')
+	TOPA() = 'CHANGED'
+	OUTPUT = POPA()
+	OUTPUT = POPA()
+	OUTPUT = POPB()
+END

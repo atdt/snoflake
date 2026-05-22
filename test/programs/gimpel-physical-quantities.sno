@@ -1,0 +1,23 @@
+* @title Gimpel physical quantity arithmetic
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 14.6; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* 1:M/S
+* 2:M/
+* 2:M/
+* SAME
+* 5
+* <<<
+-INCLUDE "PHYSICAL.INC"
+	M = PHYS(3,'M','')
+	S = PHYS(2,'S','')
+	V = M / S
+	OUTPUT = VAL(V) ':' NUM(V) '/' DEN(V)
+	A = V * S
+	A = NORM(A)
+	OUTPUT = VAL(A) ':' NUM(A) '/' DEN(A)
+	B = PHYS(2,'MS','S')
+	B = NORM(B)
+	OUTPUT = VAL(B) ':' NUM(B) '/' DEN(B)
+	OUTPUT = EQ(A,B) 'SAME'
+	OUTPUT = 2 + 3
+END
