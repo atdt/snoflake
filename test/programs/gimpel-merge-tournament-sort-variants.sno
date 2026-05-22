@@ -1,0 +1,77 @@
+* @title Gimpel FRSORT, MSORT, TSORT, INSERTB, and LSORT sort variants
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 13.3-13.6 and 13.10; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* FRSORT('MISSISSIPPI') = ISPM
+* MSORT NAMES: AMY,JOE,PAT,SUE,TOM
+* MSORT SALARIES: 35000,50000,30000,45000,40000
+* TSORT: BETH,BILL,CHUCK,JIM,JOHN,KATE,MAUREEN,REE
+* INSERTB: ALL,FOR,GOOD,IS,MEN,NOW,THE,TIME,
+* LSORT: AMY,JOE,PAT,SUE,TOM,
+* <<<
+-INCLUDE "FRSORT.INC"
+-INCLUDE "INSERTB.INC"
+-INCLUDE "LINEARIZ.INC"
+-INCLUDE "LSORT.INC"
+-INCLUDE "TSORT.INC"
+
+* FRSORT (Program 13.5, p. 288). The book gives FRSORT('MISSISSIPPI')
+* = 'ISPM': characters ordered by descending occurrence count (I=4,
+* S=4, P=2, M=1 — ties broken by first appearance via CRACK/MSORT).
+        OUTPUT = "FRSORT('MISSISSIPPI') = " FRSORT('MISSISSIPPI')
+
+* MSORT (Program 13.4, p. 285). Sort a name array; apply the
+* returned permutation vector to a parallel salary array via AI so
+* names sort alphabetically while salaries follow their owners.
+        A = ARRAY(5)
+        B = ARRAY(5)
+        A<1> = 'PAT';  B<1> = 30000
+        A<2> = 'JOE';  B<2> = 50000
+        A<3> = 'TOM';  B<3> = 40000
+        A<4> = 'AMY';  B<4> = 35000
+        A<5> = 'SUE';  B<5> = 45000
+        I = MSORT(A)
+        A = AI(A,I)
+        B = AI(B,I)
+        OUTPUT = 'MSORT NAMES: ' STRINGOUT(A, ',')
+        OUTPUT = 'MSORT SALARIES: ' STRINGOUT(B, ',')
+
+* TSORT (Program 13.6, p. 290). Figure 13.2's eight-name tournament:
+* JIM, BETH, CHUCK, MAUREEN, KATE, BILL, REE, JOHN sort alphabetically
+* under default LGT to BETH, BILL, CHUCK, JIM, JOHN, KATE, MAUREEN, REE.
+        N = ARRAY(8)
+        N<1> = 'JIM';   N<2> = 'BETH';  N<3> = 'CHUCK'; N<4> = 'MAUREEN'
+        N<5> = 'KATE';  N<6> = 'BILL';  N<7> = 'REE';   N<8> = 'JOHN'
+        OUTPUT = 'TSORT: ' STRINGOUT(TSORT(N), ',')
+
+* INSERTB (Program 13.10, p. 297). Insert the book's eight words
+* NOW IS THE TIME FOR ALL GOOD MEN into a backward-growing BST.
+* LINEARIZE then threads the tree's in-order traversal through the
+* right-son field so a single RSON walk emits the sorted sequence.
+        WORDS = 'NOW IS THE TIME FOR ALL GOOD MEN '
+        T =
+NXT     WORDS BREAK(' ') . W SPAN(' ') = :F(LIN)
+        T = INSERTB(T, W)                       :(NXT)
+LIN     T = LINEARIZE(T)
+        OUT = ''
+WALK    DIFFER(T)                               :F(EMITT)
+        OUT = OUT VALUE(T) ','
+        T = RSON(T)                             :(WALK)
+EMITT   OUTPUT = 'INSERTB: ' OUT
+
+* LSORT (Program 13.3, p. 283). Build a five-name linked list using
+* the default VALUE/NEXT field names and verify LSORT rearranges
+* the next-pointers (not the storage) into alphabetic order.
+        DATA('LNODE(VALUE,NEXT)')
+        L =
+        L = LNODE('TOM', L)
+        L = LNODE('AMY', L)
+        L = LNODE('JOE', L)
+        L = LNODE('PAT', L)
+        L = LNODE('SUE', L)
+        L = LSORT(L)
+        OUT = ''
+LWALK   DIFFER(L)                               :F(EMITL)
+        OUT = OUT VALUE(L) ','
+        L = NEXT(L)                             :(LWALK)
+EMITL   OUTPUT = 'LSORT: ' OUT
+END
