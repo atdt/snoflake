@@ -261,7 +261,8 @@ cluster cleanly).
   that field invisible, and `VISIT(ST,-1)` resets marks so a structure
   can be visited again.
 - **Ch 8** matchers: `ASM360`, `PLI_STMT`, `ONCE` covered by
-  `gimpel-asm360-pli-once.sno`. `ORVISUAL` skipped: it relies on the
+  `gimpel-asm360-pli-once.sno`; `TEST` covered by
+  `gimpel-test-pattern-predicate.sno`. `ORVISUAL` skipped: it relies on the
   SNOBOL4+ comma-operator `(IDENT(X) "''", X)` conditional, which
   snoflake (and pre-SNOBOL4+ SNOBOL4) does not implement.
 - **Ch 9** I/O readers (single fixture each, see notes below):

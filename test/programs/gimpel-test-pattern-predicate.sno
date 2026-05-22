@@ -1,0 +1,22 @@
+* @title Gimpel TEST predicate pattern
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 8.7; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* BA YES
+* AB NO
+* NULL MATCH
+* <<<
+-INCLUDE "TEST.INC"
+	P = TEST(*LGT(A,B))
+	A = 'B'; B = 'A'
+	'' P					:S(YES1)F(NO1)
+YES1	OUTPUT = 'BA YES'			:(T2)
+NO1	OUTPUT = 'BA NO'
+T2	A = 'A'; B = 'B'
+	'' P					:S(YES2)F(NO2)
+YES2	OUTPUT = 'AB YES'			:(T3)
+NO2	OUTPUT = 'AB NO'
+T3	A = 'B'; B = 'A'
+	'ABC' POS(0) P 'ABC' RPOS(0)		:S(NULL_OK)F(NULL_BAD)
+NULL_OK	OUTPUT = 'NULL MATCH'			:(END)
+NULL_BAD OUTPUT = 'CONSUMED'
+END
