@@ -10,9 +10,10 @@ const { values, positionals } = parseArgs( {
         file:            { type: 'string' },
         input:           { type: 'string' },
         interactive:     { type: 'boolean', short: 'i' },
-        // -f preserves the source's original case. The SIL compiler folds
-        // identifiers to uppercase by default to match historical SNOBOL4.
-        'preserve-case': { type: 'boolean', short: 'f' },
+        // Seeds &CASE: --case=false preserves the source's original case.
+        // The SIL compiler folds identifiers to uppercase by default to
+        // match historical SNOBOL4.
+        case:            { type: 'string' },
         // -b restores the SNOBOL4 startup banner / termination messages,
         // which Snoflake suppresses by default.
         banner:          { type: 'boolean', short: 'b' },
@@ -31,7 +32,7 @@ const result = run( {
     file:        values.file ?? positionals[ 0 ],
     input:       values.input,
     interactive: values.interactive,
-    case:        !values[ 'preserve-case' ],
+    case:        values.case !== 'false',
     banner:      values.banner,
     statistics:  values.statistics,
     list:        values.list,
