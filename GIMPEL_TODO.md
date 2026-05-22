@@ -251,6 +251,10 @@ breakdown — `READ`/`FORTREAD`/`PARAGRAPH`/`SNOREAD`/`TREEREAD` all share the
 `INPUT_BUF`/`NF_INPUT` globals and eat `INPUT` until EOF, so they don't
 cluster cleanly).
 
+- **Ch 2** date conversion: `DAY` covered by
+  `gimpel-day-of-week.sno`. The include uses the book's integer
+  century constants and slash-separated `DATE()` fallback pattern rather
+  than Catspaw's SNOBOL4+ real-arithmetic/date-format edits.
 - **Ch 8** matchers: `ASM360`, `PLI_STMT`, `ONCE` covered by
   `gimpel-asm360-pli-once.sno`. `ORVISUAL` skipped: it relies on the
   SNOBOL4+ comma-operator `(IDENT(X) "''", X)` conditional, which
