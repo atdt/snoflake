@@ -1,0 +1,18 @@
+* @title Gimpel FORTRAN blank removal
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 18.3; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* A=B+C
+* CALLALPHA(A')'
+* CALLALPHA('ABCDEFGHIJKL')
+* CALLMSG('A B C')
+* IF(A.EQ.'X Y')WRITE(6,10)'A B'
+* READ(UNIT'REC)A+'B C'
+* <<<
+-INCLUDE "BLANKS.INC"
+	OUTPUT = BLANKS('A = B + C')
+	OUTPUT = BLANKS('CALL ALPHA(A1H)')
+	OUTPUT = BLANKS('CALL ALPHA(1 2 HABCDEFGHIJKL)')
+	OUTPUT = BLANKS("CALL MSG('A B C')")
+	OUTPUT = BLANKS("IF (A .EQ. 'X Y') WRITE (6,10) 'A B'")
+	OUTPUT = BLANKS("READ (UNIT ' REC) A + 'B C'")
+END

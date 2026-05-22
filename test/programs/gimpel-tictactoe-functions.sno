@@ -1,0 +1,29 @@
+* @title Gimpel tic-tac-toe board functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 17.4; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* [  X      ]
+* [        X]
+* [      X  ]
+* [        X]
+* -1
+* [OOX      ]
+* 1
+* [XXXOO    ]
+* <<<
+-INCLUDE "TICTACTO.INC"
+	NEXT_N = 0
+	B = 'X        '
+	C = NEXTBD(B)
+	OUTPUT = '[' C ']'
+	C = NEXTBD(C)
+	OUTPUT = '[' C ']'
+	C = NEXTBD(C)
+	OUTPUT = '[' C ']'
+	C = NEXTBD(C)
+	OUTPUT = '[' C ']'
+
+	OUTPUT = TTTV('OO       ')
+	OUTPUT = '[' TTTM('OO       ') ']'
+	OUTPUT = TTTV('XX OO    ')
+	OUTPUT = '[' TTTM('XX OO    ') ']'
+END

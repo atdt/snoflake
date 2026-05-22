@@ -1,0 +1,20 @@
+* @title Gimpel Polish-prefix tree pattern
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 18.5; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* +:2,A,B,
+* *:3,A,B,C,
+* +:2,A,B,
+* +:2,C,D,
+* <<<
+-INCLUDE "TREE.INC"
+	S = '+:2,A,B,'
+	S TREE('+',2) . X
+	OUTPUT = X
+
+	S = '*:3,A,B,C,'
+	S TREE('*',0) . X
+	OUTPUT = X
+
+	S = '*:2,+:2,A,B,+:2,C,D,'
+	S TREE('+',2) $ OUTPUT FAIL
+END

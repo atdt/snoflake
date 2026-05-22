@@ -1,0 +1,28 @@
+* @title Gimpel random string functions
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapters 16.2, 16.5, and 16.6; Catspaw SNOBOL4+ program diskette
+* @input >>>
+* BRANDON BRADLEY BRADFORD BRAVO
+* ALPHA ALBERT ALICE ALTON
+* BETA BRANCH BRIDGE BROOK
+* END
+* <<<
+* @expect >>>
+* A
+* P
+* BET
+* ALPHA
+* 9
+* 2
+* 2
+* <<<
+-INCLUDE "RWORD.INC"
+	OUTPUT = RCHAR('BR')
+	OUTPUT = RCHAR('AL')
+	OUTPUT = RWORD(1)
+	OUTPUT = RWORD(2)
+
+-INCLUDE "RAMM.INC"
+	OUTPUT = RAMM(10)
+	OUTPUT = RAMM(10)
+	OUTPUT = RAMM(10)
+END

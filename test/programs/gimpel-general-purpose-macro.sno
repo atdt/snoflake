@@ -1,0 +1,22 @@
+* @title Gimpel general purpose macro processor
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 18.8; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* xSTRINGy
+* (X+Y)*(X+Y)
+* STRINGY*STRINGY
+* AA#AA
+* AB<C>DE
+* STRING
+* Initialization Action
+* Action
+* <<<
+-INCLUDE "GPM.INC"
+	OUTPUT = GPM('#DEF,M,STRING;x#M;y')
+	OUTPUT = GPM('#DEF,SQUARE,&1*&1;#SQUARE,(X+Y);')
+	OUTPUT = GPM('#SQUARE,#M;Y;')
+	OUTPUT = GPM('AA<#>AA')
+	OUTPUT = GPM('A<B<C>D>E')
+	OUTPUT = GPM('#DEF,A,<#M;>;#A;')
+	OUTPUT = GPM('#DEF,X,Initialization <#DEF,X,Action;#X;>;#X;')
+	OUTPUT = GPM('#X;')
+END
