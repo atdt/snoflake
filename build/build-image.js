@@ -4,9 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-// The public entry imports the generated image this script overwrites.
 import { assemble } from '../src/assemble.js';
-// Handwritten SIL parser. Its AST shape mirrors build/sil-grammar.peg.
 import { parse as parseSil } from './sil-parser.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
