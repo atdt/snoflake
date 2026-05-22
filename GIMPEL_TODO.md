@@ -312,11 +312,12 @@ cluster cleanly).
   real arithmetic into an error inside the book CLOG iteration; CSNOBOL4
   completes those cases.
 - **Ch 16** stochastic helpers `RAMM`, `RCHAR`, and `RWORD` covered by
-  `gimpel-random-string-functions.sno`. `RAMM.INC` is patched to seed its
+  `gimpel-random-string-functions.sno`; `ONEWAY` covered by
+  `gimpel-oneway-cipher.sno`. `RAMM.INC` is patched to seed its
   separate Knuth generator state before table initialization and to use the
   book's integer `REMDR` constants instead of Catspaw's real constants.
-  `ONEWAY` is broken in both Catspaw and CSNOBOL4 (REMDR on real args) —
-  try to rewrite to book form.
+  `ONEWAY.INC` likewise uses the book's integer seed and modulus instead
+  of Catspaw's real-valued `REMDR` operands.
 - **Ch 17** game helper `TICTACTO` covered by
   `gimpel-tictactoe-functions.sno`.
 - **Ch 18** processors `BLANKS`, `GPM`, `TREE` covered by

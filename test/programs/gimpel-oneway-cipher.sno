@@ -1,0 +1,18 @@
+* @title Gimpel one-way cipher function
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 16.4; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* O
+* GJ
+* 2JD
+* 1CC32T0L
+* MLANKL
+* 1CC32T0L
+* <<<
+-INCLUDE "ONEWAY.INC"
+	OUTPUT = ONEWAY('A')
+	OUTPUT = ONEWAY('AB')
+	OUTPUT = ONEWAY('ABC')
+	OUTPUT = ONEWAY('PASSWORD')
+	OUTPUT = ONEWAY('SECRET')
+	OUTPUT = ONEWAY('PASSWORD')
+END
