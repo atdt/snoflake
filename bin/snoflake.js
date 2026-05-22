@@ -18,7 +18,7 @@ const { values, positionals } = parseArgs( {
         banner:          { type: 'boolean', short: 'b' },
         // -s emits the program statistics summary at exit.
         statistics:      { type: 'boolean', short: 's' },
-        listing:         { type: 'boolean' },
+        list:            { type: 'boolean' },
         // -I adds a directory to the SNOLIB search path for -INCLUDE
         // lookups. Repeatable.
         snolib:          { type: 'string', short: 'I', multiple: true },
@@ -31,10 +31,10 @@ const result = run( {
     file:        values.file ?? positionals[ 0 ],
     input:       values.input,
     interactive: values.interactive,
-    caseFold:    !values[ 'preserve-case' ],
+    case:        !values[ 'preserve-case' ],
     banner:      values.banner,
     statistics:  values.statistics,
-    listing:     values.listing,
+    list:        values.list,
     loader:      createHostLoader( { snolib: values.snolib } ),
 } );
 

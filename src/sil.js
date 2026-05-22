@@ -4036,7 +4036,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // back to the host option in that case.
     const caseFold = this.symbols.CASECL !== undefined
             ? this.i32[ this.symbols.CASECL ] !== 0
-            : this.options.caseFold;
+            : this.options.case;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
     let table = this.syntaxTables[ TABLE ];

@@ -16,8 +16,8 @@ function wordsToBytes( words ) {
 }
 
 const DEFAULT_OPTIONS = {
-    caseFold: true,
-    // Suppress the SNOBOL4 startup banner, success/termination messages, and statistics summary.
+    case: true,
+    list: false,
     banner: false,
     statistics: false,
 };
@@ -25,10 +25,10 @@ const DEFAULT_OPTIONS = {
 // System-variable descriptors whose initial integer value is seeded from
 // the matching host option after the image loads.
 const HOST_SWITCHES = {
-    LISTCL: 'listing',
+    LISTCL: 'list',
     BANRCL: 'banner',
     STATCL: 'statistics',
-    CASECL: 'caseFold',
+    CASECL: 'case',
 };
 
 export class VM {

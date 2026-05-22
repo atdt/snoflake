@@ -62,8 +62,8 @@ const SEMANTIC_OPTION_KEYS = [ 'debug', 'watch' ];
 function csnobol4FlagsForOptions( opts ) {
     const flags = [];
     // -f toggles identifier folding. CSNOBOL4 defaults to folding ON, matching
-    // Snoflake, so caseFold:false maps to a single -f to turn it off.
-    if ( opts.caseFold === false ) {
+    // Snoflake, so `case: false` maps to a single -f to turn it off.
+    if ( opts.case === false ) {
         flags.push( '-f' );
     }
     return flags;

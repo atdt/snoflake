@@ -142,12 +142,12 @@ const FOLDABLE_TABLES = [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ];
 // SNABTB is reconfigured at runtime via CLERTB+PLUGTB by ANY/BREAK/SPAN/
 // NOTANY (see SNOBOL311.sil ANYC/BRKC/SPNC/NNYC) -- its entries sit at the
 // raw byte indices of the character-class string the user supplied.  STREAM
-// must therefore look up SNABTB without case folding, even when the global
-// caseFold option is on; otherwise SPAN('abc') against a lowercase subject
-// would fold 'a' -> 'A' (0x41) at lookup time and miss the entry plugged at
-// 0x61.  CSNOBOL4 sidesteps this by routing ANY/NOTANY through the host
-// helper XANY [PLB86] rather than STREAM at all; we keep STREAM but flag
-// the runtime-keyed table so it scans byte-literal.
+// must therefore look up SNABTB without case folding, even when &CASE is
+// on; otherwise SPAN('abc') against a lowercase subject would fold 'a' ->
+// 'A' (0x41) at lookup time and miss the entry plugged at 0x61.  CSNOBOL4
+// sidesteps this by routing ANY/NOTANY through the host helper XANY
+// [PLB86] rather than STREAM at all; we keep STREAM but flag the
+// runtime-keyed table so it scans byte-literal.
 const RUNTIME_KEYED_TABLES = [ 'SNABTB' ];
 
 export function normalizeToken( table, mem, start, length, caseFold ) {

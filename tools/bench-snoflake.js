@@ -221,12 +221,12 @@ function runVm( SNOBOL, fixture ) {
 function optionArgs( options ) {
     const args = [];
     for ( const [ key, value ] of Object.entries( options ) ) {
-        if ( value === true ) {
+        if ( key === 'case' && value === false ) {
+            args.push( '--preserve-case' );
+        } else if ( value === true ) {
             args.push( '--' + key );
-        } else if ( value !== false || key !== 'caseFold' ) {
-            args.push( '--' + key + '=' + String( value ) );
         } else {
-            args.push( '--caseFold=false' );
+            args.push( '--' + key + '=' + String( value ) );
         }
     }
     return args;

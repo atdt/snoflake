@@ -64,7 +64,7 @@ Validation enforced by the runner:
 - `input` is rejected in `@options`. Inline `@input` blocks are the only
   supported way to feed runtime `INPUT(...)` reads, which keeps tests hermetic.
 
-Other recognized keys (`caseFold`, ...) are passed through to
+Other recognized keys (`case`, `list`, ...) are passed through to
 `createVM(options)` exactly as `snoflake` does today.
 
 ### `@input`
@@ -191,7 +191,7 @@ Input plus runtime options:
 
 ```snobol
 * @title chapter 3 input copy loop, no case folding
-* @options {"caseFold": false}
+* @options {"case": false}
 * @input >>>
 * alpha
 * Beta
@@ -340,7 +340,7 @@ node tools/check-csnobol4.js --update FIX    # rewrite @expect with CSNOBOL4 std
 
 `--update` only rewrites `@match exact` fixtures whose CSNOBOL4 run did not
 error; `substring` and `error` fixtures are left untouched with a skip note.
-`@options` runtime flags (`caseFold`, …) are not translated to CSNOBOL4
+`@options` runtime flags (`case`, …) are not translated to CSNOBOL4
 invocation flags — fixtures that set them get a `WARN` line so disagreements
 are not mis-attributed. Mismatched runs are dumped to
 `tmp/check-csnobol4/<name>.actual`. Override the binary with `SNOBOL4=<path>`.
