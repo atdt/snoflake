@@ -1968,8 +1968,6 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
           ptr3 = $DESCR3,
           A = i32[ ptr2 + 0 ],
           stop = A + mem[ A + 2 ];
-    const isFunctionPairList = this.symbols.FNCPL !== undefined &&
-            A === i32[ this.symbols.FNCPL + 0 ];
 
     for ( let ptr = A + 6; ; ptr += 6 ) {
         if ( mem[ ptr + 0 ] === mem[ ptr3 + 0 ] &&
@@ -1987,11 +1985,22 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         }
     }
 
-    // Function names from source are folded by STREAM, but names supplied
-    // as data to DEFINE/OPSYN are ordinary strings.  FNCPL stores those
-    // names as string structures, so fall back to the same ASCII fold here
-    // after preserving the exact descriptor match above.
-    if ( this.options.caseFold && isFunctionPairList ) {
+    // FNCPL lookup needs a case-folded retry when the search key was built
+    // from a runtime string -- DEFINE('foo()') folds 'foo' to FOO at STREAM
+    // time, but OPSYN('^','opt',1) reaches FINDEX with the raw name 'opt'
+    // and the descriptor compare above misses the upper-cased entry already
+    // sitting in FNCPL.
+    //
+    // CSNOBOL4 handles this at the call site: OPSYN/UNLOAD/etc. use VARVUP
+    // [PLB28..PLB30] instead of VARVAL, and VARVUP's helper VPXPTR copies
+    // the name's string via the RAISE2 host call [PLB86], allocates the
+    // upper-cased variant through GNVARS, and aliases it so subsequent
+    // operations see the canonical name.  We don't have VARVUP/RAISE2 in
+    // the snoflake macro set, so we approximate the same effect with a
+    // fold-on-miss compare here.  Scoped to FNCPL: it's the only
+    // association list whose entries are name-keyed by string identity
+    // rather than already-installed variable descriptors.
+    if ( this.options.caseFold && lookupNeedsCaseFoldRetry( this, A ) ) {
         const key = str.foldAsciiUpper( stringStructureText( this, this.d( ptr3 ) ) );
 
         for ( let ptr = A + 6; ; ptr += 6 ) {
@@ -2012,6 +2021,11 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 
     this.jmp( FLOC );
 };
+
+function lookupNeedsCaseFoldRetry( vm, listAddr ) {
+    return vm.symbols.FNCPL !== undefined &&
+            listAddr === vm.i32[ vm.symbols.FNCPL + 0 ];
+}
 
 //     LOCSP is used to obtain a specifier to a  string  given
 // in  a string structure.  CPD is the number of characters per

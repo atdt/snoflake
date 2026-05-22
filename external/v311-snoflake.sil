@@ -21,6 +21,20 @@
 *                       argument.  This port preserves v311's third INPUT
 *                       argument as record length rather than importing the
 *                       later PLB51 options argument.
+*        [PLB28..30]  — Case-folded name resolution.  CSNOBOL4 added a
+*                       VARVUP procedure (VARVAL + VPXPTR's RAISE2/GNVARS
+*                       upper-case-alias install) and routes OPSYN, UNLOAD,
+*                       LABEL, and friends through it.  Snoflake doesn't
+*                       expose VARVUP at the SIL layer; instead the host
+*                       LOCAPV implementation retries an FNCPL miss with
+*                       a folded compare under caseFold, achieving the
+*                       same end result without RAISE2/GNVARS plumbing.
+*        [PLB86]      — Pattern-class scanning bypasses STREAM-level case
+*                       folding.  CSNOBOL4 routes ANY/NOTANY through the
+*                       host XANY helper; snoflake keeps STREAM but flags
+*                       SNABTB as runtime-keyed so the lookup byte isn't
+*                       folded when scanning a user-supplied character
+*                       class.
 *
        TITLE   'Table of Contents'
 *
