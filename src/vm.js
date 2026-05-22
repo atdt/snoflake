@@ -22,12 +22,13 @@ const DEFAULT_OPTIONS = {
     statistics: false,
 };
 
-// SNOBOL on/off flags the host can override after loading the image:
-// source listing, startup banner, end-of-run statistics.
+// System-variable descriptors whose initial integer value is seeded from
+// the matching host option after the image loads.
 const HOST_SWITCHES = {
     LISTCL: 'listing',
     BANRCL: 'banner',
     STATCL: 'statistics',
+    CASECL: 'caseFold',
 };
 
 export class VM {

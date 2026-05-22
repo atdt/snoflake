@@ -4021,7 +4021,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           L = SPEC2.length;
 
     const mem = this.mem;
-    // Source scanning folds lowercase to uppercase under caseFold so that
+    // Source scanning folds lowercase to uppercase when &CASE is on so that
     // lowercase letters in source dispatch through the same row as their
     // uppercase counterparts (e.g. `:f`/`:s` match FGOSYM/SGOSYM, lowercase
     // identifiers match LETTER).  SNABTB is the exception: it is plugged
@@ -4032,7 +4032,11 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // CSNOBOL4 dodges this by routing ANY/NOTANY through the XANY host
     // helper rather than STREAM [PLB86]; we keep STREAM but skip folding
     // for runtime-keyed tables.
-    const caseFold = this.options.caseFold;
+    // Minimal test images may omit the system-variable descriptors; fall
+    // back to the host option in that case.
+    const caseFold = this.symbols.CASECL !== undefined
+            ? this.i32[ this.symbols.CASECL ] !== 0
+            : this.options.caseFold;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
     let table = this.syntaxTables[ TABLE ];
