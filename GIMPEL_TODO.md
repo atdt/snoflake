@@ -255,6 +255,11 @@ cluster cleanly).
   `gimpel-day-of-week.sno`. The include uses the book's integer
   century constants and slash-separated `DATE()` fallback pattern rather
   than Catspaw's SNOBOL4+ real-arithmetic/date-format edits.
+- **Ch 5** structure traversal: `VISIT` covered by
+  `gimpel-visit-structure-functions.sno`. The fixture checks that
+  `DATA` inserts the hidden `MARK` field, the redefined `FIELD` keeps
+  that field invisible, and `VISIT(ST,-1)` resets marks so a structure
+  can be visited again.
 - **Ch 8** matchers: `ASM360`, `PLI_STMT`, `ONCE` covered by
   `gimpel-asm360-pli-once.sno`. `ORVISUAL` skipped: it relies on the
   SNOBOL4+ comma-operator `(IDENT(X) "''", X)` conditional, which

@@ -1,0 +1,37 @@
+* @title Gimpel structure visitor function
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 5.10; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* LEFT
+* HIDDEN
+* A
+* B
+* D
+* C
+* 4
+* A
+* B
+* D
+* C
+* 4
+* <<<
+-INCLUDE "VISIT.INC"
+	DEFINE('PROCESS(ND)')
+	DATA('NODE(NAME,LEFT,RIGHT)')
+	ROOT = NODE('A', NODE('B', NODE('D')), NODE('C'))
+	OUTPUT = FIELD('NODE', 2)
+	FIELD('NODE', 4)			:S(BAD)
+	OUTPUT = 'HIDDEN'
+	VISIT(ROOT)
+	OUTPUT = COUNT
+	COUNT =
+	RESET = 1
+	VISIT(ROOT, -1)
+	RESET =
+	VISIT(ROOT)
+	OUTPUT = COUNT			:(DONE)
+PROCESS	DIFFER(RESET)			:S(RETURN)
+	OUTPUT = NAME(ND)
+	COUNT = COUNT + 1		:(RETURN)
+BAD	OUTPUT = 'VISIBLE'
+DONE
+END
