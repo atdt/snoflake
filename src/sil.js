@@ -3,7 +3,7 @@
 import { D } from './datatypes.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
-import { Action, clearTable, constants, normalizeLookupByte, normalizeToken } from './syntax.js';
+import { Action, clearTable, constants, normalizeToken } from './syntax.js';
 import { isFloat32, isInt32 } from './datatypes.js';
 const { PTR, SIZLIM, STTL, TTL } = constants;
 
@@ -4053,16 +4053,29 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           L = SPEC2.length;
 
     const mem = this.mem;
+    // Source scanning folds lowercase to uppercase under caseFold so that
+    // lowercase letters in source dispatch through the same row as their
+    // uppercase counterparts (e.g. `:f`/`:s` match FGOSYM/SGOSYM, lowercase
+    // identifiers match LETTER).  SNABTB is the exception: it is plugged
+    // at runtime by ANY/BREAK/SPAN/NOTANY with the raw bytes of a user-
+    // supplied character class, so the lookup must be byte-literal -- else
+    // SPAN('abc') against a lowercase subject would fold each byte to its
+    // uppercase form and miss the plug entry at the lowercase index.
+    // CSNOBOL4 dodges this by routing ANY/NOTANY through the XANY host
+    // helper rather than STREAM [PLB86]; we keep STREAM but skip folding
+    // for runtime-keyed tables.
     const caseFold = this.options.caseFold;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
     let table = this.syntaxTables[ TABLE ];
     let puts = table.puts, actions = table.actions, next = table.next;
     let fallback = table.fallback;
+    let foldLookups = caseFold && !table.runtimeKeyed;
     let lastPut = 0;
 
     for ( let I = 0; I < L; I++ ) {
-        const ch = normalizeLookupByte( mem[ tokenStart + I ], caseFold );
+        const raw = mem[ tokenStart + I ];
+        const ch = foldLookups ? str.foldAsciiUpperByte( raw ) : raw;
         const isByte = ch < byteValues;
         const put = isByte ? puts[ ch ] : fallback.put;
         const action = isByte ? actions[ ch ] : fallback.action;
@@ -4079,6 +4092,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             actions = table.actions;
             next = table.next;
             fallback = table.fallback;
+            foldLookups = caseFold && !table.runtimeKeyed;
             continue;
 
         case Action.STOPSH:
