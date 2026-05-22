@@ -139,17 +139,6 @@ export const streamActions = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
 // (they consume identifiers: labels and variable names).
 const FOLDABLE_TABLES = [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ];
 
-// SNABTB is reconfigured at runtime via CLERTB+PLUGTB by ANY/BREAK/SPAN/
-// NOTANY (see SNOBOL311.sil ANYC/BRKC/SPNC/NNYC) -- its entries sit at the
-// raw byte indices of the character-class string the user supplied.  STREAM
-// must therefore look up SNABTB without case folding, even when &CASE is
-// on; otherwise SPAN('abc') against a lowercase subject would fold 'a' ->
-// 'A' (0x41) at lookup time and miss the entry plugged at 0x61.  CSNOBOL4
-// sidesteps this by routing ANY/NOTANY through the host helper XANY
-// [PLB86] rather than STREAM at all; we keep STREAM but flag the
-// runtime-keyed table so it scans byte-literal.
-const RUNTIME_KEYED_TABLES = [ 'SNABTB' ];
-
 export function normalizeToken( table, mem, start, length, caseFold ) {
     if ( caseFold && table.foldable ) {
         str.foldAsciiUpperInPlace( mem, start, length );
@@ -162,14 +151,14 @@ function emptyEntry() {
     return { put: 0, action: Action.RUNOUT, next: null };
 }
 
-function emptyTable( foldable, runtimeKeyed ) {
+function emptyTable( foldable, foldsLookups ) {
     return {
         puts:     new Int32Array( BYTE_VALUES ),
         actions:  new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
         next:     Array.from( { length: BYTE_VALUES }, () => null ),
         fallback: emptyEntry(),
         foldable,
-        runtimeKeyed,
+        foldsLookups,
     };
 }
 
@@ -383,9 +372,10 @@ export const tableNames = new Set( Object.keys( tableDefinitions ) );
 export function buildSyntaxTables() {
     const tables = {};
     for ( const name in tableDefinitions ) {
+        // All tables fold under &CASE except SNABTB, which holds literal user bytes.
         tables[ name ] = emptyTable(
             FOLDABLE_TABLES.includes( name ),
-            RUNTIME_KEYED_TABLES.includes( name )
+            name !== 'SNABTB'
         );
     }
     return tables;

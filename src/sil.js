@@ -4021,28 +4021,16 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
           L = SPEC2.length;
 
     const mem = this.mem;
-    // Source scanning folds lowercase to uppercase when &CASE is on so that
-    // lowercase letters in source dispatch through the same row as their
-    // uppercase counterparts (e.g. `:f`/`:s` match FGOSYM/SGOSYM, lowercase
-    // identifiers match LETTER).  SNABTB is the exception: it is plugged
-    // at runtime by ANY/BREAK/SPAN/NOTANY with the raw bytes of a user-
-    // supplied character class, so the lookup must be byte-literal -- else
-    // SPAN('abc') against a lowercase subject would fold each byte to its
-    // uppercase form and miss the plug entry at the lowercase index.
-    // CSNOBOL4 dodges this by routing ANY/NOTANY through the XANY host
-    // helper rather than STREAM [PLB86]; we keep STREAM but skip folding
-    // for runtime-keyed tables.
-    // Minimal test images may omit the system-variable descriptors; fall
-    // back to the host option in that case.
-    const caseFold = this.symbols.CASECL !== undefined
-            ? this.i32[ this.symbols.CASECL ] !== 0
-            : this.options.case;
+    // Fold the lookup byte under &CASE so lowercase source (`:f`, lowercase
+    // identifiers) dispatches through the same row as its uppercase form.
+    // Tables exempted via foldsLookups=false (SNABTB) scan byte-literal.
+    const caseFold = this.i32[ this.symbols.CASECL ] !== 0;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
     let table = this.syntaxTables[ TABLE ];
     let puts = table.puts, actions = table.actions, next = table.next;
     let fallback = table.fallback;
-    let foldLookups = caseFold && !table.runtimeKeyed;
+    let foldLookups = caseFold && table.foldsLookups;
     let lastPut = 0;
 
     for ( let I = 0; I < L; I++ ) {
@@ -4064,7 +4052,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
             actions = table.actions;
             next = table.next;
             fallback = table.fallback;
-            foldLookups = caseFold && !table.runtimeKeyed;
+            foldLookups = caseFold && table.foldsLookups;
             continue;
 
         case Action.STOPSH:
