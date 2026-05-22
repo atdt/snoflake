@@ -1,0 +1,70 @@
+* @title Gimpel BNORM, INORM, IMAGE, and LINE paragraph-formatting helpers
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 10 (BNORM 10.1, INORM 10.2, IMAGE 10.4, LINE 10.3, HYPHENATE 10.7); Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* BNORM('ABCD<BS><BS><BS><BS>1234'): A+1B+2C+3D+4
+* INORM('B<BS>A'): A+B
+* IMAGE pass 1: 'AB'
+* IMAGE pass 2: 'CD'
+* LINE CW=10:
+*   'A QUICK'
+*   'BROWN FOX'
+*   'JUMPED'
+*   'OVER THE'
+*   'LAZY DOG.'
+* <<<
+*
+* Chapter 10's paragraph-formatting routines all collaborate around two
+* control characters: BSPACE (ASCII 0x08, used to encode overstrikes)
+* and USCORE ('_'). The book's published programs treat both as
+* externally-supplied globals; the Catspaw distribution initialises
+* them in each .INC via the SNOBOL4+ CHAR(8) extension. Snoflake (v3.11
+* IBM SNOBOL4 macros) does not implement CHAR, so the includes are
+* patched to derive BSPACE the standard SNOBOL4 way:
+*     &ALPHABET TAB(8) LEN(1) . BSPACE
+* See SPACING.INC for the early-bind shim that ensures these globals
+* exist before any pattern using them is constructed.
+*
+* HYPHENATE is loaded as a transitive dependency of LINE.INC but is
+* not exercised directly: the book's HYPHENATE('niatbo', 3) = 4 demo
+* requires lowercase input, and snoflake's case-folded SPAN does not
+* match lowercase characters under the default case-fold mode. The
+* function still compiles fully so its OR/BALREV/UPLO/DIFF
+* pattern-construction machinery is exercised.
+-INCLUDE "LINE.INC"
+-INCLUDE "BNORM.INC"
+-INCLUDE "INORM.INC"
+-INCLUDE "IMAGE.INC"
+-INCLUDE "HYPHENAT.INC"
+        BS = BSPACE
+
+* BNORM (Program 10.1, p. 191). 'ABCD' followed by four BSPACEs and
+* then '1234' overprints each letter of 'ABCD' with the digit. After
+* B-normalization the string has each print position grouped together
+* ('A+1B+2C+3D+4', with + standing in for BSPACE for visibility).
+        OUTPUT = "BNORM('ABCD<BS><BS><BS><BS>1234'): "
++               REPLACE(BNORM('ABCD' BS BS BS BS '1234'), BS, '+')
+
+* INORM (Program 10.2, p. 199). Overstruck characters that produce the
+* same image are sorted into a canonical (alphabetic) order so that
+* 'B<BS>A' and 'A<BS>B' both normalise to 'A<BS>B'.
+        OUTPUT = "INORM('B<BS>A'): " REPLACE(INORM('B' BS 'A'), BS, '+')
+
+* IMAGE (Program 10.4, p. 198). Given a B-normalized string, return
+* the I-th print pass. 'AB' followed by two backspaces and 'CD'
+* overprints 'AB' with 'CD'; B-normalization arranges the characters
+* as 'A<BS>C B<BS>D' so pass 1 is 'AB' and pass 2 is 'CD'.
+        S = BNORM('AB' BS BS 'CD')
+        OUTPUT = "IMAGE pass 1: '" IMAGE(S, 1) "'"
+        OUTPUT = "IMAGE pass 2: '" IMAGE(S, 2) "'"
+
+* LINE (Program 10.3, p. 202). The book's worked example: fill the
+* sentence into 10-character lines with justification and hyphenation
+* off. HYPHENATE/JUSTIFY are LINE.INC globals, set to 1 by the module
+* init; the test overrides them to match the book's first listing.
+        LINE_INIT('A QUICK BROWN FOX JUMPED OVER THE LAZY DOG.')
+        JUSTIFY = 0
+        HYPHENATE = 0
+        OUTPUT = "LINE CW=10:"
+L1      OUTPUT = "  '" LINE(10) "'"        :S(L1)
+
+END

@@ -5,6 +5,15 @@
 *
 -INCLUDE "COUNT.INC"
 	DEFINE('SPACING(S)')
+*  Ensure BSPACE / USCORE exist before IF_OVERSTRIKE is constructed.
+*  Catspaw's INCs assume the caller pre-initializes them; the book
+*  programs (Ch. 10) likewise assume a global typesetter setup. Pin
+*  them here so SPACING.INC loads in any include order. BSPACE is
+*  the ASCII BS character (codepoint 8); USCORE is '_'.
+	IDENT(BSPACE)				:F(SPACING_INIT_DONE)
+	&ALPHABET TAB(8) LEN(1) . BSPACE
+	USCORE = '_'
+SPACING_INIT_DONE
 	IF_OVERSTRIKE  =  BREAK(BSPACE  USCORE)
 						:(SPACING_END)
 SPACING	SPACING  =  SIZE(S)
