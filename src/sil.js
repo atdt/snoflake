@@ -4599,13 +4599,14 @@ sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
           dst = this.s( $SPEC2 ),
           srcStart = src.addr + src.offset,
           dstStart = dst.addr + dst.offset,
-          len = src.length;
+          len = src.length,
+          mem = this.mem;
 
     let raised = false;
     for ( let i = 0; i < len; i++ ) {
-        const ch = this.mem[ srcStart + i ],
-              folded = str.foldAsciiUpperByte( ch );
-        this.mem[ dstStart + i ] = folded;
+        const ch = mem[ srcStart + i ],
+              folded = ( ch >= 97 && ch <= 122 ) ? ch - 32 : ch;
+        mem[ dstStart + i ] = folded;
         if ( folded !== ch ) raised = true;
     }
     if ( !raised ) this.jmp( FLOC );
