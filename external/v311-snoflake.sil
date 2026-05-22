@@ -21,14 +21,24 @@
 *                       argument.  This port preserves v311's third INPUT
 *                       argument as record length rather than importing the
 *                       later PLB51 options argument.
-*        [PLB28..30]  — Case-folded name resolution.  CSNOBOL4 added a
-*                       VARVUP procedure (VARVAL + VPXPTR's RAISE2/GNVARS
-*                       upper-case-alias install) and routes OPSYN, UNLOAD,
-*                       LABEL, and friends through it.  Snoflake doesn't
-*                       expose VARVUP at the SIL layer; instead the host
-*                       LOCAPV implementation retries an FNCPL miss with
-*                       a folded compare under caseFold, achieving the
-*                       same end result without RAISE2/GNVARS plumbing.
+*        [PLB28..30]  — Case-folded name resolution via VARVUP/VPXPTR.
+*                       OPSYN (and any future call site that needs to
+*                       resolve a runtime-supplied function or variable
+*                       name) goes through VARVUP, which calls VARVAL
+*                       and then VPXPTR.  VPXPTR allocates a scratch
+*                       string via CONVAR, raises it via the RAISE2
+*                       extension macro, and installs the upper-cased
+*                       variant through GNVARS so the canonical name
+*                       reaches FNCPL/INATL/OUTATL.  When &CASE is 0
+*                       VARVUP skips VPXPTR and returns the original
+*                       XPTR via RTXNAM -- VARVUP degenerates to VARVAL.
+*        [RAISE2]     — Copies one specifier to another, folding
+*                       lowercase ASCII to upper case along the way.
+*                       Ported from CSNOBOL4's RAISE2 [PLB86] -- a C
+*                       host helper invoked via XCALLC -- but folded
+*                       into the regular SIL macro set since the JS
+*                       implementation language doesn't need a
+*                       separate host-call boundary.
 *        [PLB86]      — Pattern-class scanning bypasses STREAM-level case
 *                       folding.  CSNOBOL4 routes ANY/NOTANY through the
 *                       host XANY helper; snoflake keeps STREAM but flags
@@ -1818,6 +1828,37 @@ VARV2  VEQLC   XPTR,S,,RTXNAM	   Is it STRING?
 *_
 VARVC  RCALL   XPTR,INVOKE,(XPTR),(FAIL,VARV1,VARV2)
 *				   Evaluate function
+*_
+*---------------------------------------------------------------------*
+*
+*      Evaluation of Argument as Case-Folded String	[PLB28..PLB30]
+*
+*      VARVUP wraps VARVAL and returns its result with the name's string
+*      raised to upper case under the caseFold option.  When caseFold is
+*      off (or the string is already all upper case), RAISE2 fails and
+*      VPXPTR returns the original XPTR via RTXNAM.  Otherwise VPXPTR
+*      installs the upper-cased variant via GNVARS so the canonical name
+*      reaches subsequent lookups (FNCPL, INATL, OUTATL, ...).
+*
+VARVUP PROC    VARVAL					[PLB28]
+       RCALL   ,VARVAL,,FAIL	   Get string ptr to XPTR	[PLB28]
+*				   Fall through to VPXPTR
+*_
+VPXPTR PROC    VARVAL					[PLB29]
+       LOCSP   SPECR1,XPTR	   Get specifier to string
+       LEQLC   SPECR1,0,,RTXNAM    Avoid null string
+       GETLG   AXPTR,SPECR1	   Get string length
+       RCALL   ,CONVAR,AXPTR,	   Allocate scratch space at FRSGPT
+       LOCSP   XSP,FRSGPT	   Get specifier for scratch string
+       RAISE2  SPECR1,XSP,RTXNAM				[PLB86]
+*				   Copy & raise; fails if no LC chars
+       MOVDIC  FRSGPT,DESCR,XPTR,DESCR
+*				   Give new string same value and
+       MOVDIC  FRSGPT,ATTRIB,XPTR,ATTRIB
+*				   label as original
+       RCALL   XPTR,GNVARS,AXPTR,RTXNAM
+*				   Make upper case version official
+       BRANCH  RTXNAM		   Return by name
 *_
 *---------------------------------------------------------------------*
 *
@@ -4988,9 +5029,9 @@ DUPL1  APDSP   TSP,XSP		   Append a copy
 *      OPSYN(F1,F2,N)
 *
 OPSYN  PROC    ,		   OPSYN(F,G,N)
-       RCALL   XPTR,VARVAL,,FAIL   Get object function
+       RCALL   XPTR,VARVUP,,FAIL   Get object function		[PLB28]
        PUSH    XPTR		   Save object function
-       RCALL   YPTR,VARVAL,,FAIL   Get image function
+       RCALL   YPTR,VARVUP,,FAIL   Get image function		[PLB28]
        PUSH    YPTR		   Save image function
        RCALL   ZPTR,INTVAL,,FAIL   Get type indicator
        POP     (YPTR,XPTR)	   Restore image and object functions

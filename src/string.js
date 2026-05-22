@@ -34,12 +34,6 @@ export const str = {
         return ( c >= 97 && c <= 122 ) ? c - 32 : c;
     },
 
-    foldAsciiUpper( s ) {
-        return s.replace( /[a-z]/g, ( ch ) =>
-            String.fromCharCode( ch.charCodeAt( 0 ) - 32 )
-        );
-    },
-
     foldAsciiUpperInPlace( buf, start, length ) {
         const end = start + length;
         for ( let p = start; p < end; p++ ) {

@@ -12,13 +12,6 @@ const CPD = 3;  // Characters per descriptor
 const sil = {};
 
 // Read text from a SIL string structure, not from a plain specifier.
-function stringStructureText( vm, DESCR ) {
-    const title = vm.d( DESCR.addr ),
-          start = DESCR.addr + vm.$( 'BCDFLD' );
-
-    return str.decode( vm.mem, start, title.value );
-}
-
 function asArray( ARGs ) {
     return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
 }
@@ -1985,47 +1978,8 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         }
     }
 
-    // FNCPL lookup needs a case-folded retry when the search key was built
-    // from a runtime string -- DEFINE('foo()') folds 'foo' to FOO at STREAM
-    // time, but OPSYN('^','opt',1) reaches FINDEX with the raw name 'opt'
-    // and the descriptor compare above misses the upper-cased entry already
-    // sitting in FNCPL.
-    //
-    // CSNOBOL4 handles this at the call site: OPSYN/UNLOAD/etc. use VARVUP
-    // [PLB28..PLB30] instead of VARVAL, and VARVUP's helper VPXPTR copies
-    // the name's string via the RAISE2 host call [PLB86], allocates the
-    // upper-cased variant through GNVARS, and aliases it so subsequent
-    // operations see the canonical name.  We don't have VARVUP/RAISE2 in
-    // the snoflake macro set, so we approximate the same effect with a
-    // fold-on-miss compare here.  Scoped to FNCPL: it's the only
-    // association list whose entries are name-keyed by string identity
-    // rather than already-installed variable descriptors.
-    if ( this.options.caseFold && lookupNeedsCaseFoldRetry( this, A ) ) {
-        const key = str.foldAsciiUpper( stringStructureText( this, this.d( ptr3 ) ) );
-
-        for ( let ptr = A + 6; ; ptr += 6 ) {
-            const candidate = str.foldAsciiUpper( stringStructureText( this, this.d( ptr ) ) );
-            if ( candidate === key ) {
-                i32[ ptr1 + 0 ] = ptr - 6;
-                mem[ ptr1 + 1 ] = mem[ ptr2 + 1 ];
-                mem[ ptr1 + 2 ] = mem[ ptr2 + 2 ];
-                this.jmp( SLOC );
-                return;
-            }
-
-            if ( ptr === stop ) {
-                break;
-            }
-        }
-    }
-
     this.jmp( FLOC );
 };
-
-function lookupNeedsCaseFoldRetry( vm, listAddr ) {
-    return vm.symbols.FNCPL !== undefined &&
-            listAddr === vm.i32[ vm.symbols.FNCPL + 0 ];
-}
 
 //     LOCSP is used to obtain a specifier to a  string  given
 // in  a string structure.  CPD is the number of characters per
@@ -4607,6 +4561,50 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
           end = start + this.d( $DESCR2 ).addr + D;
 
     this.mem.fill( 0, start, end );
+};
+
+//     RAISE2 copies the string addressed by SPEC1 into the buffer
+// addressed by SPEC2, raising any ASCII lowercase letter to its
+// uppercase counterpart along the way.  If at least one byte was
+// raised, transfer is to the following instruction.  Otherwise (the
+// source was already all upper case) transfer is to FLOC, so the
+// caller can fall back to the original string.
+//      Data Input to RAISE2:
+//               +-------+-------+-------+-------+-------+
+//      SPEC1    |  A1                      O1       N   |
+//               +---------------------------------------+
+//               +-------+-------+-------+-------+-------+
+//      SPEC2    |  A2                      O2       N   |
+//               +---------------------------------------+
+//               +-------+-------+-------+
+//      A1+O1    |  C1      ...     CN   |
+//               +-----------------------+
+//      Data Altered by RAISE2:
+//               +-------+-------+-------+
+//      A2+O2    |  C1'     ...     CN'  |
+//               +-----------------------+
+// Programming Notes:
+// 1.  Ported from CSNOBOL4's RAISE2 [PLB86], which is a C host helper
+// invoked via XCALLC.  Snoflake folds it into the regular SIL macro
+// set since the JS implementation language doesn't need a separate
+// host-call boundary.  Called from VPXPTR as part of the VARVUP
+// [PLB28..30] case-folded name path.
+// 2.  Callers gate on &CASE before invoking; RAISE2 does not.
+sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
+    const src = this.s( $SPEC1 ),
+          dst = this.s( $SPEC2 ),
+          srcStart = src.addr + src.offset,
+          dstStart = dst.addr + dst.offset,
+          len = src.length;
+
+    let raised = false;
+    for ( let i = 0; i < len; i++ ) {
+        const ch = this.mem[ srcStart + i ],
+              folded = str.foldAsciiUpperByte( ch );
+        this.mem[ dstStart + i ] = folded;
+        if ( folded !== ch ) raised = true;
+    }
+    if ( !raised ) this.jmp( FLOC );
 };
 
 export { sil };

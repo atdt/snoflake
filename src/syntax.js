@@ -135,7 +135,7 @@ export const Action = {
 // symbols. The macros interpret them as tags.
 export const streamActions = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
 
-// Tables whose scanned tokens get uppercased in place when caseFold is on
+// Tables whose scanned tokens get uppercased in place when &CASE is on
 // (they consume identifiers: labels and variable names).
 const FOLDABLE_TABLES = [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ];
 
