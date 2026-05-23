@@ -1,6 +1,7 @@
 *      Snoflake's working SIL, derived from v311.sil with fixes lifted
 *      from Phil Budne's CSNOBOL4 (https://www.regressive.org/snobol4/csnobol4/).
-*      Ported changes carry Budne's original [PLBnn] revision tags:
+*      Ported changes carry Budne's original [PLBnn] revision tags.
+*      Snoflake-local extensions carry [SNFnn] revision tags:
 *
 *        [PLB1,21,57] — CARDSZ=1024, SEQSIZ=0: allow input lines past 72
 *                       columns by widening the card buffer and dropping
@@ -28,6 +29,8 @@
 *                       lowercase ASCII to upper case along the way.
 *        [PLB86]      — Pattern-class scanning bypasses STREAM-level case
 *                       folding.
+*        [SNF1]       — -UNHIDE re-enables listing and statement numbering
+*                       after -HIDE without listing the control card itself.
 *
        TITLE   'Table of Contents'
 *
@@ -1389,7 +1392,10 @@ FORBLK PROC    FORWRD		   Procedure to get to nonblank
 *      Card Image Processing
 *
 NEWCRD PROC    ,		   Process new card image
-       SELBRA  STYPE,(,CMTCRD,CTLCRD,CNTCRD)
+       AEQLC   UHIDCL,0,,NEWCR0  Check deferred -UNHIDE listing [SNF1]
+       SETAC   LISTCL,1	   Turn listing on after -UNHIDE [SNF1]
+       SETAC   UHIDCL,0	   Clear deferred switch	[SNF1]
+NEWCR0 SELBRA  STYPE,(,CMTCRD,CTLCRD,CNTCRD)			[SNF1]
 *				   Branch on card type
        AEQLC   LISTCL,0,,RTN3	   Return if listing is off
        MOVD    XCL,CSTNCL	   Copy of statement number
@@ -1453,10 +1459,18 @@ CTLCR2 SETAC   LLIST,0		   Zero left listing as default
 *_
 CTLCR3 LEXCMP  XSP,HIDESP,CTLCR9,,CTLCR9			[PLB102]
 *				   Is it HIDE?
-HIDE   SETAC   HIDECL,1	   Hide statement numbers	[PLB102]
+HIDE   MOVA    HIDESV,LISTCL	   Save listing state		[SNF1]
+       SETAC   HIDECL,1	   Hide statement numbers	[PLB102]
        BRANCH  UNLIST		   Join UNLIST processing	[PLB102]
 *_
-CTLCR9 LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
+CTLCR9 LEXCMP  XSP,UNHDSP,CTLCRA,,CTLCRA			[SNF1]
+*				   Is it UNHIDE?
+UNHIDE SETAC   HIDECL,0	   Unhide statements		[SNF1]
+       AEQLC   HIDESV,0,,UNHID1  Leave listing off if saved off [SNF1]
+       SETAC   UHIDCL,1	   Defer listing until next card	[SNF1]
+UNHID1 BRANCH  UNLIST		   Hide this control card	[SNF1]
+*_
+CTLCRA LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
 *				   Is it EJECT?
        AEQLC   LISTCL,0,,CMTCLR    Skip eject if not listing
        OUTPUT  OUTPUT,EJECTF	   Eject page
@@ -5554,12 +5568,14 @@ CNSLCL DESCR   0,0,0		   Label redefinition switch
 DATACL DESCR   0,0,0		   Prototype end switch for DATA(P)
 FNVLCL DESCR   0,0,0		   FUNCTION-VALUE switch for trace
 HIDECL DESCR   0,0,0		   Hide statement numbers	[PLB102]
+HIDESV DESCR   0,0,0		   Saved HIDE listing switch	[SNF1]
 INICOM DESCR   0,0,0		   INITIALIZATION SWITCH	E3.10.6
 LENFCL DESCR   0,0,0		   Length failure switch
 LISTCL DESCR   1,0,0		   Compiler listing switch
 LLIST  DESCR   0,0,0		   Left listing switch
 NAMGCL DESCR   0,0,0		   Naming switch for SJSR
 SCERCL DESCR   0,0,0		   Error branch switch
+UHIDCL DESCR   0,0,0		   Deferred UNHIDE listing switch [SNF1]
 *
 *      Constants
 *
@@ -5745,6 +5761,7 @@ STARSP STRING  '*** '
 TRCLSP STRING  ' CALL OF '
 TRLVSP STRING  'LEVEL '
 TRSTSP STRING  '    STATEMENT '
+UNHDSP STRING  'UNHIDE'					[SNF1]
 UNLSP  STRING  'UNLIST'
 XFERSP STRING  'TRANSFER TO'
 *

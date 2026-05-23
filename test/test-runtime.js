@@ -164,6 +164,51 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '2\n' );
     } );
 
+    it( 'UNHIDE resumes listing after an invisible control card', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                '-LIST LEFT',
+                '-HIDE',
+                " OUTPUT = 'H' &STNO",
+                '-UNHIDE',
+                " OUTPUT = 'V' &STNO",
+                'END',
+                ''
+            ].join( '\n' ),
+            list: true,
+            stdout
+        } );
+
+        const output = joinLines( stdout.lines );
+        assert.match( output, /^\s+-LIST LEFT/m );
+        assert.doesNotMatch( output, /-HIDE|-UNHIDE|OUTPUT = 'H'/ );
+        assert.match( output, /^1\s+OUTPUT = 'V' &STNO/m );
+        assert.match( output, /^2\s+END/m );
+        assert.match( output, /H0\nV1\n$/ );
+    } );
+
+    it( 'UNHIDE preserves disabled listing across a hidden block', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                '-HIDE',
+                " X = 'hidden'",
+                '-UNHIDE',
+                " Y = 'visible'",
+                " OUTPUT = Y",
+                'END',
+                ''
+            ].join( '\n' ),
+            list: false,
+            stdout
+        } );
+
+        assert.equal( joinLines( stdout.lines ), 'visible\n' );
+    } );
+
     it( 'creates a VM that loads a file through an explicit host loader', function () {
         const root = path.join( __dirname, '..' ),
               programFile = path.join( root, 'tmp', 'test-create-vm-file.sno' ),
