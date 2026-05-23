@@ -510,7 +510,9 @@ describe( 'Specifier Datatype', function () {
         s.value = 8;
         s.offset = 9;
         s.length = 10;
-        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
+        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10, 0 ] );
+        assert.equal( vm.mem[ s.ptr + 4 ], 10 );
+        assert.equal( vm.mem[ s.ptr + 5 ], 0 );
     } );
 
     it( 'read', function () {
@@ -526,7 +528,9 @@ describe( 'Specifier Datatype', function () {
         const vm = new VM(),
               s = new Specifier( vm );
         s.update( 6, 7, 8, 9, 10 );
-        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10 ] );
+        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 10, 0 ] );
+        assert.equal( vm.mem[ s.ptr + 4 ], 10 );
+        assert.equal( vm.mem[ s.ptr + 5 ], 0 );
     } );
 
     it( 'eq', function () {

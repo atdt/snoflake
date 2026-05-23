@@ -47,7 +47,6 @@ export class Descriptor {
 
     get name()      { return 'Descriptor'; }
     get width()     { return D; }
-    get rawLength() { return D; }
 
     get addr()    { return this.vm.getInt( this.ptr ); }
     set addr( n ) { this.vm.setInt( this.ptr, n ); }
@@ -89,7 +88,7 @@ export class Descriptor {
 
     raw() {
         return Array.from(
-            this.vm.mem.subarray( this.ptr, this.ptr + this.rawLength ),
+            this.vm.mem.subarray( this.ptr, this.ptr + this.width ),
         );
     }
 
@@ -118,7 +117,6 @@ export class Descriptor {
 export class Specifier extends Descriptor {
     get name()      { return 'Specifier'; }
     get width()     { return 2 * D; }
-    get rawLength() { return 2 * D - 1; }
 
     get offset()    { return this.vm.getUint( this.ptr + 3 ); }
     set offset( n ) { this.vm.setUint( this.ptr + 3, n ); }
