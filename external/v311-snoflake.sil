@@ -15,6 +15,8 @@
 *                       DFLSIZ from the caller.
 *        [PLB20]      — -INCLUDE / -COPY control cards read quoted source
 *                       files during compilation.
+*        [PLB102]     — -HIDE disables listing and suppresses statement
+*                       number assignment until the next -LIST control card.
 *        [PLB38]      — &STLIMIT defaults to -1.  Negative &STLIMIT means
 *                       unlimited execution and suppresses &STCOUNT increments.
 *        [PLB4]       — INPUT and OUTPUT accept an optional fourth filename
@@ -902,8 +904,9 @@ BINEOS SETAC   EMSGCL,ILLEOS	   Set up error message
 CMPILE PROC    ,		   Procedure to compile statement
        SETAC   BRTYPE,0 	   Clear break indicator
        MOVD    BOSCL,CMOFCL	   Set statement beginning offset
+       AEQLC   HIDECL,0,CMPIL0   Do not number hidden statements [PLB102]
        INCRA   CSTNCL,1 	   Increment statement number
-       STREAM  XSP,TEXTSP,LBLTB,CERR1
+CMPIL0 STREAM  XSP,TEXTSP,LBLTB,CERR1				[PLB102]
 *				   Break out label
        LEQLC   XSP,0,,CMPILA	   Check for no label
        INCRA   CMOFCL,DESCR	   Increment offset
@@ -1428,12 +1431,13 @@ CTLCRD FSHRTN  TEXTSP,1 	   Delete control character
 *				   Break out command
        LEXCMP  XSP,UNLSP,CTLCR1,,CTLCR1
 *				   Is it UNLIST?
-       SETAC   LISTCL,0 	   Zero listing switch
+UNLIST SETAC   LISTCL,0 	   Zero listing switch
        BRANCH  RTN1		   Return
 *_
 CTLCR1 LEXCMP  XSP,LISTSP,CTLCR3,,CTLCR3
 *				   Is it LIST?
        SETAC   LISTCL,1 	   Turn on listing
+       SETAC   HIDECL,0	   Unhide statements		[PLB102]
        STREAM  XSP,TEXTSP,FRWDTB,COMP3,CMTCLR
 *				   Get to next nonblank character
        AEQLC   STYPE,NBTYP,CMTCLR  Verify nonbreak
@@ -1447,7 +1451,12 @@ CTLCR1 LEXCMP  XSP,LISTSP,CTLCR3,,CTLCR3
 CTLCR2 SETAC   LLIST,0		   Zero left listing as default
        BRANCH  CMTCLR		   Join terminal processing
 *_
-CTLCR3 LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
+CTLCR3 LEXCMP  XSP,HIDESP,CTLCR9,,CTLCR9			[PLB102]
+*				   Is it HIDE?
+HIDE   SETAC   HIDECL,1	   Hide statement numbers	[PLB102]
+       BRANCH  UNLIST		   Join UNLIST processing	[PLB102]
+*_
+CTLCR9 LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
 *				   Is it EJECT?
        AEQLC   LISTCL,0,,CMTCLR    Skip eject if not listing
        OUTPUT  OUTPUT,EJECTF	   Eject page
@@ -5544,6 +5553,7 @@ CUTNO  DESCR   0,0,0						E3.2.2
 CNSLCL DESCR   0,0,0		   Label redefinition switch
 DATACL DESCR   0,0,0		   Prototype end switch for DATA(P)
 FNVLCL DESCR   0,0,0		   FUNCTION-VALUE switch for trace
+HIDECL DESCR   0,0,0		   Hide statement numbers	[PLB102]
 INICOM DESCR   0,0,0		   INITIALIZATION SWITCH	E3.10.6
 LENFCL DESCR   0,0,0		   Length failure switch
 LISTCL DESCR   1,0,0		   Compiler listing switch
@@ -5725,6 +5735,7 @@ EJCTSP STRING  'EJECT'
 EQLSP  STRING  '= '
 ETIMSP STRING  ',TIME = '
 EXDTSP STRING  'EXTERNAL'
+HIDESP STRING  'HIDE'						[PLB102]
 LEFTSP STRING  'LEFT'
 LISTSP STRING  'LIST'
 LPRNSP STRING  '('

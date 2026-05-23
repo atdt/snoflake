@@ -1,0 +1,14 @@
+* @title HIDE suppresses statement numbers until LIST
+* @match substring
+* @expect >>>
+* 0
+* 0
+* 1
+* <<<
+-HIDE
+ OUTPUT = &STNO
+ OUTPUT = &STNO
+-LIST
+-UNLIST
+ OUTPUT = &STNO
+END

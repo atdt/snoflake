@@ -1,0 +1,8 @@
+* @title HIDE resumes listing at the LIST control line
+* @match substring
+* @expect         -LIST
+-HIDE
+ OUTPUT = &STNO
+-LIST
+-UNLIST
+END
