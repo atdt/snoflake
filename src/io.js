@@ -50,14 +50,21 @@ export class UnitTable {
     }
 
     // Open a SIL unit's input File, building it on first access. A unit reads
-    // source first, then optional runtime input, then optional interactive
-    // stdin.
+    // the main source (an inline `source` string takes precedence over
+    // loader-backed `file`), then optional runtime input, then optional
+    // interactive stdin.
     open( unitNum ) {
         const entry = this.#ensure( unitNum );
         if ( entry.input ) return entry.input;
 
         const segments = [];
-        if ( this.options.file ) {
+        if ( this.options.source !== undefined ) {
+            segments.push( {
+                reader: bufferedReader( this.options.source ),
+                padReads: true,
+                path: this.options.file,
+            } );
+        } else if ( this.options.file ) {
             segments.push( {
                 reader: bufferedReader( this.loader.load( this.options.file ) ),
                 padReads: true,
