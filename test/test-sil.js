@@ -9,7 +9,9 @@ import process from "node:process";
 
 // VM wired to the host filesystem, for tests that read or write real files.
 function createFileVM() {
-    return createVM( { loader: createHostLoader() } );
+    // No extensions: these tests exercise raw I/O composition, where an
+    // extension preamble would add an unrelated source segment.
+    return createVM( { loader: createHostLoader(), extensions: null } );
 }
 
 //

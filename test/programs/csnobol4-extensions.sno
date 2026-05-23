@@ -1,0 +1,16 @@
+* @title CSNOBOL4 extensions round-trip cleanly
+* @expect >>>
+* A
+* abc
+* 65
+* 97 33
+* Z
+* 65
+* <<<
+          OUTPUT = CHAR(65)
+          OUTPUT = CHAR(97) CHAR(98) CHAR(99)
+          OUTPUT = ORD('A')
+          OUTPUT = ORD('a') ' ' ORD('!')
+          OUTPUT = CHAR(ORD('Z'))
+          OUTPUT = ORD(CHAR(65))
+END

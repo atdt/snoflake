@@ -42,22 +42,27 @@ export const defaultLoader = {
 // Per-unit { input?: File, output?: Writer }. Entries persist across close
 // so a closed input still returns EOF on subsequent reads.
 export class UnitTable {
-    constructor( { options, loader, stdout } ) {
+    constructor( { options, loader, stdout, preamble } ) {
         this.options = options;
         this.loader = loader;
         this.stdout = stdout;
+        this.preamble = preamble;
         this.units = new Map();
     }
 
-    // Open a SIL unit's input File, building it on first access. A unit reads
-    // the main source (an inline `source` string takes precedence over
-    // loader-backed `file`), then optional runtime input, then optional
-    // interactive stdin.
+    // Open a unit's input File on first access. Segments compose in order:
+    // preamble, main source, runtime input, interactive stdin.
     open( unitNum ) {
         const entry = this.#ensure( unitNum );
         if ( entry.input ) return entry.input;
 
         const segments = [];
+        if ( this.preamble ) {
+            segments.push( {
+                reader: bufferedReader( this.preamble ),
+                padReads: true,
+            } );
+        }
         if ( this.options.source !== undefined ) {
             segments.push( {
                 reader: bufferedReader( this.options.source ),

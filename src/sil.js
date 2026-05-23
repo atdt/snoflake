@@ -5,7 +5,7 @@ import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
 import { Action, clearTable, constants, normalizeToken } from './syntax.js';
 import { isFloat32, isInt32 } from './datatypes.js';
-const { PTR, SIZLIM, STTL, TTL } = constants;
+const { SIZLIM, STTL, TTL } = constants;
 
 const CPD = 3;  // Characters per descriptor
 
@@ -1758,10 +1758,51 @@ sil.LHERE = function () {
 // 2.  LINK need not be implemented if LOAD is  not.   In  this
 // case, LINK should branch to INTR10.
 // 3.  See also LOAD and UNLOAD.
-sil.LINK = function ( _$DESCR1, _$DESCR2, _$DESCR3, _$DESCR4, _FLOC, _SLOC ) {
-    // External function linkage is not supported. Programming note 2 says to
-    // branch to INTR10 in that case.
-    this.jmp( this.$( 'INTR10' ) );
+//
+// Snoflake notes:
+// Dispatches to the JS extension whose slot id was stashed in DESCR4
+// by sil.LOAD.
+sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
+    const ext = this.extensionsBySlot[ this.d( $DESCR4 ).addr ];
+    const argsAddr = this.d( $DESCR2 ).addr;
+
+    // LNKFNC has staged each coerced arg in a descriptor at argsAddr.
+    // .addr and .raddr are int and Float32 views of the same cell.
+    const args = ext.args.map( ( kind, i ) => {
+        const arg = this.d( argsAddr + i * D );
+        switch ( kind ) {
+        case 'int':  return arg.addr;
+        case 'real': return arg.raddr;
+        case 'string':
+            // Natural variable layout: 4-descriptor header, then chars.
+            // addr 0 is the null string.
+            if ( arg.addr === 0 ) return '';
+            return str.decode( this.mem, arg.addr + 4 * D, this.d( arg.addr ).value );
+        }
+    } );
+    const result = ext.impl( ...args );
+
+    // An undefined return signals SNOBOL FAIL. LNKFNC passes the global
+    // FAIL handler as FLOC.
+    if ( result === undefined ) return this.jmp( FLOC );
+
+    switch ( ext.result ) {
+    case 'int':
+        this.d( $DESCR1 ).update( result, 0, this.$( 'I' ) );
+        break;
+    case 'real': {
+        const d = this.d( $DESCR1 );
+        d.raddr = result;
+        d.flags = 0;
+        d.value = this.$( 'R' );
+        break;
+    }
+    case 'string':
+        // Type L hands LNKFNC a specifier in .addr. LNKFNC wraps the
+        // bytes into a natural variable on the way out.
+        this.d( $DESCR1 ).update( this.specify( result ), 0, this.$( 'L' ) );
+        break;
+    }
 };
 
 //     LINKOR  links  through `or' (alternative) fields of
@@ -1836,10 +1877,16 @@ sil.LINKOR = function ( $DESCR1, $DESCR2 ) {
 // bring  an external function from the library whose DDNAME is
 // specified by C21...C2L2.
 // 4.  See also LINK and UNLOAD.
-sil.LOAD = function ( _$DESCR, _$SPEC1, _$SPEC2, _FLOC, _SLOC ) {
-    // External function linkage is not supported. Programming note 2 says to
-    // branch to UNDF in that case.
-    this.jmp( this.$( 'UNDF' ) );
+//
+// Snoflake notes:
+// Binds a JS extension to the function block, so sil.LINK can dispatch
+// to it. Unknown names fail through FLOC.
+sil.LOAD = function ( $DESCR, $SPEC1, _$SPEC2, FLOC, _SLOC ) {
+    const name = this.s( $SPEC1 ).specified,
+          ext = this.extensions[ name ];
+
+    if ( !ext ) return this.jmp( FLOC );
+    this.d( $DESCR ).addr = this.extensionsBySlot.push( ext ) - 1;
 };
 
 //     LOCAPT is used to locate the `type' descriptor of a

@@ -209,6 +209,81 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), 'visible\n' );
     } );
 
+    it( 'registers REAL-typed extensions that round-trip through SNOBOL', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                ' OUTPUT = RHALF(3.5)',
+                ' OUTPUT = RSTR(RHALF(10.0))',
+                'END',
+                ''
+            ].join( '\n' ),
+            extensions: {
+                RHALF: {
+                    args:   [ 'real' ],
+                    result: 'real',
+                    impl:   ( x ) => x / 2,
+                },
+                RSTR: {
+                    args:   [ 'real' ],
+                    result: 'string',
+                    impl:   ( x ) => 'r=' + x.toFixed( 2 ),
+                },
+            },
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '1.75\nr=5.00\n' );
+    } );
+
+    it( 'extensions can signal SNOBOL FAIL by returning undefined', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                ' OUTPUT = POS(3)',
+                ' POS(-1) :S(GOOD)F(BAD)',
+                'GOOD     OUTPUT = "unreachable" :(END)',
+                'BAD      OUTPUT = "failure routed"',
+                'END',
+                ''
+            ].join( '\n' ),
+            extensions: {
+                POS: {
+                    args:   [ 'int' ],
+                    result: 'int',
+                    impl:   ( n ) => n > 0 ? n : undefined,
+                },
+            },
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '3\nfailure routed\n' );
+    } );
+
+    it( 'extensions accept higher arity with mixed argument types', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                ' OUTPUT = JOIN4(1, "two", 3.5, 4)',
+                'END',
+                ''
+            ].join( '\n' ),
+            extensions: {
+                JOIN4: {
+                    args:   [ 'int', 'string', 'real', 'int' ],
+                    result: 'string',
+                    impl:   ( a, b, c, d ) => `${a}|${b}|${c}|${d}`,
+                },
+            },
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '1|two|3.5|4\n' );
+    } );
+
     it( 'creates a VM that loads a file through an explicit host loader', function () {
         const root = path.join( __dirname, '..' ),
               programFile = path.join( root, 'tmp', 'test-create-vm-file.sno' ),
@@ -399,7 +474,7 @@ describe( 'SNOBOL Program Execution', function () {
     } );
 
     it( 'returns EOF when no input streams are configured', function () {
-        const vm = new VM();
+        const vm = new VM( { extensions: null } );
         assert.deepEqual( vm.units.open( 5 ).readRecord( 80 ), { eof: true } );
     } );
 
@@ -414,6 +489,7 @@ describe( 'SNOBOL Program Execution', function () {
                   interactive: true,
                   loader: { load: path => files[ path ] },
                   stdinReader: () => bufferedLineReader( [ 'STDIN' ] ),
+                  extensions: null,
               } ),
               file = vm.units.open( 5 );
 
@@ -436,6 +512,7 @@ describe( 'SNOBOL Program Execution', function () {
                   interactive: true,
                   loader: { load: path => files[ path ] },
                   stdinReader: () => bufferedLineReader( [ 'STDIN' ] ),
+                  extensions: null,
               } ),
               file = vm.units.open( constants.UNITI );
 

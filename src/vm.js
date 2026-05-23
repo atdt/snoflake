@@ -2,6 +2,7 @@
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
 import { Descriptor, Specifier, isFloat32, isInt32, isUint32 } from './datatypes.js';
+import { extensions as defaultExtensions } from './extensions.js';
 import { UnitTable, defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
@@ -31,10 +32,18 @@ const HOST_SWITCHES = {
     CASECL: 'case',
 };
 
+// SNOBOL type names used in LOAD prototypes, keyed by extension kind.
+const TYPE_NAMES = { int: 'INTEGER', real: 'REAL', string: 'STRING' };
+
 export class VM {
-    constructor( options ) {
+    constructor( options = {} ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
         this.loader = this.options.loader || defaultLoader;
+        // User extensions merge on top of the defaults. Pass `null` to
+        // start empty (intended for tests that need a bare runtime).
+        this.extensions = options.extensions === null
+            ? {}
+            : { ...defaultExtensions, ...options.extensions };
         this.reset();
     }
 
@@ -48,6 +57,7 @@ export class VM {
             options: this.options,
             loader: this.loader,
             stdout: this.options.stdout || defaultStdout,
+            preamble: this.#buildPreamble(),
         } );
         // INTSPC's local conversion buffer, lazily allocated on first use.
         this.intspcBuf = null;
@@ -55,6 +65,9 @@ export class VM {
         // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
         this.OSTACK = 0;
+        // Populated by sil.LOAD as the extension declarations compile.
+        // sil.LINK indexes back in to dispatch the call.
+        this.extensionsBySlot = [];
     }
 
     run( image ) {
@@ -230,5 +243,19 @@ export class VM {
 
     s( ptr ) {
         return ptr instanceof Specifier ? ptr : new Specifier( this, ptr );
+    }
+
+    // SIL source that declares each registered extension via its
+    // source-language LOAD statement. -HIDE/-UNHIDE bracket the block so
+    // the declarations don't appear in listings or advance &STNO.
+    #buildPreamble() {
+        const loads = [];
+        for ( const [ name, ext ] of Object.entries( this.extensions ) ) {
+            const argTypes = ext.args.map( ( k ) => TYPE_NAMES[ k ] ).join( ',' );
+            const resultType = TYPE_NAMES[ ext.result ];
+            loads.push( ` LOAD('${ name }(${ argTypes })${ resultType }','JS')` );
+        }
+        if ( !loads.length ) return '';
+        return [ '-HIDE', ...loads, '-UNHIDE', '' ].join( '\n' );
     }
 }
