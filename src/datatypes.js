@@ -115,14 +115,16 @@ export class Descriptor {
 }
 
 export class Specifier extends Descriptor {
+    // Griswold §5.1.2 lays a qualifier out as two descriptors. The second
+    // descriptor's V field is offset and its T field is length; F is unused.
     get name()      { return 'Specifier'; }
     get width()     { return 2 * D; }
 
     get offset()    { return this.vm.getUint( this.ptr + 3 ); }
     set offset( n ) { this.vm.setUint( this.ptr + 3, n ); }
 
-    get length()    { return this.vm.getUint( this.ptr + 4 ); }
-    set length( n ) { this.vm.setUint( this.ptr + 4, n ); }
+    get length()    { return this.vm.getUint( this.ptr + 5 ); }
+    set length( n ) { this.vm.setUint( this.ptr + 5, n ); }
 
     get specified() {
         const start = this.addr + this.offset;

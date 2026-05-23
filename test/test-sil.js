@@ -108,9 +108,9 @@ describe( 'Macros that Assemble Data', function () {
         const vm = new VM();
         const A = 55, F = 66, V = 77, O = 88, L = 99,
               s = vm.s( sil.SPEC.call( vm, A, F, V, O, L ) );
-        assert.deepEqual( s.raw(), [ A, F, V, O, L, 0 ] );
-        assert.equal( vm.mem[ s.ptr + 4 ], L );
-        assert.equal( vm.mem[ s.ptr + 5 ], 0 );
+        assert.deepEqual( s.raw(), [ A, F, V, O, 0, L ] );
+        assert.equal( vm.mem[ s.ptr + 4 ], 0 );
+        assert.equal( vm.mem[ s.ptr + 5 ], L );
     } );
 
     it( 'STRING', function () {
@@ -521,7 +521,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         sil.SPUSH.call( vm, s );
 
         s = vm.s( cur + D );
-        assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 5, 0 ] );
+        assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 0, 5 ] );
     } );
 } );
 
@@ -1115,7 +1115,7 @@ describe( 'Macros that Move Specifiers', function () {
         s1.update( 10, 11, 12, 13, 14 );
         s2.update( 20, 21, 22, 23, 24 );
         sil.SETSP.call( vm, s1, s2 );
-        assert.deepEqual( s1.raw(), [ 20, 21, 22, 23, 24, 0 ] );
+        assert.deepEqual( s1.raw(), [ 20, 21, 22, 23, 0, 24 ] );
         assert.deepEqual( s1.raw(), s2.raw() );
     } );
 
@@ -1269,7 +1269,7 @@ describe( 'Macros that Operate on Specifiers', function () {
         d.addr = di.ptr;
         di.value = 9;
         sil.LOCSP.call( vm, s, d );
-        assert.deepEqual( s.raw(), [ d.addr, d.flags, d.value, 4*CPD, di.value, 0 ] );
+        assert.deepEqual( s.raw(), [ d.addr, d.flags, d.value, 4*CPD, 0, di.value ] );
     } );
 
     it( 'PUTLG', function () {
@@ -1289,14 +1289,14 @@ describe( 'Macros that Operate on Specifiers', function () {
         s2.update( 1, 2, 3, 9, 5 );
         s3.update( 1, 2, 3, 4, 2 );
         sil.REMSP.call( vm, s1, s2, s3 );
-        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + s3.length, s2.length - s3.length, 0 ] );
+        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + s3.length, 0, s2.length - s3.length ] );
 
         // If SPEC1 and SPEC3 are the same:
         s1.update( 0 );
         s2.update( 1, 2, 3, 9, 5 );
         const L3 = s1.length;
         sil.REMSP.call( vm, s1, s2, s1 );
-        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + L3, s2.length - L3, 0 ] );
+        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + L3, 0, s2.length - L3 ] );
     } );
 
     it( 'SETLC', function () {
@@ -1400,14 +1400,14 @@ describe( 'Macros that Operate on Specifiers', function () {
         s3.update( 6, 7, 8, 9, 8 );
         sil.SUBSP.call( vm, s1, s2, s3, FLOC, SLOC );
         assert.equal( vm.ip, 2 );
-        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 5, 0 ] );
+        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 0, 5 ] );
 
         // L3 == L2
         s3.length = 5;
         s1.update( 0 );
         sil.SUBSP.call( vm, s1, s2, s3, FLOC, SLOC );
         assert.equal( vm.ip, 2 );
-        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 5, 0 ] );
+        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 0, 5 ] );
 
         // L3 < L2
         s3.length = 2;
