@@ -29,6 +29,8 @@
 *                       lowercase ASCII to upper case along the way.
 *        [PLB86]      — Pattern-class scanning bypasses STREAM-level case
 *                       folding.
+*        [PLB81]      — &MAXLNGTH defaults to SIZLIM instead of 5000, so
+*                       string-length checks do not trip on modern inputs.
 *        [SNF1]       — -UNHIDE re-enables listing and statement numbering
 *                       after -HIDE without listing the control card itself.
 *
@@ -5433,7 +5435,7 @@ CASECL DESCR   1,0,I		   &CASE  (folding)		[PLB15][PLB69]
        DESCR   CASESP,0,0
 OUTSW  DESCR   1,0,I		   &OUTPUT
        DESCR   OUTSP,0,0
-MLENCL DESCR   5000,0,I 	   &MAXLNGTH
+MLENCL DESCR   SIZLIM,0,I	   &MAXLNGTH			[PLB81]
        DESCR   MAXLSP,0,0
 INSW   DESCR   1,0,I		   &INPUT
        DESCR   INSP,0,0
