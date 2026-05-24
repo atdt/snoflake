@@ -2,7 +2,7 @@
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
 import { Descriptor, Specifier, isFloat32, isInt32, isUint32 } from './datatypes.js';
-import { extensions as defaultExtensions } from './extensions.js';
+import { extensions as defaultExtensions, parseSignature } from './extensions.js';
 import { UnitTable, defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
 import { str } from './string.js';
@@ -42,9 +42,16 @@ export class VM {
         this.loader = this.options.loader || defaultLoader;
         // User extensions merge on top of the defaults. Pass `null` to
         // start empty (intended for tests that need a bare runtime).
-        this.extensions = options.extensions === null
-            ? {}
-            : { ...defaultExtensions, ...options.extensions };
+        // Merge host extensions over the defaults. Function values are
+        // signature-form keys ('NAME :: (types) => type'); object values
+        // are the canonical { args, result, impl } shape.
+        this.extensions = options.extensions === null ? {} : { ...defaultExtensions };
+        for ( const [ key, value ] of Object.entries( options.extensions || {} ) ) {
+            const [ name, entry ] = typeof value === 'function'
+                ? parseSignature( key, value )
+                : [ key, value ];
+            this.extensions[ name ] = entry;
+        }
         this.reset();
     }
 

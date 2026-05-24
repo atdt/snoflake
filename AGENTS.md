@@ -28,6 +28,43 @@ crystal-clear, beautiful, simple, and well-documented.
 - `tmp/`: Scratch programs, probes, and logs (do not commit).
 - `SIL-CHANGES.md`: Notes on candidate fixes from later CSNOBOL4 SIL.
 
+## Extensions API
+
+Hosts can register JS functions that SNOBOL programs call as ordinary
+built-ins. Register them on the VM via the `extensions` option:
+
+```js
+run( {
+    source: " OUTPUT = RHALF(3.5)\nEND\n",
+    extensions: {
+        'RHALF :: (real) => real':   ( x ) => x / 2,
+        'NOTE  :: (string) => void': ( s ) => console.log( s ),
+    },
+} );
+```
+
+Two registration forms are accepted and may be mixed:
+
+- **Signature form** -- key encodes name and types, value is the impl:
+  `'NAME :: (t1, t2) => result'`. Parens are required even when empty
+  (`'NOW :: () => int'`).
+- **Object form** -- key is the name, value is `{ args, result, impl }`.
+  This is the canonical shape; defaults in `src/extensions.js` use it.
+
+Type kinds:
+
+- `args`: `'int'`, `'real'`, or `'string'` -- `LNKFNC` coerces the
+  ARGVAL-evaluated descriptors before calling `impl`.
+- `result`: arg kinds plus `'void'` (returns the null string to SNOBOL).
+
+Failure signaling: an impl can throw or return the `FAIL` sentinel
+(exported from `src/extensions.js`) to make the call fail in SNOBOL.
+Any other thrown value propagates to the host.
+
+Defaults (currently `CHAR` and `ORD`) merge under the host registry;
+pass `extensions: null` to start with a bare runtime (intended for
+tests).
+
 ## Rules & Workflow
 
 ### Source of truth

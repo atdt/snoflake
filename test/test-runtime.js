@@ -330,6 +330,69 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '1|two|3.5|4\n' );
     } );
 
+    it( 'accepts extensions in signature form: NAME :: (types) => result', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                ' OUTPUT = RHALF(3.5)',
+                ' OUTPUT = RSTR(RHALF(10.0))',
+                ' OUTPUT = JOIN4(1, "two", 3.5, 4)',
+                'END',
+                ''
+            ].join( '\n' ),
+            extensions: {
+                'RHALF :: (real) => real':                    ( x ) => x / 2,
+                'RSTR  :: (real) => string':                  ( x ) => 'r=' + x.toFixed( 2 ),
+                'JOIN4 :: (int, string, real, int) => string':
+                    ( a, b, c, d ) => `${a}|${b}|${c}|${d}`,
+            },
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '1.75\nr=5.00\n1|two|3.5|4\n' );
+    } );
+
+    it( 'signature form accepts nullary () and void result', function () {
+        const stdout = captureWriter();
+        const log = [];
+
+        run( {
+            source: [
+                ' OUTPUT = NOW()',
+                ' NOTE("hi")',
+                'END',
+                ''
+            ].join( '\n' ),
+            extensions: {
+                'NOW  :: () => int':         () => 42,
+                'NOTE :: (string) => void':  ( s ) => log.push( s ),
+            },
+            stdout,
+        } );
+
+        assert.deepEqual( log, [ 'hi' ] );
+        assert.equal( joinLines( stdout.lines ), '42\n' );
+    } );
+
+    it( 'rejects malformed signature keys when value is a function', function () {
+        const cases = [
+            'BAD :: real -> real',     // wrong arrow
+            'BAD :: real => real',     // missing parens
+            'BAD :: (frob) => int',    // unknown arg type
+            'BAD :: () => frob',       // unknown result type
+            'BAD :: (int,) => int',    // trailing comma
+            'BAD :: (int int) => int', // missing comma
+        ];
+        for ( const key of cases ) {
+            assert.throws(
+                () => new VM( { extensions: { [ key ]: () => 0 } } ),
+                SyntaxError,
+                `should reject: ${ key }`,
+            );
+        }
+    } );
+
     it( 'creates a VM that loads a file through an explicit host loader', function () {
         const root = path.join( __dirname, '..' ),
               programFile = path.join( root, 'tmp', 'test-create-vm-file.sno' ),
