@@ -60,7 +60,7 @@ export class Descriptor {
     get value()    { return this.vm.getUint( this.ptr + 2 ); }
     set value( n ) { this.vm.setUint( this.ptr + 2, n ); }
 
-    update( addr = 0, flags = 0, value = 0 ) {
+    set( addr = 0, flags = 0, value = 0 ) {
         this.addr = addr;
         this.flags = flags;
         this.value = value;
@@ -80,9 +80,7 @@ export class Descriptor {
         return true;
     }
 
-    // Copy another instance's storage over our own. copyWithin handles
-    // overlap correctly per the typed-array spec.
-    read( src ) {
+    copyFrom( src ) {
         this.vm.mem.copyWithin( this.ptr, src.ptr, src.ptr + this.width );
     }
 
@@ -132,8 +130,8 @@ export class Specifier extends Descriptor {
         return str.decode( this.vm.mem, start, this.length );
     }
 
-    update( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {
-        super.update( addr, flags, value );
+    set( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {
+        super.set( addr, flags, value );
         this.offset = offset;
         this.length = length;
         return this;

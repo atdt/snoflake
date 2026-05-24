@@ -159,9 +159,9 @@ sil.ADDSIB = function ( $DESCR1, $DESCR2 ) {
         A2_RSIB = this.d( A2 + RSIB ),
         A2_FATHER = this.d( A2 + FATHER );
 
-    A2_RSIB.update( A4, F4, V4 );
-    A2_FATHER.update( A3, F3, V3 );
-    A1_RSIB.update( A2, F2, V2 );
+    A2_RSIB.set( A4, F4, V4 );
+    A2_FATHER.set( A3, F3, V3 );
+    A1_RSIB.set( A2, F2, V2 );
     A3_CODE.value = I + 1;
 };
 
@@ -214,9 +214,9 @@ sil.ADDSON = function ( $DESCR1, $DESCR2 ) {
           a2_father = this.d( DESCR2.addr + father ),
           a2_rsib = this.d( DESCR2.addr + rsib );
 
-    a2_father.read( DESCR1 );
-    a2_rsib.read( a1_lson );
-    a1_lson.read( DESCR2 );
+    a2_father.copyFrom( DESCR1 );
+    a2_rsib.copyFrom( a1_lson );
+    a1_lson.copyFrom( DESCR2 );
     a1_code.value++;
 };
 
@@ -788,21 +788,21 @@ sil.CPYPAT = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, $DESCR5, $DESCR6 ) {
     do {
         src = this.d( R2 + 3 );
         dst = this.d( R1 + 3 );
-        dst.read( src );
+        dst.copyFrom( src );
         V7 = src.value;
 
         src = this.d( R2 + 6 );
         dst = this.d( R1 + 6 );
-        dst.update( F1( src.addr ), 0, F2( src.value ) );
+        dst.set( F1( src.addr ), 0, F2( src.value ) );
 
         src = this.d( R2 + 9 );
         dst = this.d( R1 + 9 );
-        dst.update( src.addr + A3, 0, src.value + A3 );
+        dst.set( src.addr + A3, 0, src.value + A3 );
 
         if ( V7 === 3 ) {
             src = this.d( R2 + 12 );
             dst = this.d( R1 + 12 );
-            dst.read( src );
+            dst.copyFrom( src );
         }
 
         R3 -= 3 * ( V7 + 1 );
@@ -1388,7 +1388,7 @@ sil.GETSPC = function ( $SPEC, $DESCR, N ) {
         SPEC = this.s( $SPEC ),
         SPEC_indirect = this.s( A1 + N );
 
-    SPEC.read( SPEC_indirect );
+    SPEC.copyFrom( SPEC_indirect );
 };
 
 //     INCRA is used to  increment  the  address  field  of  a
@@ -1540,10 +1540,10 @@ sil.INSERT = function ( $DESCR1, $DESCR2 ) {
           A2_LSON = this.d( A2 + LSON );
 
 
-    A1_FATHER.update( A2, F2, V2 );
-    A4_RSIB.update( A2, F2, V2 );
-    A2_FATHER.update( A3, F3, V3 );
-    A2_LSON.update( A1, F1, V1 );
+    A1_FATHER.set( A2, F2, V2 );
+    A4_RSIB.set( A2, F2, V2 );
+    A2_FATHER.set( A3, F3, V3 );
+    A2_LSON.set( A1, F1, V1 );
     A2_CODE.value = I + 1;
 };
 
@@ -1601,7 +1601,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     if ( this.intspcBuf === null ) {
         this.intspcBuf = this.alloc( 255 );
     }
-    SPEC.update( this.intspcBuf, 0, 0, 0, I_str.length );
+    SPEC.set( this.intspcBuf, 0, 0, 0, I_str.length );
     this.mem.set( encoded, SPEC.addr + SPEC.offset );
 };
 
@@ -1794,7 +1794,7 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
 
     switch ( ext.result ) {
     case 'int':
-        this.d( $DESCR1 ).update( result, 0, this.$( 'I' ) );
+        this.d( $DESCR1 ).set( result, 0, this.$( 'I' ) );
         break;
     case 'real': {
         const d = this.d( $DESCR1 );
@@ -1806,11 +1806,11 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     case 'string':
         // Type L hands LNKFNC a specifier in .addr. LNKFNC wraps the
         // bytes into a natural variable on the way out.
-        this.d( $DESCR1 ).update( this.specify( result ), 0, this.$( 'L' ) );
+        this.d( $DESCR1 ).set( this.specify( result ), 0, this.$( 'L' ) );
         break;
     case 'void':
         // Hand SNOBOL the null string, matching LOAD's own RETNUL exit.
-        this.d( $DESCR1 ).update( this.specify( '' ), 0, this.$( 'L' ) );
+        this.d( $DESCR1 ).set( this.specify( '' ), 0, this.$( 'L' ) );
         break;
     }
 };
@@ -2131,7 +2131,7 @@ sil.LVALUE = function ( $DESCR1, $DESCR2 ) {
         }
     } while ( offset !== 0 );
 
-    DESCR1.update( least, 0, 0 );
+    DESCR1.set( least, 0, 0 );
 };
 
 //     MAKNOD  is  used  to make a node for a pattern.  DESCR6
@@ -2187,13 +2187,13 @@ sil.MAKNOD = function ( $DESCR1, $DESCR2, $DESCR3, $DESCR4, $DESCR5, $DESCR6 ) {
           DESCR5 = this.d( $DESCR5 ),
           DESCR6 = this.d( $DESCR6 );
 
-    this.d( DESCR2.addr + 3 ).read( DESCR5 );
+    this.d( DESCR2.addr + 3 ).copyFrom( DESCR5 );
     this.d( DESCR2.addr + 6 ).addr = DESCR4.addr;
     this.d( DESCR2.addr + 9 ).addr = DESCR3.addr;
     if ( DESCR6 !== undefined ) {
-        this.d( DESCR2.addr + 12 ).read( DESCR6 );
+        this.d( DESCR2.addr + 12 ).copyFrom( DESCR6 );
     }
-    DESCR1.read( DESCR2 );
+    DESCR1.copyFrom( DESCR2 );
 };
 
 //     MNREAL is used to change the sign of a real number.
@@ -2214,7 +2214,7 @@ sil.MNREAL = function ( $DESCR1, $DESCR2 ) {
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 );
 
-    DESCR1.read( DESCR2 );
+    DESCR1.copyFrom( DESCR2 );
     DESCR1.raddr *= -1;
 };
 
@@ -2242,7 +2242,7 @@ sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.read( DESCR2 );
+    DESCR1.copyFrom( DESCR2 );
     DESCR1.addr = newAddr;
     this.jmp( SLOC );
 };
@@ -2355,7 +2355,7 @@ sil.MOVDIC = function ( $DESCR1, N1, $DESCR2, N2 ) {
     const DESCR1 = this.d( $DESCR1 ),
           DESCR2 = this.d( $DESCR2 );
 
-    this.d( DESCR1.addr + N1 ).read( this.d( DESCR2.addr + N2 ) );
+    this.d( DESCR1.addr + N1 ).copyFrom( this.d( DESCR2.addr + N2 ) );
 };
 
 //     MOVV is used to move a value field from one  descriptor
@@ -2905,7 +2905,7 @@ sil.PUTSPC = function ( $DESCR, N, $SPEC ) {
           SPEC = this.s( $SPEC ),
           SPEC_indirect = this.s( A1 + N );
 
-    SPEC_indirect.read( SPEC );
+    SPEC_indirect.copyFrom( SPEC );
 };
 
 //     PUTVC is used to put a value field into a descriptor at
@@ -3595,7 +3595,7 @@ sil.SETSP = function ( $SPEC1, $SPEC2 ) {
     const SPEC1 = this.s( $SPEC1 ),
           SPEC2 = this.s( $SPEC2 );
 
-    SPEC1.read( SPEC2 );
+    SPEC1.copyFrom( SPEC2 );
 };
 
 //     SETVA  is used to set the value field of one descriptor
@@ -3687,7 +3687,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
           I = this.$( 'I' );
 
     if ( SPEC.length === 0 ) {
-        DESCR.update( 0, 0, I );
+        DESCR.set( 0, 0, I );
         DESCR.addr = 0;
         return this.jmp( SLOC );
     }
@@ -3701,12 +3701,12 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     }
 
     if ( !isInt32( val ) ) {
-        DESCR.update( 0, 0, I );
+        DESCR.set( 0, 0, I );
         DESCR.addr = 0;
         return this.jmp( FLOC );
     }
 
-    DESCR.update( 0, 0, I );
+    DESCR.set( 0, 0, I );
     DESCR.addr = val;
     this.jmp( SLOC );
 };
@@ -3771,7 +3771,7 @@ sil.SPOP = function ( SPECs ) {
         if ( this.CSTACK - dst.width < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
         }
-        dst.read( this.s( this.CSTACK - ( dst.width - D ) ) );
+        dst.copyFrom( this.s( this.CSTACK - ( dst.width - D ) ) );
         this.CSTACK -= dst.width;
     }
 };
@@ -3861,7 +3861,7 @@ sil.SPUSH = function ( SPECs ) {
             throw new RangeError( 'Stack overflow' );
         }
         this.CSTACK += src.width;
-        this.s( this.CSTACK - ( src.width - D ) ).read( src );
+        this.s( this.CSTACK - ( src.width - D ) ).copyFrom( src );
     }
 };
 
@@ -4111,30 +4111,30 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
         case Action.STOPSH:
             STYPE.addr = lastPut;
-            SPEC1.update( A, F, V, O, I );
+            SPEC1.set( A, F, V, O, I );
             normalizeToken( table, mem, tokenStart, I, caseFold );
-            SPEC2.update( A, F, V, O + I, L - I );
+            SPEC2.set( A, F, V, O + I, L - I );
             this.jmp( SLOC );
             return;
 
         case Action.STOP:
             STYPE.addr = lastPut;
-            SPEC1.update( A, F, V, O, I + 1 );
+            SPEC1.set( A, F, V, O, I + 1 );
             normalizeToken( table, mem, tokenStart, I + 1, caseFold );
-            SPEC2.update( A, F, V, O + I + 1, L - I - 1 );
+            SPEC2.set( A, F, V, O + I + 1, L - I - 1 );
             this.jmp( SLOC );
             return;
 
         case Action.ERROR:
             STYPE.addr = 0;
-            SPEC1.update( A, F, V, O, L );
+            SPEC1.set( A, F, V, O, L );
             this.jmp( ERROR );
             return;
 
         case Action.RUNOUT:
             STYPE.addr = lastPut;
-            SPEC1.update( A, F, V, O, L );
-            SPEC2.update( A, F, V, O, 0 );
+            SPEC1.set( A, F, V, O, L );
+            SPEC2.set( A, F, V, O, 0 );
             this.jmp( RUNOUT );
             return;
         }
@@ -4143,9 +4143,9 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // Scanned to end of input without a terminal row. This is the same as
     // in-loop RUNOUT, except the whole span is the token.
     STYPE.addr = lastPut;
-    SPEC1.update( A, F, V, O, L );
+    SPEC1.set( A, F, V, O, L );
     normalizeToken( table, mem, tokenStart, L, caseFold );
-    SPEC2.update( A, F, V, O, 0 );
+    SPEC2.set( A, F, V, O, 0 );
     this.jmp( RUNOUT );
 };
 
@@ -4200,7 +4200,7 @@ sil.SUBSP = function ( $SPEC1, $SPEC2, $SPEC3, FLOC, SLOC ) {
           SPEC3 = this.s( $SPEC3 );
 
     if ( SPEC3.length >= SPEC2.length ) {
-        SPEC1.read( SPEC3 );
+        SPEC1.copyFrom( SPEC3 );
         SPEC1.length = SPEC2.length;
         this.jmp( SLOC );
     } else {
@@ -4415,7 +4415,7 @@ sil.TRIMSP = function ( $SPEC1, $SPEC2 ) {
     const SPEC1 = this.s( $SPEC1 ),
           SPEC2 = this.s( $SPEC2 );
 
-    SPEC1.read( SPEC2 );
+    SPEC1.copyFrom( SPEC2 );
     const mem = this.mem,
           base = SPEC1.addr + SPEC1.offset;
     let len = SPEC1.length;

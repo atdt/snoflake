@@ -698,15 +698,15 @@ describe( 'Descriptor Datatype', function () {
         const vm = new VM(),
               src = vm.d(),
               dst = vm.d();
-        src.update( 6, 7, 8 );
-        dst.read( src );
+        src.set( 6, 7, 8 );
+        dst.copyFrom( src );
         assert.deepEqual( dst.raw(), src.raw() );
     } );
 
-    it( 'update', function () {
+    it( 'set', function () {
         const vm = new VM(),
               d = new Descriptor( vm );
-        d.update( 6, 7, 8 );
+        d.set( 6, 7, 8 );
         assert.deepEqual( d.raw(), [ 6, 7, 8 ] );
     } );
 
@@ -715,11 +715,11 @@ describe( 'Descriptor Datatype', function () {
               d1 = new Descriptor( vm ),
               d2 = new Descriptor( vm );
 
-        d1.update( 6, 7, 8 );
-        d2.update( 6, 7, 8 );
+        d1.set( 6, 7, 8 );
+        d2.set( 6, 7, 8 );
         assert( d1.isEqualTo( d2 ) );
 
-        d2.update( 9, 10, 11 );
+        d2.set( 9, 10, 11 );
         assert( !d1.isEqualTo( d2 ) );
     } );
 } );
@@ -750,15 +750,15 @@ describe( 'Specifier Datatype', function () {
         const vm = new VM(),
               src = new Specifier( vm ),
               dst = new Specifier( vm );
-        src.update( 6, 7, 8, 9, 10 );
-        dst.read( src );
+        src.set( 6, 7, 8, 9, 10 );
+        dst.copyFrom( src );
         assert.deepEqual( dst.raw(), src.raw() );
     } );
 
-    it( 'update', function () {
+    it( 'set', function () {
         const vm = new VM(),
               s = new Specifier( vm );
-        s.update( 6, 7, 8, 9, 10 );
+        s.set( 6, 7, 8, 9, 10 );
         assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 0, 10 ] );
         assert.equal( vm.mem[ s.ptr + 4 ], 0 );
         assert.equal( vm.mem[ s.ptr + 5 ], 10 );
@@ -769,11 +769,11 @@ describe( 'Specifier Datatype', function () {
               s1 = new Specifier( vm ),
               s2 = new Specifier( vm );
 
-        s1.update( 6, 7, 8, 9, 10 );
-        s2.update( 6, 7, 8, 9, 10 );
+        s1.set( 6, 7, 8, 9, 10 );
+        s2.set( 6, 7, 8, 9, 10 );
         assert( s1.isEqualTo( s2 ) );
 
-        s2.update( 1, 2, 3, 4, 5 );
+        s2.set( 1, 2, 3, 4, 5 );
         assert( !s1.isEqualTo( s2 ) );
     } );
 

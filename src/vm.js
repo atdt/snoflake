@@ -240,7 +240,7 @@ export class VM {
               SPEC = this.s( $SPEC ),
               encoded = str.encode( text );
         const ptr = this.alloc( encoded.length );
-        SPEC.update( ptr, 0, 0, 0, text.length );
+        SPEC.set( ptr, 0, 0, 0, text.length );
         this.mem.set( encoded, ptr );
         return SPEC.ptr;
     }
