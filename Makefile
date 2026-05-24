@@ -31,6 +31,9 @@ bench:
 bench-vs-csnobol4:
 	@node ./tools/bench-vs-csnobol4.js
 
+demo:
+	@npm run demo
+
 # To release: run make release from a clean master checkout. It defaults to
 # VERSION=patch; use VERSION=minor, VERSION=major, or VERSION=X.Y.Z when
 # needed. GitHub Actions publishes the package to npm after the release is
@@ -54,4 +57,4 @@ release: release-check
 	git push origin master "$$tag"; \
 	gh release create "$$tag" --verify-tag --title "$$tag" --generate-notes
 
-.PHONY: test test-node test-deno test-bun test-all build run profile bench bench-vs-csnobol4 release-check release
+.PHONY: test test-node test-deno test-bun test-all build run profile bench bench-vs-csnobol4 demo release-check release
