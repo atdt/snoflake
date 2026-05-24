@@ -45,6 +45,70 @@
             </div>
         </section>
 
+        <section id="lsystem-example" class="example" aria-labelledby="lsystem-title">
+            <div class="example-header">
+                <div>
+                    <h2 id="lsystem-title">L-systems on a canvas</h2>
+                    <p>L-systems are string-rewriting grammars whose generated strings are read as turtle-graphics commands. Rewriting is SNOBOL's native superpower, so the language does it all. For the drawing, the program calls a handful of JS functions the host registered as ordinary SNOBOL built-ins.</p>
+                </div>
+                <div class="actions">
+                    <label class="picker">
+                        <span>Preset</span>
+                        <select id="lsystem-preset" aria-label="L-system preset"></select>
+                    </label>
+                    <button id="lsystem-run" type="button">Draw</button>
+                    <span id="lsystem-status" class="status">Ready</span>
+                </div>
+            </div>
+
+            <div class="workspace workspace-lsystem" aria-label="L-system demo">
+                <div class="pane">
+                    <div class="pane-header">Source</div>
+                    <textarea id="lsystem-source" spellcheck="false" aria-label="L-system SNOBOL source"></textarea>
+                </div>
+                <div class="pane strings-pane">
+                    <div class="pane-header">Generations</div>
+                    <div id="lsystem-strings" class="strings" aria-live="polite"></div>
+                </div>
+                <div class="pane canvas-pane">
+                    <div class="pane-header">Canvas</div>
+                    <div class="canvas-wrap">
+                        <canvas id="lsystem-canvas" width="720" height="540" aria-label="L-system rendering"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ca-example" class="example" aria-labelledby="ca-title">
+            <div class="example-header">
+                <div>
+                    <h2 id="ca-title">Elementary cellular automata</h2>
+                    <p>Wolfram's 1D cellular automata are nothing but a sliding-window string rewrite. SNOBOL computes each row from the previous one as pure string manipulation; the host renders the accumulated rows as a pixel grid.</p>
+                </div>
+                <div class="actions">
+                    <label class="picker">
+                        <span>Preset</span>
+                        <select id="ca-preset" aria-label="CA preset"></select>
+                    </label>
+                    <button id="ca-run" type="button">Run</button>
+                    <span id="ca-status" class="status">Ready</span>
+                </div>
+            </div>
+
+            <div class="workspace workspace-ca" aria-label="CA demo">
+                <div class="pane">
+                    <div class="pane-header">Source</div>
+                    <textarea id="ca-source" spellcheck="false" aria-label="CA SNOBOL source"></textarea>
+                </div>
+                <div class="pane canvas-pane">
+                    <div class="pane-header">Canvas</div>
+                    <div class="canvas-wrap">
+                        <canvas id="ca-canvas" width="720" height="540" aria-label="CA rendering"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="pattern-example" class="example" aria-labelledby="pattern-title">
             <div class="example-header">
                 <div>

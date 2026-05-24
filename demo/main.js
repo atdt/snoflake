@@ -1,7 +1,11 @@
 import { runSnoflake } from './run-snoflake.js';
+import { presets, makeTurtleExtensions } from './lsystem-turtle.js';
+import { presets as caPresets, makeCaExtensions } from './ca-host.js';
 
 const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),
       elizaSourceUrl = new URL( './eliza.sno', import.meta.url ),
+      lsystemSourceUrl = new URL( './lsystem.sno', import.meta.url ),
+      caSourceUrl = new URL( './ca.sno', import.meta.url ),
       patternSampleInput = 'THE BLUEBIRD\nGOLDFISH\n',
       patternSource = document.querySelector( '#pattern-source' ),
       patternInput = document.querySelector( '#pattern-input' ),
@@ -17,7 +21,18 @@ const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),
       elizaInputForm = document.querySelector( '#eliza-input-form' ),
       elizaInputLine = document.querySelector( '#eliza-input-line' ),
       elizaSendButton = document.querySelector( '#eliza-send' ),
-      elizaEofButton = document.querySelector( '#eliza-eof' );
+      elizaEofButton = document.querySelector( '#eliza-eof' ),
+      lsystemSource = document.querySelector( '#lsystem-source' ),
+      lsystemCanvas = document.querySelector( '#lsystem-canvas' ),
+      lsystemStrings = document.querySelector( '#lsystem-strings' ),
+      lsystemPreset = document.querySelector( '#lsystem-preset' ),
+      lsystemRunButton = document.querySelector( '#lsystem-run' ),
+      lsystemStatus = document.querySelector( '#lsystem-status' ),
+      caSource = document.querySelector( '#ca-source' ),
+      caCanvas = document.querySelector( '#ca-canvas' ),
+      caPreset = document.querySelector( '#ca-preset' ),
+      caRunButton = document.querySelector( '#ca-run' ),
+      caStatus = document.querySelector( '#ca-status' );
 
 let elizaWorker = null,
     elizaStdin = null,
@@ -206,11 +221,142 @@ elizaEofButton.addEventListener( 'click', function () {
     setElizaInputEnabled( false );
 } );
 
+function setLsystemStatus( text ) {
+    lsystemStatus.textContent = text;
+}
+
+function populateLsystemPresets() {
+    for ( const [ key, preset ] of Object.entries( presets ) ) {
+        const opt = document.createElement( 'option' );
+        opt.value = key;
+        opt.textContent = preset.label;
+        lsystemPreset.append( opt );
+    }
+}
+
+function appendGenerationRow( gen, str ) {
+    const row    = document.createElement( 'div' ),
+          label  = document.createElement( 'div' ),
+          body   = document.createElement( 'div' ),
+          length = document.createElement( 'span' ),
+          limit  = 160,
+          shown  = str.length > limit ? str.slice( 0, limit ) + '…' : str;
+    row.className = 'strings-row';
+    label.className = 'gen';
+    label.textContent = 'gen ' + gen;
+    length.className = 'len';
+    length.textContent = str.length + ' ch';
+    label.append( length );
+    body.className = 'body';
+    body.textContent = shown;
+    row.append( label, body );
+    lsystemStrings.append( row );
+}
+
+function runLsystem() {
+    const preset = presets[ lsystemPreset.value ];
+    if ( !preset ) return;
+
+    lsystemStrings.textContent = '';
+    setLsystemStatus( 'Drawing' );
+
+    // Defer to next frame so the status update paints before the synchronous
+    // SNOBOL run blocks the main thread.
+    requestAnimationFrame( function () {
+        let gen = 0;
+        const extensions = makeTurtleExtensions( lsystemCanvas, preset, function ( str ) {
+            appendGenerationRow( gen++, str );
+        } );
+
+        try {
+            const result = runSnoflake( lsystemSource.value, { extensions } );
+            if ( result.stderr ) {
+                setLsystemStatus( 'Error' );
+                console.error( result.stderr );
+            } else {
+                setLsystemStatus( 'Drawn' );
+            }
+        } catch ( e ) {
+            setLsystemStatus( 'Error' );
+            console.error( e );
+        }
+    } );
+}
+
+async function resetLsystem() {
+    setLsystemStatus( 'Loading' );
+    try {
+        lsystemSource.value = await loadSource( lsystemSourceUrl );
+        populateLsystemPresets();
+        setLsystemStatus( 'Ready' );
+        runLsystem();
+    } catch ( e ) {
+        setLsystemStatus( 'Error' );
+        console.error( e );
+    }
+}
+
+function setCaStatus( text ) {
+    caStatus.textContent = text;
+}
+
+function populateCaPresets() {
+    for ( const [ key, preset ] of Object.entries( caPresets ) ) {
+        const opt = document.createElement( 'option' );
+        opt.value = key;
+        opt.textContent = preset.label;
+        caPreset.append( opt );
+    }
+}
+
+function runCa() {
+    const preset = caPresets[ caPreset.value ];
+    if ( !preset ) return;
+
+    setCaStatus( 'Running' );
+
+    requestAnimationFrame( function () {
+        const extensions = makeCaExtensions( caCanvas, preset );
+
+        try {
+            const result = runSnoflake( caSource.value, { extensions } );
+            if ( result.stderr ) {
+                setCaStatus( 'Error' );
+                console.error( result.stderr );
+            } else {
+                setCaStatus( 'Done' );
+            }
+        } catch ( e ) {
+            setCaStatus( 'Error' );
+            console.error( e );
+        }
+    } );
+}
+
+async function resetCa() {
+    setCaStatus( 'Loading' );
+    try {
+        caSource.value = await loadSource( caSourceUrl );
+        populateCaPresets();
+        setCaStatus( 'Ready' );
+        runCa();
+    } catch ( e ) {
+        setCaStatus( 'Error' );
+        console.error( e );
+    }
+}
+
 patternRunButton.addEventListener( 'click', runPattern );
 patternResetButton.addEventListener( 'click', resetPattern );
 elizaRestartButton.addEventListener( 'click', startElizaSession );
 elizaResetButton.addEventListener( 'click', resetEliza );
+lsystemRunButton.addEventListener( 'click', runLsystem );
+lsystemPreset.addEventListener( 'change', runLsystem );
+caRunButton.addEventListener( 'click', runCa );
+caPreset.addEventListener( 'change', runCa );
 
 setElizaInputEnabled( false );
 resetPattern();
 resetEliza();
+resetLsystem();
+resetCa();

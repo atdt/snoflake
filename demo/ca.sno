@@ -1,0 +1,25 @@
+* Elementary 1D cellular automaton: each row is a string of bits;
+* SNOBOL slides a 3-cell window and looks up the next cell in RULE.
+
+         &TRIM = 1
+         RULE  = RULE()
+         ROW   = INIT()
+         R     = 0
+         EMIT(ROW)
+
+* For HEIGHT()-1 more rows, walk the padded row left-to-right,
+* convert each 3-bit window to an index 0..7, and pick that cell of
+* the rule string as the new center.
+NEXTROW  LT(R, HEIGHT() - 1)                        :F(DONE)
+         PAD = '0' ROW '0'
+         OUT = ''
+SCAN     PAD LEN(1) . B2 LEN(1) . B1 LEN(1) . B0    :F(BUMP)
+         IDX = 4 * B2 + 2 * B1 + B0
+         RULE POS(IDX) LEN(1) . NEW
+         OUT = OUT NEW
+         PAD LEN(1) =                               :(SCAN)
+BUMP     ROW = OUT
+         R   = R + 1
+         EMIT(ROW)                                  :(NEXTROW)
+DONE     RENDER()
+END

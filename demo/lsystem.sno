@@ -1,0 +1,35 @@
+* L-system: SNOBOL rewrites the grammar, JS draws the result.
+
+         &TRIM = 1
+         STR   = AXIOM()
+         G     = 0
+         EMIT(STR)
+
+* Rewrite: DEPTH passes, expanding each non-terminal via LOOKUP.
+NEXTGEN  LT(G, DEPTH())                            :F(DRAW)
+         OUT = ''
+         SRC = STR
+SCAN     SRC LEN(1) . C =                          :F(BUMP)
+         R = LOOKUP(C)
+         IDENT(R, '')                              :S(KEEP)
+         OUT = OUT R                               :(SCAN)
+KEEP     OUT = OUT C                               :(SCAN)
+BUMP     STR = OUT
+         G   = G + 1
+         EMIT(STR)                                 :(NEXTGEN)
+
+* Draw: each terminal dispatches one turtle command.
+DRAW     BEGIN()
+DSCAN    STR LEN(1) . C =                          :F(SHOW)
+         IDENT(C, 'F')                             :F(T1)
+         MOVE(STEP())                              :(DSCAN)
+T1       IDENT(C, '+')                             :F(T2)
+         TURN(ANGLE())                             :(DSCAN)
+T2       IDENT(C, '-')                             :F(T3)
+         TURN(-ANGLE())                            :(DSCAN)
+T3       IDENT(C, '[')                             :F(T4)
+         PUSH()                                    :(DSCAN)
+T4       IDENT(C, ']')                             :F(DSCAN)
+         POP()                                     :(DSCAN)
+SHOW     RENDER()
+END
