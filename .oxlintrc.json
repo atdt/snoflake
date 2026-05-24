@@ -12,7 +12,9 @@
     "correctness": "error",
     "perf": "warn"
   },
-  "rules": {},
+  "rules": {
+    "unicorn/prefer-set-has": "off"
+  },
   "env": {
     "builtin": true
   }
