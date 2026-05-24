@@ -213,9 +213,7 @@ export class VM {
 
     define( symbol, value ) {
         if ( typeof value === 'string' ) {
-            // str.encode rounds the buffer up to a multiple of 3 words; trim
-            // back to the character count before storing.
-            const encoded = str.encode( value ).subarray( 0, value.length ),
+            const encoded = str.encode( value ),
                   ptr = this.alloc( encoded.length );
             this.symbols[ symbol ] = ptr;
             this.mem.set( encoded, ptr );

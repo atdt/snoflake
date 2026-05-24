@@ -728,9 +728,9 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
               d1 = vm.d(),
               d2 = vm.d();
         d2.addr = s.length;
-        const len = str.encode( s ).length + 9;
+        // F(L) = D*(3 + ceil(L/CPD)); here D=3, CPD=3, L=29 → 3*(3+10) = 39.
         sil.GETLTH.call( vm, d1, d2 );
-        assert.equal( d1.addr, len );
+        assert.equal( d1.addr, 39 );
     } );
 
     it( 'GETSIZ', function () {

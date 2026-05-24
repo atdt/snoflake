@@ -9,13 +9,11 @@ export const str = {
     },
 
     encode( s ) {
-        const text = s.toString();
-        const len = text.length;
-        const paddedLen = len + ( len % 3 === 0 ? 0 : 3 - ( len % 3 ) );
-        const encoded = new Uint32Array( paddedLen );
+        const len = s.length,
+              encoded = new Uint32Array( len );
 
         for ( let i = 0; i < len; i++ ) {
-            encoded[ i ] = text.charCodeAt( i );
+            encoded[ i ] = s.charCodeAt( i );
         }
 
         return encoded;

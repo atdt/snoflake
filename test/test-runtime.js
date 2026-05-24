@@ -23,10 +23,6 @@ describe( 'String Encoding', function () {
         assert.deepEqual( Array.from( encoded ), [ 2361, 2366, 2351 ] );
     } );
 
-    it( 'encode pads to descriptor boundaries', function () {
-        assert.deepEqual( Array.from( str.encode( 'ab' ) ), [ 97, 98, 0 ] );
-    } );
-
     it( 'decode reads the requested logical span', function () {
         assert.deepEqual( str.decode( [ 0, 2361, 2366, 2351, 0 ], 1, 3 ), 'हाय' );
     } );

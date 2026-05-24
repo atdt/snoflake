@@ -3961,11 +3961,9 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    // record.text length is bounded by SPEC.length so str.encode's trailing
-    // pad cells stay outside the buffer.
     const text = record.text,
           encoded = str.encode( text );
-    this.mem.set( encoded.subarray( 0, text.length ), SPEC.addr + SPEC.offset );
+    this.mem.set( encoded, SPEC.addr + SPEC.offset );
 
     // Stream-mode segments report the actual record length through SPEC.length.
     // Card-mode reads keep SPEC.length at the buffer width, so the caller keeps

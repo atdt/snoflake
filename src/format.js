@@ -157,8 +157,8 @@ export function formatHasLeadingCarriageControl( template ) {
 // Render a formatted record as the array of lines a line printer would
 // emit. When stripCarriageControl is true, a leading FORTRAN carriage-control
 // character ('1', '0', '+', or space) is stripped. Other leading characters
-// are kept. NUL padding from str.encode's descriptor alignment is always
-// stripped because it must never reach the printer.
+// are kept. Embedded NULs (from zero-filled buffer cells beyond a string's
+// logical length) are stripped so they never reach the printer.
 export function printerLines( template, data, { stripCarriageControl } ) {
     return formatRecord( template, data ).split( '\n' ).map( line => {
         if ( stripCarriageControl && /^[10+ ]/.test( line ) ) line = line.slice( 1 );
