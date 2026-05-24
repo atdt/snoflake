@@ -109,6 +109,34 @@
             </div>
         </section>
 
+        <section id="shape-example" class="example" aria-labelledby="shape-title">
+            <div class="example-header">
+                <div>
+                    <h2 id="shape-title">Shape Grammar</h2>
+                    <p>SNOBOL rewrites a worklist of <code>NAME(args)</code> symbols into a 3-D scene; each terminal box is handed to the renderer through an <code>EMIT</code> JavaScript extension.</p>
+                </div>
+                <div class="actions">
+                    <button id="shape-restart" type="button">Restart</button>
+                    <button id="shape-reset" class="secondary" type="button">Reset</button>
+                    <span id="shape-status" class="status">Ready</span>
+                </div>
+            </div>
+
+            <div class="workspace workspace-shape" aria-label="Shape grammar demo">
+                <div class="pane">
+                    <div class="pane-header">Source</div>
+                    <textarea id="shape-source" spellcheck="false" aria-label="Shape grammar SNOBOL source"></textarea>
+                </div>
+                <div class="pane scene-pane">
+                    <div class="pane-header">
+                        <span>Scene</span>
+                        <span class="hint">drag to rotate &middot; wheel to zoom</span>
+                    </div>
+                    <canvas id="shape-canvas" aria-label="3-D rendered scene"></canvas>
+                </div>
+            </div>
+        </section>
+
         <section id="pattern-example" class="example" aria-labelledby="pattern-title">
             <div class="example-header">
                 <div>

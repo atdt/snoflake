@@ -145,6 +145,10 @@ input:disabled {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr);
 }
 
+.workspace-shape {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr);
+}
+
 .strings {
     flex: 1;
     overflow: auto;
@@ -228,6 +232,40 @@ input:disabled {
     background: var(--panel);
     color: var(--ink);
     font: inherit;
+}
+
+.scene-pane .pane-header {
+    justify-content: space-between;
+}
+
+.scene-pane .hint {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+#shape-canvas {
+    display: block;
+    flex: 1;
+    width: 100%;
+    min-height: 460px;
+    background: #eef2ee;
+    touch-action: none;
+    cursor: grab;
+}
+
+#shape-canvas:active {
+    cursor: grabbing;
+}
+
+p code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #e6ece6;
+    color: var(--accent-strong);
+    font: 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 .pane {
@@ -388,7 +426,8 @@ pre {
     .workspace-batch,
     .workspace-interactive,
     .workspace-lsystem,
-    .workspace-ca {
+    .workspace-ca,
+    .workspace-shape {
         grid-template-columns: 1fr;
     }
 

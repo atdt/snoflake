@@ -1,0 +1,161 @@
+* Snoflake browser demo: a 3-D shape grammar.
+*
+* SNOBOL holds a worklist string of symbols of the form
+* NAME(arg,arg,...) separated by spaces. Each iteration peels the
+* leading symbol off the worklist, dispatches on its NAME, and
+* prepends one or more child symbols. Terminal BOX symbols are
+* passed to the host renderer through the EMIT extension:
+*
+*       EMIT(x, y, z, w, h, d, color)
+*
+* Coordinates are integer "studs"; Y is up. The renderer scales
+* the world to pixels and centers the scene.
+*
+* Try editing the heights in R_BLOCK, the floor stripe colours in
+* R_FLOOR, or the rooftop machine room in BCAP. The grammar runs
+* in a Web Worker, so it will not freeze the page.
+
+        &TRIM    = 1
+        &ANCHOR  = 1
+
+*-----------------------------------------------------------------
+*       Patterns: HEAD peels the leading symbol off the worklist;
+*       ARGSn unpacks N comma-separated arguments into V1..Vn.
+*-----------------------------------------------------------------
+
+        HEAD     = BREAK('(') . NAME '(' BREAK(')') . ARGS ')' ' '
+
+        ARGS3    = BREAK(',') . V1 ',' BREAK(',') . V2 ',' REM . V3
+        ARGS4    = BREAK(',') . V1 ',' BREAK(',') . V2
++                  ',' BREAK(',') . V3 ',' REM . V4
+        ARGS6    = BREAK(',') . V1 ',' BREAK(',') . V2
++                  ',' BREAK(',') . V3 ',' BREAK(',') . V4
++                  ',' BREAK(',') . V5 ',' REM . V6
+        ARGS7    = BREAK(',') . V1 ',' BREAK(',') . V2
++                  ',' BREAK(',') . V3 ',' BREAK(',') . V4
++                  ',' BREAK(',') . V5 ',' BREAK(',') . V6
++                  ',' REM . V7
+
+*       Seed: one city block, 72 studs square, centred at the origin.
+        WORK     = 'BLOCK(-36,-36,72,72) '
+
+*-----------------------------------------------------------------
+*       Main rewrite loop: pop, dispatch, repeat.
+*-----------------------------------------------------------------
+
+LOOP    WORK HEAD REM . REST     :F(END)
+        WORK = REST
+        IDENT(NAME, 'BOX')       :S(R_BOX)
+        IDENT(NAME, 'BLOCK')     :S(R_BLOCK)
+        IDENT(NAME, 'LOT')       :S(R_LOT)
+        IDENT(NAME, 'BUILD')     :S(R_BUILD)
+        IDENT(NAME, 'FLOOR')     :S(R_FLOOR)
+        IDENT(NAME, 'BAND')      :S(R_BAND)
+        OUTPUT = 'unknown symbol: ' NAME
+        :(LOOP)
+
+*-----------------------------------------------------------------
+*       BOX(x, y, z, w, h, d, color) - terminal. Hand to renderer.
+*-----------------------------------------------------------------
+R_BOX   ARGS ARGS7
+        EMIT(V1, V2, V3, V4, V5, V6, V7)
+        :(LOOP)
+
+*-----------------------------------------------------------------
+*       BLOCK(x, z, w, d) - ground slab + 3x3 grid of lots.
+*       Lots are 20x20, streets 4 wide, outer margin 2.
+*       Heights are hardcoded for a varied skyline.
+*-----------------------------------------------------------------
+R_BLOCK ARGS ARGS4
+        X = V1
+        Z = V2
+        W = V3
+        D = V4
+        WORK = 'BOX(' X ',-1,' Z ',' W ',1,' D ',PRK) ' WORK
+        X1 = X + 2
+        X2 = X + 26
+        X3 = X + 50
+        Z1 = Z + 2
+        Z2 = Z + 26
+        Z3 = Z + 50
+        WORK = 'LOT(' X1 ',' Z1 ',5) LOT(' X2 ',' Z1 ',9) LOT(' X3 ',' Z1 ',6) ' WORK
+        WORK = 'LOT(' X1 ',' Z2 ',7) LOT(' X2 ',' Z2 ',4) LOT(' X3 ',' Z2 ',8) ' WORK
+        WORK = 'LOT(' X1 ',' Z3 ',8) LOT(' X2 ',' Z3 ',6) LOT(' X3 ',' Z3 ',5) ' WORK
+        :(LOOP)
+
+*-----------------------------------------------------------------
+*       LOT(x, z, n) - foundation slab + BUILD with N floors.
+*       Lot footprint is fixed at 20x20.
+*-----------------------------------------------------------------
+R_LOT   ARGS ARGS3
+        X = V1
+        Z = V2
+        N = V3
+        WORK = 'BOX(' X ',0,' Z ',20,1,20,FND) ' WORK
+        WORK = 'BUILD(' X ',1,' Z ',20,20,' N ') ' WORK
+        :(LOOP)
+
+*-----------------------------------------------------------------
+*       BUILD(x, y, z, w, d, n) - n stacked FLOORs then a roof cap.
+*       Each floor is 3 studs tall.
+*-----------------------------------------------------------------
+R_BUILD ARGS ARGS6
+        X = V1
+        Y = V2
+        Z = V3
+        W = V4
+        D = V5
+        N = V6
+        EQ(N, 0)                 :S(BCAP)
+        WORK = 'FLOOR(' X ',' Y ',' Z ',' W ',3,' D ') ' WORK
+        Y2 = Y + 3
+        N2 = N - 1
+        WORK = 'BUILD(' X ',' Y2 ',' Z ',' W ',' D ',' N2 ') ' WORK
+        :(LOOP)
+BCAP    WORK = 'BOX(' X ',' Y ',' Z ',' W ',1,' D ',RUF) ' WORK
+        XC = X + 8
+        ZC = Z + 8
+        Y3 = Y + 1
+        WORK = 'BOX(' XC ',' Y3 ',' ZC ',4,2,4,RUF) ' WORK
+        :(LOOP)
+
+*-----------------------------------------------------------------
+*       FLOOR(x, y, z, w, h, d) - three perimeter BANDs.
+*       Brick lintel, glass ribbon, brick sill.
+*-----------------------------------------------------------------
+R_FLOOR ARGS ARGS6
+        X = V1
+        Y = V2
+        Z = V3
+        W = V4
+        H = V5
+        D = V6
+        Y2 = Y + 1
+        Y3 = Y + H - 1
+        WORK = 'BAND(' X ',' Y ',' Z ',' W ',1,' D ',BRC) ' WORK
+        WORK = 'BAND(' X ',' Y2 ',' Z ',' W ',1,' D ',GLS) ' WORK
+        WORK = 'BAND(' X ',' Y3 ',' Z ',' W ',1,' D ',BRC) ' WORK
+        :(LOOP)
+
+*-----------------------------------------------------------------
+*       BAND(x, y, z, w, h, d, color) - four BOXes forming a hollow
+*       perimeter. Side walls skip the corner studs to avoid overlap.
+*-----------------------------------------------------------------
+R_BAND  ARGS ARGS7
+        X = V1
+        Y = V2
+        Z = V3
+        W = V4
+        H = V5
+        D = V6
+        C = V7
+        XE = X + W - 1
+        ZE = Z + D - 1
+        Z2 = Z + 1
+        D2 = D - 2
+        WORK = 'BOX(' X ',' Y ',' Z ',' W ',' H ',1,' C ') ' WORK
+        WORK = 'BOX(' X ',' Y ',' ZE ',' W ',' H ',1,' C ') ' WORK
+        WORK = 'BOX(' X ',' Y ',' Z2 ',1,' H ',' D2 ',' C ') ' WORK
+        WORK = 'BOX(' XE ',' Y ',' Z2 ',1,' H ',' D2 ',' C ') ' WORK
+        :(LOOP)
+END

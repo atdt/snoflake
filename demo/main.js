@@ -1,8 +1,10 @@
 import { runSnoflake } from './run-snoflake.js';
 import { presets, makeTurtleExtensions } from './lsystem-turtle.js';
 import { presets as caPresets, makeCaExtensions } from './ca-host.js';
+import { createScene } from './canvas3d.js';
 
 const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),
+      shapeSourceUrl = new URL( './shape-grammar.sno', import.meta.url ),
       elizaSourceUrl = new URL( './eliza.sno', import.meta.url ),
       lsystemSourceUrl = new URL( './lsystem.sno', import.meta.url ),
       caSourceUrl = new URL( './ca.sno', import.meta.url ),
@@ -32,11 +34,18 @@ const patternSourceUrl = new URL( './pattern-matcher.sno', import.meta.url ),
       caCanvas = document.querySelector( '#ca-canvas' ),
       caPreset = document.querySelector( '#ca-preset' ),
       caRunButton = document.querySelector( '#ca-run' ),
-      caStatus = document.querySelector( '#ca-status' );
+      caStatus = document.querySelector( '#ca-status' ),
+      shapeSource = document.querySelector( '#shape-source' ),
+      shapeCanvas = document.querySelector( '#shape-canvas' ),
+      shapeStatus = document.querySelector( '#shape-status' ),
+      shapeRestartButton = document.querySelector( '#shape-restart' ),
+      shapeResetButton = document.querySelector( '#shape-reset' );
 
 let elizaWorker = null,
     elizaStdin = null,
-    elizaRunning = false;
+    elizaRunning = false,
+    shapeWorker = null,
+    shapeScene = null;
 
 async function loadSource( url ) {
     const response = await fetch( url );
@@ -346,6 +355,59 @@ async function resetCa() {
     }
 }
 
+function setShapeStatus( text ) {
+    shapeStatus.textContent = text;
+}
+
+function stopShapeWorker() {
+    if ( shapeWorker ) {
+        shapeWorker.terminate();
+        shapeWorker = null;
+    }
+}
+
+function startShapeRun() {
+    stopShapeWorker();
+    shapeScene.clear();
+    shapeScene.resetCamera();
+
+    let count = 0;
+
+    shapeWorker = new Worker( './shape-worker.js', { type: 'module' } );
+    shapeWorker.addEventListener( 'message', function ( event ) {
+        const message = event.data;
+        if ( message.type === 'box' ) {
+            shapeScene.addBox( message.box );
+            count += 1;
+            setShapeStatus( count + ' boxes' );
+        } else if ( message.type === 'done' ) {
+            setShapeStatus( count + ' boxes · finished' );
+        } else if ( message.type === 'stderr' ) {
+            setShapeStatus( 'Error: ' + message.line );
+        }
+    } );
+    shapeWorker.addEventListener( 'error', function ( event ) {
+        setShapeStatus( 'Error: ' + event.message );
+    } );
+
+    setShapeStatus( 'Running' );
+    shapeWorker.postMessage( { type: 'start', source: shapeSource.value } );
+}
+
+async function resetShape() {
+    stopShapeWorker();
+    if ( shapeScene ) shapeScene.clear();
+    setShapeStatus( 'Loading' );
+
+    try {
+        shapeSource.value = await loadSource( shapeSourceUrl );
+        setShapeStatus( 'Ready' );
+        startShapeRun();
+    } catch ( e ) {
+        setShapeStatus( e.message );
+    }
+}
+
 patternRunButton.addEventListener( 'click', runPattern );
 patternResetButton.addEventListener( 'click', resetPattern );
 elizaRestartButton.addEventListener( 'click', startElizaSession );
@@ -354,9 +416,13 @@ lsystemRunButton.addEventListener( 'click', runLsystem );
 lsystemPreset.addEventListener( 'change', runLsystem );
 caRunButton.addEventListener( 'click', runCa );
 caPreset.addEventListener( 'change', runCa );
+shapeRestartButton.addEventListener( 'click', startShapeRun );
+shapeResetButton.addEventListener( 'click', resetShape );
 
 setElizaInputEnabled( false );
+shapeScene = createScene( shapeCanvas );
 resetPattern();
 resetEliza();
 resetLsystem();
 resetCa();
+resetShape();
