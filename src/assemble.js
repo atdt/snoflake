@@ -12,11 +12,11 @@ import { VM } from './vm.js';
 import { sil } from './sil.js';
 import { constants, defaults, hostStrings, streamActions, tableNames } from './syntax.js';
 
-// Assembly-time macros run during assembly, not execution. They return the
-// value their label binds to. Storage macros (all but EQU) also claim memory.
+// These macros run at assembly time rather than during execution. Each
+// returns the value its label binds to. All but EQU also claim memory.
 const ASSEMBLY_MACROS = [ 'ARRAY', 'BUFFER', 'DESCR', 'EQU', 'FORMAT', 'SPEC', 'STRING' ];
 
-// These mark a location in the listing, but do not generate code or data.
+// Macros that mark a location in the listing, but do not generate code or data.
 const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
 
 export function assemble( program ) {

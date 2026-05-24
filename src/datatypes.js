@@ -12,12 +12,6 @@ const probeBuf = new ArrayBuffer( 4 ),
       probeI32 = new Int32Array( probeBuf ),
       probeU32 = new Uint32Array( probeBuf );
 
-// JS-native Float64 results lose precision on the way into a Float32 cell.
-// Accept any value that round-trips within delta.
-function nearlyEqual( a, b ) {
-    return a === b || Math.abs( a - b ) < 0.001;
-}
-
 export function isUint32( value ) {
     probeU32[ 0 ] = value;
     return probeU32[ 0 ] === value;
@@ -30,9 +24,27 @@ export function isInt32( value ) {
 
 export function isFloat32( value ) {
     probeF32[ 0 ] = value;
-    return nearlyEqual( probeF32[ 0 ], value );
+    // JS numbers are Float64, so compare with a small tolerance.
+    return Math.abs( probeF32[ 0 ] - value ) < 0.001;
 }
 
+// Descriptors are the SNOBOL4 runtime's basic datatype. Every value (integer,
+// real, string, pattern, array, ...) lives in a descriptor or in a small
+// structure made of them. A descriptor has three fields, named A, F, and V:
+//
+//   +-------+-------+-------+
+//   |   A       F       V   |
+//   +-----------------------+
+//
+//   A - address: a pointer into memory, or a signed integer for arithmetic.
+//   F - flags: packed bits such as the type code and GC marks.
+//   V - value: an unsigned datum, often a count or a secondary pointer.
+//
+// The same three slots also carry the runtime's internal bookkeeping, so
+// what any given field holds depends on the macro that is consuming it.
+//
+// In this port each field is one 32-bit cell of the VM's backing buffer,
+// readable as int, uint, or real via overlapping typed-array views.
 export class Descriptor {
     constructor( vm, ptr ) {
         this.vm = vm;
@@ -112,9 +124,19 @@ export class Descriptor {
     }
 }
 
+// A specifier names a string in SNOBOL. It is a pair of descriptors that
+// together pick out a range of characters in memory:
+//
+//   +-------+-------+-------+-------+-------+-------+
+//   |   A       F       V   |   O       -       L   |
+//   +-----------------------+-----------------------+
+//
+// The first descriptor is an ordinary A/F/V record whose A field points at
+// the string's storage. The second descriptor borrows its A and V slots for
+// O (offset) and L (length); its F slot is unused.
+//
+// The named string starts at A+O and runs for L characters.
 export class Specifier extends Descriptor {
-    // Griswold §5.1.2 lays a qualifier out as two descriptors. The second
-    // descriptor's V field is offset and its T field is length; F is unused.
     get name()      { return 'Specifier'; }
     get width()     { return 2 * D; }
 
