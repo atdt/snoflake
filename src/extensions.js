@@ -6,10 +6,11 @@
 // Signature:
 //   args   -- per-arg kind: 'int', 'real', or 'string'. LNKFNC coerces
 //             the ARGVAL-evaluated descriptors before LINK runs.
-//   result -- 'int', 'real', or 'string'. LINK wraps the return value in
-//             the appropriate descriptor type.
-//   impl   -- the JS function, called with coerced native values. Return
-//             `undefined` to signal SNOBOL FAIL.
+//   result -- 'int', 'real', 'string', or 'void'.
+//   impl   -- the JS function, called with coerced native values.
+//             Return or throw the FAIL sentinel to signal SNOBOL failure.
+export const FAIL = Symbol( 'FAIL' );
+
 export const extensions = {
     // CHAR(N): the one-byte string whose code is N.
     CHAR: {

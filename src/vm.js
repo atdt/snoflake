@@ -33,7 +33,8 @@ const HOST_SWITCHES = {
 };
 
 // SNOBOL type names used in LOAD prototypes, keyed by extension kind.
-const TYPE_NAMES = { int: 'INTEGER', real: 'REAL', string: 'STRING' };
+// Void maps to STRING because SNOBOL has no void result type.
+const TYPE_NAMES = { int: 'INTEGER', real: 'REAL', string: 'STRING', void: 'STRING' };
 
 export class VM {
     constructor( options = {} ) {

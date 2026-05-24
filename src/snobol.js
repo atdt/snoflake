@@ -12,6 +12,7 @@ export * from './format.js';
 export * from './sil.js';
 export * from './assemble.js';
 export * from './vm.js';
+export * from './extensions.js';
 export { snobolImage as image };
 
 const DEFAULT_SOURCE_PATH = 'source.sno';

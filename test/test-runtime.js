@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
+import { FAIL, VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
 import { createHostLoader } from '../src/host.js';
 import process from "node:process";
 
@@ -237,7 +237,7 @@ describe( 'SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '1.75\nr=5.00\n' );
     } );
 
-    it( 'extensions can signal SNOBOL FAIL by returning undefined', function () {
+    it( 'extensions can signal SNOBOL FAIL by throwing FAIL', function () {
         const stdout = captureWriter();
 
         run( {
@@ -253,13 +253,59 @@ describe( 'SNOBOL Program Execution', function () {
                 POS: {
                     args:   [ 'int' ],
                     result: 'int',
-                    impl:   ( n ) => n > 0 ? n : undefined,
+                    impl:   ( n ) => {
+                        if ( n <= 0 ) throw FAIL;
+                        return n;
+                    },
                 },
             },
             stdout,
         } );
 
         assert.equal( joinLines( stdout.lines ), '3\nfailure routed\n' );
+    } );
+
+    it( 'void extensions run for side effects and return the null string', function () {
+        const stdout = captureWriter();
+        const log = [];
+
+        run( {
+            source: [
+                ' NOTE("first")',
+                ' NOTE("second")',
+                ' OUTPUT = "[" NOTE("third") "]"',
+                'END',
+                ''
+            ].join( '\n' ),
+            extensions: {
+                NOTE: {
+                    args:   [ 'string' ],
+                    result: 'void',
+                    impl:   ( s ) => { log.push( s ); },
+                },
+            },
+            stdout,
+        } );
+
+        assert.deepEqual( log, [ 'first', 'second', 'third' ] );
+        assert.equal( joinLines( stdout.lines ), '[]\n' );
+    } );
+
+    it( 'host exceptions from extensions propagate, FAIL does not', function () {
+        const boom = new Error( 'boom' );
+        assert.throws( function () {
+            run( {
+                source: ' BOOM()\nEND\n',
+                extensions: {
+                    BOOM: {
+                        args:   [],
+                        result: 'void',
+                        impl:   () => { throw boom; },
+                    },
+                },
+                stdout: captureWriter(),
+            } );
+        }, ( e ) => e === boom );
     } );
 
     it( 'extensions accept higher arity with mixed argument types', function () {

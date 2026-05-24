@@ -1,6 +1,7 @@
 // JS implementations of the SIL macros.
 
 import { D } from './datatypes.js';
+import { FAIL } from './extensions.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import { str } from './string.js';
 import { Action, clearTable, constants, normalizeToken } from './syntax.js';
@@ -1780,11 +1781,16 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
             return str.decode( this.mem, arg.addr + 4 * D, this.d( arg.addr ).value );
         }
     } );
-    const result = ext.impl( ...args );
 
-    // An undefined return signals SNOBOL FAIL. LNKFNC passes the global
-    // FAIL handler as FLOC.
-    if ( result === undefined ) return this.jmp( FLOC );
+    // Extensions signal SNOBOL FAIL by either returning or throwing FAIL.
+    let result;
+    try {
+        result = ext.impl( ...args );
+    } catch ( e ) {
+        if ( e === FAIL ) return this.jmp( FLOC );
+        throw e;
+    }
+    if ( result === FAIL ) return this.jmp( FLOC );
 
     switch ( ext.result ) {
     case 'int':
@@ -1801,6 +1807,10 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
         // Type L hands LNKFNC a specifier in .addr. LNKFNC wraps the
         // bytes into a natural variable on the way out.
         this.d( $DESCR1 ).update( this.specify( result ), 0, this.$( 'L' ) );
+        break;
+    case 'void':
+        // Hand SNOBOL the null string, matching LOAD's own RETNUL exit.
+        this.d( $DESCR1 ).update( this.specify( '' ), 0, this.$( 'L' ) );
         break;
     }
 };
