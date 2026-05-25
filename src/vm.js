@@ -301,8 +301,11 @@ export class VM {
         // Several statements can share a single source line (separated
         // by ';'), and only the first records a fresh STREAD. Walk back
         // to the nearest mapped statement so the context still resolves.
+        // A 0 stno (compile-time error before any statement executes,
+        // e.g. a failed -INCLUDE) falls back to the last line we read.
         let entry = null;
-        for ( let i = stno; i > 0 && !entry; i-- ) {
+        const start = stno > 0 ? stno : this.statementLines.length - 1;
+        for ( let i = start; i > 0 && !entry; i-- ) {
             entry = this.statementLines[ i ] ?? null;
         }
         if ( entry ) {

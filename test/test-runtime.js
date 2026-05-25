@@ -706,6 +706,20 @@ describe( 'Error Diagnostics', function () {
         const output = joinLines( stdout.lines );
         assert.match( output, /at source\.sno:1/ );
     } );
+
+    it( 'shows the offending line when a compile-time error fires before any statement runs', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: " X = 'A'\n-INCLUDE 'does-not-exist.inc'\nEND\n",
+            stdout,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /STATEMENT\s+0/ );
+        assert.match( output, /READING ERROR/ );
+        assert.match( output, /at prog\.sno:2/ );
+        assert.match( output, /-INCLUDE 'does-not-exist\.inc'/ );
+    } );
 } );
 
 function captureWriter() {
