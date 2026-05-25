@@ -6,26 +6,16 @@ import { str } from './string.js';
 // SIL descriptors are three words.
 export const D = 3;
 
-// Scratch one-word buffer viewed as uint, int, and float for range checks.
-const probeBuf = new ArrayBuffer( 4 ),
-      probeF32 = new Float32Array( probeBuf ),
-      probeI32 = new Int32Array( probeBuf ),
-      probeU32 = new Uint32Array( probeBuf );
-
 export function isUint32( value ) {
-    probeU32[ 0 ] = value;
-    return probeU32[ 0 ] === value;
+    return ( value >>> 0 ) === value;
 }
 
 export function isInt32( value ) {
-    probeI32[ 0 ] = value;
-    return probeI32[ 0 ] === value;
+    return ( value | 0 ) === value;
 }
 
 export function isFloat32( value ) {
-    probeF32[ 0 ] = value;
-    // JS numbers are Float64, so compare with a small tolerance.
-    return Math.abs( probeF32[ 0 ] - value ) < 0.001;
+    return Number.isFinite( Math.fround( value ) );
 }
 
 // Descriptors are the SNOBOL4 runtime's basic datatype. Every value (integer,
