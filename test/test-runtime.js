@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { FAIL, VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str } from '../src/snobol.js';
+import { FAIL, VM, Descriptor, Specifier, File, assemble, constants, createVM, decodeString, image, run, sil, writeString } from '../src/snobol.js';
 import { stdinReader } from '../src/host.js';
 import { createHostLoader } from '../src/host.js';
 import process from "node:process";
@@ -18,24 +18,24 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 //
 
 describe( 'String Encoding', function () {
-    it( 'encodeInto writes each code unit verbatim into the destination', function () {
+    it( 'writeString writes each code unit verbatim into the destination', function () {
         const dst = new Uint32Array( 5 );
-        str.encodeInto( 'हाय', dst, 1 );
+        writeString( 'हाय', dst, 1 );
         assert.deepEqual( Array.from( dst ), [ 0, 2361, 2366, 2351, 0 ] );
     } );
 
-    it( 'decode reads the requested logical span', function () {
-        assert.deepEqual( str.decode( [ 0, 2361, 2366, 2351, 0 ], 1, 3 ), 'हाय' );
+    it( 'decodeString reads the requested logical span', function () {
+        assert.deepEqual( decodeString( [ 0, 2361, 2366, 2351, 0 ], 1, 3 ), 'हाय' );
     } );
 
-    it( 'decode preserves raw UTF-16 code units', function () {
-        assert.equal( str.decode( [ 0xFEFF, 65 ], 0, 2 ), '\uFEFFA' );
-        assert.equal( str.decode( [ 0xD800 ], 0, 1 ), '\uD800' );
+    it( 'decodeString preserves raw UTF-16 code units', function () {
+        assert.equal( decodeString( [ 0xFEFF, 65 ], 0, 2 ), '\uFEFFA' );
+        assert.equal( decodeString( [ 0xD800 ], 0, 1 ), '\uD800' );
     } );
 
-    it( 'decode preserves logical trailing zero bytes', function () {
+    it( 'decodeString preserves logical trailing zero bytes', function () {
         const encoded = [ 97, 98, 0 ];
-        assert.equal( str.decode( encoded, 0, 3 ), 'ab\0' );
+        assert.equal( decodeString( encoded, 0, 3 ), 'ab\0' );
         assert.deepEqual( encoded, [ 97, 98, 0 ] );
     } );
 } );

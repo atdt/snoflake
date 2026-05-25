@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import { Action, D, VM, assemble, bindSyntaxTables, constants, createVM, defaults, sil, str } from '../src/snobol.js';
+import { Action, D, VM, assemble, bindSyntaxTables, constants, createVM, decodeString, defaults, sil } from '../src/snobol.js';
 import { createHostLoader } from '../src/host.js';
 import process from "node:process";
 
@@ -1250,7 +1250,7 @@ describe( 'Macros that Operate on Specifiers', function () {
 
         assert.equal( s.specified, '42' );
         assert.notEqual( s.addr, original );
-        assert.equal( str.decode( vm.mem, original, 3 ), 'abc' );
+        assert.equal( decodeString( vm.mem, original, 3 ), 'abc' );
     } );
 
     it( 'LOCSP', function () {

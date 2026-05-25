@@ -2,7 +2,7 @@
 // SIL translator hands to the assembled image.
 
 import { D } from './datatypes.js';
-import { str } from './string.js';
+import { foldAsciiUpperByte } from './string.js';
 
 // &ALPHABET holds every byte value of the host character set, matching
 // CSNOBOL4 and the original IBM/360 ALPHSZ = 256.
@@ -138,7 +138,7 @@ export function normalizeToken( table, mem, start, length, caseFold ) {
     if ( caseFold && table.foldable ) {
         const end = start + length;
         for ( let i = start; i < end; i++ ) {
-            mem[ i ] = str.foldAsciiUpperByte( mem[ i ] );
+            mem[ i ] = foldAsciiUpperByte( mem[ i ] );
         }
     }
 }

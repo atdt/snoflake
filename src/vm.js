@@ -5,7 +5,7 @@ import { Descriptor, Specifier, isFloat32, isInt32, isUint32 } from './datatypes
 import { extensions as defaultExtensions, parseSignature } from './extensions.js';
 import { UnitTable, defaultStdout, defaultLoader } from './io.js';
 import { sil } from './sil.js';
-import { str } from './string.js';
+import { writeString } from './string.js';
 import { bindSyntaxTables, buildSyntaxTables } from './syntax.js';
 
 const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
@@ -196,21 +196,21 @@ export class VM {
 
     setUint( ptr, value ) {
         if ( !isUint32( value ) ) {
-            throw new RangeError( 'Invalid Uint32: ' + JSON.stringify( value ) );
+            throw new RangeError( `Invalid Uint32: ${ value }` );
         }
         this.mem[ ptr ] = value;
     }
 
     setInt( ptr, value ) {
         if ( !isInt32( value ) ) {
-            throw new RangeError( 'Invalid Int32: ' + JSON.stringify( value ) );
+            throw new RangeError( `Invalid Int32: ${ value }` );
         }
         this.i32[ ptr ] = value;
     }
 
     setReal( ptr, value ) {
         if ( !isFloat32( value ) ) {
-            throw new RangeError( 'Invalid Float32: ' + JSON.stringify( value ) );
+            throw new RangeError( `Invalid Float32: ${ value }` );
         }
         this.f32[ ptr ] = value;
     }
@@ -221,7 +221,7 @@ export class VM {
         if ( typeof value === 'string' ) {
             const ptr = this.alloc( value.length );
             this.symbols[ symbol ] = ptr;
-            str.encodeInto( value, this.mem, ptr );
+            writeString( value, this.mem, ptr );
         } else {
             this.symbols[ symbol ] = value;
         }
@@ -242,7 +242,7 @@ export class VM {
         const SPEC = this.s( $SPEC ),
               ptr = this.alloc( text.length );
         SPEC.set( ptr, 0, 0, 0, text.length );
-        str.encodeInto( text, this.mem, ptr );
+        writeString( text, this.mem, ptr );
         return SPEC.ptr;
     }
 

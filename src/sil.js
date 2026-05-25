@@ -3,7 +3,7 @@
 import { D } from './datatypes.js';
 import { FAIL } from './extensions.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
-import { str } from './string.js';
+import { decodeString, foldAsciiUpperByte, hashString, writeString } from './string.js';
 import { Action, clearTable, constants, normalizeToken } from './syntax.js';
 import { isFloat32, isInt32 } from './datatypes.js';
 const { SIZLIM, STTL, TTL } = constants;
@@ -1195,7 +1195,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
           start = SPEC.addr + SPEC.offset + SPEC.length,
-          string = str.decode( this.mem, start, DESCR.addr );
+          string = decodeString( this.mem, start, DESCR.addr );
     let j,
         stack;
 
@@ -1601,7 +1601,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
         this.intspcBuf = this.alloc( 255 );
     }
     SPEC.set( this.intspcBuf, 0, 0, 0, I_str.length );
-    str.encodeInto( I_str, this.mem, SPEC.addr + SPEC.offset );
+    writeString( I_str, this.mem, SPEC.addr + SPEC.offset );
 };
 
 //     ISTACK is used to initialize the system stack.
@@ -1778,7 +1778,7 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
             // Natural variable layout: 4-descriptor header, then chars.
             // addr 0 is the null string.
             if ( arg.addr === 0 ) return '';
-            return str.decode( this.mem, arg.addr + 4 * D, this.d( arg.addr ).value );
+            return decodeString( this.mem, arg.addr + 4 * D, this.d( arg.addr ).value );
         }
     } );
 
@@ -3907,9 +3907,9 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
           A = DESCR2.addr,
           A2 = this.d( A + ( 2 * D ) ).addr,
           M = this.d( A2 ).value,
-          fmt = str.decode( this.mem, A2 + ( 4 * D ), M ),
+          fmt = decodeString( this.mem, A2 + ( 4 * D ), M ),
           SPEC = this.s( $SPEC ),
-          item = str.decode( this.mem, SPEC.addr + SPEC.offset, SPEC.length ),
+          item = decodeString( this.mem, SPEC.addr + SPEC.offset, SPEC.length ),
           lines = printerLines( fmt, item, {
               stripCarriageControl: formatHasLeadingCarriageControl( fmt )
           } );
@@ -3960,7 +3960,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
     }
 
     const text = record.text;
-    str.encodeInto( text, this.mem, SPEC.addr + SPEC.offset );
+    writeString( text, this.mem, SPEC.addr + SPEC.offset );
 
     // Stream-mode segments report the actual record length through SPEC.length.
     // Card-mode reads keep SPEC.length at the buffer width, so the caller keeps
@@ -4084,7 +4084,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
 
     for ( let I = 0; I < L; I++ ) {
         const raw = mem[ tokenStart + I ];
-        const ch = foldLookups ? str.foldAsciiUpperByte( raw ) : raw;
+        const ch = foldLookups ? foldAsciiUpperByte( raw ) : raw;
         const isByte = ch < byteValues;
         const put = isByte ? puts[ ch ] : fallback.put;
         const action = isByte ? actions[ ch ] : fallback.action;
@@ -4490,10 +4490,10 @@ sil.VARID = function ( $DESCR, $SPEC ) {
         SPEC = this.s( $SPEC ),
         text = SPEC.specified,
 
-        K_HASH = str.hash( 'K' + text ),
+        K_HASH = hashString( 'K' + text ),
         K = Math.abs( K_HASH % this.$( 'OBSIZ' ) ) * D,
 
-        M_HASH = str.hash( 'M' + text ),
+        M_HASH = hashString( 'M' + text ),
         M = Math.abs( M_HASH % ( SIZLIM + 1 ) );
 
     DESCR.addr  = K;
@@ -4634,7 +4634,7 @@ sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
     let raised = false;
     for ( let i = 0; i < len; i++ ) {
         const ch = mem[ srcStart + i ],
-              folded = str.foldAsciiUpperByte( ch );
+              folded = foldAsciiUpperByte( ch );
         mem[ dstStart + i ] = folded;
         if ( folded !== ch ) raised = true;
     }

@@ -1,7 +1,7 @@
 // Core SIL data types: descriptors and specifiers, plus predicates for the
 // value domains of descriptor fields.
 
-import { str } from './string.js';
+import { decodeString } from './string.js';
 
 // SIL descriptors are three words.
 export const D = 3;
@@ -18,20 +18,21 @@ export function isFloat32( value ) {
     return Number.isFinite( Math.fround( value ) );
 }
 
-// Descriptors are the SNOBOL4 runtime's basic datatype. Every value (integer,
-// real, string, pattern, array, ...) lives in a descriptor or in a small
-// structure made of them. A descriptor has three fields, named A, F, and V:
+// Descriptors are the SNOBOL4 runtime's basic datatype. Every value
+// (integer, real, string, pattern, array, ...) lives in a descriptor or
+// in a small structure made of them. A descriptor has three fields,
+// named A, F, and V:
 //
 //   +-------+-------+-------+
 //   |   A       F       V   |
 //   +-----------------------+
 //
-//   A - address: a pointer into memory, or a signed integer for arithmetic.
+//   A - address: a pointer into memory, or a signed int for arithmetic.
 //   F - flags: packed bits such as the type code and GC marks.
 //   V - value: an unsigned datum, often a count or a secondary pointer.
 //
-// The same three slots also carry the runtime's internal bookkeeping, so
-// what any given field holds depends on the macro that is consuming it.
+// The same three slots also carry the runtime's internal bookkeeping,
+// so what any given field holds depends on the macro that consumes it.
 //
 // In this port each field is one 32-bit cell of the VM's backing buffer,
 // readable as int, uint, or real via overlapping typed-array views.
@@ -65,7 +66,6 @@ export class Descriptor {
         this.addr = addr;
         this.flags = flags;
         this.value = value;
-        return this;
     }
 
     isEqualTo( other ) {
@@ -81,7 +81,6 @@ export class Descriptor {
         return true;
     }
 
-    // The caller is responsible for matching widths. No runtime assert.
     copyFrom( src ) {
         this.vm.mem.copyWithin( this.ptr, src.ptr, src.ptr + this.width );
     }
@@ -102,16 +101,16 @@ export class Descriptor {
     }
 }
 
-// A specifier names a string in SNOBOL. It is a pair of descriptors that
-// together pick out a range of characters in memory:
+// A specifier names a string in SNOBOL. It is a pair of descriptors
+// that together pick out a range of characters in memory:
 //
 //   +-------+-------+-------+-------+-------+-------+
 //   |   A       F       V   |   O       -       L   |
 //   +-----------------------+-----------------------+
 //
-// The first descriptor is an ordinary A/F/V record whose A field points at
-// the string's storage. The second descriptor borrows its A and V slots for
-// O (offset) and L (length); its F slot is unused.
+// The first descriptor is an ordinary A/F/V record whose A field points
+// at the string's storage. The second descriptor borrows its A and V
+// slots for O (offset) and L (length); its F slot is unused.
 //
 // The named string starts at A+O and runs for L characters.
 export class Specifier extends Descriptor {
@@ -125,8 +124,7 @@ export class Specifier extends Descriptor {
 
     get specified() {
         const start = this.addr + this.offset;
-
-        return str.decode( this.vm.mem, start, this.length );
+        return decodeString( this.vm.mem, start, this.length );
     }
 
     set( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {
