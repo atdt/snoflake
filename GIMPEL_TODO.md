@@ -68,12 +68,12 @@ that have bitten fixture work. None are bugs you should fix in `src/`
   match** a lowercase subject even though substring/literal matches do.
   Consequence: book programs whose published source uses lowercase
   character classes (notably `HYPHENATE`'s `SPAN(LOWERS_ '-')`) fail
-  silently in default mode. `--preserve-case` (`caseFold: false`) makes
+  silently in default mode. `--case=false` (`caseFold: false`) makes
   them match, but the entire fixture must then use uppercase
-  identifiers consistently and you may hit further snoflake bugs
-  (HYPHENATE in particular trips a `RangeError: Invalid Uint32` under
-  preserve-case). When in doubt, exercise the function via its
-  module-init pattern construction and skip the direct call.
+  identifiers consistently. The historical `RangeError: Invalid Uint32`
+  that HYPHENATE used to trip under preserve-case has been fixed in
+  the VM, so the function is now exercised directly by
+  `gimpel-bnorm-inorm-image-line.sno`.
 - `-INCLUDE` re-executes a file's top-level statements every time it
   appears, including transitive re-includes. Side effects (DEFINE,
   assignments to global pattern variables, datatype definitions)
@@ -269,19 +269,18 @@ cluster cleanly).
   `gimpel-fortran-statement-reader.sno`, `gimpel-paragraph-reader.sno`,
   `gimpel-snobol-statement-reader.sno`, `gimpel-tree-reader.sno`,
   `gimpel-line-output.sno`, `gimpel-mfread-multi-file.sno` — all done.
-- **Ch 10** line shaping `BNORM`, `INORM`, `IMAGE`, `LINE` covered by
-  `gimpel-bnorm-inorm-image-line.sno`. Each Catspaw include initialises
-  `BSPACE = CHAR(8)` (a SNOBOL4+ extension snoflake does not
-  implement); they are patched to the standard SNOBOL4 idiom
-  `&ALPHABET TAB(8) LEN(1) . BSPACE`. SPACING.INC adds an idempotent
-  early-bind shim so the BSPACE/USCORE globals exist before any
-  pattern that uses them is constructed (the includes form a diamond
-  through PAD→SPACING that previously failed when SPACING loaded
-  before BNORM in LINE.INC's chain). HYPHENATE is loaded but not
-  invoked: its lowercase-only TRUE_WORD pattern fails under snoflake's
-  default case-fold (lowercase SPAN/ANY do not match in that mode),
-  and `--preserve-case` trips a separate snoflake bug
-  (`RangeError: Invalid Uint32`) when HYPHENATE runs.
+- **Ch 10** line shaping `BNORM`, `INORM`, `IMAGE`, `LINE`,
+  `HYPHENATE` covered by `gimpel-bnorm-inorm-image-line.sno`. Each
+  Catspaw include initialises `BSPACE = CHAR(8)` (a SNOBOL4+ extension
+  snoflake does not implement); they are patched to the standard
+  SNOBOL4 idiom `&ALPHABET TAB(8) LEN(1) . BSPACE`. SPACING.INC adds
+  an idempotent early-bind shim so the BSPACE/USCORE globals exist
+  before any pattern that uses them is constructed (the includes form
+  a diamond through PAD→SPACING that previously failed when SPACING
+  loaded before BNORM in LINE.INC's chain). HYPHENATE's lowercase
+  `SPAN(LOWERS_ '-')` requires preserve-case, so the fixture sets
+  `case: false` and asserts the book's four worked examples
+  (`niatbo`/`ssensselerac`/`gninniw`/`sessenrah`).
 - **Ch 11** implementation/timing helpers: `LPROG`, `RESOLUTI`,
   `SYSTEM`, `TIMER`, `TIMEGC` covered by
   `gimpel-implementation-and-timing.sno`. The fixture asserts the three

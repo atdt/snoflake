@@ -1,5 +1,6 @@
-* @title Gimpel BNORM, INORM, IMAGE, and LINE paragraph-formatting helpers
+* @title Gimpel BNORM, INORM, IMAGE, LINE, and HYPHENATE paragraph-formatting helpers
 * @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 10 (BNORM 10.1, INORM 10.2, IMAGE 10.4, LINE 10.3, HYPHENATE 10.7); Catspaw SNOBOL4+ program diskette
+* @options {"case": false}
 * @expect >>>
 * BNORM('ABCD<BS><BS><BS><BS>1234'): A+1B+2C+3D+4
 * INORM('B<BS>A'): A+B
@@ -11,6 +12,10 @@
 *   'JUMPED'
 *   'OVER THE'
 *   'LAZY DOG.'
+* HYPHENATE('niatbo',3) = 4 HYPHEN=[-]
+* HYPHENATE('ssensselerac',6) = 8 HYPHEN=[-]
+* HYPHENATE('gninniw',3) = 4 HYPHEN=[-]
+* HYPHENATE('sessenrah',3) = 6 HYPHEN=[-]
 * <<<
 *
 * Chapter 10's paragraph-formatting routines all collaborate around two
@@ -24,12 +29,12 @@
 * See SPACING.INC for the early-bind shim that ensures these globals
 * exist before any pattern using them is constructed.
 *
-* HYPHENATE is loaded as a transitive dependency of LINE.INC but is
-* not exercised directly: the book's HYPHENATE('niatbo', 3) = 4 demo
-* requires lowercase input, and snoflake's case-folded SPAN does not
-* match lowercase characters under the default case-fold mode. The
-* function still compiles fully so its OR/BALREV/UPLO/DIFF
-* pattern-construction machinery is exercised.
+* HYPHENATE consumes the reversed form of a word (e.g. 'niatbo' for
+* 'obtain') and walks lowercase character classes that don't match
+* under the default case-fold mode. The fixture therefore runs with
+* `case: false` so SPAN(LOWERS_ '-') sees its argument unmodified.
+* All other identifiers and data are uppercase, so preserve-case has
+* no observable effect on BNORM / INORM / IMAGE / LINE.
 -INCLUDE "LINE.INC"
 -INCLUDE "BNORM.INC"
 -INCLUDE "INORM.INC"
@@ -63,8 +68,26 @@
 * init; the test overrides them to match the book's first listing.
         LINE_INIT('A QUICK BROWN FOX JUMPED OVER THE LAZY DOG.')
         JUSTIFY = 0
+        HYPH_FLAG = HYPHENATE
         HYPHENATE = 0
         OUTPUT = "LINE CW=10:"
 L1      OUTPUT = "  '" LINE(10) "'"        :S(L1)
+
+* HYPHENATE (Program 10.7, p. 205). The book's worked example
+* states "HYPHENATE('niatbo', 3) will just succeed and return a
+* value of 4" with HYPHEN set to '-'. The reversed-word inputs
+* below correspond to 'obtain' (ob-tain), 'carelessness'
+* (care-lessness), 'winning' (win-ning), and 'harnesses'
+* (har-nesses) per the suffix-stripping discussion on pp. 206-207.
+* HYPHENATE was shadowed by a JUSTIFY flag above; restore it.
+        HYPHENATE = HYPH_FLAG
+        K = HYPHENATE('niatbo', 3)
+        OUTPUT = "HYPHENATE('niatbo',3) = " K ' HYPHEN=[' HYPHEN ']'
+        K = HYPHENATE('ssensselerac', 6)
+        OUTPUT = "HYPHENATE('ssensselerac',6) = " K ' HYPHEN=[' HYPHEN ']'
+        K = HYPHENATE('gninniw', 3)
+        OUTPUT = "HYPHENATE('gninniw',3) = " K ' HYPHEN=[' HYPHEN ']'
+        K = HYPHENATE('sessenrah', 3)
+        OUTPUT = "HYPHENATE('sessenrah',3) = " K ' HYPHEN=[' HYPHEN ']'
 
 END
