@@ -43,7 +43,7 @@ export class Descriptor {
         if ( ptr === undefined ) {
             ptr = vm.alloc( this.width );
         } else if ( typeof ptr === 'string' ) {
-            ptr = vm.resolve( ptr );
+            ptr = vm.$( ptr );
         }
         this.ptr = ptr;
     }

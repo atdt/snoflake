@@ -58,7 +58,7 @@ describe( 'Assembly Control Macros', function () {
 
         // BUFFER and DESCR assemble data, but do not occupy runtime
         // instruction slots.
-        assert.equal( vm.resolve( 'LBL' ), 2 );
+        assert.equal( vm.$( 'LBL' ), 2 );
         assert.equal( vm.d( 'DS' ).addr, 22 );
     } );
 

@@ -235,16 +235,15 @@ export class VM {
         }
     }
 
-    resolve( key ) {
+    // Look up a symbol's bound value (a storage pointer or raw number),
+    // throwing if undefined. Kept to one character because the macros
+    // call it constantly.
+    $( key ) {
         if ( Object.hasOwn( this.symbols, key ) ) {
             return this.symbols[ key ];
         }
         throw new ReferenceError( `Unknown symbol "${ key }"` );
     }
-
-    // Terse alias: SIL macros lean on $(NAME) for symbol lookup so heavily
-    // that the verbose form would dominate sil.js. Same behavior as resolve.
-    $( key ) { return this.resolve( key ); }
 
     specify( text, $SPEC ) {
         const SPEC = this.s( $SPEC ),

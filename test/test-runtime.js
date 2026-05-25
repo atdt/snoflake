@@ -87,13 +87,13 @@ describe( 'Symbol Binding', function () {
     it( 'simple', function () {
         const vm = new VM();
         vm.define( 'answer', 42 );
-        assert.equal( vm.resolve( 'answer' ), 42 );
+        assert.equal( vm.$( 'answer' ), 42 );
     } );
 
     it( 'missing', function () {
         const vm = new VM();
         assert.throws( function () {
-            vm.resolve( 'missing' );
+            vm.$( 'missing' );
         }, 'ReferenceError' );
     } );
 
@@ -862,8 +862,8 @@ describe( 'Program Execution', function () {
             { label: 'B',  macro: 'EQU', operands: [ 17 ] },
             { label: null, macro: 'END', operands: [] },
         ] ) );
-        assert.equal( vm.resolve( 'A' ), 11 );
-        assert.equal( vm.resolve( 'B' ), 17 );
+        assert.equal( vm.$( 'A' ), 11 );
+        assert.equal( vm.$( 'B' ), 17 );
     } );
 
     it( 'honors an explicit branch to the current instruction', function () {
