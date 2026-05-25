@@ -1620,6 +1620,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 sil.ISTACK = function () {
     this.OSTACK = 0;
     this.CSTACK = this.$( 'STACK' );
+    this.STACK_TOP = this.CSTACK + D * this.$( 'STSIZE' );
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2687,8 +2688,7 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
 // is detected.
 sil.POP = function ( DESCRs ) {
     const STACK_BASE = this.symbols.STACK;
-    for ( const arg of asArray( DESCRs ) ) {
-        const dst = arg;
+    for ( const dst of asArray( DESCRs ) ) {
         if ( this.CSTACK - D < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
         }
@@ -2770,15 +2770,14 @@ sil.PSTACK = function ( $DESCR ) {
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
 sil.PUSH = function ( DESCRs ) {
-    const STACK_TOP = this.symbols.STACK + D * this.symbols.STSIZE;
-    for ( const arg of asArray( DESCRs ) ) {
-        const src = arg;
-        if ( this.CSTACK + D > STACK_TOP ) {
+    const STACK_TOP = this.STACK_TOP;
+    for ( const src of asArray( DESCRs ) ) {
+        const dst = this.CSTACK + D;
+        if ( dst > STACK_TOP ) {
             throw new RangeError( 'Stack overflow' );
         }
-        this.CSTACK += D;
-        const mem = this.mem,
-              dst = this.CSTACK;
+        this.CSTACK = dst;
+        const mem = this.mem;
         mem[ dst + 0 ] = mem[ src + 0 ];
         mem[ dst + 1 ] = mem[ src + 1 ];
         mem[ dst + 2 ] = mem[ src + 2 ];
@@ -3026,7 +3025,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     // recursive call
     const fallthroughLoc = this.ip,
           mem = this.mem,
-          STACK_TOP = this.symbols.STACK + D * this.symbols.STSIZE;
+          STACK_TOP = this.STACK_TOP;
 
     // Save the old stack pointer (A0) at A+D. Flags and value are cleared so
     // the slot reads as a plain descriptor.
@@ -3052,22 +3051,22 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
 
     if ( Array.isArray( $DESCRs ) ) {
         for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
-            if ( this.CSTACK + D > STACK_TOP ) {
+            const dst = this.CSTACK + D;
+            if ( dst > STACK_TOP ) {
                 throw new RangeError( 'Stack overflow' );
             }
-            this.CSTACK += D;
-            const dst = this.CSTACK,
-                  src = $DESCRs[ i ];
+            this.CSTACK = dst;
+            const src = $DESCRs[ i ];
             mem[ dst + 0 ] = mem[ src + 0 ];
             mem[ dst + 1 ] = mem[ src + 1 ];
             mem[ dst + 2 ] = mem[ src + 2 ];
         }
     } else {
-        if ( this.CSTACK + D > STACK_TOP ) {
+        const dst = this.CSTACK + D;
+        if ( dst > STACK_TOP ) {
             throw new RangeError( 'Stack overflow' );
         }
-        this.CSTACK += D;
-        const dst = this.CSTACK;
+        this.CSTACK = dst;
         mem[ dst + 0 ] = mem[ $DESCRs + 0 ];
         mem[ dst + 1 ] = mem[ $DESCRs + 1 ];
         mem[ dst + 2 ] = mem[ $DESCRs + 2 ];

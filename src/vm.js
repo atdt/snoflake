@@ -72,6 +72,9 @@ export class VM {
         // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
         this.CSTACK = 0;
         this.OSTACK = 0;
+        // Cached STACK + D * STSIZE for the hot PUSH/RCALL overflow check.
+        // sil.ISTACK populates it once STACK and STSIZE are bound.
+        this.STACK_TOP = 0;
         // Populated by sil.LOAD as the extension declarations compile.
         // sil.LINK indexes back in to dispatch the call.
         this.extensionsBySlot = [];
