@@ -111,7 +111,6 @@ for ( const name in characterClasses ) {
 }
 
 export function match( characterClass, char ) {
-    if ( characterClass === 'ELSE' ) return true;
     const code = typeof char === 'number' ? char : char.charCodeAt( 0 );
     return characterClassBitsets[ characterClass ][ code ] === 1;
 }
@@ -408,7 +407,8 @@ function bindTable( tables, table, rows, resolveSymbol ) {
     }
 
     for ( let code = 0; code < BYTE_VALUES; code++ ) {
-        const entry = bindEntry( rows.find( ( r ) => match( r[ 0 ], code ) ) );
+        // ELSE is the catch-all for byte values no class row matched.
+        const entry = bindEntry( rows.find( ( r ) => r[ 0 ] === 'ELSE' || match( r[ 0 ], code ) ) );
         table.puts[ code ] = entry.put;
         table.actions[ code ] = entry.action;
         table.next[ code ] = entry.next;
