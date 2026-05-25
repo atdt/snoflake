@@ -1,0 +1,35 @@
+* @title Gimpel chapter 11 implementation and timing helpers
+* @attribution James F. Gimpel, Algorithms in SNOBOL4, Chapter 11; Catspaw SNOBOL4+ program diskette
+* @expect >>>
+* SYSTEM = IBM MAINBOL
+* RESOLUTION POSITIVE = YES
+* LPROG_A = 81
+* LPROG_B = 82
+* LPROG_C = 83
+* <<<
+* The deterministic helpers from Chapter 11 are exercised end-to-
+* end: SYSTEM() identifies the processor by &ALPHABET size and an
+* OPSYN-driven precedence probe, RESOLUTION() spins until TIME()
+* ticks, and LPROG() returns &STNO of a freshly compiled probe
+* statement (so each call increments).
+*
+* TIMER and TIMEGC are -INCLUDEd to verify they parse and define
+* without error, but they are not invoked: their reported output
+* is the measured millisecond cost of a statement or a typical
+* garbage collect, which is non-deterministic.
+*
+* FPROFILE and TPROFILE are omitted entirely. Both install
+* TRACE(.STCOUNT,'KEYWORD',...) on the statement-execution
+* counter, which neither snoflake nor stock CSNOBOL4 fire on the
+* executing program, so the profiler arrays never accumulate.
+-INCLUDE "LPROG.INC"
+-INCLUDE "RESOLUTI.INC"
+-INCLUDE "SYSTEM.INC"
+-INCLUDE "TIMER.INC"
+-INCLUDE "TIMEGC.INC"
+        OUTPUT = 'SYSTEM = ' SYSTEM()
+        OUTPUT = 'RESOLUTION POSITIVE = ' (GT(RESOLUTION(),0) 'YES')
+        OUTPUT = 'LPROG_A = ' LPROG()
+        OUTPUT = 'LPROG_B = ' LPROG()
+        OUTPUT = 'LPROG_C = ' LPROG()
+END

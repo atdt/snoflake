@@ -282,10 +282,19 @@ cluster cleanly).
   default case-fold (lowercase SPAN/ANY do not match in that mode),
   and `--preserve-case` trips a separate snoflake bug
   (`RangeError: Invalid Uint32`) when HYPHENATE runs.
-- **Ch 11** timing/profiling: `LPROG`, `RESOLUTI`, `TIMER`, `TIMEGC`,
-  `SYSTEM`, `FPROFILE`, `TPROFILE`. Timing-dependent; assertions will be
-  brittle. Probably worth `@match substring` on structural output only, or
-  skip.
+- **Ch 11** implementation/timing helpers: `LPROG`, `RESOLUTI`,
+  `SYSTEM`, `TIMER`, `TIMEGC` covered by
+  `gimpel-implementation-and-timing.sno`. The fixture asserts the three
+  deterministic helpers — `SYSTEM()` (which resolves to `IBM MAINBOL`
+  through the `&ALPHABET`-size and OPSYN-precedence probes), `LPROG()`
+  (which returns the post-CODE `&STNO`), and `RESOLUTION()` via a
+  `GT(...,0)` predicate — and -INCLUDEs `TIMER`/`TIMEGC` purely as a
+  parse-and-define smoke test. The wall-clock values they print are
+  non-deterministic so neither function is invoked. `FPROFILE` and
+  `TPROFILE` are omitted: both install
+  `TRACE(.STCOUNT,'KEYWORD',...)` on the statement-execution counter,
+  which neither snoflake nor stock CSNOBOL4 fire on the executing
+  program, so the profiler arrays never accumulate.
 - **Ch 13** sort variants `FRSORT`, `INSERTB`, `LSORT`, `MSORT`, `TSORT`
   covered by `gimpel-merge-tournament-sort-variants.sno`. FRSORT.INC's
   Catspaw `-INCLUDE "STRINGOUT.INC"` is patched to the 8.3-truncated
