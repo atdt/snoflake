@@ -22,6 +22,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 import { parseHeader, loadCases } from '../test/program-fixture.js';
+import { createHostLoader } from '../src/host.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
       ROOT = path.join( __dirname, '..' ),
@@ -204,6 +205,8 @@ async function createRunner( opts ) {
     return fixture => runVm( SNOBOL, fixture );
 }
 
+const hostLoader = createHostLoader();
+
 function runVm( SNOBOL, fixture ) {
     const stdout = captureWriter(),
           stderr = captureWriter(),
@@ -211,6 +214,7 @@ function runVm( SNOBOL, fixture ) {
               ...fixture.header.options,
               file: fixture.filePath,
               input: fixture.inputPath || undefined,
+              loader: hostLoader,
               stdout,
               stderr
           } );
