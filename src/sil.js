@@ -1412,6 +1412,11 @@ sil.INCRA = function ( $DESCR, N ) {
     const ptr = $DESCR,
           A = this.i32[ ptr + 0 ];
     this.i32[ ptr + 0 ] = A + N;
+    // ESAICL counts compile-time errors. Capture each one's context now
+    // since LISTCL may keep CDIAG's listing path silent.
+    if ( ptr === this.ESAICL_ADDR ) {
+        this.recordCompileError();
+    }
 };
 
 //     INCRV  is  used  to  increment  the  value  field  of a
@@ -2593,6 +2598,15 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
           unit = this.d( $DESCR ).addr;
 
     for ( const line of lines ) this.units.write( unit, line );
+
+    // FTLCF is the runtime-fatal header. ERRCF is the compile-pass one.
+    // Augment FTLCF with the failing statement's source line, and ERRCF
+    // with the compile errors we collected.
+    if ( FORMAT === this.symbols.FTLCF ) {
+        this.emitErrorContext( descrs[ 1 ].addr, unit );
+    } else if ( FORMAT === this.symbols.ERRCF ) {
+        this.emitCompileErrorSummary( unit );
+    }
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3967,6 +3981,11 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
     // seeing fixed-column records.
     if ( !record.padded ) {
         SPEC.length = text.length;
+    }
+
+    // UNIT is the compiler's source feed. Record each line for diagnostics.
+    if ( $DESCR === this.symbols.UNIT ) {
+        this.recordSourceLine( file.currentSource(), text );
     }
 
     return this.jmp( SLOC );

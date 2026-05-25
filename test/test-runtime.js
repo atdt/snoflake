@@ -649,6 +649,65 @@ describe( 'SNOBOL Program Execution', function () {
     } );
 } );
 
+describe( 'Error Diagnostics', function () {
+    it( 'reports the offending source line and path for runtime errors', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: " X = 'A'\n Y = X + 'A'\nEND\n",
+            stdout,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /ERROR\s+1 IN STATEMENT\s+2/ );
+        assert.match( output, /ILLEGAL DATA TYPE/ );
+        assert.match( output, /at prog\.sno:2/ );
+        assert.match( output, /Y = X \+ 'A'/ );
+    } );
+
+    it( 'skips comment and blank lines when mapping statements', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: "*a comment\n X = 'A'\n*another\n Y = X + 'A'\nEND\n",
+            stdout,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /at prog\.sno:4/ );
+    } );
+
+    it( 'attributes multiple statements on one line to that line', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: " X = 1 ; Y = X + 'A'\nEND\n",
+            stdout,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /at prog\.sno:1/ );
+        assert.match( output, /X = 1 ; Y = X \+ 'A'/ );
+    } );
+
+    it( 'summarises every compile error after the source pass', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'bad.sno',
+            source: " X = #\n Y = 'unclosed\nEND\n",
+            stdout,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /ERRORS DETECTED IN SOURCE PROGRAM/ );
+        assert.match( output, /ILLEGAL CHARACTER IN ELEMENT.*bad\.sno:1/ );
+        assert.match( output, /UNCLOSED LITERAL.*bad\.sno:2/ );
+    } );
+
+    it( 'falls back to a synthetic path for inline source', function () {
+        const stdout = captureWriter();
+        run( { source: " X = X + 'A'\nEND\n", stdout } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /at source\.sno:1/ );
+    } );
+} );
+
 function captureWriter() {
     return {
         lines: [],

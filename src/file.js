@@ -17,13 +17,18 @@ export const stripTrailingBlanks = s => s.replace( / +$/, '' );
 //
 // Loaders may return a string or a Uint8Array. bufferedReader accepts both
 // so callers don't have to coerce.
+//
+// `lineNum` is the 1-based number of the line most recently returned.
+// rewind() resets it to 0.
 export function bufferedReader( content ) {
     const bytes = typeof content === 'string'
         ? textEncoder.encode( content )
         : content;
     let pos = 0;
 
-    return {
+    const reader = {
+        lineNum: 0,
+
         readLine() {
             if ( pos >= bytes.length ) return null;
 
@@ -44,12 +49,14 @@ export function bufferedReader( content ) {
 
             const line = bytes.slice( pos, end );
             pos = next;
+            reader.lineNum++;
             return line;
         },
 
-        rewind() { pos = 0; },
+        rewind() { pos = 0; reader.lineNum = 0; },
         close() { pos = bytes.length; },
     };
+    return reader;
 }
 
 // Long records are cut to the caller's buffer. Card-mode records are
@@ -114,19 +121,29 @@ export class File {
 
     readRecord( length ) {
         while ( this.idx < this.segments.length ) {
-            const { reader, padReads } = this.segments[ this.idx ],
-                  line = reader.readLine();
+            const segment = this.segments[ this.idx ],
+                  line = segment.reader.readLine();
 
             if ( line === null ) {
                 this.idx++;
                 continue;
             }
 
+            this.lastSegment = segment;
             const text = textDecoder.decode( line );
-            return { eof: false, ...fitRecord( text, length, padReads ) };
+            return { eof: false, ...fitRecord( text, length, segment.padReads ) };
         }
 
+        this.lastSegment = null;
         return { eof: true };
+    }
+
+    // Path and 1-based line number of the most recently returned record, or
+    // null when the file has not yet produced a line or has hit EOF.
+    currentSource() {
+        const seg = this.lastSegment;
+        if ( !seg ) return null;
+        return { path: seg.path ?? null, lineNum: seg.reader.lineNum };
     }
 
     rewind() {

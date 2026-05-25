@@ -78,6 +78,11 @@ export class VM {
         // Populated by sil.LOAD as the extension declarations compile.
         // sil.LINK indexes back in to dispatch the call.
         this.extensionsBySlot = [];
+        // Source-location diagnostics: statementLines is sparse, keyed by
+        // 1-based statement number, with the line that statement began on.
+        this.statementLines = [];
+        this.compileErrors = [];
+        this.ESAICL_ADDR = -1;
     }
 
     run( image ) {
@@ -105,6 +110,9 @@ export class VM {
         }
         this.mem.set( image.memory, 0 );
         this.memPtr = image.memory.length;
+        // Cache ESAICL_ADDR now so the hot INCRA path can compare against
+        // a number instead of doing a symbol-table lookup on every call.
+        this.ESAICL_ADDR = this.symbols.ESAICL ?? -1;
         // Minimal test images may omit syntax-table symbols.
         bindSyntaxTables( this.syntaxTables, ( name ) => this.symbols[ name ] ?? 0 );
     }
@@ -252,6 +260,72 @@ export class VM {
 
     s( ptr ) {
         return new Specifier( this, ptr );
+    }
+
+    // Diagnostics: map each statement number to the line it began on.
+    // CMPILE increments CSTNCL once per statement, so the last line we
+    // see while CSTNCL sits at N-1 is the start of statement N. -HIDE
+    // blocks and comment lines collapse harmlessly: they share a CSTNCL
+    // value with the next real statement, and the last write wins.
+    recordSourceLine( source, text ) {
+        const stno = this.i32[ this.symbols.CSTNCL ] + 1;
+        this.statementLines[ stno ] = { text, ...source };
+    }
+
+    // Called from sil.INCRA each time the compile-error counter advances.
+    // We freeze the surrounding context so emitErrorContext can print the
+    // offending line even when LISTCL keeps the compiler's listing quiet.
+    // CSTNCL is the statement being compiled, and CMPILE bumps it before
+    // CDIAG fires, so statementLines[CSTNCL] is already populated.
+    recordCompileError() {
+        const cstncl = this.i32[ this.symbols.CSTNCL ],
+              emsgPtr = this.i32[ this.symbols.EMSGCL ],
+              message = emsgPtr ? this.s( emsgPtr ).specified : '';
+        this.compileErrors.push( {
+            stno: cstncl,
+            message,
+            source: this.statementLines[ cstncl ] ?? null,
+        } );
+    }
+
+    // After OUTPUT writes "ERROR n IN STATEMENT m AT LEVEL k", append the
+    // source line for statement m, plus any compile-error messages we
+    // captured against that statement.
+    emitErrorContext( stno, unit ) {
+        const compileErrs = this.compileErrors.filter( ( e ) => e.stno === stno );
+        for ( const err of compileErrs ) {
+            if ( err.message ) {
+                this.units.write( unit, '*** ' + err.message );
+            }
+        }
+        // Several statements can share a single source line (separated
+        // by ';'), and only the first records a fresh STREAD. Walk back
+        // to the nearest mapped statement so the context still resolves.
+        let entry = null;
+        for ( let i = stno; i > 0 && !entry; i-- ) {
+            entry = this.statementLines[ i ] ?? null;
+        }
+        if ( entry ) {
+            const where = entry.path ? `${ entry.path }:${ entry.lineNum }` : `line ${ entry.lineNum }`;
+            this.units.write( unit, `  at ${ where }` );
+            this.units.write( unit, '    ' + entry.text.replace( /\s+$/, '' ) );
+        }
+    }
+
+    // Dump every captured compile error after the "ERRORS DETECTED IN
+    // SOURCE PROGRAM" header so the user can see all of them in one go,
+    // not just the first one that execution happens to hit.
+    emitCompileErrorSummary( unit ) {
+        for ( const err of this.compileErrors ) {
+            const where = err.source?.path
+                ? `${ err.source.path }:${ err.source.lineNum }`
+                : err.source ? `line ${ err.source.lineNum }` : null;
+            const at = where ? ` at ${ where }` : '';
+            this.units.write( unit, `*** ${ err.message } (in statement ${ err.stno }${ at })` );
+            if ( err.source ) {
+                this.units.write( unit, '    ' + err.source.text.replace( /\s+$/, '' ) );
+            }
+        }
     }
 
     // SIL source that declares each registered extension via its
