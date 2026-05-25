@@ -104,14 +104,12 @@ export function createHostLoader( options = {} ) {
         },
 
         loadInclude( includePath ) {
-            // Try the path as given, then each -I/SNOLIB directory in turn.
+            // Try the path as given (cwd or absolute), then each -I/SNOLIB
+            // directory in turn.
             for ( const dir of [ '', ...snolibDirs ] ) {
                 const filePath = dir ? path.join( dir, includePath ) : includePath;
-                try {
-                    return { path: filePath, content: this.load( filePath ) };
-                } catch ( e ) {
-                    if ( e.code !== 'ENOENT' && e.code !== 'ENOTDIR' ) throw e;
-                }
+                const buf = tryReadFile( filePath );
+                if ( buf !== null ) return { path: filePath, content: buf };
             }
             return null;
         }
