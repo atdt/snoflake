@@ -1,15 +1,13 @@
 // Small string utilities shared across the runtime.
 
 export const str = {
-    encode( s ) {
-        const len = s.length,
-              encoded = new Uint32Array( len );
-
+    // Write s's char codes directly into dst starting at offset.
+    // dst is expected to be a Uint32Array view of VM memory.
+    encodeInto( s, dst, offset ) {
+        const len = s.length;
         for ( let i = 0; i < len; i++ ) {
-            encoded[ i ] = s.charCodeAt( i );
+            dst[ offset + i ] = s.charCodeAt( i );
         }
-
-        return encoded;
     },
 
     decode( encoded, start, length ) {

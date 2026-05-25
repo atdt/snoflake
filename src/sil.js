@@ -1595,14 +1595,13 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
     // convert integer to specifier
     const SPEC = this.s( $SPEC ),
           DESCR = this.d( $DESCR ),
-          I_str = DESCR.addr.toString(),
-          encoded = str.encode( I_str );
+          I_str = DESCR.addr.toString();
 
     if ( this.intspcBuf === null ) {
         this.intspcBuf = this.alloc( 255 );
     }
     SPEC.set( this.intspcBuf, 0, 0, 0, I_str.length );
-    this.mem.set( encoded, SPEC.addr + SPEC.offset );
+    str.encodeInto( I_str, this.mem, SPEC.addr + SPEC.offset );
 };
 
 //     ISTACK is used to initialize the system stack.
@@ -3960,9 +3959,8 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
         return this.jmp( EOF );
     }
 
-    const text = record.text,
-          encoded = str.encode( text );
-    this.mem.set( encoded, SPEC.addr + SPEC.offset );
+    const text = record.text;
+    str.encodeInto( text, this.mem, SPEC.addr + SPEC.offset );
 
     // Stream-mode segments report the actual record length through SPEC.length.
     // Card-mode reads keep SPEC.length at the buffer width, so the caller keeps

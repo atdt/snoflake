@@ -219,10 +219,9 @@ export class VM {
     // and points the symbol at that storage. A number is stored verbatim.
     define( symbol, value ) {
         if ( typeof value === 'string' ) {
-            const encoded = str.encode( value ),
-                  ptr = this.alloc( encoded.length );
+            const ptr = this.alloc( value.length );
             this.symbols[ symbol ] = ptr;
-            this.mem.set( encoded, ptr );
+            str.encodeInto( value, this.mem, ptr );
         } else {
             this.symbols[ symbol ] = value;
         }
@@ -241,10 +240,9 @@ export class VM {
 
     specify( text, $SPEC ) {
         const SPEC = this.s( $SPEC ),
-              encoded = str.encode( text ),
               ptr = this.alloc( text.length );
         SPEC.set( ptr, 0, 0, 0, text.length );
-        this.mem.set( encoded, ptr );
+        str.encodeInto( text, this.mem, ptr );
         return SPEC.ptr;
     }
 

@@ -18,10 +18,10 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 //
 
 describe( 'String Encoding', function () {
-    it( 'encode', function () {
-        const encoded = str.encode( 'हाय' );
-        assert( encoded instanceof Uint32Array );
-        assert.deepEqual( Array.from( encoded ), [ 2361, 2366, 2351 ] );
+    it( 'encodeInto writes each code unit verbatim into the destination', function () {
+        const dst = new Uint32Array( 5 );
+        str.encodeInto( 'हाय', dst, 1 );
+        assert.deepEqual( Array.from( dst ), [ 0, 2361, 2366, 2351, 0 ] );
     } );
 
     it( 'decode reads the requested logical span', function () {
