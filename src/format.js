@@ -5,38 +5,23 @@
 //   - a single descriptor, used by an I or F field, or
 //   - an array of descriptors, consumed in order by successive I/F fields.
 export function formatRecord( template, data ) {
+    template = stripOuterParens( template );
     if ( !template ) return '';
 
-    // Strip the outermost parentheses if present.
-    const start = template.indexOf( '(' ),
-          end = template.lastIndexOf( ')' );
-    if ( start !== -1 && end > start ) {
-        template = template.slice( start + 1, end );
-    }
-
-    let strData = '',
-        descrData = null,
-        descrIdx = 0;
-    if ( typeof data === 'string' ) {
-        strData = data;
-    } else if ( Array.isArray( data ) ) {
-        descrData = data;
-    } else if ( data && typeof data === 'object' ) {
-        descrData = [ data ];
-    }
-
-    let pos = 0,
-        out = '',
-        i = 0;
+    const { strData, descrData } = normalizeData( data );
+    let strPos = 0,
+        descrIdx = 0,
+        i = 0,
+        out = '';
 
     function take( n ) {
-        const s = strData.slice( pos, pos + n );
-        pos += n;
+        const s = strData.slice( strPos, strPos + n );
+        strPos += n;
         return s;
     }
 
     function nextDescr() {
-        return descrData && descrIdx < descrData.length ? descrData[ descrIdx++ ] : null;
+        return descrIdx < descrData.length ? descrData[ descrIdx++ ] : null;
     }
 
     function skipSeparators() {
@@ -84,6 +69,16 @@ export function formatRecord( template, data ) {
         }
     }
 
+    // Consume an unsupported control word so its letters don't get treated as
+    // A-conversions. PAUSE may carry a quoted apostrophe marker.
+    function skipControlWord( first ) {
+        let word = first;
+        while ( i < template.length && /[A-Za-z0-9.]/.test( template[ i ] ) ) {
+            word += template[ i++ ];
+        }
+        if ( word === 'PAUSE' ) skipPauseQuoteMarks();
+    }
+
     while ( i < template.length ) {
         skipSeparators();
         if ( i >= template.length ) break;
@@ -97,55 +92,75 @@ export function formatRecord( template, data ) {
         const rep = parseDigits() || 1;
         const code = template[ i++ ];
 
-        if ( code === '"' || code === "'" ) {
-            out += readQuotedLiteral( code ).repeat( rep );
-        } else if ( code === 'H' ) {
-            // Hollerith literal: rep is the character count.
-            out += template.slice( i, i + rep );
-            i += rep;
-        } else if ( code === 'X' ) {
-            out += ' '.repeat( rep );
-        } else if ( code === 'A' ) {
-            const aw = parseDigits();
-            for ( let r = 0; r < rep; r++ ) {
-                out += aw ? take( aw ) : strData.slice( pos );
+        switch ( code ) {
+            case '"':
+            case "'":
+                out += readQuotedLiteral( code ).repeat( rep );
+                break;
+
+            case 'H':
+                // Hollerith literal: rep is the character count.
+                out += template.slice( i, i + rep );
+                i += rep;
+                break;
+
+            case 'X':
+                out += ' '.repeat( rep );
+                break;
+
+            case 'A': {
+                const aw = parseDigits();
+                for ( let r = 0; r < rep; r++ ) {
+                    out += aw ? take( aw ) : strData.slice( strPos );
+                }
+                break;
             }
-        } else if ( code === 'I' ) {
-            const iw = parseDigits();
-            const descr = nextDescr();
-            const val = descr
-                ? descr.addr
-                : ( parseInt( strData.slice( pos ), 10 ) || 0 );
-            out += String( val ).padStart( iw );
-        } else if ( code === 'F' ) {
-            const fw = parseDigits();
-            let fd = 0;
-            if ( template[ i ] === '.' ) {
-                i++;
-                fd = parseDigits();
+
+            case 'I': {
+                const iw = parseDigits();
+                const descr = nextDescr();
+                const val = descr
+                    ? descr.addr
+                    : ( parseInt( strData.slice( strPos ), 10 ) || 0 );
+                out += String( val ).padStart( iw );
+                break;
             }
-            const descr = nextDescr();
-            const fval = descr
-                ? descr.raddr
-                : ( parseFloat( strData.slice( pos ) ) || 0 );
-            const ftxt = fd ? fval.toFixed( fd ) : String( fval );
-            out += ftxt.padStart( fw );
-        } else if ( /[A-Za-z]/.test( code ) ) {
-            // Unsupported control words are skipped as whole words. That
-            // keeps the A in PAUSE from being treated as an A field.
-            let word = code;
-            while ( i < template.length && /[A-Za-z0-9.]/.test( template[ i ] ) ) {
-                word += template[ i ];
-                i++;
+
+            case 'F': {
+                const fw = parseDigits();
+                let fd = 0;
+                if ( template[ i ] === '.' ) {
+                    i++;
+                    fd = parseDigits();
+                }
+                const descr = nextDescr();
+                const fval = descr
+                    ? descr.raddr
+                    : ( parseFloat( strData.slice( strPos ) ) || 0 );
+                const ftxt = fd ? fval.toFixed( fd ) : String( fval );
+                out += ftxt.padStart( fw );
+                break;
             }
-            if ( word === 'PAUSE' ) {
-                // PAUSE may be followed by a quoted apostrophe marker.
-                skipPauseQuoteMarks();
-            }
+
+            default:
+                if ( /[A-Za-z]/.test( code ) ) skipControlWord( code );
         }
     }
 
     return out;
+}
+
+function stripOuterParens( template ) {
+    if ( !template ) return template;
+    const m = /^\s*\((.*)\)\s*$/.exec( template );
+    return m ? m[ 1 ] : template;
+}
+
+function normalizeData( data ) {
+    if ( typeof data === 'string' )                  return { strData: data, descrData: [] };
+    if ( Array.isArray( data ) )                     return { strData: '', descrData: data };
+    if ( data && typeof data === 'object' )          return { strData: '', descrData: [ data ] };
+    return { strData: '', descrData: [] };
 }
 
 // True when the template begins with a token that contributes a literal
