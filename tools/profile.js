@@ -1,27 +1,35 @@
 #!/usr/bin/env node
 'use strict';
 
-// CPU profile a Snoflake run with V8's tick sampler.
+// CPU profile a Snoflake run with V8's sampler.
 //
-// Wraps `node --prof tools/bench-snoflake.js --mode=vm ...` so the work
-// happens inside a single Node process (lots of samples, no per-fixture
-// startup noise), then post-processes the isolate log into a readable
-// report.
+// Wraps bench-snoflake.js --mode=vm so the work happens inside a single
+// process (lots of samples, no per-fixture startup noise) and writes
+// human-readable artifacts under tmp/profiles/.
+//
+// Two runtimes:
+//
+//   deno (default) -- spawns
+//     `deno run -A --cpu-prof --cpu-prof-flamegraph --cpu-prof-md ...`
+//     and emits three sibling files sharing one basename:
+//       <basename>.cpuprofile  raw V8 profile (Chrome DevTools, speedscope)
+//       <basename>.svg         flamegraph
+//       <basename>.md          markdown report (also tailed to stdout)
+//
+//   node                -- spawns `node --prof ...` and post-processes the
+//     resulting isolate-*.log with `node --prof-process` into a single
+//     tick-sampled text report.
 //
 // Usage:
-//   node tools/profile.js                                # default fixture suite
+//   node tools/profile.js                                # deno, default suite
+//   node tools/profile.js --runtime=node                 # legacy node path
 //   node tools/profile.js kalah-opening-search           # one fixture
 //   node tools/profile.js tmp/probe.sno                  # ad hoc SNOBOL file
 //   node tools/profile.js --iterations=10 wang-theorem-prover
-//   node tools/profile.js --output=tmp/profiles/foo.txt  # custom report path
+//   node tools/profile.js --output=tmp/profiles/foo.md   # custom path
 //
-// All options other than --output are forwarded verbatim to
-// bench-snoflake.js, so anything that script accepts (--samples,
-// --iterations, --warmup, --all, --root, fixture names, .sno paths, etc.)
-// works here.
-//
-// Reads tmp/profiles/<timestamp>.txt for the post-processed report and
-// prints its first 60 lines (Summary + JavaScript hot list).
+// Everything other than --runtime and --output is forwarded verbatim to
+// bench-snoflake.js (try --help on it for the full option list).
 
 import childProcess from 'node:child_process';
 import fs from 'node:fs';
@@ -41,9 +49,12 @@ const DEFAULTS = [
     '--iterations=3',
 ];
 
+const RUNTIMES = new Set( [ 'deno', 'node' ] );
+
 function splitArgs( argv ) {
     const forwarded = [];
-    let output = null;
+    let output = null,
+        runtime = 'deno';
 
     for ( const arg of argv ) {
         if ( arg === '--help' || arg === '-h' ) {
@@ -54,20 +65,29 @@ function splitArgs( argv ) {
             output = path.resolve( arg.slice( '--output='.length ) );
             continue;
         }
+        if ( arg.startsWith( '--runtime=' ) ) {
+            runtime = arg.slice( '--runtime='.length );
+            if ( !RUNTIMES.has( runtime ) ) {
+                throw new Error( '--runtime must be one of: ' + [ ...RUNTIMES ].join( ', ' ) );
+            }
+            continue;
+        }
         forwarded.push( arg );
     }
 
-    return { forwarded, output };
+    return { forwarded, output, runtime };
 }
 
 function usage() {
     console.log( [
-        'Usage: node tools/profile.js [--output=PATH] [bench-snoflake.js options ...]',
+        'Usage: node tools/profile.js [--runtime=deno|node] [--output=PATH] [bench options ...]',
         '',
-        'Captures a V8 tick profile of bench-snoflake.js --mode=vm and writes a',
-        'tick-processed report. Anything other than --output is forwarded to',
-        'bench-snoflake.js (try --help on it to see those options). Explicit',
-        '.sno paths run as ad hoc programs with validation disabled by default.',
+        'Captures a CPU profile of bench-snoflake.js --mode=vm. With --runtime=deno',
+        '(the default) writes <basename>.{cpuprofile,svg,md} via Deno\'s V8 profiler.',
+        'With --runtime=node, writes a tick-processed .txt via node --prof.',
+        '',
+        'Anything other than --runtime and --output is forwarded to bench-snoflake.js',
+        '(try --help on it). Explicit .sno paths run as ad hoc programs.',
         '',
         'Defaults: ' + DEFAULTS.join( ' ' )
     ].join( '\n' ) );
@@ -77,65 +97,86 @@ function timestamp() {
     return new Date().toISOString().replace( /[:.]/g, '-' ).replace( /Z$/, '' );
 }
 
-function takenSnapshot( before, after ) {
-    return [ ...after ].filter( name => !before.has( name ) );
+// Split a user-supplied --output path into the (dir, basename) Deno needs.
+// Strips a trailing known artifact extension so --output=foo.md and
+// --output=foo both yield basename "foo".
+function splitOutput( output ) {
+    const dir = path.dirname( output ),
+          ext = path.extname( output ),
+          stripped = [ '.md', '.svg', '.cpuprofile' ].includes( ext ),
+          basename = stripped ? path.basename( output, ext ) : path.basename( output );
+    return { dir, basename };
+}
+
+function runDeno( forwarded, output ) {
+    const target = output ? splitOutput( output )
+                          : { dir: PROFILES_DIR, basename: timestamp() };
+    fs.mkdirSync( target.dir, { recursive: true } );
+
+    const result = childProcess.spawnSync(
+        'deno',
+        [
+            'run', '-A',
+            '--cpu-prof',
+            '--cpu-prof-flamegraph',
+            '--cpu-prof-md',
+            '--cpu-prof-interval=100',
+            '--cpu-prof-dir=' + target.dir,
+            '--cpu-prof-name=' + target.basename + '.cpuprofile',
+            BENCH, ...DEFAULTS, ...forwarded
+        ],
+        { stdio: [ 'ignore', 'ignore', 'inherit' ] }
+    );
+    if ( result.error ) {
+        if ( result.error.code === 'ENOENT' ) {
+            throw new Error( 'deno not found on PATH; install Deno or use --runtime=node' );
+        }
+        throw result.error;
+    }
+    if ( result.status !== 0 ) {
+        throw new Error( 'bench-snoflake.js exited with status ' + result.status );
+    }
+
+    const base = path.join( target.dir, target.basename ),
+          paths = {
+              cpuprofile: base + '.cpuprofile',
+              svg:        base + '.svg',
+              md:         base + '.md'
+          };
+
+    const md = fs.readFileSync( paths.md, 'utf8' );
+    process.stdout.write( md.split( '\n' ).slice( 0, 60 ).join( '\n' ) + '\n' );
+    console.log( '\n--- artifacts:' );
+    for ( const [ , p ] of Object.entries( paths ) ) {
+        console.log( '    ' + path.relative( ROOT, p ) );
+    }
 }
 
 function readIsolates( dir ) {
-    if ( !fs.existsSync( dir ) ) {
-        return new Set();
-    }
+    if ( !fs.existsSync( dir ) ) return new Set();
     return new Set(
-        fs.readdirSync( dir ).filter( ( name ) =>
+        fs.readdirSync( dir ).filter( name =>
             name.startsWith( 'isolate-' ) && name.endsWith( '-v8.log' )
-        ),
+        )
     );
 }
 
-function runBench( forwarded ) {
-    const result = childProcess.spawnSync(
+function runNode( forwarded, output ) {
+    fs.mkdirSync( PROFILES_DIR, { recursive: true } );
+    const before = readIsolates( PROFILES_DIR );
+
+    const benchResult = childProcess.spawnSync(
         process.execPath,
         [ '--prof', BENCH, ...DEFAULTS, ...forwarded ],
         { cwd: PROFILES_DIR, stdio: [ 'ignore', 'ignore', 'inherit' ] }
     );
-    if ( result.error ) {
-        throw result.error;
+    if ( benchResult.error ) throw benchResult.error;
+    if ( benchResult.status !== 0 ) {
+        throw new Error( 'bench-snoflake.js exited with status ' + benchResult.status );
     }
-    if ( result.status !== 0 ) {
-        throw new Error(
-            'bench-snoflake.js exited with status ' + result.status,
-        );
-    }
-}
 
-function processIsolate( isolatePath ) {
-    const result = childProcess.spawnSync(
-        process.execPath,
-        [ '--prof-process', isolatePath ],
-        { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
-    );
-    if ( result.error ) {
-        throw result.error;
-    }
-    if ( result.status !== 0 ) {
-        throw new Error(
-            '--prof-process exited with status ' + result.status + '\n' +
-                result.stderr,
-        );
-    }
-    return result.stdout;
-}
-
-function main() {
-    const { forwarded, output } = splitArgs( process.argv.slice( 2 ) );
-
-    fs.mkdirSync( PROFILES_DIR, { recursive: true } );
-    const before = readIsolates( PROFILES_DIR );
-
-    runBench( forwarded );
-
-    const after = readIsolates( PROFILES_DIR );
-    const created = takenSnapshot( before, after );
+    const after = readIsolates( PROFILES_DIR ),
+          created = [ ...after ].filter( name => !before.has( name ) );
     if ( created.length === 0 ) {
         throw new Error( 'no new isolate-*.log appeared in ' + PROFILES_DIR );
     }
@@ -146,16 +187,33 @@ function main() {
                               - fs.statSync( path.join( PROFILES_DIR, a ) ).size );
     const isolatePath = path.join( PROFILES_DIR, created[ 0 ] );
 
-    const report = processIsolate( isolatePath );
-    const reportPath = output || path.join( PROFILES_DIR, timestamp() + '.txt' );
-    fs.writeFileSync( reportPath, report );
+    const procResult = childProcess.spawnSync(
+        process.execPath,
+        [ '--prof-process', isolatePath ],
+        { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
+    );
+    if ( procResult.error ) throw procResult.error;
+    if ( procResult.status !== 0 ) {
+        throw new Error( '--prof-process exited with status ' + procResult.status + '\n' + procResult.stderr );
+    }
 
+    const reportPath = output || path.join( PROFILES_DIR, timestamp() + '.txt' );
+    fs.writeFileSync( reportPath, procResult.stdout );
     for ( const name of created ) {
         fs.unlinkSync( path.join( PROFILES_DIR, name ) );
     }
 
-    process.stdout.write( report.split( '\n' ).slice( 0, 60 ).join( '\n' ) + '\n' );
+    process.stdout.write( procResult.stdout.split( '\n' ).slice( 0, 60 ).join( '\n' ) + '\n' );
     console.log( '\n--- full report: ' + path.relative( ROOT, reportPath ) );
+}
+
+function main() {
+    const { forwarded, output, runtime } = splitArgs( process.argv.slice( 2 ) );
+    if ( runtime === 'deno' ) {
+        runDeno( forwarded, output );
+    } else {
+        runNode( forwarded, output );
+    }
 }
 
 main();
