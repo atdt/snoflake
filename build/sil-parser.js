@@ -22,7 +22,6 @@ const STATEMENT =
 const isDigit = ( ch ) => ch >= '0' && ch <= '9';
 const isUpper = ( ch ) => ch >= 'A' && ch <= 'Z';
 const isNameChar = ( ch ) => isUpper( ch ) || isDigit( ch );
-const isNonBlank = ( ch ) => ch !== undefined && ch !== ' ' && ch !== '\t';
 
 export function parse( input ) {
     const statements = [];
@@ -72,8 +71,11 @@ function parseOperands( source, lineNumber ) {
 
     function operandList() {
         const operands = [ operand() ];
-        while ( peek() === ',' && isNonBlank( source[ offset + 1 ] ) ) {
-            offset++;
+        while ( peek() === ',' ) {
+            offset++;                          // consume the comma
+            const next = peek();
+            // A blank, tab, or end-of-input here begins a trailing comment.
+            if ( !next || next === ' ' || next === '\t' ) break;
             operands.push( operand() );
         }
         return operands;
