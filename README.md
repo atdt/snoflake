@@ -65,6 +65,16 @@ Snoflake runs unmodified in the browser. A hosted build of the demo is
 live at [atdt.github.io/snoflake/demo/][3]; the demo loads `src/snobol.js`
 directly as an ES module and captures output through custom writers.
 
+With no build step or install, import it straight from a CDN such as
+[esm.sh][4]:
+
+```html
+<script type="module">
+  import { run } from 'https://esm.sh/@ath0/snoflake';
+  run( { source: " OUTPUT = 'HELLO, WORLD'\nEND\n" } );
+</script>
+```
+
 To run the same demo against your local checkout:
 
 ```
@@ -112,3 +122,4 @@ tagged inline with their original `[PLBnn]` revision markers; see
 [1]: mailto:ori.livneh@gmail.com
 [2]: https://github.com/philbudne/csnobol4
 [3]: https://atdt.github.io/snoflake/demo/
+[4]: https://esm.sh/
