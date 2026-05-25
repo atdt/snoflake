@@ -18,10 +18,18 @@
 //
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
 
-import { File, bufferedReader, stdinReader } from './file.js';
+import { File, bufferedReader, stripTrailingBlanks } from './file.js';
 import { constants } from './syntax.js';
 
 const { UNITI } = constants;
+
+// Normalize an INPUT/OUTPUT filename argument. An all-blank path means the
+// caller defaulted the argument: return null so the redirect is a no-op and
+// the unit's existing binding stays put.
+function redirectPath( filePath ) {
+    const path = stripTrailingBlanks( filePath );
+    return path === '' ? null : path;
+}
 
 export const defaultStdout = {
     write( line ) { console.log( line ); },
@@ -33,8 +41,7 @@ export const defaultLoader = {
         throw new Error( 'No file loader configured for this host: ' + path );
     },
 
-    loadInclude( includePath ) {
-        void includePath;
+    loadInclude( _includePath ) {
         return null;
     }
 };
@@ -50,54 +57,48 @@ export class UnitTable {
         this.units = new Map();
     }
 
-    // Open a unit's input File on first access. Segments compose in order:
-    // preamble, main source, runtime input, interactive stdin.
+    // Open a unit's input File on first access. The standard input unit
+    // (UNITI) composes, in order: preamble, main source, runtime input,
+    // interactive stdin. Other units start empty and pick up content only
+    // when redirectInput rebinds them.
     open( unitNum ) {
         const entry = this.#ensure( unitNum );
         if ( entry.input ) return entry.input;
 
         const segments = [];
-        if ( this.preamble ) {
-            segments.push( {
-                reader: bufferedReader( this.preamble ),
-                padReads: true,
-            } );
-        }
-        if ( this.options.source !== undefined ) {
-            segments.push( {
-                reader: bufferedReader( this.options.source ),
-                padReads: true,
-                path: this.options.file,
-            } );
-        } else if ( this.options.file ) {
-            segments.push( {
-                reader: bufferedReader( this.loader.load( this.options.file ) ),
-                padReads: true,
-                path: this.options.file,
-            } );
-        }
-        if ( this.options.input && unitNum === UNITI ) {
-            segments.push( {
-                reader: bufferedReader( this.loader.load( this.options.input ) ),
-                padReads: false,
-            } );
-        }
-        if ( this.options.interactive && unitNum === UNITI ) {
-            const readStdin = this.options.stdinReader || stdinReader;
-            segments.push( {
-                reader: readStdin(),
-                padReads: false,
-            } );
+        const pushSegment = ( reader, padReads, path ) => {
+            const seg = { reader, padReads };
+            if ( path ) seg.path = path;
+            segments.push( seg );
+        };
+
+        if ( unitNum === UNITI ) {
+            const { source, file, input, interactive, stdinReader } = this.options;
+            if ( this.preamble ) {
+                pushSegment( bufferedReader( this.preamble ), true );
+            }
+            if ( source !== undefined ) {
+                pushSegment( bufferedReader( source ), true, file );
+            } else if ( file ) {
+                pushSegment( bufferedReader( this.loader.load( file ) ), true, file );
+            }
+            if ( input ) {
+                pushSegment( bufferedReader( this.loader.load( input ) ), false );
+            }
+            if ( interactive ) {
+                if ( !stdinReader ) {
+                    throw new Error( 'interactive mode requires options.stdinReader' );
+                }
+                pushSegment( stdinReader(), false );
+            }
         }
         entry.input = new File( segments );
         return entry.input;
     }
 
-    // An empty path means the optional INPUT/OUTPUT filename argument was
-    // defaulted. Leave the unit's existing binding untouched.
     redirectInput( unitNum, filePath ) {
-        const path = filePath.replace( / +$/, '' );
-        if ( path === '' ) return;
+        const path = redirectPath( filePath );
+        if ( path === null ) return;
         const entry = this.#ensure( unitNum );
         entry.input?.close();
         entry.input = new File( [ {
@@ -108,8 +109,8 @@ export class UnitTable {
     }
 
     redirectOutput( unitNum, filePath ) {
-        const path = filePath.replace( / +$/, '' );
-        if ( path === '' ) return;
+        const path = redirectPath( filePath );
+        if ( path === null ) return;
         const writer = this.loader.openOutput?.( path );
         if ( !writer ) {
             throw new Error( 'No file writer configured for this host' );

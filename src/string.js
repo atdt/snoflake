@@ -1,13 +1,6 @@
 // Small string utilities shared across the runtime.
 
 export const str = {
-    pad( text, width, align, padChar = ' ' ) {
-        if ( text.length >= width ) return text;
-        return align === 'left'
-            ? text.padEnd( width, padChar )
-            : text.padStart( width, padChar );
-    },
-
     encode( s ) {
         const len = s.length,
               encoded = new Uint32Array( len );
@@ -30,13 +23,6 @@ export const str = {
 
     foldAsciiUpperByte( c ) {
         return ( c >= 97 && c <= 122 ) ? c - 32 : c;
-    },
-
-    foldAsciiUpperInPlace( buf, start, length ) {
-        const end = start + length;
-        for ( let p = start; p < end; p++ ) {
-            buf[ p ] = str.foldAsciiUpperByte( buf[ p ] );
-        }
     },
 
     // An implementation of Jenkins's one-at-a-time hash

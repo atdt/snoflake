@@ -41,11 +41,11 @@ class SignatureParser {
         this.offset = 0;
     }
 
-    at() { return this.tokens[ this.offset ]; }
+    peek() { return this.tokens[ this.offset ]; }
 
     eat( want ) {
         const token = this.tokens[ this.offset++ ];
-        if ( !want.includes( token ) ) {
+        if ( want !== token && !want.includes( token ) ) {
             throw new SyntaxError(
                 `Invalid signature "${ this.input }" near "${ token ?? 'end' }"`
             );
@@ -55,19 +55,24 @@ class SignatureParser {
 
     parse( impl ) {
         const name = this.tokens[ this.offset++ ];
+        if ( name === undefined || !/^\w+$/.test( name ) ) {
+            throw new SyntaxError(
+                `Invalid signature "${ this.input }" near "${ name ?? 'end' }"`
+            );
+        }
         this.eat( '::' );
         this.eat( '(' );
         const args = [];
-        while ( this.at() !== ')' ) {
+        while ( this.peek() !== ')' ) {
             if ( args.length ) this.eat( ',' );
             args.push( this.eat( SignatureParser.ARGS ) );
         }
         this.eat( ')' );
         this.eat( '=>' );
         const result = this.eat( SignatureParser.RESULTS );
-        if ( this.at() !== undefined ) {
+        if ( this.peek() !== undefined ) {
             throw new SyntaxError(
-                `Invalid signature "${ this.input }" near "${ this.at() }"`
+                `Invalid signature "${ this.input }" near "${ this.peek() }"`
             );
         }
         return [ name, { args, result, impl } ];

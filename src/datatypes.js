@@ -47,7 +47,6 @@ export class Descriptor {
         this.ptr = ptr;
     }
 
-    get name()      { return 'Descriptor'; }
     get width()     { return D; }
 
     get addr()    { return this.vm.getInt( this.ptr ); }
@@ -82,35 +81,24 @@ export class Descriptor {
         return true;
     }
 
+    // The caller is responsible for matching widths. No runtime assert.
     copyFrom( src ) {
         this.vm.mem.copyWithin( this.ptr, src.ptr, src.ptr + this.width );
     }
 
-    raw() {
+    cells() {
         return Array.from(
             this.vm.mem.subarray( this.ptr, this.ptr + this.width ),
         );
     }
 
     toString() {
-        const fields = [];
-        const props = {
-            A: this.addr,
-            F: this.flags,
-            V: this.value,
-        };
-        if ( this.width === 6 ) {
-            props.O = this.offset;
-            props.L = this.length;
-        }
-
-        for ( const k of [ 'A', 'F', 'V', 'O', 'L' ] ) {
-            if ( k in props ) {
-                fields.push( `${k}=${props[ k ]}` );
-            }
-        }
-
-        return `<${this.name}@${this.ptr} ${fields.join( ', ' )}>`;
+        const fields = [
+            `A=${ this.addr }`,
+            `F=${ this.flags }`,
+            `V=${ this.value }`,
+        ];
+        return `<Descriptor@${ this.ptr } ${ fields.join( ', ' ) }>`;
     }
 }
 
@@ -127,7 +115,6 @@ export class Descriptor {
 //
 // The named string starts at A+O and runs for L characters.
 export class Specifier extends Descriptor {
-    get name()      { return 'Specifier'; }
     get width()     { return 2 * D; }
 
     get offset()    { return this.vm.getUint( this.ptr + 3 ); }
@@ -147,5 +134,16 @@ export class Specifier extends Descriptor {
         this.offset = offset;
         this.length = length;
         return this;
+    }
+
+    toString() {
+        const fields = [
+            `A=${ this.addr }`,
+            `F=${ this.flags }`,
+            `V=${ this.value }`,
+            `O=${ this.offset }`,
+            `L=${ this.length }`,
+        ];
+        return `<Specifier@${ this.ptr } ${ fields.join( ', ' ) }>`;
     }
 }

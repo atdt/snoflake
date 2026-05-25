@@ -40,11 +40,10 @@ export class VM {
     constructor( options = {} ) {
         this.options = { ...DEFAULT_OPTIONS, ...options };
         this.loader = this.options.loader || defaultLoader;
-        // User extensions merge on top of the defaults. Pass `null` to
-        // start empty (intended for tests that need a bare runtime).
-        // Merge host extensions over the defaults. Function values are
-        // signature-form keys ('NAME :: (types) => type'); object values
-        // are the canonical { args, result, impl } shape.
+        // Host extensions merge over the defaults. Pass `null` to start
+        // empty (intended for tests that need a bare runtime). Function
+        // values are signature-form keys ('NAME :: (types) => type').
+        // Object values are the canonical { args, result, impl } shape.
         this.extensions = options.extensions === null ? {} : { ...defaultExtensions };
         for ( const [ key, value ] of Object.entries( options.extensions || {} ) ) {
             const [ name, entry ] = typeof value === 'function'
@@ -86,6 +85,8 @@ export class VM {
         this.applyHostSwitches();
         this.interpret( this.compileInstructions( image.instructions ) );
 
+        // A non-negative ip means the program reached END or fell off the
+        // instruction list. A negative ip signals an abnormal halt.
         return this.ip >= 0;
     }
 
@@ -120,7 +121,7 @@ export class VM {
     // Compile each [label, macro, args] image entry into a bound call.
     compileInstructions( instructions ) {
         return instructions.map( ( stmt, idx ) => {
-            const [ , macro, args ] = stmt,
+            const [ /*label*/, macro, args ] = stmt,
                   impl = sil[ macro ];
 
             if ( !impl ) {
@@ -145,7 +146,7 @@ export class VM {
 
     // SIL storage is word-addressed. These length-tracking views share one
     // resizable buffer so a field can be read as unsigned, signed, or float.
-    refreshMemoryViews() {
+    rebindMemoryViews() {
         this.mem = new Uint32Array( this.buffer );
         this.i32 = new Int32Array( this.buffer );
         this.f32 = new Float32Array( this.buffer );
@@ -156,7 +157,7 @@ export class VM {
         this.buffer = new ArrayBuffer( wordsToBytes( INITIAL_WORDS ), {
             maxByteLength: wordsToBytes( MAX_WORDS )
         } );
-        this.refreshMemoryViews();
+        this.rebindMemoryViews();
     }
 
     // Grow memory capacity without changing memPtr.
@@ -173,7 +174,7 @@ export class VM {
         this.buffer.resize( wordsToBytes( words ) );
     }
 
-    // Allocate zero-filled words from memPtr.
+    // Allocate words from memPtr.
     alloc( size, value = 0 ) {
         if ( this.memPtr + size > this.mem.length ) {
             this.grow( this.memPtr + size );
@@ -211,6 +212,8 @@ export class VM {
         this.f32[ ptr ] = value;
     }
 
+    // Bind a symbol. A string value allocates storage, encodes the bytes,
+    // and points the symbol at that storage. A number is stored verbatim.
     define( symbol, value ) {
         if ( typeof value === 'string' ) {
             const encoded = str.encode( value ),
@@ -226,18 +229,17 @@ export class VM {
         if ( Object.hasOwn( this.symbols, key ) ) {
             return this.symbols[ key ];
         }
-        throw new ReferenceError( key );
+        throw new ReferenceError( `Unknown symbol "${ key }"` );
     }
 
     // Terse alias: SIL macros lean on $(NAME) for symbol lookup so heavily
     // that the verbose form would dominate sil.js. Same behavior as resolve.
     $( key ) { return this.resolve( key ); }
 
-    specify( s, $SPEC ) {
-        const text = s.toString(),
-              SPEC = this.s( $SPEC ),
-              encoded = str.encode( text );
-        const ptr = this.alloc( encoded.length );
+    specify( text, $SPEC ) {
+        const SPEC = this.s( $SPEC ),
+              encoded = str.encode( text ),
+              ptr = this.alloc( text.length );
         SPEC.set( ptr, 0, 0, 0, text.length );
         this.mem.set( encoded, ptr );
         return SPEC.ptr;

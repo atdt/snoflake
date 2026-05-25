@@ -12,7 +12,7 @@ const CPD = 3;  // Characters per descriptor
 
 const sil = {};
 
-// Read text from a SIL string structure, not from a plain specifier.
+// Normalize a SIL variadic operand list.
 function asArray( ARGs ) {
     return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
 }
@@ -3133,7 +3133,7 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 sil.REALST = function ( $SPEC, $DESCR ) {
     // convert real number to string
     const DESCR = this.d( $DESCR );
-    return this.specify( DESCR.raddr, $SPEC );
+    return this.specify( DESCR.raddr.toString(), $SPEC );
 };
 
 //     REMSP is used to obtain a remainder specifier resulting
@@ -4637,7 +4637,7 @@ sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
     let raised = false;
     for ( let i = 0; i < len; i++ ) {
         const ch = mem[ srcStart + i ],
-              folded = ( ch >= 97 && ch <= 122 ) ? ch - 32 : ch;
+              folded = str.foldAsciiUpperByte( ch );
         mem[ dstStart + i ] = folded;
         if ( folded !== ch ) raised = true;
     }

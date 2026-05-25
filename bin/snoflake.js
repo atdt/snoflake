@@ -2,7 +2,7 @@
 import { parseArgs } from 'node:util';
 import process from 'node:process';
 import { run } from '../src/snobol.js';
-import { createHostLoader } from '../src/host.js';
+import { createHostLoader, stdinReader } from '../src/host.js';
 
 const { values, positionals } = parseArgs( {
     args: process.argv.slice( 2 ),
@@ -37,6 +37,7 @@ const result = run( {
     statistics:  values.statistics,
     list:        values.list,
     loader:      createHostLoader( { snolib: values.snolib } ),
+    stdinReader,
 } );
 
 process.exitCode = result.exitCode;

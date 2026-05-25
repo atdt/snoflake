@@ -110,7 +110,7 @@ describe( 'Macros that Assemble Data', function () {
         const vm = new VM();
         const A = 55, F = 66, V = 77, O = 88, L = 99,
               s = vm.s( sil.SPEC.call( vm, A, F, V, O, L ) );
-        assert.deepEqual( s.raw(), [ A, F, V, O, 0, L ] );
+        assert.deepEqual( s.cells(), [ A, F, V, O, 0, L ] );
         assert.equal( vm.mem[ s.ptr + 4 ], 0 );
         assert.equal( vm.mem[ s.ptr + 5 ], L );
     } );
@@ -465,8 +465,8 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         assert.equal( vm.CSTACK, cur + d1.width + d2.width );
         sil.POP.call( vm, [ d3.ptr, d4.ptr ] );
         assert.equal( vm.CSTACK, cur );
-        assert.deepEqual( d1.raw(), d4.raw() );
-        assert.deepEqual( d2.raw(), d3.raw() );
+        assert.deepEqual( d1.cells(), d4.cells() );
+        assert.deepEqual( d2.cells(), d3.cells() );
     } );
 
     it( 'PSTACK', function () {
@@ -474,7 +474,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         const d = vm.d();
         vm.CSTACK = 123;
         sil.PSTACK.call( vm, d.ptr );
-        assert.deepEqual( d.raw(), [ 120, 0, 0 ] );
+        assert.deepEqual( d.cells(), [ 120, 0, 0 ] );
     } );
 
     it( 'PUSH', function () {
@@ -484,7 +484,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         d.set( 4, 1, 6 );
         sil.PUSH.call( vm, d.ptr );
         d = vm.d( cur + d.width );
-        assert.deepEqual( d.raw(), [ 4, 1, 6 ] );
+        assert.deepEqual( d.cells(), [ 4, 1, 6 ] );
     } );
 
     it( 'RCALL', function () { // stub
@@ -510,8 +510,8 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         assert.equal( vm.CSTACK, cur + s1.width + s2.width );
         sil.SPOP.call( vm, [ s3.ptr, s4.ptr ] );
         assert.equal( vm.CSTACK, cur );
-        assert.deepEqual( s1.raw(), s4.raw() );
-        assert.deepEqual( s2.raw(), s3.raw() );
+        assert.deepEqual( s1.cells(), s4.cells() );
+        assert.deepEqual( s2.cells(), s3.cells() );
     } );
 
     it( 'SPUSH', function () {
@@ -523,7 +523,7 @@ describe( 'Macros that Relate to Recursive Procedures and Stack Management', fun
         sil.SPUSH.call( vm, s.ptr );
 
         s = vm.s( cur + D );
-        assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 0, 5 ] );
+        assert.deepEqual( s.cells(), [ 1, 2, 3, 4, 0, 5 ] );
     } );
 } );
 
@@ -540,7 +540,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
         d3.addr = 55;
         src.set( 555, 666, 777 );
         sil.GETD.call( vm, d1.ptr, d2.ptr, d3.ptr );
-        assert.deepEqual( src.raw(), d1.raw() );
+        assert.deepEqual( src.cells(), d1.cells() );
     } );
 
     it( 'GETDC', function () {
@@ -553,7 +553,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
               N = di.ptr - d2.addr;
         di.set( 4, 5, 6 );
         sil.GETDC.call( vm, d1.ptr, d2.ptr, N );
-        assert.deepEqual( d1.raw(), di.raw() );
+        assert.deepEqual( d1.cells(), di.cells() );
     } );
 
     it( 'MOVBLK', function () {
@@ -572,7 +572,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
         sil.MOVBLK.call( vm, d1.ptr, d2.ptr, d3.ptr );
         for ( let i = 0; i < 10; i++ ) {
             const ptr = d1.addr + 3 + ( 3 * i );
-            assert.deepEqual( vm.d( ptr ).raw(), [ i, i, i ] );
+            assert.deepEqual( vm.d( ptr ).cells(), [ i, i, i ] );
         }
     } );
 
@@ -582,7 +582,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
               d2 = vm.d();
         d2.set( 123, 456, 789 );
         sil.MOVD.call( vm, d1.ptr, d2.ptr );
-        assert.deepEqual( d1.raw(), [ 123, 456, 789 ] );
+        assert.deepEqual( d1.cells(), [ 123, 456, 789 ] );
     } );
 
     it( 'MOVDIC', function () {
@@ -599,7 +599,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
         d1.addr = dst.ptr - N1;
         src.set( 4, 5, 6 );
         sil.MOVDIC.call( vm, d1.ptr, N1, d2.ptr, N2 );
-        assert.deepEqual( dst.raw(), src.raw() );
+        assert.deepEqual( dst.cells(), src.cells() );
     } );
 
     it( 'PUTD', function () {
@@ -614,7 +614,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
         d2.addr = dst.ptr - d1.addr;
         d3.set( 555, 666, 777 );
         sil.PUTD.call( vm, d1.ptr, d2.ptr, d3.ptr );
-        assert.deepEqual( d3.raw(), dst.raw() );
+        assert.deepEqual( d3.cells(), dst.cells() );
     } );
 
     it( 'PUTDC', function () {
@@ -628,7 +628,7 @@ describe( 'Macros that Move and Set Descriptors', function () {
               N = dst.ptr - d1.addr;
         d2.set( 555, 666, 777 );
         sil.PUTDC.call ( vm, d1.ptr, N, d2.ptr );
-        assert.deepEqual( dst.raw(), d2.raw() );
+        assert.deepEqual( dst.cells(), d2.cells() );
     } );
 
     it( 'ZERBLK', function () {
@@ -646,11 +646,11 @@ describe( 'Macros that Move and Set Descriptors', function () {
         d2.addr = 19 * 3;
 
         sil.ZERBLK.call( vm, d1.ptr, d2.ptr );
-        assert.deepEqual( before.raw(), [ 1, 1, 1 ] );
+        assert.deepEqual( before.cells(), [ 1, 1, 1 ] );
         for ( let i = ptr; i < after.ptr; i++ ) {
             assert.equal( vm.mem[i], 0, `mem at position ${i}` );
         }
-        assert.deepEqual( after.raw(), [ 1, 1, 1 ] );
+        assert.deepEqual( after.cells(), [ 1, 1, 1 ] );
     } );
 } );
 
@@ -681,13 +681,13 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         di.set( 3, constants.STTL, 5 );
         sil.BKSIZE.call( vm, d1.ptr, d2.ptr );
         FV = 3 * ( 4 + Math.floor( ( di.value - 1 ) / 3 + 1 ) );
-        assert.deepEqual( d1.raw(), [ FV, 0, 0 ] );
+        assert.deepEqual( d1.cells(), [ FV, 0, 0 ] );
 
         // F does not contain STTL
         di.set( 3, 0, 5 );
         sil.BKSIZE.call( vm, d1.ptr, d2.ptr );
         FV = di.value + 3;
-        assert.deepEqual( d1.raw(), [ FV, 0, 0 ] );
+        assert.deepEqual( d1.cells(), [ FV, 0, 0 ] );
     } );
 
     it( 'DECRA', function () {
@@ -719,7 +719,7 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
               d = vm.d();
         s.length = 1212;
         sil.GETLG.call( vm, d.ptr, s.ptr );
-        assert.deepEqual( d.raw(), [ s.length, 0, 0 ] );
+        assert.deepEqual( d.cells(), [ s.length, 0, 0 ] );
     } );
 
     it( 'GETLTH', function () {
@@ -790,7 +790,7 @@ describe( 'Macros that Modify Address Fields of Descriptors', function () {
         d1.set( 1, 2, 3 );
         d2.set( 5, 6, 7 );
         sil.SETAV.call( vm, d1.ptr, d2.ptr );
-        assert.deepEqual( d1.raw(), [ d2.value, 0, 0 ] );
+        assert.deepEqual( d1.cells(), [ d2.value, 0, 0 ] );
     } );
 } );
 
@@ -963,14 +963,14 @@ describe( 'Macros that Perform Integer Arithmetic on Address Fields', function (
         // A+I in range:
         d3.addr = 999;
         sil.SUM.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
-        assert.deepEqual( d1.raw(), [ d2.addr + d3.addr, d2.flags, d2.value ] );
+        assert.deepEqual( d1.cells(), [ d2.addr + d3.addr, d2.flags, d2.value ] );
         assert.equal( vm.ip, 9 );
 
         // A+I overflow:
         d1.set( 11, 22, 33 );
         d3.addr = INT32_MAX;
         sil.SUM.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
-        assert.deepEqual( d1.raw(), [ 11, 22, 33 ] );
+        assert.deepEqual( d1.cells(), [ 11, 22, 33 ] );
         assert.equal( vm.ip, 7 );
     } );
 } );
@@ -1053,7 +1053,7 @@ describe( 'Macros that Deal with Real Numbers', function () {
 
         d2.raddr = 3.8;
         sil.RLINT.call( vm, d1.ptr, d2.ptr, 7, 9 );
-        assert.deepEqual( d1.raw(), [ 3, 0, 6 ] );
+        assert.deepEqual( d1.cells(), [ 3, 0, 6 ] );
         assert.equal( vm.ip, 9 );
     } );
 
@@ -1096,7 +1096,7 @@ describe( 'Macros that Move Specifiers', function () {
         vm.alloc( 32 );
         sil.GETSPC.call( vm, s.ptr, d.ptr, N );
         const s_indirect = vm.s( s.addr + N );
-        assert.deepEqual( s.raw(), s_indirect.raw() );
+        assert.deepEqual( s.cells(), s_indirect.cells() );
     } );
 
     it( 'PUTSPC', function () {
@@ -1107,7 +1107,7 @@ describe( 'Macros that Move Specifiers', function () {
         const dst = vm.s();
         src.set( 55, 44, 33, 22, 11 );
         sil.PUTSPC.call( vm, d.ptr, dst.ptr - d.addr, src.ptr );
-        assert.deepEqual( src.raw(), dst.raw() );
+        assert.deepEqual( src.cells(), dst.cells() );
     } );
 
     it( 'SETSP', function () {
@@ -1117,8 +1117,8 @@ describe( 'Macros that Move Specifiers', function () {
         s1.set( 10, 11, 12, 13, 14 );
         s2.set( 20, 21, 22, 23, 24 );
         sil.SETSP.call( vm, s1.ptr, s2.ptr );
-        assert.deepEqual( s1.raw(), [ 20, 21, 22, 23, 0, 24 ] );
-        assert.deepEqual( s1.raw(), s2.raw() );
+        assert.deepEqual( s1.cells(), [ 20, 21, 22, 23, 0, 24 ] );
+        assert.deepEqual( s1.cells(), s2.cells() );
     } );
 
 } );
@@ -1263,7 +1263,7 @@ describe( 'Macros that Operate on Specifiers', function () {
         d.set( 0, 555, 666 );
         s.set( 1, 2, 3, 4, 5 );
         sil.LOCSP.call( vm, s.ptr, d.ptr );
-        assert.deepEqual( s.raw(), [ 1, 2, 3, 4, 0, 0 ] );
+        assert.deepEqual( s.cells(), [ 1, 2, 3, 4, 0, 0 ] );
 
         // A != 0
         vm.alloc( 100 );
@@ -1271,7 +1271,7 @@ describe( 'Macros that Operate on Specifiers', function () {
         d.addr = di.ptr;
         di.value = 9;
         sil.LOCSP.call( vm, s.ptr, d.ptr );
-        assert.deepEqual( s.raw(), [ d.addr, d.flags, d.value, 4*CPD, 0, di.value ] );
+        assert.deepEqual( s.cells(), [ d.addr, d.flags, d.value, 4*CPD, 0, di.value ] );
     } );
 
     it( 'PUTLG', function () {
@@ -1291,14 +1291,14 @@ describe( 'Macros that Operate on Specifiers', function () {
         s2.set( 1, 2, 3, 9, 5 );
         s3.set( 1, 2, 3, 4, 2 );
         sil.REMSP.call( vm, s1.ptr, s2.ptr, s3.ptr );
-        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + s3.length, 0, s2.length - s3.length ] );
+        assert.deepEqual( s1.cells(), [ 1, 2, 3, s2.offset + s3.length, 0, s2.length - s3.length ] );
 
         // If SPEC1 and SPEC3 are the same:
         s1.set( 0 );
         s2.set( 1, 2, 3, 9, 5 );
         const L3 = s1.length;
         sil.REMSP.call( vm, s1.ptr, s2.ptr, s1.ptr );
-        assert.deepEqual( s1.raw(), [ 1, 2, 3, s2.offset + L3, 0, s2.length - L3 ] );
+        assert.deepEqual( s1.cells(), [ 1, 2, 3, s2.offset + L3, 0, s2.length - L3 ] );
     } );
 
     it( 'SETLC', function () {
@@ -1402,21 +1402,21 @@ describe( 'Macros that Operate on Specifiers', function () {
         s3.set( 6, 7, 8, 9, 8 );
         sil.SUBSP.call( vm, s1.ptr, s2.ptr, s3.ptr, FLOC, SLOC );
         assert.equal( vm.ip, 2 );
-        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 0, 5 ] );
+        assert.deepEqual( s1.cells(), [ 6, 7, 8, 9, 0, 5 ] );
 
         // L3 == L2
         s3.length = 5;
         s1.set( 0 );
         sil.SUBSP.call( vm, s1.ptr, s2.ptr, s3.ptr, FLOC, SLOC );
         assert.equal( vm.ip, 2 );
-        assert.deepEqual( s1.raw(), [ 6, 7, 8, 9, 0, 5 ] );
+        assert.deepEqual( s1.cells(), [ 6, 7, 8, 9, 0, 5 ] );
 
         // L3 < L2
         s3.length = 2;
         s1.set( 0 );
         sil.SUBSP.call( vm, s1.ptr, s2.ptr, s3.ptr, FLOC, SLOC );
         assert.equal( vm.ip, 1 );
-        assert.deepEqual( s1.raw(), [ 0, 0, 0, 0, 0, 0 ] );
+        assert.deepEqual( s1.cells(), [ 0, 0, 0, 0, 0, 0 ] );
 
         assert( sil.SUBSP ); 
     } );
@@ -1520,9 +1520,9 @@ describe( 'Macros that Construct Pattern Nodes', function () {
 
         sil.CPYPAT.call( vm, dst.ptr, src.ptr, shift.ptr, offset.ptr, next.ptr, size.ptr );
 
-        assert.deepEqual( vm.d( dstBase + 3 ).raw(), [ 1, 2, 2 ] );
-        assert.deepEqual( vm.d( dstBase + 6 ).raw(), [ 36, 0, 39 ] );
-        assert.deepEqual( vm.d( dstBase + 9 ).raw(), [ 112, 0, 115 ] );
+        assert.deepEqual( vm.d( dstBase + 3 ).cells(), [ 1, 2, 2 ] );
+        assert.deepEqual( vm.d( dstBase + 6 ).cells(), [ 36, 0, 39 ] );
+        assert.deepEqual( vm.d( dstBase + 9 ).cells(), [ 112, 0, 115 ] );
     } );
 
     it( 'MAKNOD', function () { // stub
@@ -1878,7 +1878,7 @@ describe( 'Macros that Depend on Operating System Facilities', function () {
         const d = vm.d();
         d.set( 1, 2, 3 );
         sil.MSTIME.call( vm, d.ptr );
-        assert.deepEqual( d.raw(), [ 0, 0, 0 ] );
+        assert.deepEqual( d.cells(), [ 0, 0, 0 ] );
         assert( sil.MSTIME ); 
     } );
 
@@ -1941,7 +1941,7 @@ describe( 'Miscellaneous Macros', function () {
         sil.LOCAPT.call( vm, result.ptr, list.ptr, key.ptr, missing, found );
 
         assert.equal( vm.ip, FOUND_IP );
-        assert.deepEqual( result.raw(), [ firstValue, LIST_FLAGS, LIST_VALUE ] );
+        assert.deepEqual( result.cells(), [ firstValue, LIST_FLAGS, LIST_VALUE ] );
 
         key.set.apply( key, SAME_ADDRESS_DIFFERENT_FLAGS );
         vm.ip = 0;
@@ -1969,7 +1969,7 @@ describe( 'Miscellaneous Macros', function () {
         sil.LOCAPV.call( vm, result.ptr, list.ptr, key.ptr, missing, found );
 
         assert.equal( vm.ip, 123 );
-        assert.deepEqual( result.raw(), [ base, 7, 11 ] );
+        assert.deepEqual( result.cells(), [ base, 7, 11 ] );
 
         key.set( 43, 0, 2 );
         vm.ip = 0;
@@ -2093,14 +2093,14 @@ describe( 'Miscellaneous Macros', function () {
         block.at( -7 ).flags |= TTL;
         sil.TOP.call( vm, d1.ptr, d2.ptr, d3.ptr );
         assert.equal( d2.addr, 6 * 3 );
-        assert.deepEqual( d1.raw(), [ block.at( -7 ).ptr, 123, 456 ] );
+        assert.deepEqual( d1.cells(), [ block.at( -7 ).ptr, 123, 456 ] );
         assert.equal( d3.addr - d2.addr, d1.addr );
 
         // N = 0
         block.at( -1 ).flags |= TTL;
         sil.TOP.call( vm, d1.ptr, d2.ptr, d3.ptr );
         assert.equal( d2.addr, 0 );
-        assert.deepEqual( d1.raw(), [ block.at( -1 ).ptr, 123, 456 ] );
+        assert.deepEqual( d1.cells(), [ block.at( -1 ).ptr, 123, 456 ] );
         assert.equal( d3.addr - d2.addr, d1.addr );
     } );
 

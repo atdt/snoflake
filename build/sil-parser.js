@@ -29,7 +29,7 @@ export function parse( input ) {
     const lines = input.split( /\r?\n/ );
 
     for ( const [ index, line ] of lines.entries() ) {
-        if ( !line || line.startsWith( '*' ) ) {
+        if ( /^\s*$/.test( line ) || line.startsWith( '*' ) ) {
             continue;
         }
 
@@ -64,22 +64,23 @@ function parseStatement( line, lineNumber ) {
 function parseOperands( source, lineNumber ) {
     let offset = 0;
 
-    const at = () => source[offset];
-    const fail = ( message ) => {
+    const peek = () => source[offset];
+
+    function fail( message ) {
         throw new Error( `${message} on SIL line ${lineNumber}` );
-    };
+    }
 
     function operandList() {
-        const operands = [ variable() ];
-        while ( at() === ',' && isNonBlank( source[ offset + 1 ] ) ) {
+        const operands = [ operand() ];
+        while ( peek() === ',' && isNonBlank( source[ offset + 1 ] ) ) {
             offset++;
-            operands.push( variable() );
+            operands.push( operand() );
         }
         return operands;
     }
 
-    function variable() {
-        switch ( at() ) {
+    function operand() {
+        switch ( peek() ) {
             case undefined:
             case ',':
             case ')':
@@ -97,15 +98,15 @@ function parseOperands( source, lineNumber ) {
         offset++;  // consume '('
         const items = [];
 
-        if ( at() !== ')' ) {
-            items.push( variable() );
-            while ( at() === ',' ) {
+        if ( peek() !== ')' ) {
+            items.push( operand() );
+            while ( peek() === ',' ) {
                 offset++;
-                items.push( variable() );
+                items.push( operand() );
             }
         }
 
-        if ( at() !== ')' ) {
+        if ( peek() !== ')' ) {
             fail( 'Expected )' );
         }
         offset++;  // consume ')'
@@ -117,21 +118,23 @@ function parseOperands( source, lineNumber ) {
         offset++;  // skip opening quote
         const start = offset;
 
-        while ( at() !== "'" ) {
-            if ( at() === undefined ) {
+        while ( peek() !== "'" ) {
+            if ( peek() === undefined ) {
                 fail( 'Unterminated literal' );
             }
             offset++;
         }
 
-        return source.slice( start, offset++ );  // and skip closing quote
+        const value = source.slice( start, offset );
+        offset++;  // skip closing quote
+        return value;
     }
 
     function additive() {
         let left = multiplicative();
 
-        while ( at() === '+' || at() === '-' ) {
-            const type = at() === '+' ? 'add' : 'sub';
+        while ( peek() === '+' || peek() === '-' ) {
+            const type = peek() === '+' ? 'add' : 'sub';
             offset++;
             left = { type, left, right: multiplicative() };
         }
@@ -142,7 +145,7 @@ function parseOperands( source, lineNumber ) {
     function multiplicative() {
         let left = unary();
 
-        while ( at() === '*' ) {
+        while ( peek() === '*' ) {
             offset++;
             left = { type: 'mul', left, right: unary() };
         }
@@ -151,11 +154,11 @@ function parseOperands( source, lineNumber ) {
     }
 
     function unary() {
-        if ( at() === '+' ) {
+        if ( peek() === '+' ) {
             offset++;
             return unary();
         }
-        if ( at() === '-' ) {
+        if ( peek() === '-' ) {
             offset++;
             return { type: 'negate', operand: unary() };
         }
@@ -163,18 +166,18 @@ function parseOperands( source, lineNumber ) {
     }
 
     function primary() {
-        if ( isDigit( at() ) ) {
+        if ( isDigit( peek() ) ) {
             return integer();
         }
-        if ( isUpper( at() ) ) {
+        if ( isUpper( peek() ) ) {
             return { type: 'symbol', name: name() };
         }
-        fail( 'Expected operand' );
+        fail( `Expected operand, got "${ peek() ?? 'end' }"` );
     }
 
     function integer() {
         const start = offset;
-        while ( isDigit( at() ) ) {
+        while ( isDigit( peek() ) ) {
             offset++;
         }
         return parseInt( source.slice( start, offset ), 10 );
@@ -182,7 +185,7 @@ function parseOperands( source, lineNumber ) {
 
     function name() {
         const start = offset;
-        while ( isNameChar( at() ) ) {
+        while ( isNameChar( peek() ) ) {
             offset++;
         }
         return source.slice( start, offset );

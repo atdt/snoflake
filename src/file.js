@@ -1,10 +1,11 @@
-import { str } from './string.js';
-
 const LF = 10,
       CR = 13;
 
 const textDecoder = new TextDecoder( 'utf-8' );
 const textEncoder = new TextEncoder();
+
+// FORTRAN/SIL filename arguments are space-padded to their field width.
+export const stripTrailingBlanks = s => s.replace( / +$/, '' );
 
 // A line reader has the few operations the VM needs. Buffered files can
 // rewind. Stdin cannot. close() releases any held state and forces
@@ -51,58 +52,6 @@ export function bufferedReader( content ) {
     };
 }
 
-// The default stdin reader is synchronous because STREAD runs inside the VM
-// dispatch loop. Hosts that need async input should inject their own reader.
-export function stdinReader() {
-    let closed = false;
-
-    return {
-        readLine() {
-            if ( closed ) return null;
-
-            const line = readLineFromStdinSync();
-            if ( line === null ) {
-                closed = true;
-                return null;
-            }
-            return line;
-        },
-
-        close() { closed = true; },
-    };
-}
-
-// Read one byte at a time so we stop exactly at the next line break. Reading
-// more would steal bytes that belong to later STREAD calls.
-function readLineFromStdinSync() {
-    const fs = globalThis.process?.getBuiltinModule?.( 'fs' );
-    if ( !fs ) {
-        throw new Error( 'No stdin reader configured for this host' );
-    }
-
-    const buf = new Uint8Array( 1 ),
-          chunks = [];
-
-    while ( true ) {
-        let n;
-        try {
-            n = fs.readSync( 0, buf, 0, 1, null );
-        } catch ( e ) {
-            if ( e.code === 'EAGAIN' ) continue;
-            throw e;
-        }
-
-        if ( n === 0 ) {
-            if ( chunks.length === 0 ) return null;
-            return Uint8Array.from( chunks );
-        }
-        if ( buf[ 0 ] === LF ) return Uint8Array.from( chunks );
-        if ( buf[ 0 ] !== CR ) {
-            chunks.push( buf[ 0 ] );
-        }
-    }
-}
-
 // Long records are cut to the caller's buffer. Card-mode records are
 // padded to it. Stream-mode records keep their natural length.
 function fitRecord( text, length, padReads ) {
@@ -114,7 +63,7 @@ function fitRecord( text, length, padReads ) {
     }
     if ( padReads ) {
         return {
-            text: str.pad( text, length, 'left' ),
+            text: text.padEnd( length ),
             padded: true,
         };
     }
@@ -127,6 +76,7 @@ function fitRecord( text, length, padReads ) {
 //
 // Segment shape: { reader, padReads: boolean, path?: string }.
 export class File {
+    // File takes ownership of `segments`: include() mutates it via splice.
     constructor( segments ) {
         this.segments = segments;
         this.idx = 0;
@@ -136,6 +86,8 @@ export class File {
     }
 
     include( content, path ) {
+        // Insert at this.idx so the included source is read next, ahead of
+        // the remaining lines of the current segment.
         this.segments.splice( this.idx, 0, {
             reader: bufferedReader( content ),
             padReads: true,
@@ -144,7 +96,7 @@ export class File {
     }
 
     includeSource( filename, loader ) {
-        const includePath = filename.replace( / +$/, '' ),
+        const includePath = stripTrailingBlanks( filename ),
               included = loader.loadInclude?.( includePath ) ?? null;
 
         if ( included === null ) {

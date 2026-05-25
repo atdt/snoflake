@@ -40,7 +40,7 @@ export function assemble( program ) {
         instructions: instructions.map( stmt => [
             stmt.label,
             stmt.macro,
-            argsFor( vm, stmt )
+            stmt.operands.map( o => resolveOperand( vm, o ) )
         ] ),
     };
 }
@@ -55,10 +55,10 @@ function bindLabels( vm, program ) {
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
             // Assembly-time macros decide the label value.
             // Storage macros also claim memory.
-            location = getAssemblyMacroLocation( vm, stmt );
+            location = runAssemblyMacro( vm, stmt );
         } else if ( MARKER_MACROS.includes( stmt.macro ) ) {
             // Markers alias the next memory or instruction slot.
-            location = getMarkerMacroLocation( program, i, vm.memPtr, instructions.length );
+            location = getMarkerMacroLocation( program, i, vm, instructions );
         } else {
             // Executable labels point into the instruction array.
             location = instructions.length;
@@ -74,7 +74,7 @@ function bindLabels( vm, program ) {
 // that reference forward labels throw during symbol lookup. We treat such
 // operands as zero so the macro can run to claim its memory. Whatever data the
 // macro writes will be overwritten in pass 2 with every symbol bound.
-function getAssemblyMacroLocation( vm, stmt ) {
+function runAssemblyMacro( vm, stmt ) {
     const args = stmt.operands.map( operand => {
         try { return resolveOperand( vm, operand ); }
         catch { return 0; }
@@ -88,7 +88,8 @@ function writeStorage( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     for ( const stmt of program ) {
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
-            sil[ stmt.macro ].apply( vm, argsFor( vm, stmt ) );
+            const args = stmt.operands.map( o => resolveOperand( vm, o ) );
+            sil[ stmt.macro ].apply( vm, args );
         }
     }
     if ( vm.memPtr !== dataEnd ) {
@@ -98,22 +99,16 @@ function writeStorage( vm, program, dataStart, dataEnd ) {
 
 // A marker label belongs to the next statement that actually occupies
 // memory or an instruction slot. Consecutive markers all name that same spot.
-function getMarkerMacroLocation( program, i, memPtr, instructionCount ) {
+function getMarkerMacroLocation( program, i, vm, instructions ) {
     for ( let j = i + 1; j < program.length; j++ ) {
         const macro = program[ j ].macro;
         if ( !MARKER_MACROS.includes( macro ) ) {
             return ASSEMBLY_MACROS.includes( macro )
-                ? memPtr
-                : instructionCount;
+                ? vm.memPtr
+                : instructions.length;
         }
     }
     throw new Error( 'Marker has no following anchor' );
-}
-
-// The parser leaves expressions as small trees. Resolve them after labels
-// have been bound.
-function argsFor( vm, stmt ) {
-    return stmt.operands.map( operand => resolveOperand( vm, operand ) );
 }
 
 function resolveOperand( vm, op ) {
@@ -125,8 +120,8 @@ function resolveOperand( vm, op ) {
         case 'sub':    return resolveOperand( vm, op.left ) - resolveOperand( vm, op.right );
         case 'mul':    return resolveOperand( vm, op.left ) * resolveOperand( vm, op.right );
         case 'list':   return op.items.map( item => resolveOperand( vm, item ) );
+        default:       throw new Error( `Unknown operand type: ${ op.type }` );
     }
-    throw new Error( 'Unknown SIL operand: ' + JSON.stringify( op ) );
 }
 
 // Syntax-table and stream-action names are literal tokens, not symbols.

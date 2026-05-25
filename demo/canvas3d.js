@@ -70,7 +70,7 @@ export function createScene( canvas ) {
     let auto = true;
 
     function resize() {
-        const dpr  = window.devicePixelRatio || 1,
+        const dpr  = globalThis.devicePixelRatio || 1,
               rect = canvas.getBoundingClientRect();
         width  = Math.max( rect.width,  1 );
         height = Math.max( rect.height, 1 );
@@ -249,7 +249,7 @@ export function createScene( canvas ) {
         stopAuto();
     }, { passive: false } );
 
-    window.addEventListener( 'resize', resize );
+    globalThis.addEventListener( 'resize', resize );
 
     resize();
     requestAnimationFrame( tick );

@@ -1,8 +1,9 @@
 // Minimal FORTRAN IV "undigested" format processor for OUTPUT and STPRNT.
 
-import { str } from './string.js';
-
-// `data` is either a string for A fields or descriptors for I/F fields.
+// `data` accepts three shapes:
+//   - a string, supplying characters for A fields,
+//   - a single descriptor, used by an I or F field, or
+//   - an array of descriptors, consumed in order by successive I/F fields.
 export function formatRecord( template, data ) {
     if ( !template ) return '';
 
@@ -38,7 +39,8 @@ export function formatRecord( template, data ) {
         return descrData && descrIdx < descrData.length ? descrData[ descrIdx++ ] : null;
     }
 
-    function skipSpaces() {
+    function skipSeparators() {
+        // FORTRAN treats whitespace and ',' interchangeably between items.
         while ( i < template.length && /[\s,]/.test( template[ i ] ) ) i++;
     }
 
@@ -49,6 +51,7 @@ export function formatRecord( template, data ) {
         return parseInt( m[ 1 ], 10 );
     }
 
+    // FORTRAN doubles the quote character to embed it in a quoted literal.
     function readQuotedLiteral( quote ) {
         let literal = '';
         while ( i < template.length ) {
@@ -82,7 +85,7 @@ export function formatRecord( template, data ) {
     }
 
     while ( i < template.length ) {
-        skipSpaces();
+        skipSeparators();
         if ( i >= template.length ) break;
 
         if ( template[ i ] === '/' ) {
@@ -95,14 +98,13 @@ export function formatRecord( template, data ) {
         const code = template[ i++ ];
 
         if ( code === '"' || code === "'" ) {
-            // FORTRAN doubles the quote mark inside quoted literals.
             out += readQuotedLiteral( code ).repeat( rep );
         } else if ( code === 'H' ) {
             // Hollerith literal: rep is the character count.
             out += template.slice( i, i + rep );
             i += rep;
         } else if ( code === 'X' ) {
-            out += str.pad( '', rep, 'left', ' ' );
+            out += ' '.repeat( rep );
         } else if ( code === 'A' ) {
             const aw = parseDigits();
             for ( let r = 0; r < rep; r++ ) {
@@ -114,7 +116,7 @@ export function formatRecord( template, data ) {
             const val = descr
                 ? descr.addr
                 : ( parseInt( strData.slice( pos ), 10 ) || 0 );
-            out += str.pad( String( val ), iw );
+            out += String( val ).padStart( iw );
         } else if ( code === 'F' ) {
             const fw = parseDigits();
             let fd = 0;
@@ -127,7 +129,7 @@ export function formatRecord( template, data ) {
                 ? descr.raddr
                 : ( parseFloat( strData.slice( pos ) ) || 0 );
             const ftxt = fd ? fval.toFixed( fd ) : String( fval );
-            out += str.pad( ftxt, fw );
+            out += ftxt.padStart( fw );
         } else if ( /[A-Za-z]/.test( code ) ) {
             // Unsupported control words are skipped as whole words. That
             // keeps the A in PAUSE from being treated as an A field.

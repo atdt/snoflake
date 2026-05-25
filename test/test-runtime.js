@@ -6,7 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { FAIL, VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str, stdinReader } from '../src/snobol.js';
+import { FAIL, VM, Descriptor, Specifier, File, assemble, constants, createVM, image, run, sil, str } from '../src/snobol.js';
+import { stdinReader } from '../src/host.js';
 import { createHostLoader } from '../src/host.js';
 import process from "node:process";
 
@@ -687,7 +688,7 @@ describe( 'Descriptor Datatype', function () {
         d.addr = 6;
         d.flags = 7;
         d.value = 8;
-        assert.deepEqual( d.raw(), [ 6, 7, 8 ] );
+        assert.deepEqual( d.cells(), [ 6, 7, 8 ] );
     } );
 
     it( 'read', function () {
@@ -696,14 +697,14 @@ describe( 'Descriptor Datatype', function () {
               dst = vm.d();
         src.set( 6, 7, 8 );
         dst.copyFrom( src );
-        assert.deepEqual( dst.raw(), src.raw() );
+        assert.deepEqual( dst.cells(), src.cells() );
     } );
 
     it( 'set', function () {
         const vm = new VM(),
               d = new Descriptor( vm );
         d.set( 6, 7, 8 );
-        assert.deepEqual( d.raw(), [ 6, 7, 8 ] );
+        assert.deepEqual( d.cells(), [ 6, 7, 8 ] );
     } );
 
     it( 'eq', function () {
@@ -737,7 +738,7 @@ describe( 'Specifier Datatype', function () {
         s.value = 8;
         s.offset = 9;
         s.length = 10;
-        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 0, 10 ] );
+        assert.deepEqual( s.cells(), [ 6, 7, 8, 9, 0, 10 ] );
         assert.equal( vm.mem[ s.ptr + 4 ], 0 );
         assert.equal( vm.mem[ s.ptr + 5 ], 10 );
     } );
@@ -748,14 +749,14 @@ describe( 'Specifier Datatype', function () {
               dst = new Specifier( vm );
         src.set( 6, 7, 8, 9, 10 );
         dst.copyFrom( src );
-        assert.deepEqual( dst.raw(), src.raw() );
+        assert.deepEqual( dst.cells(), src.cells() );
     } );
 
     it( 'set', function () {
         const vm = new VM(),
               s = new Specifier( vm );
         s.set( 6, 7, 8, 9, 10 );
-        assert.deepEqual( s.raw(), [ 6, 7, 8, 9, 0, 10 ] );
+        assert.deepEqual( s.cells(), [ 6, 7, 8, 9, 0, 10 ] );
         assert.equal( vm.mem[ s.ptr + 4 ], 0 );
         assert.equal( vm.mem[ s.ptr + 5 ], 10 );
     } );

@@ -94,17 +94,12 @@ const characterClasses = {
     SQUOTE       : /'/,
     STAR         : /\*/,
     TERMINATOR   : /[;)>,\] \t]/,
-    ELSE         : /.*/,
 };
 
 // STREAM asks this matcher about every scanned character, so compile the
 // documented regular-expression classes into byte lookup tables once.
 const characterClassBitsets = {};
 for ( const name in characterClasses ) {
-    if ( name === 'ELSE' ) {
-        continue;
-    }
-
     const bitset = new Uint8Array( BYTE_VALUES ),
           pattern = characterClasses[ name ];
 
@@ -141,7 +136,10 @@ const FOLDABLE_TABLES = [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ];
 
 export function normalizeToken( table, mem, start, length, caseFold ) {
     if ( caseFold && table.foldable ) {
-        str.foldAsciiUpperInPlace( mem, start, length );
+        const end = start + length;
+        for ( let i = start; i < end; i++ ) {
+            mem[ i ] = str.foldAsciiUpperByte( mem[ i ] );
+        }
     }
 }
 
@@ -152,6 +150,7 @@ const emptyEntry = {
     action: Action.RUNOUT,
     next: null
 };
+Object.freeze( emptyEntry );
 
 function emptyTable( foldable, foldsLookups ) {
     return {
@@ -165,9 +164,9 @@ function emptyTable( foldable, foldsLookups ) {
 }
 
 // CLERTB rewrites byte rows. Wider host code units remain a miss.
-export function clearTable( table, key ) {
+export function clearTable( table, actionName ) {
     table.puts.fill( 0 );
-    table.actions.fill( Action[ key ] );
+    table.actions.fill( Action[ actionName ] );
     table.next.fill( null );
     table.fallback = emptyEntry;
 }
@@ -391,10 +390,7 @@ export function bindSyntaxTables( tables, resolveSymbol ) {
 }
 
 function bindTable( tables, table, rows, resolveSymbol ) {
-    table.puts.fill( 0 );
-    table.actions.fill( Action.RUNOUT );
-    table.next.fill( null );
-    table.fallback = emptyEntry;
+    clearTable( table, 'RUNOUT' );
 
     function bindEntry( row ) {
         if ( !row ) {
