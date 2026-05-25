@@ -86,16 +86,23 @@ export class VM {
     }
 
     run( image ) {
-        this.reset();
-        this.loadImage( image );
-
-        this.ip = 0;
-        this.applyHostSwitches();
-        this.interpret( this.compileInstructions( image.instructions ) );
+        this.interpret( this.prepare( image ) );
 
         // A non-negative ip means the program reached END or fell off the
         // instruction list. A negative ip signals an abnormal halt.
         return this.ip >= 0;
+    }
+
+    // Load an image and ready the first instruction, returning the compiled
+    // instruction list. run() drives that list to completion in one call;
+    // callers that step the loop themselves -- an interactive session that
+    // must pause for input -- use prepare() and drive the list directly.
+    prepare( image ) {
+        this.reset();
+        this.loadImage( image );
+        this.ip = 0;
+        this.applyHostSwitches();
+        return this.compileInstructions( image.instructions );
     }
 
     // Load the image's symbols and assembled memory snapshot.

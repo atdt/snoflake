@@ -1,6 +1,7 @@
 // Public entry point.
 
 import { VM } from './vm.js';
+import { Session } from './interactive.js';
 import snobolImage from './generated-snobol-image.js';
 
 export * from './io.js';
@@ -13,26 +14,39 @@ export * from './sil.js';
 export * from './assemble.js';
 export * from './vm.js';
 export * from './extensions.js';
+export * from './interactive.js';
 export { snobolImage as image };
 
 const DEFAULT_SOURCE_PATH = 'source.sno';
 
-export function createVM( options = {} ) {
+// The inline-source shortcut: bytes flow through options.source; we
+// synthesize a file path so vm.options.file stays meaningful for
+// diagnostics, and we drop sourcePath which UnitTable doesn't know. The
+// synthetic path replaces any explicit file: when source is supplied, the
+// file argument is treated as a label rather than a path to read.
+function normalizeOptions( options ) {
     const opts = { ...options };
-    // The inline-source shortcut: bytes flow through options.source; we
-    // synthesize a file path so vm.options.file stays meaningful for
-    // diagnostics, and we drop sourcePath which UnitTable doesn't know.
-    // The synthetic path replaces any explicit file: when source is supplied,
-    // the file argument is treated as a label rather than a path to read.
     if ( Object.hasOwn( opts, 'source' ) ) {
         opts.file = opts.sourcePath || DEFAULT_SOURCE_PATH;
         delete opts.sourcePath;
     }
-    return new VM( opts );
+    return opts;
+}
+
+export function createVM( options = {} ) {
+    return new VM( normalizeOptions( options ) );
 }
 
 export function run( options = {} ) {
     const vm = createVM( options );
     vm.run( snobolImage );
     return { vm, exitCode: vm.exitCode };
+}
+
+// A resumable run for programs that read input interactively. Accepts the
+// same options as run(), plus onOutput/onError/onDone callbacks; returns a
+// Session the host drives with start(), send(line), and end(). See
+// src/interactive.js.
+export function createSession( options = {} ) {
+    return new Session( snobolImage, normalizeOptions( options ) );
 }
