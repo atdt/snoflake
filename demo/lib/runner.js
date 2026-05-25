@@ -1,4 +1,4 @@
-import { VM, image } from '../src/snobol.js';
+import { VM, image } from '../../src/snobol.js';
 
 function captureWriter() {
     const lines = [];

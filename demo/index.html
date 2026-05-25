@@ -15,31 +15,31 @@
             </div>
         </header>
 
-        <section id="eliza-example" class="example" aria-labelledby="eliza-title">
+        <section id="interactive-io-example" class="example" aria-labelledby="interactive-io-title">
             <div class="example-header">
                 <div>
-                    <h2 id="eliza-title">Interactive I/O</h2>
+                    <h2 id="interactive-io-title">Interactive I/O</h2>
                 </div>
                 <div class="actions">
-                    <button id="eliza-restart" type="button">Restart</button>
-                    <button id="eliza-reset" class="secondary" type="button">Reset</button>
-                    <span id="eliza-status" class="status">Ready</span>
+                    <button id="interactive-io-restart" type="button">Restart</button>
+                    <button id="interactive-io-reset" class="secondary" type="button">Reset</button>
+                    <span id="interactive-io-status" class="status">Ready</span>
                 </div>
             </div>
 
             <div class="workspace workspace-interactive" aria-label="Interactive SNOBOL demo">
                 <div class="pane">
                     <div class="pane-header">Source</div>
-                    <textarea id="eliza-source" spellcheck="false" aria-label="ELIZA SNOBOL source"></textarea>
+                    <textarea id="interactive-io-source" spellcheck="false" aria-label="ELIZA SNOBOL source"></textarea>
                 </div>
                 <div class="pane conversation-pane">
                     <div class="pane-header">Interactive I/O</div>
-                    <div id="eliza-conversation" class="terminal" role="log" aria-label="Interactive output" aria-live="polite"></div>
-                    <form id="eliza-input-form" class="prompt">
+                    <div id="interactive-io-conversation" class="terminal" role="log" aria-label="Interactive output" aria-live="polite"></div>
+                    <form id="interactive-io-input-form" class="prompt">
                         <span aria-hidden="true">&gt;</span>
-                        <input id="eliza-input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">
-                        <button id="eliza-send" type="submit">Send</button>
-                        <button id="eliza-eof" class="secondary" type="button">EOF</button>
+                        <input id="interactive-io-input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">
+                        <button id="interactive-io-send" type="submit">Send</button>
+                        <button id="interactive-io-eof" class="secondary" type="button">EOF</button>
                     </form>
                 </div>
             </div>
@@ -79,88 +79,88 @@
             </div>
         </section>
 
-        <section id="ca-example" class="example" aria-labelledby="ca-title">
+        <section id="cellular-automata-example" class="example" aria-labelledby="cellular-automata-title">
             <div class="example-header">
                 <div>
-                    <h2 id="ca-title">Elementary cellular automata</h2>
+                    <h2 id="cellular-automata-title">Elementary cellular automata</h2>
                     <p>Wolfram's 1D cellular automata are nothing but a sliding-window string rewrite. SNOBOL computes each row from the previous one as pure string manipulation; the host renders the accumulated rows as a pixel grid.</p>
                 </div>
                 <div class="actions">
                     <label class="picker">
                         <span>Preset</span>
-                        <select id="ca-preset" aria-label="CA preset"></select>
+                        <select id="cellular-automata-preset" aria-label="CA preset"></select>
                     </label>
-                    <button id="ca-run" type="button">Run</button>
-                    <span id="ca-status" class="status">Ready</span>
+                    <button id="cellular-automata-run" type="button">Run</button>
+                    <span id="cellular-automata-status" class="status">Ready</span>
                 </div>
             </div>
 
             <div class="workspace workspace-ca" aria-label="CA demo">
                 <div class="pane">
                     <div class="pane-header">Source</div>
-                    <textarea id="ca-source" spellcheck="false" aria-label="CA SNOBOL source"></textarea>
+                    <textarea id="cellular-automata-source" spellcheck="false" aria-label="CA SNOBOL source"></textarea>
                 </div>
                 <div class="pane canvas-pane">
                     <div class="pane-header">Canvas</div>
                     <div class="canvas-wrap">
-                        <canvas id="ca-canvas" width="720" height="540" aria-label="CA rendering"></canvas>
+                        <canvas id="cellular-automata-canvas" width="720" height="540" aria-label="CA rendering"></canvas>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="shape-example" class="example" aria-labelledby="shape-title">
+        <section id="shape-grammar-example" class="example" aria-labelledby="shape-grammar-title">
             <div class="example-header">
                 <div>
-                    <h2 id="shape-title">Shape Grammar</h2>
+                    <h2 id="shape-grammar-title">Shape Grammar</h2>
                     <p>SNOBOL rewrites a worklist of <code>NAME(args)</code> symbols into a 3-D scene; each terminal box is handed to the renderer through an <code>EMIT</code> JavaScript extension.</p>
                 </div>
                 <div class="actions">
-                    <button id="shape-restart" type="button">Restart</button>
-                    <button id="shape-reset" class="secondary" type="button">Reset</button>
-                    <span id="shape-status" class="status">Ready</span>
+                    <button id="shape-grammar-restart" type="button">Restart</button>
+                    <button id="shape-grammar-reset" class="secondary" type="button">Reset</button>
+                    <span id="shape-grammar-status" class="status">Ready</span>
                 </div>
             </div>
 
             <div class="workspace workspace-shape" aria-label="Shape grammar demo">
                 <div class="pane">
                     <div class="pane-header">Source</div>
-                    <textarea id="shape-source" spellcheck="false" aria-label="Shape grammar SNOBOL source"></textarea>
+                    <textarea id="shape-grammar-source" spellcheck="false" aria-label="Shape grammar SNOBOL source"></textarea>
                 </div>
                 <div class="pane scene-pane">
                     <div class="pane-header">
                         <span>Scene</span>
                         <span class="hint">drag to rotate &middot; wheel to zoom</span>
                     </div>
-                    <canvas id="shape-canvas" aria-label="3-D rendered scene"></canvas>
+                    <canvas id="shape-grammar-canvas" aria-label="3-D rendered scene"></canvas>
                 </div>
             </div>
         </section>
 
-        <section id="pattern-example" class="example" aria-labelledby="pattern-title">
+        <section id="batch-io-example" class="example" aria-labelledby="batch-io-title">
             <div class="example-header">
                 <div>
-                    <h2 id="pattern-title">Batch I/O</h2>
+                    <h2 id="batch-io-title">Batch I/O</h2>
                 </div>
                 <div class="actions">
-                    <button id="pattern-run" type="button">Run</button>
-                    <button id="pattern-reset" class="secondary" type="button">Reset</button>
-                    <span id="pattern-status" class="status">Ready</span>
+                    <button id="batch-io-run" type="button">Run</button>
+                    <button id="batch-io-reset" class="secondary" type="button">Reset</button>
+                    <span id="batch-io-status" class="status">Ready</span>
                 </div>
             </div>
 
             <div class="workspace workspace-batch" aria-label="Batch I/O demo">
                 <div class="pane">
                     <div class="pane-header">Source</div>
-                    <textarea id="pattern-source" spellcheck="false" aria-label="Batch SNOBOL source"></textarea>
+                    <textarea id="batch-io-source" spellcheck="false" aria-label="Batch SNOBOL source"></textarea>
                 </div>
                 <div class="pane input-pane">
                     <div class="pane-header">Input</div>
-                    <textarea id="pattern-input" spellcheck="false" aria-label="Batch input"></textarea>
+                    <textarea id="batch-io-input" spellcheck="false" aria-label="Batch input"></textarea>
                 </div>
                 <div class="pane">
                     <div class="pane-header">Output</div>
-                    <pre id="pattern-output" aria-live="polite"></pre>
+                    <pre id="batch-io-output" aria-live="polite"></pre>
                 </div>
             </div>
         </section>

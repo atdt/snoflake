@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import { describe, it } from 'node:test';
-import { runSnoflake } from '../demo/run-snoflake.js';
+import { runSnoflake } from '../demo/lib/runner.js';
 
 describe( 'browser demo runner', function () {
     it( 'runs the preloaded style of program from an in-memory source', function () {
@@ -37,7 +37,7 @@ describe( 'browser demo runner', function () {
 
     it( 'keeps the original pattern-matcher demo runnable', function () {
         const result = runSnoflake(
-            fs.readFileSync( 'demo/pattern-matcher.sno', 'utf8' ),
+            fs.readFileSync( 'demo/programs/pattern-matcher.sno', 'utf8' ),
             { inputText: 'THE BLUEBIRD\nGOLDFISH\n' }
         );
 
@@ -50,7 +50,7 @@ describe( 'browser demo runner', function () {
 
     it( 'runs ELIZA as a batch companion demo with scripted input', function () {
         const result = runSnoflake(
-            fs.readFileSync( 'demo/eliza.sno', 'utf8' ),
+            fs.readFileSync( 'demo/programs/eliza.sno', 'utf8' ),
             { inputText: 'I feel nervous about computers\nbye\n' }
         );
 

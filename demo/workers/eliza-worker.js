@@ -1,4 +1,4 @@
-import { VM, image } from '../src/snobol.js';
+import { VM, image } from '../../src/snobol.js';
 
 const sourcePath = 'demo.sno',
       encoder = new TextEncoder();

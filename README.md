@@ -56,7 +56,7 @@ process.exitCode = result.exitCode;
 For advanced embedding, `createVM(options)` returns a configured VM while
 `new VM(options)` remains the low-level, host-neutral machine. Options select
 the source file, source text, input file, interactive stdin, output streams,
-and custom loaders. See [`demo/run-snoflake.js`](demo/run-snoflake.js) for an
+and custom loaders. See [`demo/lib/runner.js`](demo/lib/runner.js) for an
 in-memory browser example.
 
 ### Browser

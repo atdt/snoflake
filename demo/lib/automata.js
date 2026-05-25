@@ -71,7 +71,7 @@ function paintGrid( canvas, rows ) {
     }
 }
 
-export function makeCaExtensions( canvas, preset ) {
+export function makeAutomatonExtensions( canvas, preset ) {
     const rows = [];
 
     return {

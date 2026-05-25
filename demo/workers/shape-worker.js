@@ -4,7 +4,7 @@
 // terminal box. We register EMIT as a host extension and stream each
 // call to the main thread, where the canvas3d scene appends it.
 
-import { VM, image } from '../src/snobol.js';
+import { VM, image } from '../../src/snobol.js';
 
 const sourcePath = 'shape-grammar.sno';
 
