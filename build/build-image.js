@@ -10,16 +10,11 @@ import { parse as parseSil } from './sil-parser.js';
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const sourcePath = path.join( __dirname, '..', 'external', 'v311-snoflake.sil' );
 
-const listing = parseSource();
+const listing = parseSil( fs.readFileSync( sourcePath, 'utf8' ) );
 const image = assemble( listing );
 const code = generatedFileHeader() + serializeImage( image );
 
 process.stdout.write( code );
-
-function parseSource() {
-    const source = fs.readFileSync( sourcePath, 'utf8' );
-    return parseSil( source );
-}
 
 function generatedFileHeader() {
     return [
@@ -33,7 +28,7 @@ function generatedFileHeader() {
 function serializeImage( image ) {
     return [
         'export default {',
-        '  "symbols": ' + serializeSymbols( image.symbols ) + ',',
+        '  "symbols": ' + JSON.stringify( image.symbols, null, 2 ) + ',',
         '  "memory": new Uint32Array( [',
         serializeMemory( image.memory ),
         '  ] ),',
@@ -45,20 +40,12 @@ function serializeImage( image ) {
     ].join( '\n' );
 }
 
-function serializeSymbols( symbols ) {
-    return JSON.stringify( symbols, null, 2 )
-        .split( '\n' )
-        .map( ( line ) => '  ' + line )
-        .join( '\n' )
-        .trimStart();
-}
-
 function serializeMemory( memory ) {
     const cellsPerLine = 16;
     const lines = [];
 
     for ( let i = 0; i < memory.length; i += cellsPerLine ) {
-        const chunk = Array.from( memory.subarray( i, i + cellsPerLine ) );
+        const chunk = memory.subarray( i, i + cellsPerLine );
         lines.push( '    ' + chunk.join( ',' ) );
     }
 
