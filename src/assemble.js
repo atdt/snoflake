@@ -28,10 +28,10 @@ export function assemble( program ) {
     }
 
     const dataStart = vm.memPtr,
-          instructions = bindLabels( vm, program ),
+          instructions = bindLabelsAndClaimMemory( vm, program ),
           dataEnd = vm.memPtr;
 
-    writeStorage( vm, program, dataStart, dataEnd );
+    runStorageMacros( vm, program, dataStart, dataEnd );
 
     return {
         symbols: { ...vm.symbols },
@@ -46,7 +46,7 @@ export function assemble( program ) {
 }
 
 // Decide where every label points.
-function bindLabels( vm, program ) {
+function bindLabelsAndClaimMemory( vm, program ) {
     const instructions = [];
 
     for ( let i = 0; i < program.length; i++ ) {
@@ -70,21 +70,23 @@ function bindLabels( vm, program ) {
     return instructions;
 }
 
-// Run an assembly-time macro and return the value its label binds to. Operands
-// that reference forward labels throw during symbol lookup. We treat such
-// operands as zero so the macro can run to claim its memory. Whatever data the
-// macro writes will be overwritten in pass 2 with every symbol bound.
+// Forward-label references throw ReferenceError. Substitute zero so pass 1
+// can claim memory. Pass 2 rewrites the data.
 function runAssemblyMacro( vm, stmt ) {
     const args = stmt.operands.map( operand => {
-        try { return resolveOperand( vm, operand ); }
-        catch { return 0; }
+        try {
+            return resolveOperand( vm, operand );
+        } catch ( e ) {
+            if ( e instanceof ReferenceError ) return 0;
+            throw e;
+        }
     } );
     return sil[ stmt.macro ].apply( vm, args );
 }
 
 // Rewind to the data segment and re-run the assembly-time macros with every
 // symbol bound. Storage macros write into the cells they claimed in pass 1.
-function writeStorage( vm, program, dataStart, dataEnd ) {
+function runStorageMacros( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     for ( const stmt of program ) {
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
