@@ -16,6 +16,10 @@ the language.
 > **Try it now:** [atdt.github.io/snoflake/demo/][3] — Snoflake runs in
 > your browser, no install required.
 
+> **📖 User Guide:** [`docs/manual.md`](docs/manual.md) — a complete,
+> hands-on manual for running Snoflake from the shell, scripting it,
+> embedding it in a web page, and extending it. Start here.
+
 Usage
 -----
 Snoflake can be used three ways: as a command-line interpreter, as a
