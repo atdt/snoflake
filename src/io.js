@@ -57,43 +57,61 @@ export class UnitTable {
         this.units = new Map();
     }
 
-    // Open a unit's input File on first access. The standard input unit
-    // (UNITI) composes, in order: preamble, main source, runtime input,
-    // interactive stdin. Other units start empty and pick up content only
+    // Open a unit's input File on first access. UNITI composes its segments
+    // from host options. Other units start empty and pick up content only
     // when redirectInput rebinds them.
     open( unitNum ) {
         const entry = this.#ensure( unitNum );
-        if ( entry.input ) return entry.input;
-
-        const segments = [];
-        const pushSegment = ( reader, padReads, path ) => {
-            const seg = { reader, padReads };
-            if ( path ) seg.path = path;
-            segments.push( seg );
-        };
-
-        if ( unitNum === UNITI ) {
-            const { source, file, input, interactive, stdinReader } = this.options;
-            if ( this.preamble ) {
-                pushSegment( bufferedReader( this.preamble ), true );
-            }
-            if ( source !== undefined ) {
-                pushSegment( bufferedReader( source ), true, file );
-            } else if ( file ) {
-                pushSegment( bufferedReader( this.loader.load( file ) ), true, file );
-            }
-            if ( input ) {
-                pushSegment( bufferedReader( this.loader.load( input ) ), false );
-            }
-            if ( interactive ) {
-                if ( !stdinReader ) {
-                    throw new Error( 'interactive mode requires options.stdinReader' );
-                }
-                pushSegment( stdinReader(), false );
-            }
+        if ( !entry.input ) {
+            const segments = unitNum === UNITI ? this.#buildStdinSegments() : [];
+            entry.input = new File( segments );
         }
-        entry.input = new File( segments );
         return entry.input;
+    }
+
+    // Compose UNITI's segments in read order: preamble, main source,
+    // runtime input, interactive stdin. Each is included only if the
+    // corresponding option was supplied.
+    #buildStdinSegments() {
+        const { source, file, input, interactive, stdinReader } = this.options;
+        const segments = [];
+
+        if ( this.preamble ) {
+            segments.push( {
+                reader: bufferedReader( this.preamble ),
+                padReads: true,
+            } );
+        }
+        if ( source !== undefined ) {
+            segments.push( {
+                reader: bufferedReader( source ),
+                padReads: true,
+                path: file,
+            } );
+        } else if ( file ) {
+            segments.push( {
+                reader: bufferedReader( this.loader.load( file ) ),
+                padReads: true,
+                path: file,
+            } );
+        }
+        if ( input ) {
+            segments.push( {
+                reader: bufferedReader( this.loader.load( input ) ),
+                padReads: false,
+            } );
+        }
+        if ( interactive ) {
+            if ( !stdinReader ) {
+                throw new Error( 'interactive mode requires options.stdinReader' );
+            }
+            segments.push( {
+                reader: stdinReader(),
+                padReads: false,
+            } );
+        }
+
+        return segments;
     }
 
     redirectInput( unitNum, filePath ) {
