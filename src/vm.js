@@ -244,11 +244,11 @@ export class VM {
     }
 
     d( ptr ) {
-        return ptr instanceof Descriptor ? ptr : new Descriptor( this, ptr );
+        return new Descriptor( this, ptr );
     }
 
     s( ptr ) {
-        return ptr instanceof Specifier ? ptr : new Specifier( this, ptr );
+        return new Specifier( this, ptr );
     }
 
     // SIL source that declares each registered extension via its
