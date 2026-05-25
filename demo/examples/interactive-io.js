@@ -1,11 +1,12 @@
-// Interactive I/O: run a SNOBOL program in a Web Worker so its blocking
-// reads can wait for input typed into the terminal pane. The worker
-// suspends on each read; this module feeds it lines as the user sends them.
+// Interactive I/O: run a SNOBOL program whose blocking reads wait for
+// input typed into the terminal pane. createSession() runs the program on
+// this thread, suspending whenever it reads and resuming as the user sends
+// lines. Eliza's work between reads is light, so no Web Worker is needed.
 
+import { createSession } from '../../src/snobol.js';
 import { loadSource } from '../lib/dom.js';
 
-const sourceUrl = new URL( '../programs/eliza.sno', import.meta.url ),
-      workerUrl = new URL( '../workers/eliza-worker.js', import.meta.url );
+const sourceUrl = new URL( '../programs/eliza.sno', import.meta.url );
 
 export function init() {
     const source  = document.querySelector( '#interactive-io-source' ),
@@ -18,7 +19,7 @@ export function init() {
           send    = document.querySelector( '#interactive-io-send' ),
           eof     = document.querySelector( '#interactive-io-eof' );
 
-    let worker = null,
+    let session = null,
         running = false;
 
     function setStatus( text ) {
@@ -39,10 +40,9 @@ export function init() {
     }
 
     function stop() {
-        if ( worker ) {
-            worker.terminate();
-            worker = null;
-        }
+        // On the main thread the session is just an object; dropping the
+        // reference is all the teardown there is.
+        session = null;
         running = false;
         setInputEnabled( false );
     }
@@ -50,31 +50,22 @@ export function init() {
     function start() {
         stop();
         log.textContent = '';
+        setStatus( 'Running' );
 
-        worker = new Worker( workerUrl, { type: 'module' } );
-        worker.addEventListener( 'message', function ( event ) {
-            const message = event.data;
-            if ( message.type === 'stdout' ) {
-                append( message.line );
-            } else if ( message.type === 'stderr' ) {
-                append( message.line, 'error' );
-            } else if ( message.type === 'done' ) {
+        session = createSession( {
+            source:   source.value,
+            onOutput: ( text ) => append( text ),
+            onError:  ( text ) => append( text, 'error' ),
+            onDone:   ( exitCode ) => {
                 running = false;
                 setInputEnabled( false );
-                setStatus( message.exitCode ? 'Error' : 'Finished' );
-            }
-        } );
-        worker.addEventListener( 'error', function ( event ) {
-            append( event.message, 'error' );
-            running = false;
-            setInputEnabled( false );
-            setStatus( 'Error' );
+                setStatus( exitCode ? 'Error' : 'Finished' );
+            },
         } );
 
         running = true;
-        setStatus( 'Running' );
         setInputEnabled( true );
-        worker.postMessage( { type: 'start', source: source.value } );
+        session.start();
     }
 
     async function reload() {
@@ -93,11 +84,11 @@ export function init() {
 
     form.addEventListener( 'submit', function ( event ) {
         event.preventDefault();
-        if ( !running || !worker ) return;
+        if ( !running || !session ) return;
         const text = line.value;
         line.value = '';
         append( '> ' + text, 'input' );
-        worker.postMessage( { type: 'input', line: text } );
+        session.send( text );
     } );
 
     line.addEventListener( 'keydown', function ( event ) {
@@ -107,9 +98,9 @@ export function init() {
     } );
 
     eof.addEventListener( 'click', function () {
-        if ( !running || !worker ) return;
+        if ( !running || !session ) return;
         append( '<EOF>', 'input' );
-        worker.postMessage( { type: 'eof' } );
+        session.end();
         setInputEnabled( false );
     } );
 
