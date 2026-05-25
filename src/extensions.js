@@ -29,56 +29,31 @@ export const extensions = {
     },
 };
 
-// Recursive-descent parser for signature-form keys.
-// Grammar:  NAME :: ( type, ... ) => result
-class SignatureParser {
-    static ARGS = [ 'int', 'real', 'string' ];
-    static RESULTS = [ ...SignatureParser.ARGS, 'void' ];
-
-    constructor( input ) {
-        this.input = input;
-        this.tokens = input.match( /::|=>|\w+|[(),]/g ) || [];
-        this.offset = 0;
-    }
-
-    peek() { return this.tokens[ this.offset ]; }
-
-    eat( want ) {
-        const token = this.tokens[ this.offset++ ];
-        if ( want !== token && !want.includes( token ) ) {
-            throw new SyntaxError(
-                `Invalid signature "${ this.input }" near "${ token ?? 'end' }"`
-            );
-        }
-        return token;
-    }
-
-    parse( impl ) {
-        const name = this.tokens[ this.offset++ ];
-        if ( name === undefined || !/^\w+$/.test( name ) ) {
-            throw new SyntaxError(
-                `Invalid signature "${ this.input }" near "${ name ?? 'end' }"`
-            );
-        }
-        this.eat( '::' );
-        this.eat( '(' );
-        const args = [];
-        while ( this.peek() !== ')' ) {
-            if ( args.length ) this.eat( ',' );
-            args.push( this.eat( SignatureParser.ARGS ) );
-        }
-        this.eat( ')' );
-        this.eat( '=>' );
-        const result = this.eat( SignatureParser.RESULTS );
-        if ( this.peek() !== undefined ) {
-            throw new SyntaxError(
-                `Invalid signature "${ this.input }" near "${ this.peek() }"`
-            );
-        }
-        return [ name, { args, result, impl } ];
-    }
-}
+// Parse a signature-form key. Grammar:  NAME :: (type, ...) => result
+//   args   in { int, real, string }
+//   result in { int, real, string, void }
+// Whitespace around any token is optional.
+const SIGNATURE = /^(\w+)\s*::\s*\(([\w,\s]*)\)\s*=>\s*(\w+)\s*$/;
+const ARG_TYPES = [ 'int', 'real', 'string' ];
+const RESULT_TYPES = [ ...ARG_TYPES, 'void' ];
 
 export function parseSignature( key, impl ) {
-    return new SignatureParser( key ).parse( impl );
+    const fail = ( reason ) => {
+        throw new SyntaxError( `Invalid signature "${ key }": ${ reason }` );
+    };
+
+    const match = SIGNATURE.exec( key );
+    if ( !match ) fail( 'expected NAME :: (type, ...) => result' );
+
+    const [ , name, argSource, result ] = match;
+    const args = argSource.trim()
+        ? argSource.split( ',' ).map( ( t ) => t.trim() )
+        : [];
+
+    for ( const arg of args ) {
+        if ( !ARG_TYPES.includes( arg ) ) fail( `unknown arg type "${ arg }"` );
+    }
+    if ( !RESULT_TYPES.includes( result ) ) fail( `unknown result type "${ result }"` );
+
+    return [ name, { args, result, impl } ];
 }
