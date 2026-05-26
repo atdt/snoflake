@@ -1,6 +1,6 @@
 // Small string utilities shared across the runtime.
 
-// Write s's char codes directly into dst starting at offset.
+// Write s's char codes into dst starting at offset.
 // dst is expected to be a Uint32Array view of VM memory.
 export function writeString( s, dst, offset ) {
     const len = s.length;

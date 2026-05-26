@@ -19,11 +19,9 @@ export { snobolImage as image };
 
 const DEFAULT_SOURCE_PATH = 'source.sno';
 
-// The inline-source shortcut: bytes flow through options.source; we
-// synthesize a file path so vm.options.file stays meaningful for
-// diagnostics, and we drop sourcePath which UnitTable doesn't know. The
-// synthetic path replaces any explicit file: when source is supplied, the
-// file argument is treated as a label rather than a path to read.
+// When source is passed inline via options.source, the file argument is a
+// label, not a path to read. Move sourcePath into file (UnitTable does not
+// know sourcePath) so vm.options.file still names the source in diagnostics.
 function normalizeOptions( options ) {
     const opts = { ...options };
     if ( Object.hasOwn( opts, 'source' ) ) {

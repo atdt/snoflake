@@ -70,12 +70,10 @@ export function createHostLoader( options = {} ) {
 
     return {
         load( filePath ) {
-            // Resolve a relative path against the SNOLIB search dirs before
-            // falling back to the host cwd. This gives runtime INPUT(...,
-            // 'NAME') the same lookup semantics as -INCLUDE so a fixture can
-            // reference shared data files (e.g. PHRASES.IN) without knowing
-            // where the test runner placed the cwd. Absolute paths are
-            // honored verbatim.
+            // Resolve a relative path against the SNOLIB dirs before falling
+            // back to the host cwd, matching -INCLUDE lookup. A fixture can
+            // then reference a shared data file (e.g. PHRASES.IN) regardless
+            // of the test runner's cwd. Absolute paths are honored verbatim.
             if ( !path.isAbsolute( filePath ) ) {
                 for ( const dir of snolibDirs ) {
                     const buf = tryReadFile( path.join( dir, filePath ) );

@@ -3713,8 +3713,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 
     const val = parseInt( SPEC.specified, 10 );
 
-    // Ensure entire string matched integer (no trailing garbage like "10A")
-    // Note: SNOBOL integers might have leading signs, but trailing characters are invalid.
+    // A leading sign is allowed, but trailing characters are not: reject "10A".
     if ( isNaN( val ) || !/^[+-]?\d+$/.test( SPEC.specified ) ) {
         return this.jmp( FLOC );
     }

@@ -62,7 +62,7 @@ function inputChannel() {
 //     session.end()         signal end-of-input (the host's Ctrl-D), then
 //                           run to completion
 //
-// A non-interactive program simply runs to completion on start().
+// A non-interactive program runs to completion on start().
 export class Session {
     constructor( image, options = {} ) {
         const onOutput = options.onOutput ?? ( () => {} ),
