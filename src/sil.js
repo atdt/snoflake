@@ -1412,10 +1412,17 @@ sil.INCRA = function ( $DESCR, N ) {
     const ptr = $DESCR,
           A = this.i32[ ptr + 0 ];
     this.i32[ ptr + 0 ] = A + N;
-    // ESAICL counts compile-time errors. Capture each one's context now
-    // since LISTCL may keep CDIAG's listing path silent.
+    // ESAICL counts compile-time errors; capture each one's context now,
+    // since LISTCL may keep CDIAG's listing path silent. CSTNCL is bumped
+    // as CMPILE begins each statement; map it to its source card.
     if ( ptr === this.ESAICL_ADDR ) {
-        this.recordCompileError();
+        const emsgPtr = this.i32[ this.symbols.EMSGCL ];
+        this.diagnostics.recordCompileError(
+            this.i32[ this.symbols.CSTNCL ],
+            emsgPtr ? this.s( emsgPtr ).specified : '',
+        );
+    } else if ( ptr === this.CSTNCL_ADDR ) {
+        this.diagnostics.noteStatementStart( A + N );
     }
 };
 
@@ -2602,11 +2609,13 @@ sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // FTLCF is the runtime-fatal header. ERRCF is the compile-pass one.
     // Augment FTLCF with the failing statement's source line, and ERRCF
     // with the compile errors we collected.
+    let context = [];
     if ( FORMAT === this.symbols.FTLCF ) {
-        this.emitErrorContext( descrs[ 1 ].addr, unit );
+        context = this.diagnostics.errorContext( descrs[ 1 ].addr );
     } else if ( FORMAT === this.symbols.ERRCF ) {
-        this.emitCompileErrorSummary( unit );
+        context = this.diagnostics.compileErrorSummary();
     }
+    for ( const line of context ) this.units.write( unit, line );
 };
 
 //     PLUGTB  is used to set selected indicator fields in the
@@ -3980,9 +3989,9 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
         SPEC.length = text.length;
     }
 
-    // UNIT is the compiler's source feed. Record each line for diagnostics.
+    // UNIT is the compiler's source feed. Remember the card for diagnostics.
     if ( $DESCR === this.symbols.UNIT ) {
-        this.recordSourceLine( file.currentSource(), text );
+        this.diagnostics.noteSourceCard( file.currentSource(), text );
     }
 
     return this.jmp( SLOC );
