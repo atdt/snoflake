@@ -3989,9 +3989,9 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
         SPEC.length = text.length;
     }
 
-    // UNIT is the compiler's source feed. Remember the card for diagnostics.
+    // UNIT is the compiler's source feed. Remember the line for diagnostics.
     if ( $DESCR === this.symbols.UNIT ) {
-        this.diagnostics.noteSourceCard( file.currentSource(), text );
+        this.diagnostics.noteSourceLine( file.currentSource(), text );
     }
 
     return this.jmp( SLOC );
