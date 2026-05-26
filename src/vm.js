@@ -69,34 +69,23 @@ export class VM {
         // INTSPC's local conversion buffer, lazily allocated on first use.
         this.intspcBuf = null;
         this.syntaxTables = buildSyntaxTables();
-        // Keep current (CSTACK) and old (OSTACK) stack pointers as VM registers.
-        this.CSTACK = 0;
-        this.OSTACK = 0;
-        // Cached STACK + D * STSIZE for the hot PUSH/RCALL overflow check.
-        // sil.ISTACK populates it once STACK and STSIZE are bound.
-        this.STACK_TOP = 0;
-        // Populated by sil.LOAD as the extension declarations compile.
-        // sil.LINK indexes back in to dispatch the call.
+        // Keep frequently-accessed values as VM registers:
+        this.CSTACK = 0;  // Current stack pointer
+        this.OSTACK = 0;  // Old stack pointer
+        this.TSTACK = 0;  // Stack top pointer
+        this.ESAICL_ADDR = -1;  // Count of compiler errors
         this.extensionsBySlot = [];
-        // Source-location diagnostics: statementLines is sparse, keyed by
-        // 1-based statement number, with the line that statement began on.
         this.statementLines = [];
         this.compileErrors = [];
-        this.ESAICL_ADDR = -1;
     }
 
     run( image ) {
         this.interpret( this.prepare( image ) );
-
-        // A non-negative ip means the program reached END or fell off the
-        // instruction list. A negative ip signals an abnormal halt.
         return this.ip >= 0;
     }
 
     // Load an image and ready the first instruction, returning the compiled
-    // instruction list. run() drives that list to completion in one call;
-    // callers that step the loop themselves -- an interactive session that
-    // must pause for input -- use prepare() and drive the list directly.
+    // instruction list.
     prepare( image ) {
         this.reset();
         this.loadImage( image );

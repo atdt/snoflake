@@ -1624,7 +1624,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 sil.ISTACK = function () {
     this.OSTACK = 0;
     this.CSTACK = this.$( 'STACK' );
-    this.STACK_TOP = this.CSTACK + D * this.$( 'STSIZE' );
+    this.TSTACK = this.CSTACK + D * this.$( 'STSIZE' );
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
@@ -2783,10 +2783,9 @@ sil.PSTACK = function ( $DESCR ) {
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
 sil.PUSH = function ( DESCRs ) {
-    const STACK_TOP = this.STACK_TOP;
     for ( const src of asArray( DESCRs ) ) {
         const dst = this.CSTACK + D;
-        if ( dst > STACK_TOP ) {
+        if ( dst > this.TSTACK ) {
             throw new RangeError( 'Stack overflow' );
         }
         this.CSTACK = dst;
@@ -3037,8 +3036,7 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
     const fallthroughLoc = this.ip,
-          mem = this.mem,
-          STACK_TOP = this.STACK_TOP;
+          mem = this.mem;
 
     // Save the old stack pointer (A0) at A+D. Flags and value are cleared so
     // the slot reads as a plain descriptor.
@@ -3065,7 +3063,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
     if ( Array.isArray( $DESCRs ) ) {
         for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
             const dst = this.CSTACK + D;
-            if ( dst > STACK_TOP ) {
+            if ( dst > this.TSTACK ) {
                 throw new RangeError( 'Stack overflow' );
             }
             this.CSTACK = dst;
@@ -3076,7 +3074,7 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         }
     } else {
         const dst = this.CSTACK + D;
-        if ( dst > STACK_TOP ) {
+        if ( dst > this.TSTACK ) {
             throw new RangeError( 'Stack overflow' );
         }
         this.CSTACK = dst;
@@ -3866,10 +3864,9 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 // will result in an appropriate error termination.
 // 2.  See also PUSH, POP, and SPOP.
 sil.SPUSH = function ( SPECs ) {
-    const STACK_TOP = this.$( 'STACK' ) + D * this.$( 'STSIZE' );
     for ( const arg of asArray( SPECs ) ) {
         const src = this.s( arg );
-        if ( this.CSTACK + src.width > STACK_TOP ) {
+        if ( this.CSTACK + src.width > this.TSTACK ) {
             throw new RangeError( 'Stack overflow' );
         }
         this.CSTACK += src.width;
