@@ -1,10 +1,19 @@
 // The virtual machine: word-addressed memory, descriptor and specifier
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
-import { Descriptor, Specifier, isFloat32, isInt32, isUint32 } from './datatypes.js';
+import {
+    Descriptor,
+    isFloat32,
+    isInt32,
+    isUint32,
+    Specifier,
+} from './datatypes.js';
 import { Diagnostics } from './diagnostics.js';
-import { extensions as defaultExtensions, parseSignature } from './extensions.js';
-import { UnitTable, defaultStdout, defaultLoader } from './io.js';
+import {
+    extensions as defaultExtensions,
+    parseSignature,
+} from './extensions.js';
+import { defaultLoader, defaultStdout, UnitTable } from './io.js';
 import { sil } from './sil.js';
 import { writeString } from './string.js';
 import { bindSyntaxTables, buildSyntaxTables } from './syntax.js';
@@ -35,7 +44,12 @@ const HOST_SWITCHES = {
 
 // SNOBOL type names used in LOAD prototypes, keyed by extension kind.
 // Void maps to STRING because SNOBOL has no void result type.
-const TYPE_NAMES = { int: 'INTEGER', real: 'REAL', string: 'STRING', void: 'STRING' };
+const TYPE_NAMES = {
+    int: 'INTEGER',
+    real: 'REAL',
+    string: 'STRING',
+    void: 'STRING',
+};
 
 export class VM {
     constructor( options = {} ) {
@@ -45,12 +59,16 @@ export class VM {
         // empty (intended for tests that need a bare runtime). Function
         // values are signature-form keys ('NAME :: (types) => type').
         // Object values are the canonical { args, result, impl } shape.
-        this.extensions = options.extensions === null ? {} : { ...defaultExtensions };
-        for ( const [ key, value ] of Object.entries( options.extensions || {} ) ) {
+        this.extensions = options.extensions === null
+            ? {}
+            : { ...defaultExtensions };
+        for (
+            const [ key, value ] of Object.entries( options.extensions || {} )
+        ) {
             const [ name, entry ] = typeof value === 'function'
                 ? parseSignature( key, value )
                 : [ key, value ];
-            this.extensions[ name ] = entry;
+            this.extensions[name] = entry;
         }
         this.reset();
     }
@@ -71,11 +89,11 @@ export class VM {
         this.intspcBuf = null;
         this.syntaxTables = buildSyntaxTables();
         // Keep frequently-accessed values as VM registers:
-        this.CSTACK = 0;  // Current stack pointer
-        this.OSTACK = 0;  // Old stack pointer
-        this.TSTACK = 0;  // Stack top pointer
-        this.ESAICL_ADDR = -1;  // Count of compiler errors
-        this.CSTNCL_ADDR = -1;  // Compiler statement counter
+        this.CSTACK = 0; // Current stack pointer
+        this.OSTACK = 0; // Old stack pointer
+        this.TSTACK = 0; // Stack top pointer
+        this.ESAICL_ADDR = -1; // Count of compiler errors
+        this.CSTNCL_ADDR = -1; // Compiler statement counter
         this.extensionsBySlot = [];
         this.diagnostics = new Diagnostics();
     }
@@ -112,7 +130,10 @@ export class VM {
         this.ESAICL_ADDR = this.symbols.ESAICL ?? -1;
         this.CSTNCL_ADDR = this.symbols.CSTNCL ?? -1;
         // Minimal test images may omit syntax-table symbols.
-        bindSyntaxTables( this.syntaxTables, ( name ) => this.symbols[ name ] ?? 0 );
+        bindSyntaxTables(
+            this.syntaxTables,
+            ( name ) => this.symbols[name] ?? 0,
+        );
     }
 
     applyHostSwitches() {
@@ -120,8 +141,8 @@ export class VM {
         // After loading, overwrite them from the VM options for this run.
         for ( const symbol in HOST_SWITCHES ) {
             if ( Object.hasOwn( this.symbols, symbol ) ) {
-                const option = HOST_SWITCHES[ symbol ],
-                      enabled = this.options[ option ] ? 1 : 0;
+                const option = HOST_SWITCHES[symbol],
+                    enabled = this.options[option] ? 1 : 0;
                 this.d( symbol ).addr = enabled;
             }
         }
@@ -131,10 +152,12 @@ export class VM {
     compileInstructions( instructions ) {
         return instructions.map( ( stmt, idx ) => {
             const [ /*label*/, macro, args ] = stmt,
-                  impl = sil[ macro ];
+                impl = sil[macro];
 
             if ( !impl ) {
-                throw new Error( `Unknown SIL macro "${ macro }" at instruction ${ idx }` );
+                throw new Error(
+                    `Unknown SIL macro "${macro}" at instruction ${idx}`,
+                );
             }
             return impl.bind( this, ...args );
         } );
@@ -142,7 +165,7 @@ export class VM {
 
     interpret( instructions ) {
         while ( this.ip >= 0 && this.ip < instructions.length ) {
-            instructions[ this.ip++ ]();
+            instructions[this.ip++]();
         }
     }
 
@@ -164,7 +187,7 @@ export class VM {
     resetMemory() {
         this.memPtr = 0;
         this.buffer = new ArrayBuffer( wordsToBytes( INITIAL_WORDS ), {
-            maxByteLength: wordsToBytes( MAX_WORDS )
+            maxByteLength: wordsToBytes( MAX_WORDS ),
         } );
         this.rebindMemoryViews();
     }
@@ -196,29 +219,35 @@ export class VM {
         return ptr;
     }
 
-    getUint( ptr )        { return this.mem[ ptr ]; }
-    getInt( ptr )         { return this.i32[ ptr ]; }
-    getReal( ptr )        { return this.f32[ ptr ]; }
+    getUint( ptr ) {
+        return this.mem[ptr];
+    }
+    getInt( ptr ) {
+        return this.i32[ptr];
+    }
+    getReal( ptr ) {
+        return this.f32[ptr];
+    }
 
     setUint( ptr, value ) {
         if ( !isUint32( value ) ) {
-            throw new RangeError( `Invalid Uint32: ${ value }` );
+            throw new RangeError( `Invalid Uint32: ${value}` );
         }
-        this.mem[ ptr ] = value;
+        this.mem[ptr] = value;
     }
 
     setInt( ptr, value ) {
         if ( !isInt32( value ) ) {
-            throw new RangeError( `Invalid Int32: ${ value }` );
+            throw new RangeError( `Invalid Int32: ${value}` );
         }
-        this.i32[ ptr ] = value;
+        this.i32[ptr] = value;
     }
 
     setReal( ptr, value ) {
         if ( !isFloat32( value ) ) {
-            throw new RangeError( `Invalid Float32: ${ value }` );
+            throw new RangeError( `Invalid Float32: ${value}` );
         }
-        this.f32[ ptr ] = value;
+        this.f32[ptr] = value;
     }
 
     // Bind a symbol. A string value allocates storage, encodes the bytes,
@@ -226,10 +255,10 @@ export class VM {
     define( symbol, value ) {
         if ( typeof value === 'string' ) {
             const ptr = this.alloc( value.length );
-            this.symbols[ symbol ] = ptr;
+            this.symbols[symbol] = ptr;
             writeString( value, this.mem, ptr );
         } else {
-            this.symbols[ symbol ] = value;
+            this.symbols[symbol] = value;
         }
     }
 
@@ -238,14 +267,14 @@ export class VM {
     // call it constantly.
     $( key ) {
         if ( Object.hasOwn( this.symbols, key ) ) {
-            return this.symbols[ key ];
+            return this.symbols[key];
         }
-        throw new ReferenceError( `Unknown symbol "${ key }"` );
+        throw new ReferenceError( `Unknown symbol "${key}"` );
     }
 
     specify( text, $SPEC ) {
         const SPEC = this.s( $SPEC ),
-              ptr = this.alloc( text.length );
+            ptr = this.alloc( text.length );
         SPEC.set( ptr, 0, 0, 0, text.length );
         writeString( text, this.mem, ptr );
         return SPEC.ptr;
@@ -265,9 +294,11 @@ export class VM {
     #buildPreamble() {
         const loads = [];
         for ( const [ name, ext ] of Object.entries( this.extensions ) ) {
-            const argTypes = ext.args.map( ( k ) => TYPE_NAMES[ k ] ).join( ',' );
-            const resultType = TYPE_NAMES[ ext.result ];
-            loads.push( ` LOAD('${ name }(${ argTypes })${ resultType }','JS')` );
+            const argTypes = ext.args
+                .map( ( k ) => TYPE_NAMES[k] )
+                .join( ',' );
+            const resultType = TYPE_NAMES[ext.result];
+            loads.push( ` LOAD('${name}(${argTypes})${resultType}','JS')` );
         }
         if ( !loads.length ) return '';
         return [ '-HIDE', ...loads, '-UNHIDE', '' ].join( '\n' );

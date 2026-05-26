@@ -4,7 +4,7 @@
 
 // "path:line", or "line N" when the line carries no path.
 function formatLocation( line ) {
-    return line.path ? `${ line.path }:${ line.lineNum }` : `line ${ line.lineNum }`;
+    return line.path ? `${line.path}:${line.lineNum}` : `line ${line.lineNum}`;
 }
 
 export class Diagnostics {
@@ -19,7 +19,7 @@ export class Diagnostics {
     }
 
     noteStatementStart( stno ) {
-        this.statementLines[ stno ] = this.currentLine;
+        this.statementLines[stno] = this.currentLine;
     }
 
     recordCompileError( stno, message ) {
@@ -28,7 +28,9 @@ export class Diagnostics {
 
     // The line statement `stno` began on, or the latest line for stno 0.
     #lineFor( stno ) {
-        return stno > 0 ? ( this.statementLines[ stno ] ?? null ) : this.currentLine;
+        return stno > 0
+            ? ( this.statementLines[stno] ?? null )
+            : this.currentLine;
     }
 
     // Context appended to "ERROR n IN STATEMENT m": messages logged
@@ -36,11 +38,13 @@ export class Diagnostics {
     errorContext( stno ) {
         const lines = [];
         for ( const err of this.compileErrors ) {
-            if ( err.stno === stno && err.message ) lines.push( '*** ' + err.message );
+            if ( err.stno === stno && err.message ) {
+                lines.push( '*** ' + err.message );
+            }
         }
         const line = this.#lineFor( stno );
         if ( line ) {
-            lines.push( `  at ${ formatLocation( line ) }` );
+            lines.push( `  at ${formatLocation( line )}` );
             lines.push( '    ' + line.text.trimEnd() );
         }
         return lines;
@@ -52,8 +56,8 @@ export class Diagnostics {
         const lines = [];
         for ( const err of this.compileErrors ) {
             const line = this.#lineFor( err.stno );
-            const at = line ? ` at ${ formatLocation( line ) }` : '';
-            lines.push( `*** ${ err.message } (in statement ${ err.stno }${ at })` );
+            const at = line ? ` at ${formatLocation( line )}` : '';
+            lines.push( `*** ${err.message} (in statement ${err.stno}${at})` );
             if ( line ) lines.push( '    ' + line.text.trimEnd() );
         }
         return lines;

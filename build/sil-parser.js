@@ -72,7 +72,7 @@ function parseOperands( source, lineNumber ) {
     function operandList() {
         const operands = [ operand() ];
         while ( peek() === ',' ) {
-            offset++;                          // consume the comma
+            offset++; // consume the comma
             const next = peek();
             // A blank, tab, or end-of-input here begins a trailing comment.
             if ( !next || next === ' ' || next === '\t' ) break;
@@ -97,7 +97,7 @@ function parseOperands( source, lineNumber ) {
     }
 
     function list() {
-        offset++;  // consume '('
+        offset++; // consume '('
         const items = [];
 
         if ( peek() !== ')' ) {
@@ -111,13 +111,13 @@ function parseOperands( source, lineNumber ) {
         if ( peek() !== ')' ) {
             fail( 'Expected )' );
         }
-        offset++;  // consume ')'
+        offset++; // consume ')'
 
         return { type: 'list', items };
     }
 
     function literal() {
-        offset++;  // skip opening quote
+        offset++; // skip opening quote
         const start = offset;
 
         while ( peek() !== "'" ) {
@@ -128,7 +128,7 @@ function parseOperands( source, lineNumber ) {
         }
 
         const value = source.slice( start, offset );
-        offset++;  // skip closing quote
+        offset++; // skip closing quote
         return value;
     }
 
@@ -174,7 +174,7 @@ function parseOperands( source, lineNumber ) {
         if ( isUpper( peek() ) ) {
             return { type: 'symbol', name: name() };
         }
-        fail( `Expected operand, got "${ peek() ?? 'end' }"` );
+        fail( `Expected operand, got "${peek() ?? 'end'}"` );
     }
 
     function integer() {

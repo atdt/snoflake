@@ -16,16 +16,16 @@ export const FAIL = Symbol( 'FAIL' );
 export const extensions = {
     // CHAR(N): the one-byte string whose code is N.
     CHAR: {
-        args:   [ 'int' ],
+        args: [ 'int' ],
         result: 'string',
-        impl:   ( n ) => String.fromCharCode( n ),
+        impl: ( n ) => String.fromCharCode( n ),
     },
 
     // ORD(S): the code of the first byte of S.
     ORD: {
-        args:   [ 'string' ],
+        args: [ 'string' ],
         result: 'int',
-        impl:   ( s ) => s.charCodeAt( 0 ),
+        impl: ( s ) => s.charCodeAt( 0 ),
     },
 };
 
@@ -39,7 +39,7 @@ const RESULT_TYPES = [ ...ARG_TYPES, 'void' ];
 
 export function parseSignature( key, impl ) {
     const fail = ( reason ) => {
-        throw new SyntaxError( `Invalid signature "${ key }": ${ reason }` );
+        throw new SyntaxError( `Invalid signature "${key}": ${reason}` );
     };
 
     const match = SIGNATURE.exec( key );
@@ -51,9 +51,11 @@ export function parseSignature( key, impl ) {
         : [];
 
     for ( const arg of args ) {
-        if ( !ARG_TYPES.includes( arg ) ) fail( `unknown arg type "${ arg }"` );
+        if ( !ARG_TYPES.includes( arg ) ) fail( `unknown arg type "${arg}"` );
     }
-    if ( !RESULT_TYPES.includes( result ) ) fail( `unknown result type "${ result }"` );
+    if ( !RESULT_TYPES.includes( result ) ) {
+        fail( `unknown result type "${result}"` );
+    }
 
     return [ name, { args, result, impl } ];
 }

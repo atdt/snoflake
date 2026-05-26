@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const LF = 10,
-      CR = 13;
+    CR = 13;
 
 // Synchronous because STREAD runs inside the VM dispatch loop. Hosts that
 // need async input should supply their own reader through VM options.
@@ -23,7 +23,9 @@ export function stdinReader() {
             return line;
         },
 
-        close() { closed = true; },
+        close() {
+            closed = true;
+        },
     };
 }
 
@@ -31,7 +33,7 @@ export function stdinReader() {
 // more would steal bytes that belong to later STREAD calls.
 function readLineFromStdinSync() {
     const buf = new Uint8Array( 1 ),
-          chunks = [];
+        chunks = [];
 
     while ( true ) {
         let n;
@@ -46,9 +48,9 @@ function readLineFromStdinSync() {
             if ( chunks.length === 0 ) return null;
             return Uint8Array.from( chunks );
         }
-        if ( buf[ 0 ] === LF ) return Uint8Array.from( chunks );
-        if ( buf[ 0 ] !== CR ) {
-            chunks.push( buf[ 0 ] );
+        if ( buf[0] === LF ) return Uint8Array.from( chunks );
+        if ( buf[0] !== CR ) {
+            chunks.push( buf[0] );
         }
     }
 }
@@ -88,7 +90,9 @@ export function createHostLoader( options = {} ) {
             return {
                 write( line ) {
                     if ( fd === null ) {
-                        throw new Error( `Write to closed output: ${ filePath }` );
+                        throw new Error(
+                            `Write to closed output: ${filePath}`,
+                        );
                     }
                     fs.writeSync( fd, line + '\n' );
                 },
@@ -105,11 +109,13 @@ export function createHostLoader( options = {} ) {
             // Try the path as given (cwd or absolute), then each -I/SNOLIB
             // directory in turn.
             for ( const dir of [ '', ...snolibDirs ] ) {
-                const filePath = dir ? path.join( dir, includePath ) : includePath;
+                const filePath = dir
+                    ? path.join( dir, includePath )
+                    : includePath;
                 const buf = tryReadFile( filePath );
                 if ( buf !== null ) return { path: filePath, content: buf };
             }
             return null;
-        }
+        },
     };
 }

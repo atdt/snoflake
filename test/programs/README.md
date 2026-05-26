@@ -2,8 +2,8 @@
 
 `test/programs/` holds end-to-end SNOBOL test programs. Each `*.sno` file is a
 single test case: a runnable SNOBOL program with an embedded header that
-declares the test's title, runtime options, optional stdin, expected output,
-and match mode. The Node test runner at `test/test-programs.js` enumerates the
+declares the test's title, runtime options, optional stdin, expected output, and
+match mode. The Node test runner at `test/test-programs.js` enumerates the
 directory and emits one `it(...)` per file.
 
 These tests complement the focused unit tests in `test/test-*.js`. Use a
@@ -26,8 +26,8 @@ Header lines take one of two forms.
 * @key value
 ```
 
-**Multi-line block.** Each line inside the block is `*` followed by payload;
-the runner strips the leading `*` (or bare `*` for an empty payload line) and
+**Multi-line block.** Each line inside the block is `*` followed by payload; the
+runner strips the leading `*` (or bare `*` for an empty payload line) and
 preserves the rest verbatim.
 
 ```snobol
@@ -42,14 +42,14 @@ silently dropping expectations.
 
 ## Directives
 
-| Directive  | Form       | Required                          | Purpose                                                   |
-|------------|------------|-----------------------------------|-----------------------------------------------------------|
-| `@title`   | single     | yes                               | Used as the test name.                                    |
-| `@options` | single     | no                                | JSON object merged into `snoflake`'s options.               |
-| `@input`   | multi-line | no                                | Lines written to a tmp file; runner wires up `input` opt. |
-| `@expect`  | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                          |
-| `@match`   | single     | no                                | `exact` (default), `substring`, or `error`.               |
-| `@attribution` | single | no                                | Free-text credit for where the program came from. Informational only. |
+| Directive      | Form       | Required                                    | Purpose                                                               |
+| -------------- | ---------- | ------------------------------------------- | --------------------------------------------------------------------- |
+| `@title`       | single     | yes                                         | Used as the test name.                                                |
+| `@options`     | single     | no                                          | JSON object merged into `snoflake`'s options.                         |
+| `@input`       | multi-line | no                                          | Lines written to a tmp file; runner wires up `input` opt.             |
+| `@expect`      | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                                      |
+| `@match`       | single     | no                                          | `exact` (default), `substring`, or `error`.                           |
+| `@attribution` | single     | no                                          | Free-text credit for where the program came from. Informational only. |
 
 ### `@options`
 
@@ -69,14 +69,13 @@ Other recognized keys (`case`, `list`, ...) are passed through to
 
 ### `@input`
 
-The inline `@input` block feeds the program's default `INPUT` stream
-(unit 5). If present, the block payload is written to a tmp file and the
-runner sets `"input": "<path>"` in the merged options object. The runner
-rejects `input` in `@options` (see above), so `@input` and
-`@options.input` cannot coexist.
+The inline `@input` block feeds the program's default `INPUT` stream (unit 5).
+If present, the block payload is written to a tmp file and the runner sets
+`"input": "<path>"` in the merged options object. The runner rejects `input` in
+`@options` (see above), so `@input` and `@options.input` cannot coexist.
 
-Fixtures that need to read additional named data files at runtime can
-open them via SNOBOL's `INPUT(.VAR, U, , 'NAME')` association — see
+Fixtures that need to read additional named data files at runtime can open them
+via SNOBOL's `INPUT(.VAR, U, , 'NAME')` association — see
 [Loading shared data files](#loading-shared-data-files) below.
 
 ### `@expect` block contents
@@ -117,34 +116,33 @@ Match modes:
   `snoflake`'s stdout. The data section runs from the line after the
   `NO ERRORS DETECTED IN SOURCE PROGRAM` banner up to the line before the
   `NORMAL TERMINATION AT LEVEL` epilogue. The runner anchors on the _last_
-  `NORMAL TERMINATION AT LEVEL` occurrence after the success banner so a
-  program that prints the phrase itself does not truncate the data section.
-  Interior blank lines are preserved; only the final trailing newline of the
-  captured section is normalized before comparison.
+  `NORMAL TERMINATION AT LEVEL` occurrence after the success banner so a program
+  that prints the phrase itself does not truncate the data section. Interior
+  blank lines are preserved; only the final trailing newline of the captured
+  section is normalized before comparison.
 
-  In this mode the runner also asserts that none of the recognized error
-  markers appear anywhere in stdout.
+  In this mode the runner also asserts that none of the recognized error markers
+  appear anywhere in stdout.
 
 - **`substring`**: the `@expect` block must appear as a contiguous substring
-  anywhere in `snoflake`'s full stdout. Useful when banner extraction is
-  brittle or the test is intentionally loose. The same error-marker check
-  applies as in `exact`.
+  anywhere in `snoflake`'s full stdout. Useful when banner extraction is brittle
+  or the test is intentionally loose. The same error-marker check applies as in
+  `exact`.
 
-- **`error`**: assert the run _did_ produce one of the recognized error
-  markers. If `@expect` is present, it is matched as a substring against the
-  captured stdout/stderr.
+- **`error`**: assert the run _did_ produce one of the recognized error markers.
+  If `@expect` is present, it is matched as a substring against the captured
+  stdout/stderr.
 
 #### Recognized error markers
 
 The same fixed list is used for both the negative check in `exact`/`substring`
-and the positive check in `error`. Matches are case-insensitive so the same
-list catches snoflake (IBM-spec uppercase) and CSNOBOL4 (mixed case) error
-text:
+and the positive check in `error`. Matches are case-insensitive so the same list
+catches snoflake (IBM-spec uppercase) and CSNOBOL4 (mixed case) error text:
 
 - `ERROR IN SNOBOL4 SYSTEM`
 - `Compilation error`
 - `Execution error`
-- ` at level ` — catches the IBM-spec runtime-error preamble
+- `at level` — catches the IBM-spec runtime-error preamble
   `ERROR NN IN STATEMENT NN AT LEVEL NN` emitted by both implementations
 
 Adding a new marker is a deliberate change to the runner, not something tests
@@ -157,10 +155,9 @@ CSNOBOL4 mixed); the fixture describes semantic content, not formatting.
 #### Picking between `substring` and `error`
 
 For a fixture that asserts an expected runtime error (e.g. an explicit
-`&STLIMIT` violation), use `@match error`. `@match substring` requires a
-clean exit, which CSNOBOL4 does not produce on runtime errors — the cross-
-check helper would reject it even though snoflake's in-process run accepts
-it.
+`&STLIMIT` violation), use `@match error`. `@match substring` requires a clean
+exit, which CSNOBOL4 does not produce on runtime errors — the cross- check
+helper would reject it even though snoflake's in-process run accepts it.
 
 On mismatch, the runner dumps full actual output to
 `tmp/test-programs/<name>.actual` and references the path in the assertion
@@ -221,23 +218,22 @@ END
 ## Loading shared data files
 
 A fixture can open named data files at runtime through the standard
-`INPUT(.VAR, U, , 'NAME')` association. The loader resolves `'NAME'`
-against the SNOLIB search path — the same lookup `-INCLUDE` uses — so a
-file committed under `test/programs/gimpel/` (or wherever `gimpelLoader`
-points) is found by bare name regardless of the test runner's cwd.
+`INPUT(.VAR, U, , 'NAME')` association. The loader resolves `'NAME'` against the
+SNOLIB search path — the same lookup `-INCLUDE` uses — so a file committed under
+`test/programs/gimpel/` (or wherever `gimpelLoader` points) is found by bare
+name regardless of the test runner's cwd.
 
 This is the right idiom when the program needs:
 
-- a shared data file used by several fixtures (e.g. `PHRASES.IN`,
-  `RSEASON.IN`),
+- a shared data file used by several fixtures (e.g. `PHRASES.IN`, `RSEASON.IN`),
 - multiple distinct input streams interleaved (e.g. `MFREAD`),
-- or a program written faithful to its historical original, which opens
-  files by name rather than reading raw stdin.
+- or a program written faithful to its historical original, which opens files by
+  name rather than reading raw stdin.
 
 ### Switching `INPUT` back to the `@input` stream
 
-To rebind the `INPUT` variable to the runtime stdin stream after consuming
-a file, use the unit-rebind idiom:
+To rebind the `INPUT` variable to the runtime stdin stream after consuming a
+file, use the unit-rebind idiom:
 
 ```snobol
         INPUT(.INPUT, 8, , 'PHRASES.IN')   ; bind INPUT to unit 8 = file
@@ -245,42 +241,40 @@ a file, use the unit-rebind idiom:
         INPUT(.INPUT, 5)                    ; rebind INPUT to unit 5 (stdin)
 ```
 
-Unit 5 still holds the runtime-input segment carried over from
-compilation, so the rebind is a pure INATL association change with no
-file open. Subsequent reads of `INPUT` continue from the `@input` block.
+Unit 5 still holds the runtime-input segment carried over from compilation, so
+the rebind is a pure INATL association change with no file open. Subsequent
+reads of `INPUT` continue from the `@input` block.
 
-Use unit 8 or higher (not 6 or 7) for the data file: CSNOBOL4 reserves
-unit 6 for `OUTPUT` and unit 7 for `PUNCH`, and rebinding either to an
-input file makes subsequent writes to that stream fail.
+Use unit 8 or higher (not 6 or 7) for the data file: CSNOBOL4 reserves unit 6
+for `OUTPUT` and unit 7 for `PUNCH`, and rebinding either to an input file makes
+subsequent writes to that stream fail.
 
 ### Writable scratch files
 
-Programs that need a writable temporary file (e.g. the two-pass ASM
-fixture's `tmp/ASMTEMP` scratch listing) should write under a `tmp/`
-prefix. The repo-wide `tmp/` gitignore covers both the top-level
-`tmp/` (the snoflake test runner's cwd) and `test/programs/gimpel/tmp/`
-(the CSNOBOL4 cross-check helper's cwd). The cross-check helper
-pre-creates the latter so the fixture's first `OUTPUT(...)` to a
-`tmp/`-prefixed path can open the file.
+Programs that need a writable temporary file (e.g. the two-pass ASM fixture's
+`tmp/ASMTEMP` scratch listing) should write under a `tmp/` prefix. The repo-wide
+`tmp/` gitignore covers both the top-level `tmp/` (the snoflake test runner's
+cwd) and `test/programs/gimpel/tmp/` (the CSNOBOL4 cross-check helper's cwd).
+The cross-check helper pre-creates the latter so the fixture's first
+`OUTPUT(...)` to a `tmp/`-prefixed path can open the file.
 
 ### Post-`END` source data
 
-Historical SNOBOL4 (and snoflake) treats the source file as a single
-stream: lines after the `END` statement are not source, they are runtime
-`INPUT` data read off the same unit. CSNOBOL4 disables this by default
-(its `-r` flag toggles it). The cross-check helper detects post-`END`
-source and prepends it to the `@input` block when piping stdin to
-CSNOBOL4, so a fixture relying on this layout (e.g. the original Duquet
-ELIZA distribution, whose conversation script sits after `END`) runs
-under both implementations.
+Historical SNOBOL4 (and snoflake) treats the source file as a single stream:
+lines after the `END` statement are not source, they are runtime `INPUT` data
+read off the same unit. CSNOBOL4 disables this by default (its `-r` flag toggles
+it). The cross-check helper detects post-`END` source and prepends it to the
+`@input` block when piping stdin to CSNOBOL4, so a fixture relying on this
+layout (e.g. the original Duquet ELIZA distribution, whose conversation script
+sits after `END`) runs under both implementations.
 
 ## Adding fixtures
 
-Use descriptive file names and titles that identify the behavior under test,
-not just the chapter or page number. Prefer names like
+Use descriptive file names and titles that identify the behavior under test, not
+just the chapter or page number. Prefer names like
 `recursive-binary-conversion.sno` or `fullscan-combinations.sno`. Include an
-`@attribution` tag when the program comes from a book, paper, historical
-source, or local reduction of such an example.
+`@attribution` tag when the program comes from a book, paper, historical source,
+or local reduction of such an example.
 
 When transcribing historical examples, remember that OCR output is often wrong
 in exactly the places SNOBOL cares about most: leading blanks, continuation
@@ -317,8 +311,8 @@ For input-driven fixtures, put stdin in an `@input` block rather than in
 `@options`. If the historical program assumes fixed-width card input, either
 preserve the significant blanks in the `@input` block or make the program trim
 only the display copy while matching against the fixed-width data. Be explicit
-about blank output lines in `@expect`; a bare `*` line inside the block means
-an expected empty line.
+about blank output lines in `@expect`; a bare `*` line inside the block means an
+expected empty line.
 
 ## Running
 
@@ -340,7 +334,7 @@ node tools/check-csnobol4.js --update FIX    # rewrite @expect with CSNOBOL4 std
 
 `--update` only rewrites `@match exact` fixtures whose CSNOBOL4 run did not
 error; `substring` and `error` fixtures are left untouched with a skip note.
-`@options` runtime flags (`case`, …) are not translated to CSNOBOL4
-invocation flags — fixtures that set them get a `WARN` line so disagreements
-are not mis-attributed. Mismatched runs are dumped to
+`@options` runtime flags (`case`, …) are not translated to CSNOBOL4 invocation
+flags — fixtures that set them get a `WARN` line so disagreements are not
+mis-attributed. Mismatched runs are dumped to
 `tmp/check-csnobol4/<name>.actual`. Override the binary with `SNOBOL4=<path>`.

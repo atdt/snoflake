@@ -8,7 +8,12 @@ import { assemble } from '../src/assemble.js';
 import { parse as parseSil } from './sil-parser.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
-const sourcePath = path.join( __dirname, '..', 'external', 'v311-snoflake.sil' );
+const sourcePath = path.join(
+    __dirname,
+    '..',
+    'external',
+    'v311-snoflake.sil',
+);
 
 const listing = parseSil( fs.readFileSync( sourcePath, 'utf8' ) );
 const image = assemble( listing );

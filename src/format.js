@@ -21,28 +21,28 @@ export function formatRecord( template, data ) {
     }
 
     function nextDescr() {
-        return descrIdx < descrData.length ? descrData[ descrIdx++ ] : null;
+        return descrIdx < descrData.length ? descrData[descrIdx++] : null;
     }
 
     function skipSeparators() {
         // FORTRAN treats whitespace and ',' interchangeably between items.
-        while ( i < template.length && /[\s,]/.test( template[ i ] ) ) i++;
+        while ( i < template.length && /[\s,]/.test( template[i] ) ) i++;
     }
 
     function parseDigits() {
         const m = /^(\d+)/.exec( template.slice( i ) );
         if ( !m ) return 0;
-        i += m[ 1 ].length;
-        return parseInt( m[ 1 ], 10 );
+        i += m[1].length;
+        return parseInt( m[1], 10 );
     }
 
     // FORTRAN doubles the quote character to embed it in a quoted literal.
     function readQuotedLiteral( quote ) {
         let literal = '';
         while ( i < template.length ) {
-            const ch = template[ i++ ];
+            const ch = template[i++];
             if ( ch === quote ) {
-                if ( template[ i ] === quote ) {
+                if ( template[i] === quote ) {
                     literal += quote;
                     i++;
                     continue;
@@ -56,8 +56,8 @@ export function formatRecord( template, data ) {
 
     function skipPauseQuoteMarks() {
         for ( ;; ) {
-            while ( i < template.length && /\s/.test( template[ i ] ) ) i++;
-            const mark = template[ i ];
+            while ( i < template.length && /\s/.test( template[i] ) ) i++;
+            const mark = template[i];
             if ( mark !== '"' && mark !== "'" ) return;
             const saved = i;
             i++;
@@ -73,8 +73,8 @@ export function formatRecord( template, data ) {
     // A-conversions. PAUSE may carry a quoted apostrophe marker.
     function skipControlWord( first ) {
         let word = first;
-        while ( i < template.length && /[A-Za-z0-9.]/.test( template[ i ] ) ) {
-            word += template[ i++ ];
+        while ( i < template.length && /[A-Za-z0-9.]/.test( template[i] ) ) {
+            word += template[i++];
         }
         if ( word === 'PAUSE' ) skipPauseQuoteMarks();
     }
@@ -83,14 +83,14 @@ export function formatRecord( template, data ) {
         skipSeparators();
         if ( i >= template.length ) break;
 
-        if ( template[ i ] === '/' ) {
+        if ( template[i] === '/' ) {
             out += '\n';
             i++;
             continue;
         }
 
         const rep = parseDigits() || 1;
-        const code = template[ i++ ];
+        const code = template[i++];
 
         switch ( code ) {
             case '"':
@@ -129,7 +129,7 @@ export function formatRecord( template, data ) {
             case 'F': {
                 const fw = parseDigits();
                 let fd = 0;
-                if ( template[ i ] === '.' ) {
+                if ( template[i] === '.' ) {
                     i++;
                     fd = parseDigits();
                 }
@@ -153,13 +153,15 @@ export function formatRecord( template, data ) {
 function stripOuterParens( template ) {
     if ( !template ) return template;
     const m = /^\s*\((.*)\)\s*$/.exec( template );
-    return m ? m[ 1 ] : template;
+    return m ? m[1] : template;
 }
 
 function normalizeData( data ) {
-    if ( typeof data === 'string' )                  return { strData: data, descrData: [] };
-    if ( Array.isArray( data ) )                     return { strData: '', descrData: data };
-    if ( data && typeof data === 'object' )          return { strData: '', descrData: [ data ] };
+    if ( typeof data === 'string' ) return { strData: data, descrData: [] };
+    if ( Array.isArray( data ) ) return { strData: '', descrData: data };
+    if ( data && typeof data === 'object' ) {
+        return { strData: '', descrData: [ data ] };
+    }
     return { strData: '', descrData: [] };
 }
 
@@ -177,8 +179,10 @@ export function formatHasLeadingCarriageControl( template ) {
 // are kept. Embedded NULs (from zero-filled buffer cells beyond a string's
 // logical length) are stripped so they never reach the printer.
 export function printerLines( template, data, { stripCarriageControl } ) {
-    return formatRecord( template, data ).split( '\n' ).map( line => {
-        if ( stripCarriageControl && /^[10+ ]/.test( line ) ) line = line.slice( 1 );
+    return formatRecord( template, data ).split( '\n' ).map( ( line ) => {
+        if ( stripCarriageControl && /^[10+ ]/.test( line ) ) {
+            line = line.slice( 1 );
+        }
         return line.replaceAll( '\0', '' );
     } );
 }

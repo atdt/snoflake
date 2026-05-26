@@ -48,19 +48,37 @@ export class Descriptor {
         this.ptr = ptr;
     }
 
-    get width()     { return D; }
+    get width() {
+        return D;
+    }
 
-    get addr()    { return this.vm.getInt( this.ptr ); }
-    set addr( n ) { this.vm.setInt( this.ptr, n ); }
+    get addr() {
+        return this.vm.getInt( this.ptr );
+    }
+    set addr( n ) {
+        this.vm.setInt( this.ptr, n );
+    }
 
-    get raddr()    { return this.vm.getReal( this.ptr ); }
-    set raddr( n ) { this.vm.setReal( this.ptr, n ); }
+    get raddr() {
+        return this.vm.getReal( this.ptr );
+    }
+    set raddr( n ) {
+        this.vm.setReal( this.ptr, n );
+    }
 
-    get flags()    { return this.vm.getUint( this.ptr + 1 ); }
-    set flags( n ) { this.vm.setUint( this.ptr + 1, n ); }
+    get flags() {
+        return this.vm.getUint( this.ptr + 1 );
+    }
+    set flags( n ) {
+        this.vm.setUint( this.ptr + 1, n );
+    }
 
-    get value()    { return this.vm.getUint( this.ptr + 2 ); }
-    set value( n ) { this.vm.setUint( this.ptr + 2, n ); }
+    get value() {
+        return this.vm.getUint( this.ptr + 2 );
+    }
+    set value( n ) {
+        this.vm.setUint( this.ptr + 2, n );
+    }
 
     set( addr = 0, flags = 0, value = 0 ) {
         this.addr = addr;
@@ -74,7 +92,7 @@ export class Descriptor {
         }
         const mem = this.vm.mem;
         for ( let i = 0; i < this.width; i++ ) {
-            if ( mem[ this.ptr + i ] !== mem[ other.ptr + i ] ) {
+            if ( mem[this.ptr + i] !== mem[other.ptr + i] ) {
                 return false;
             }
         }
@@ -93,11 +111,11 @@ export class Descriptor {
 
     toString() {
         const fields = [
-            `A=${ this.addr }`,
-            `F=${ this.flags }`,
-            `V=${ this.value }`,
+            `A=${this.addr}`,
+            `F=${this.flags}`,
+            `V=${this.value}`,
         ];
-        return `<Descriptor@${ this.ptr } ${ fields.join( ', ' ) }>`;
+        return `<Descriptor@${this.ptr} ${fields.join( ', ' )}>`;
     }
 }
 
@@ -114,13 +132,23 @@ export class Descriptor {
 //
 // The named string starts at A+O and runs for L characters.
 export class Specifier extends Descriptor {
-    get width()     { return 2 * D; }
+    get width() {
+        return 2 * D;
+    }
 
-    get offset()    { return this.vm.getUint( this.ptr + 3 ); }
-    set offset( n ) { this.vm.setUint( this.ptr + 3, n ); }
+    get offset() {
+        return this.vm.getUint( this.ptr + 3 );
+    }
+    set offset( n ) {
+        this.vm.setUint( this.ptr + 3, n );
+    }
 
-    get length()    { return this.vm.getUint( this.ptr + 5 ); }
-    set length( n ) { this.vm.setUint( this.ptr + 5, n ); }
+    get length() {
+        return this.vm.getUint( this.ptr + 5 );
+    }
+    set length( n ) {
+        this.vm.setUint( this.ptr + 5, n );
+    }
 
     get specified() {
         const start = this.addr + this.offset;
@@ -136,12 +164,12 @@ export class Specifier extends Descriptor {
 
     toString() {
         const fields = [
-            `A=${ this.addr }`,
-            `F=${ this.flags }`,
-            `V=${ this.value }`,
-            `O=${ this.offset }`,
-            `L=${ this.length }`,
+            `A=${this.addr}`,
+            `F=${this.flags}`,
+            `V=${this.value}`,
+            `O=${this.offset}`,
+            `L=${this.length}`,
         ];
-        return `<Specifier@${ this.ptr } ${ fields.join( ', ' ) }>`;
+        return `<Specifier@${this.ptr} ${fields.join( ', ' )}>`;
     }
 }

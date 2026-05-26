@@ -18,7 +18,7 @@
 //
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
 
-import { File, bufferedReader, stripTrailingBlanks } from './file.js';
+import { bufferedReader, File, stripTrailingBlanks } from './file.js';
 import { constants } from './syntax.js';
 
 const { UNITI } = constants;
@@ -32,8 +32,10 @@ function redirectPath( filePath ) {
 }
 
 export const defaultStdout = {
-    write( line ) { console.log( line ); },
-    close() {}
+    write( line ) {
+        console.log( line );
+    },
+    close() {},
 };
 
 export const defaultLoader = {
@@ -43,7 +45,7 @@ export const defaultLoader = {
 
     loadInclude( _includePath ) {
         return null;
-    }
+    },
 };
 
 // Per-unit { input?: File, output?: Writer }. Entries persist across close
@@ -63,7 +65,9 @@ export class UnitTable {
     open( unitNum ) {
         const entry = this.#ensure( unitNum );
         if ( !entry.input ) {
-            const segments = unitNum === UNITI ? this.#buildStdinSegments() : [];
+            const segments = unitNum === UNITI
+                ? this.#buildStdinSegments()
+                : [];
             entry.input = new File( segments );
         }
         return entry.input;
@@ -103,7 +107,9 @@ export class UnitTable {
         }
         if ( interactive ) {
             if ( !stdinReader ) {
-                throw new Error( 'interactive mode requires options.stdinReader' );
+                throw new Error(
+                    'interactive mode requires options.stdinReader',
+                );
             }
             segments.push( {
                 reader: stdinReader(),

@@ -30,7 +30,9 @@ function inputChannel() {
         pushLine( text ) {
             if ( !closed ) lines.push( encoder.encode( text ) );
         },
-        end() { closed = true; },
+        end() {
+            closed = true;
+        },
 
         reader: {
             readLine() {
@@ -66,7 +68,7 @@ function inputChannel() {
 export class Session {
     constructor( image, options = {} ) {
         const onOutput = options.onOutput ?? ( () => {} ),
-              onError = options.onError ?? onOutput;
+            onError = options.onError ?? onOutput;
 
         this.image = image;
         this.onError = onError;
@@ -117,7 +119,7 @@ export class Session {
                 const loc = vm.ip;
                 vm.ip = loc + 1;
                 try {
-                    instructions[ loc ]();
+                    instructions[loc]();
                 } catch ( e ) {
                     if ( e === NEED_INPUT ) {
                         vm.ip = loc;

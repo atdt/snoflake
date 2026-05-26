@@ -29,12 +29,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as fixture from '../test/program-fixture.js';
-import process from "node:process";
+import process from 'node:process';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const ROOT = path.join( __dirname, '..' ),
-      TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' ),
-      GIMPEL_LIB_DIR = path.join( ROOT, 'test', 'programs', 'gimpel' );
+    TMP_DIR = path.join( ROOT, 'tmp', 'check-csnobol4' ),
+    GIMPEL_LIB_DIR = path.join( ROOT, 'test', 'programs', 'gimpel' );
 
 const SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
 
@@ -44,11 +44,11 @@ const SNOBOL4_BIN = process.env.SNOBOL4 || 'snobol4';
 // CSNOBOL4 (mixed case) error text. ' at level ' catches the IBM-spec
 // runtime-error preamble emitted by both implementations.
 const ERROR_MARKERS = [
-      'ERROR IN SNOBOL4 SYSTEM',
-      'Compilation error',
-      'Execution error',
-      'Aborting: exceeded',
-      ' at level '
+    'ERROR IN SNOBOL4 SYSTEM',
+    'Compilation error',
+    'Execution error',
+    'Aborting: exceeded',
+    ' at level ',
 ];
 
 // Options that almost certainly change observable behavior under Snoflake but
@@ -76,8 +76,8 @@ function trimTrailingNewlines( s ) {
 function findErrorMarker( output ) {
     const lower = output.toLowerCase();
     for ( let i = 0; i < ERROR_MARKERS.length; i++ ) {
-        if ( lower.indexOf( ERROR_MARKERS[ i ].toLowerCase() ) !== -1 ) {
-            return ERROR_MARKERS[ i ];
+        if ( lower.indexOf( ERROR_MARKERS[i].toLowerCase() ) !== -1 ) {
+            return ERROR_MARKERS[i];
         }
     }
     return null;
@@ -85,7 +85,7 @@ function findErrorMarker( output ) {
 
 function semanticOptionWarnings( opts ) {
     const keys = Object.keys( opts ).filter( function ( k ) {
-          return SEMANTIC_OPTION_KEYS.indexOf( k ) !== -1;
+        return SEMANTIC_OPTION_KEYS.indexOf( k ) !== -1;
     } );
     return keys.length ? keys : null;
 }
@@ -103,7 +103,7 @@ function postEndInput( filePath ) {
     // whitespace, optionally followed by a label/comment. Conservative on
     // purpose — anything fancier is a hand-edit.
     for ( let i = 0; i < lines.length; i++ ) {
-        if ( /^END(\s|$)/.test( lines[ i ] ) ) {
+        if ( /^END(\s|$)/.test( lines[i] ) ) {
             const rest = lines.slice( i + 1 ).join( '\n' );
             return rest === '' ? '' : rest;
         }
@@ -125,7 +125,9 @@ function runUnderCsnobol4( filePath, header ) {
     // data byte-identical to the previous behavior.
     const inputBuf = postEnd === '' ? headerInput : postEnd + headerInput;
     const env = { ...process.env };
-    env.SNOLIB = env.SNOLIB ? env.SNOLIB + path.delimiter + GIMPEL_LIB_DIR : GIMPEL_LIB_DIR;
+    env.SNOLIB = env.SNOLIB
+        ? env.SNOLIB + path.delimiter + GIMPEL_LIB_DIR
+        : GIMPEL_LIB_DIR;
     // -b suppresses the CSNOBOL4 startup banner so stdout is exactly the
     // program's OUTPUT/PUNCH stream, which is what @expect describes.
     // Cap wall-clock and output size so a runaway fixture does not hang the
@@ -165,7 +167,7 @@ function runUnderCsnobol4( filePath, header ) {
     return {
         stdout: result.stdout || '',
         stderr: result.stderr || '',
-        status: result.status
+        status: result.status,
     };
 }
 
@@ -174,8 +176,8 @@ function dumpActual( filePath, run ) {
     const name = path.basename( filePath, '.sno' );
     const actualPath = path.join( TMP_DIR, name + '.actual' );
     const combined = '--- stdout ---\n' + run.stdout +
-          '--- stderr ---\n' + run.stderr +
-          '--- exit ' + run.status + ' ---\n';
+        '--- stderr ---\n' + run.stderr +
+        '--- exit ' + run.status + ' ---\n';
     fs.writeFileSync( actualPath, combined );
     return actualPath;
 }
@@ -191,7 +193,10 @@ function checkAgainstExpect( header, run ) {
         // execution errors but does not print the Snoflake-specific markers,
         // so check both.
         if ( marker === null && run.status === 0 ) {
-            return { ok: false, message: 'expected an error, none observed (exit 0, no marker)' };
+            return {
+                ok: false,
+                message: 'expected an error, none observed (exit 0, no marker)',
+            };
         }
         if ( header.expect !== null ) {
             // Case-insensitive: error-message text is implementation-formatted
@@ -199,25 +204,37 @@ function checkAgainstExpect( header, run ) {
             // describes the semantic content, not the formatting.
             const needle = trimTrailingNewlines( header.expect ).toLowerCase();
             if ( combined.toLowerCase().indexOf( needle ) === -1 ) {
-                return { ok: false, message: 'expected substring not found in error output: ' +
-                    JSON.stringify( needle ) };
+                return {
+                    ok: false,
+                    message: 'expected substring not found in error output: ' +
+                        JSON.stringify( needle ),
+                };
             }
         }
         return { ok: true, message: null };
     }
 
     if ( marker !== null ) {
-        return { ok: false, message: 'unexpected error marker "' + marker + '" in output' };
+        return {
+            ok: false,
+            message: 'unexpected error marker "' + marker + '" in output',
+        };
     }
     if ( run.status !== 0 ) {
-        return { ok: false, message: 'CSNOBOL4 exited with status ' + run.status };
+        return {
+            ok: false,
+            message: 'CSNOBOL4 exited with status ' + run.status,
+        };
     }
 
     if ( header.match === 'substring' ) {
         const sub = trimTrailingNewlines( header.expect );
         if ( run.stdout.indexOf( sub ) === -1 ) {
-            return { ok: false, message: 'expected substring not found in stdout: ' +
-                JSON.stringify( sub ) };
+            return {
+                ok: false,
+                message: 'expected substring not found in stdout: ' +
+                    JSON.stringify( sub ),
+            };
         }
         return { ok: true, message: null };
     }
@@ -226,9 +243,12 @@ function checkAgainstExpect( header, run ) {
     const actual = trimTrailingNewlines( run.stdout );
     const expect = trimTrailingNewlines( header.expect );
     if ( actual !== expect ) {
-        return { ok: false, message:
-            'stdout did not match @expect\n--- expected ---\n' + expect +
-            '\n--- actual ---\n' + actual };
+        return {
+            ok: false,
+            message: 'stdout did not match @expect\n--- expected ---\n' +
+                expect +
+                '\n--- actual ---\n' + actual,
+        };
     }
     return { ok: true, message: null };
 }
@@ -252,26 +272,28 @@ function rewriteExpect( filePath, newExpect ) {
     const lines = raw.split( '\n' );
     let expectStart = -1, expectEnd = -1;
     for ( let i = 0; i < lines.length; i++ ) {
-        const line = lines[ i ];
+        const line = lines[i];
         if ( line.charAt( 0 ) !== '*' ) {
             break;
         }
         const m = /^\* @(\w+)(\s.*)?$/.exec( line );
-        if ( !m || m[ 1 ] !== 'expect' ) {
+        if ( !m || m[1] !== 'expect' ) {
             continue;
         }
-        const rest = ( m[ 2 ] || '' ).replace( /^\s+/, '' );
+        const rest = ( m[2] || '' ).replace( /^\s+/, '' );
         expectStart = i;
         if ( rest === '>>>' ) {
             for ( let j = i + 1; j < lines.length; j++ ) {
-                if ( lines[ j ] === '* <<<' ) {
+                if ( lines[j] === '* <<<' ) {
                     expectEnd = j;
                     break;
                 }
             }
             if ( expectEnd === -1 ) {
-                throw new Error( filePath + ': unterminated @expect block at line ' +
-                    ( expectStart + 1 ) );
+                throw new Error(
+                    filePath + ': unterminated @expect block at line ' +
+                        ( expectStart + 1 ),
+                );
             }
         } else {
             expectEnd = i;
@@ -284,7 +306,10 @@ function rewriteExpect( filePath, newExpect ) {
     const formatted = formatExpectBlock( newExpect );
     const before = lines.slice( 0, expectStart );
     const after = lines.slice( expectEnd + 1 );
-    fs.writeFileSync( filePath, before.concat( formatted, after ).join( '\n' ) );
+    fs.writeFileSync(
+        filePath,
+        before.concat( formatted, after ).join( '\n' ),
+    );
 }
 
 function checkOne( filePath, opts ) {
@@ -293,14 +318,23 @@ function checkOne( filePath, opts ) {
     try {
         header = fixture.parseHeader( filePath );
     } catch ( e ) {
-        return { ok: false, title: path.basename( filePath ), message: 'parse error: ' + e.message };
+        return {
+            ok: false,
+            title: path.basename( filePath ),
+            message: 'parse error: ' + e.message,
+        };
     }
     const warnings = semanticOptionWarnings( header.options );
     let run;
     try {
         run = runUnderCsnobol4( filePath, header );
     } catch ( e ) {
-        return { ok: false, title: header.title, message: e.message, warnings: warnings };
+        return {
+            ok: false,
+            title: header.title,
+            message: e.message,
+            warnings: warnings,
+        };
     }
     const result = checkAgainstExpect( header, run );
 
@@ -312,29 +346,43 @@ function checkOne( filePath, opts ) {
         // never written back. That would silently bake in a regression.
         if ( header.match !== 'exact' ) {
             return {
-                ok: false, title: header.title, warnings: warnings,
-                message: result.message, actualPath: dumpActual( filePath, run ),
-                updateSkipped: '@match ' + header.match + ' is not auto-updatable'
+                ok: false,
+                title: header.title,
+                warnings: warnings,
+                message: result.message,
+                actualPath: dumpActual( filePath, run ),
+                updateSkipped: '@match ' + header.match +
+                    ' is not auto-updatable',
             };
         }
         const marker = findErrorMarker( run.stdout + run.stderr );
         if ( marker !== null || run.status !== 0 ) {
             return {
-                ok: false, title: header.title, warnings: warnings,
-                message: result.message, actualPath: dumpActual( filePath, run ),
-                updateSkipped: 'CSNOBOL4 reported an error; refusing to update'
+                ok: false,
+                title: header.title,
+                warnings: warnings,
+                message: result.message,
+                actualPath: dumpActual( filePath, run ),
+                updateSkipped: 'CSNOBOL4 reported an error; refusing to update',
             };
         }
         try {
             rewriteExpect( filePath, run.stdout );
         } catch ( e ) {
             return {
-                ok: false, title: header.title, warnings: warnings,
+                ok: false,
+                title: header.title,
+                warnings: warnings,
                 message: 'rewrite failed: ' + e.message,
-                actualPath: dumpActual( filePath, run )
+                actualPath: dumpActual( filePath, run ),
             };
         }
-        return { ok: true, title: header.title, warnings: warnings, updated: true };
+        return {
+            ok: true,
+            title: header.title,
+            warnings: warnings,
+            updated: true,
+        };
     }
 
     const actualPath = result.ok ? null : dumpActual( filePath, run );
@@ -343,7 +391,7 @@ function checkOne( filePath, opts ) {
         title: header.title,
         message: result.message,
         warnings: warnings,
-        actualPath: actualPath
+        actualPath: actualPath,
     };
 }
 
@@ -372,22 +420,22 @@ function resolveFixtureArgs( args ) {
 function printHelp() {
     process.stdout.write(
         'Usage: node tools/check-csnobol4.js [--update] [fixture.sno ...]\n' +
-        '\n' +
-        'Run each fixture under CSNOBOL4 (snobol4 -b) and compare the captured\n' +
-        'output to the @expect / @match directives parsed from the fixture\n' +
-        'header. With no arguments, every fixture under test/programs/ is\n' +
-        'checked.\n' +
-        '\n' +
-        'Options:\n' +
-        '  --update  Rewrite the @expect block of any mismatched fixture with\n' +
-        '            CSNOBOL4\'s actual stdout. Only applies to @match exact\n' +
-        '            fixtures whose CSNOBOL4 run did not error.\n' +
-        '\n' +
-        'Environment:\n' +
-        '  SNOBOL4   path to the snobol4 binary (default: "snobol4")\n' +
-        '\n' +
-        'Exit status: 0 if every checked fixture matched (or was updated),\n' +
-        '             1 otherwise.\n'
+            '\n' +
+            'Run each fixture under CSNOBOL4 (snobol4 -b) and compare the captured\n' +
+            'output to the @expect / @match directives parsed from the fixture\n' +
+            'header. With no arguments, every fixture under test/programs/ is\n' +
+            'checked.\n' +
+            '\n' +
+            'Options:\n' +
+            '  --update  Rewrite the @expect block of any mismatched fixture with\n' +
+            "            CSNOBOL4's actual stdout. Only applies to @match exact\n" +
+            '            fixtures whose CSNOBOL4 run did not error.\n' +
+            '\n' +
+            'Environment:\n' +
+            '  SNOBOL4   path to the snobol4 binary (default: "snobol4")\n' +
+            '\n' +
+            'Exit status: 0 if every checked fixture matched (or was updated),\n' +
+            '             1 otherwise.\n',
     );
 }
 
@@ -423,8 +471,10 @@ function main( argv ) {
         const rel = path.relative( ROOT, filePath );
         const r = checkOne( filePath, { update: update } );
         if ( r.warnings && r.warnings.length ) {
-            process.stdout.write( 'WARN ' + rel + ': @options affects semantics (' +
-                r.warnings.join( ', ' ) + '); CSNOBOL4 ignores these\n' );
+            process.stdout.write(
+                'WARN ' + rel + ': @options affects semantics (' +
+                    r.warnings.join( ', ' ) + '); CSNOBOL4 ignores these\n',
+            );
         }
         if ( r.updated ) {
             updated++;
@@ -437,14 +487,22 @@ function main( argv ) {
             return;
         }
         failed++;
-        process.stdout.write( 'FAIL ' + rel + ' — ' + ( r.title || '' ) + '\n' );
-        process.stdout.write( '     ' + r.message.replace( /\n/g, '\n     ' ) + '\n' );
+        process.stdout.write(
+            'FAIL ' + rel + ' — ' + ( r.title || '' ) + '\n',
+        );
+        process.stdout.write(
+            '     ' + r.message.replace( /\n/g, '\n     ' ) + '\n',
+        );
         if ( r.updateSkipped ) {
-            process.stdout.write( '     update skipped: ' + r.updateSkipped + '\n' );
+            process.stdout.write(
+                '     update skipped: ' + r.updateSkipped + '\n',
+            );
         }
         if ( r.actualPath ) {
-            process.stdout.write( '     full output: ' +
-                path.relative( ROOT, r.actualPath ) + '\n' );
+            process.stdout.write(
+                '     full output: ' +
+                    path.relative( ROOT, r.actualPath ) + '\n',
+            );
         }
     } );
     let summary = passed + ' passed, ' + failed + ' failed';
@@ -456,7 +514,7 @@ function main( argv ) {
     return failed === 0 ? 0 : 1;
 }
 
-if ( import.meta.url === pathToFileURL( process.argv[ 1 ] ).href ) {
+if ( import.meta.url === pathToFileURL( process.argv[1] ).href ) {
     process.exit( main( process.argv.slice( 2 ) ) );
 }
 

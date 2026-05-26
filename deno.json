@@ -8,7 +8,7 @@
   },
   "fmt": {
     "indentWidth": 4,
-    "lineWidth": 79,
+    "lineWidth": 80,
     "proseWrap": "always",
     "semiColons": true,
     "singleQuote": true,

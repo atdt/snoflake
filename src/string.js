@@ -5,7 +5,7 @@
 export function writeString( s, dst, offset ) {
     const len = s.length;
     for ( let i = 0; i < len; i++ ) {
-        dst[ offset + i ] = s.charCodeAt( i );
+        dst[offset + i] = s.charCodeAt( i );
     }
 }
 
@@ -13,7 +13,7 @@ export function decodeString( encoded, start, length ) {
     let decoded = '';
     const end = start + length;
     for ( let i = start; i < end; i++ ) {
-        decoded += String.fromCharCode( encoded[ i ] );
+        decoded += String.fromCharCode( encoded[i] );
     }
     return decoded;
 }

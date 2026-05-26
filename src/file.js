@@ -1,11 +1,11 @@
 const LF = 10,
-      CR = 13;
+    CR = 13;
 
 const textDecoder = new TextDecoder( 'utf-8' );
 const textEncoder = new TextEncoder();
 
 // FORTRAN/SIL filename arguments are space-padded to their field width.
-export const stripTrailingBlanks = s => s.replace( / +$/, '' );
+export const stripTrailingBlanks = ( s ) => s.replace( / +$/, '' );
 
 // A line reader has the few operations the VM needs. Buffered files can
 // rewind. Stdin cannot. close() releases any held state and forces
@@ -43,7 +43,7 @@ export function bufferedReader( content ) {
             }
 
             // Trim a trailing CR on CRLF line endings.
-            if ( end > pos && bytes[ end - 1 ] === CR ) {
+            if ( end > pos && bytes[end - 1] === CR ) {
                 end--;
             }
 
@@ -53,8 +53,13 @@ export function bufferedReader( content ) {
             return line;
         },
 
-        rewind() { pos = 0; reader.lineNum = 0; },
-        close() { pos = bytes.length; },
+        rewind() {
+            pos = 0;
+            reader.lineNum = 0;
+        },
+        close() {
+            pos = bytes.length;
+        },
     };
     return reader;
 }
@@ -104,7 +109,7 @@ export class File {
 
     includeSource( filename, loader ) {
         const includePath = stripTrailingBlanks( filename ),
-              included = loader.loadInclude?.( includePath ) ?? null;
+            included = loader.loadInclude?.( includePath ) ?? null;
 
         if ( included === null ) {
             throw new Error( 'Cannot open INCLUDE file: ' + includePath );
@@ -121,8 +126,8 @@ export class File {
 
     readRecord( length ) {
         while ( this.idx < this.segments.length ) {
-            const segment = this.segments[ this.idx ],
-                  line = segment.reader.readLine();
+            const segment = this.segments[this.idx],
+                line = segment.reader.readLine();
 
             if ( line === null ) {
                 this.idx++;
@@ -131,7 +136,10 @@ export class File {
 
             this.lastSegment = segment;
             const text = textDecoder.decode( line );
-            return { eof: false, ...fitRecord( text, length, segment.padReads ) };
+            return {
+                eof: false,
+                ...fitRecord( text, length, segment.padReads ),
+            };
         }
 
         this.lastSegment = null;

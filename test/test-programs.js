@@ -5,14 +5,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { image, createVM } from '../src/snobol.js';
+import { createVM, image } from '../src/snobol.js';
 import { createHostLoader } from '../src/host.js';
-import { parseHeader, loadCases } from './program-fixture.js';
+import { loadCases, parseHeader } from './program-fixture.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const ROOT = path.join( __dirname, '..' ),
-      TMP_DIR = path.join( ROOT, 'tmp', 'test-programs' ),
-      GIMPEL_LIB_DIR = path.join( __dirname, 'programs', 'gimpel' );
+    TMP_DIR = path.join( ROOT, 'tmp', 'test-programs' ),
+    GIMPEL_LIB_DIR = path.join( __dirname, 'programs', 'gimpel' );
 
 const gimpelLoader = createHostLoader( { snolib: [ GIMPEL_LIB_DIR ] } );
 
@@ -26,17 +26,19 @@ const gimpelLoader = createHostLoader( { snolib: [ GIMPEL_LIB_DIR ] } );
 // ' at level ' marker catches the runtime-error preamble "ERROR NN IN
 // STATEMENT NN AT LEVEL NN" emitted by both implementations.
 const ERROR_MARKERS = [
-      'ERROR IN SNOBOL4 SYSTEM',
-      'Compilation error',
-      'Execution error',
-      ' at level '
+    'ERROR IN SNOBOL4 SYSTEM',
+    'Compilation error',
+    'Execution error',
+    ' at level ',
 ];
 
 function captureWriter() {
     const lines = [];
     return {
         lines: lines,
-        write: function ( line ) { lines.push( line ); }
+        write: function ( line ) {
+            lines.push( line );
+        },
     };
 }
 
@@ -47,8 +49,8 @@ function joinLines( lines ) {
 function findErrorMarker( output ) {
     const lower = output.toLowerCase();
     for ( let i = 0; i < ERROR_MARKERS.length; i++ ) {
-        if ( lower.indexOf( ERROR_MARKERS[ i ].toLowerCase() ) !== -1 ) {
-            return ERROR_MARKERS[ i ];
+        if ( lower.indexOf( ERROR_MARKERS[i].toLowerCase() ) !== -1 ) {
+            return ERROR_MARKERS[i];
         }
     }
     return null;
@@ -84,7 +86,10 @@ function runProgram( filePath, header ) {
 
 function dumpActual( filePath, output ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
-    const actualPath = path.join( TMP_DIR, path.basename( filePath, '.sno' ) + '.actual' );
+    const actualPath = path.join(
+        TMP_DIR,
+        path.basename( filePath, '.sno' ) + '.actual',
+    );
     fs.writeFileSync( actualPath, output );
     return actualPath;
 }
@@ -107,22 +112,34 @@ function assertProgram( filePath, header, output ) {
             // describes the semantic content, not the formatting.
             const needle = trimTrailingNewlines( header.expect ).toLowerCase();
             if ( output.toLowerCase().indexOf( needle ) === -1 ) {
-                fail( filePath, output,
-                    'expected substring not found in error output: ' + JSON.stringify( needle ) );
+                fail(
+                    filePath,
+                    output,
+                    'expected substring not found in error output: ' +
+                        JSON.stringify( needle ),
+                );
             }
         }
         return;
     }
 
     if ( marker !== null ) {
-        fail( filePath, output, 'unexpected error marker "' + marker + '" in output' );
+        fail(
+            filePath,
+            output,
+            'unexpected error marker "' + marker + '" in output',
+        );
     }
 
     if ( header.match === 'substring' ) {
         const sub = trimTrailingNewlines( header.expect );
         if ( output.indexOf( sub ) === -1 ) {
-            fail( filePath, output,
-                'expected substring not found in output: ' + JSON.stringify( sub ) );
+            fail(
+                filePath,
+                output,
+                'expected substring not found in output: ' +
+                    JSON.stringify( sub ),
+            );
         }
         return;
     }
@@ -131,13 +148,16 @@ function assertProgram( filePath, header, output ) {
     const actual = trimTrailingNewlines( output );
     const expect = trimTrailingNewlines( header.expect );
     if ( actual !== expect ) {
-        fail( filePath, output,
+        fail(
+            filePath,
+            output,
             'data section did not match @expect\n--- expected ---\n' + expect +
-            '\n--- actual ---\n' + actual );
+                '\n--- actual ---\n' + actual,
+        );
     }
 }
 
-describe( 'Program-level tests', function () {
+describe('Program-level tests', function () {
     loadCases().forEach( function ( filePath ) {
         let header;
         let parseError;
@@ -146,7 +166,9 @@ describe( 'Program-level tests', function () {
         } catch ( e ) {
             parseError = e;
         }
-        const label = header ? header.title : 'parses ' + path.basename( filePath );
+        const label = header
+            ? header.title
+            : 'parses ' + path.basename( filePath );
         it( label, function () {
             if ( parseError ) {
                 throw parseError;
@@ -155,4 +177,4 @@ describe( 'Program-level tests', function () {
             assertProgram( filePath, header, output );
         } );
     } );
-} );
+});

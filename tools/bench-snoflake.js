@@ -21,12 +21,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
-import { parseHeader, loadCases } from '../test/program-fixture.js';
+import { loadCases, parseHeader } from '../test/program-fixture.js';
 import { createHostLoader } from '../src/host.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
-      ROOT = path.join( __dirname, '..' ),
-      TMP_DIR = path.join( ROOT, 'tmp', 'bench-snoflake' );
+    ROOT = path.join( __dirname, '..' ),
+    TMP_DIR = path.join( ROOT, 'tmp', 'bench-snoflake' );
 
 const DEFAULT_FIXTURES = [
     'arbitrarily-long-integers',
@@ -41,7 +41,7 @@ const DEFAULT_FIXTURES = [
     'syntactic-recognizer',
     'topological-sort',
     'wang-theorem-prover',
-    'word-ending-analysis'
+    'word-ending-analysis',
 ];
 
 function parseArgs( argv ) {
@@ -53,7 +53,7 @@ function parseArgs( argv ) {
         warmup: 2,
         json: null,
         all: false,
-        fixtures: []
+        fixtures: [],
     };
 
     for ( const arg of argv ) {
@@ -67,8 +67,10 @@ function parseArgs( argv ) {
         }
         if ( arg.startsWith( '--' ) ) {
             const [ key, raw = 'true' ] = arg.slice( 2 ).split( '=', 2 );
-            if ( key === 'samples' || key === 'iterations' || key === 'warmup' ) {
-                opts[ key ] = parsePositiveInt( key, raw );
+            if (
+                key === 'samples' || key === 'iterations' || key === 'warmup'
+            ) {
+                opts[key] = parsePositiveInt( key, raw );
             } else if ( key === 'root' ) {
                 opts.root = path.resolve( raw );
             } else if ( key === 'mode' ) {
@@ -103,7 +105,7 @@ function usage() {
         '  --json=PATH          also write machine-readable results',
         '',
         'Fixture names may be bare names such as kalah-opening-search.',
-        'Explicit .sno paths may also be profiled.'
+        'Explicit .sno paths may also be profiled.',
     ].join( '\n' ) );
 }
 
@@ -125,31 +127,36 @@ function fixturePath( root, name ) {
     if ( isExplicitPath( name ) ) {
         return {
             filePath: path.isAbsolute( name ) ? name : path.join( root, name ),
-            allowAdHoc: true
+            allowAdHoc: true,
         };
     }
     return {
         filePath: path.join( root, 'test', 'programs', name + '.sno' ),
-        allowAdHoc: false
+        allowAdHoc: false,
     };
 }
 
 function selectedFixtures( opts ) {
     if ( opts.all ) {
-        return loadCases().map( file => ( {
-            filePath: path.join( opts.root, 'test', 'programs', path.basename( file ) ),
-            allowAdHoc: false
+        return loadCases().map( ( file ) => ( {
+            filePath: path.join(
+                opts.root,
+                'test',
+                'programs',
+                path.basename( file ),
+            ),
+            allowAdHoc: false,
         } ) );
     }
     const names = opts.fixtures.length ? opts.fixtures : DEFAULT_FIXTURES;
-    return names.map( name => fixturePath( opts.root, name ) );
+    return names.map( ( name ) => fixturePath( opts.root, name ) );
 }
 
 function makeAdHocHeader( filePath ) {
     return {
         title: path.basename( filePath ),
         options: {},
-        input: null
+        input: null,
     };
 }
 
@@ -171,7 +178,9 @@ function captureWriter() {
     const lines = [];
     return {
         lines,
-        write( line ) { lines.push( line ); }
+        write( line ) {
+            lines.push( line );
+        },
     };
 }
 
@@ -180,8 +189,8 @@ function prepareFixtures( opts ) {
 
     return selectedFixtures( opts ).map( function ( selected ) {
         const filePath = selected.filePath,
-              header = loadHeader( selected ),
-              name = path.basename( filePath, '.sno' );
+            header = loadHeader( selected ),
+            name = path.basename( filePath, '.sno' );
         let inputPath = null;
 
         if ( header.input !== null ) {
@@ -195,29 +204,30 @@ function prepareFixtures( opts ) {
 
 async function createRunner( opts ) {
     if ( opts.mode === 'cli' ) {
-        return fixture => runCli( opts, fixture );
+        return ( fixture ) => runCli( opts, fixture );
     }
 
     const SNOBOL = await import(
-        pathToFileURL( path.join( opts.root, 'src', 'snobol.js' ) ).href + '?bench=' + Date.now()
+        pathToFileURL( path.join( opts.root, 'src', 'snobol.js' ) ).href +
+            '?bench=' + Date.now()
     );
 
-    return fixture => runVm( SNOBOL, fixture );
+    return ( fixture ) => runVm( SNOBOL, fixture );
 }
 
 const hostLoader = createHostLoader();
 
 function runVm( SNOBOL, fixture ) {
     const stdout = captureWriter(),
-          stderr = captureWriter(),
-          vm = SNOBOL.createVM( {
-              ...fixture.header.options,
-              file: fixture.filePath,
-              input: fixture.inputPath || undefined,
-              loader: hostLoader,
-              stdout,
-              stderr
-          } );
+        stderr = captureWriter(),
+        vm = SNOBOL.createVM( {
+            ...fixture.header.options,
+            file: fixture.filePath,
+            input: fixture.inputPath || undefined,
+            loader: hostLoader,
+            stdout,
+            stderr,
+        } );
 
     vm.run( SNOBOL.image );
 }
@@ -238,7 +248,7 @@ function runCli( opts, fixture ) {
     const args = [
         path.join( opts.root, 'bin', 'snoflake.js' ),
         '--file=' + fixture.filePath,
-        ...optionArgs( fixture.header.options )
+        ...optionArgs( fixture.header.options ),
     ];
 
     if ( fixture.inputPath ) {
@@ -249,7 +259,7 @@ function runCli( opts, fixture ) {
         cwd: opts.root,
         encoding: 'utf8',
         timeout: 120000,
-        maxBuffer: 64 * 1024 * 1024
+        maxBuffer: 64 * 1024 * 1024,
     } );
 
     if ( result.error ) {
@@ -265,25 +275,27 @@ function timeNs( fn ) {
 
 function stats( values ) {
     const sorted = values.slice().sort( ( a, b ) => a - b ),
-          n = sorted.length,
-          mean = values.reduce( ( sum, value ) => sum + value, 0 ) / n,
-          medianValue = percentile( sorted, 0.50 ),
-          variance = values.reduce( ( sum, value ) => sum + ( value - mean ) ** 2, 0 ) / n;
+        n = sorted.length,
+        mean = values.reduce( ( sum, value ) => sum + value, 0 ) / n,
+        medianValue = percentile( sorted, 0.50 ),
+        variance =
+            values.reduce( ( sum, value ) => sum + ( value - mean ) ** 2, 0 ) /
+            n;
 
     return {
-        min: sorted[ 0 ],
+        min: sorted[0],
         median: medianValue,
         mean,
         p90: percentile( sorted, 0.90 ),
         p99: percentile( sorted, 0.99 ),
-        max: sorted[ n - 1 ],
+        max: sorted[n - 1],
         stddev: Math.sqrt( variance ),
-        rsd: mean === 0 ? 0 : Math.sqrt( variance ) / mean
+        rsd: mean === 0 ? 0 : Math.sqrt( variance ) / mean,
     };
 }
 
 function percentile( sorted, p ) {
-    return sorted[ Math.floor( ( sorted.length - 1 ) * p ) ];
+    return sorted[Math.floor( ( sorted.length - 1 ) * p )];
 }
 
 function ms( ns ) {
@@ -295,7 +307,9 @@ function fmtMs( value ) {
 }
 
 function runSuiteSample( fixtures, runner, opts, sampleIndex, measured ) {
-    const totals = new Map( fixtures.map( fixture => [ fixture.name, 0n ] ) );
+    const totals = new Map(
+        fixtures.map( ( fixture ) => [ fixture.name, 0n ] ),
+    );
     let aggregate = 0n;
 
     for ( let iteration = 0; iteration < opts.iterations; iteration++ ) {
@@ -310,10 +324,11 @@ function runSuiteSample( fixtures, runner, opts, sampleIndex, measured ) {
     }
 
     if ( measured ) {
-        console.error( 'sample %d/%d: %s ms',
+        console.error(
+            'sample %d/%d: %s ms',
             sampleIndex + 1,
             opts.samples,
-            fmtMs( ms( aggregate ) ).trim()
+            fmtMs( ms( aggregate ) ).trim(),
         );
     }
 
@@ -322,8 +337,8 @@ function runSuiteSample( fixtures, runner, opts, sampleIndex, measured ) {
 
 async function main() {
     const opts = parseArgs( process.argv.slice( 2 ) ),
-          fixtures = prepareFixtures( opts ),
-          runner = await createRunner( opts );
+        fixtures = prepareFixtures( opts ),
+        runner = await createRunner( opts );
 
     console.error( 'mode=%s root=%s', opts.mode, opts.root );
     console.error(
@@ -339,7 +354,9 @@ async function main() {
     }
 
     const aggregateSamples = [],
-          byProgram = new Map( fixtures.map( fixture => [ fixture.name, [] ] ) );
+        byProgram = new Map(
+            fixtures.map( ( fixture ) => [ fixture.name, [] ] ),
+        );
 
     for ( let i = 0; i < opts.samples; i++ ) {
         const sample = runSuiteSample( fixtures, runner, opts, i, true );
@@ -358,23 +375,26 @@ async function main() {
             samples: opts.samples,
             iterations: opts.iterations,
             warmup: opts.warmup,
-            fixtureCount: fixtures.length
+            fixtureCount: fixtures.length,
         },
         aggregate: stats( aggregateSamples ),
         programs: fixtures.map( function ( fixture ) {
             return {
                 name: fixture.name,
                 title: fixture.header.title,
-                perRunMs: stats( byProgram.get( fixture.name ) )
+                perRunMs: stats( byProgram.get( fixture.name ) ),
             };
-        } )
+        } ),
     };
 
     printReport( result );
 
     if ( opts.json ) {
         fs.mkdirSync( path.dirname( opts.json ), { recursive: true } );
-        fs.writeFileSync( opts.json, JSON.stringify( result, null, 2 ) + '\n' );
+        fs.writeFileSync(
+            opts.json,
+            JSON.stringify( result, null, 2 ) + '\n',
+        );
     }
 }
 
@@ -400,11 +420,12 @@ function printReport( result ) {
     console.log( '|---|---:|---:|---:|' );
     for ( const program of result.programs ) {
         const s = program.perRunMs;
-        console.log( '| `%s` | %s | %s | %s |',
+        console.log(
+            '| `%s` | %s | %s | %s |',
             program.name,
             fmtMs( s.median ).trim(),
             fmtMs( s.p90 ).trim(),
-            s.rsd.toFixed( 3 )
+            s.rsd.toFixed( 3 ),
         );
     }
 }

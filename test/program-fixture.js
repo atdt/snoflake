@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
-      PROGRAMS_DIR = path.join( __dirname, 'programs' );
+    PROGRAMS_DIR = path.join( __dirname, 'programs' );
 
 const VALID_MATCH_MODES = [ 'exact', 'substring', 'error' ];
 
@@ -18,18 +18,18 @@ function parseHeader( filePath ) {
     const raw = fs.readFileSync( filePath, 'utf8' );
     const lines = raw.split( '\n' );
     const header = {
-          title: null,
-          options: {},
-          input: null,
-          expect: null,
-          match: 'exact',
-          attribution: null
+        title: null,
+        options: {},
+        input: null,
+        expect: null,
+        match: 'exact',
+        attribution: null,
     };
     const seen = {};
     let i;
 
     for ( i = 0; i < lines.length; i++ ) {
-        const line = lines[ i ];
+        const line = lines[i];
         if ( line.charAt( 0 ) !== '*' ) {
             break;
         }
@@ -37,13 +37,15 @@ function parseHeader( filePath ) {
         if ( !m ) {
             continue;
         }
-        const key = m[ 1 ];
-        const rest = ( m[ 2 ] || '' ).replace( /^\s+/, '' );
+        const key = m[1];
+        const rest = ( m[2] || '' ).replace( /^\s+/, '' );
 
-        if ( seen[ key ] ) {
-            throw new Error( filePath + ':' + ( i + 1 ) + ': duplicate @' + key );
+        if ( seen[key] ) {
+            throw new Error(
+                filePath + ':' + ( i + 1 ) + ': duplicate @' + key,
+            );
         }
-        seen[ key ] = true;
+        seen[key] = true;
 
         let value;
         let isBlock;
@@ -53,7 +55,7 @@ function parseHeader( filePath ) {
             const blockLines = [];
             i++;
             while ( i < lines.length ) {
-                const bl = lines[ i ];
+                const bl = lines[i];
                 if ( bl === '* <<<' ) {
                     break;
                 }
@@ -191,14 +193,13 @@ function loadCases() {
         return [];
     }
     return fs.readdirSync( PROGRAMS_DIR )
-        .filter( function ( name ) { return name.endsWith( '.sno' ); } )
+        .filter( function ( name ) {
+            return name.endsWith( '.sno' );
+        } )
         .sort()
-        .map( function ( name ) { return path.join( PROGRAMS_DIR, name ); } );
+        .map( function ( name ) {
+            return path.join( PROGRAMS_DIR, name );
+        } );
 }
 
-export {
-    PROGRAMS_DIR,
-    VALID_MATCH_MODES,
-    parseHeader,
-    loadCases
-};
+export { loadCases, parseHeader, PROGRAMS_DIR, VALID_MATCH_MODES };

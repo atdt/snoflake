@@ -10,11 +10,25 @@
 
 import { VM } from './vm.js';
 import { sil } from './sil.js';
-import { constants, defaults, hostStrings, streamActions, tableNames } from './syntax.js';
+import {
+    constants,
+    defaults,
+    hostStrings,
+    streamActions,
+    tableNames,
+} from './syntax.js';
 
 // These macros run at assembly time rather than during execution. Each
 // returns the value its label binds to. All but EQU also claim memory.
-const ASSEMBLY_MACROS = [ 'ARRAY', 'BUFFER', 'DESCR', 'EQU', 'FORMAT', 'SPEC', 'STRING' ];
+const ASSEMBLY_MACROS = [
+    'ARRAY',
+    'BUFFER',
+    'DESCR',
+    'EQU',
+    'FORMAT',
+    'SPEC',
+    'STRING',
+];
 
 // Macros that mark a location in the listing, but do not generate code or data.
 const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
@@ -24,12 +38,12 @@ export function assemble( program ) {
 
     Object.assign( vm.symbols, constants, defaults );
     for ( const name in hostStrings ) {
-        vm.define( name, hostStrings[ name ] );
+        vm.define( name, hostStrings[name] );
     }
 
     const dataStart = vm.memPtr,
-          instructions = bindLabelsAndClaimMemory( vm, program ),
-          dataEnd = vm.memPtr;
+        instructions = bindLabelsAndClaimMemory( vm, program ),
+        dataEnd = vm.memPtr;
 
     runStorageMacros( vm, program, dataStart, dataEnd );
 
@@ -37,10 +51,10 @@ export function assemble( program ) {
         symbols: { ...vm.symbols },
         memory: vm.mem.slice( 0, dataEnd ),
         // Resolve instruction operands now, with every label bound.
-        instructions: instructions.map( stmt => [
+        instructions: instructions.map( ( stmt ) => [
             stmt.label,
             stmt.macro,
-            stmt.operands.map( o => resolveOperand( vm, o ) )
+            stmt.operands.map( ( o ) => resolveOperand( vm, o ) ),
         ] ),
     };
 }
@@ -50,7 +64,7 @@ function bindLabelsAndClaimMemory( vm, program ) {
     const instructions = [];
 
     for ( let i = 0; i < program.length; i++ ) {
-        const stmt = program[ i ];
+        const stmt = program[i];
         let location;
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
             // Assembly-time macros decide the label value.
@@ -73,7 +87,7 @@ function bindLabelsAndClaimMemory( vm, program ) {
 // Forward-label references throw ReferenceError. Substitute zero so pass 1
 // can claim memory. Pass 2 rewrites the data.
 function runAssemblyMacro( vm, stmt ) {
-    const args = stmt.operands.map( operand => {
+    const args = stmt.operands.map( ( operand ) => {
         try {
             return resolveOperand( vm, operand );
         } catch ( e ) {
@@ -81,7 +95,7 @@ function runAssemblyMacro( vm, stmt ) {
             throw e;
         }
     } );
-    return sil[ stmt.macro ].apply( vm, args );
+    return sil[stmt.macro].apply( vm, args );
 }
 
 // Rewind to the data segment and re-run the assembly-time macros with every
@@ -90,8 +104,8 @@ function runStorageMacros( vm, program, dataStart, dataEnd ) {
     vm.memPtr = dataStart;
     for ( const stmt of program ) {
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
-            const args = stmt.operands.map( o => resolveOperand( vm, o ) );
-            sil[ stmt.macro ].apply( vm, args );
+            const args = stmt.operands.map( ( o ) => resolveOperand( vm, o ) );
+            sil[stmt.macro].apply( vm, args );
         }
     }
     if ( vm.memPtr !== dataEnd ) {
@@ -103,7 +117,7 @@ function runStorageMacros( vm, program, dataStart, dataEnd ) {
 // memory or an instruction slot. Consecutive markers all name that same spot.
 function getMarkerMacroLocation( program, i, vm, instructions ) {
     for ( let j = i + 1; j < program.length; j++ ) {
-        const macro = program[ j ].macro;
+        const macro = program[j].macro;
         if ( !MARKER_MACROS.includes( macro ) ) {
             return ASSEMBLY_MACROS.includes( macro )
                 ? vm.memPtr
@@ -116,13 +130,23 @@ function getMarkerMacroLocation( program, i, vm, instructions ) {
 function resolveOperand( vm, op ) {
     if ( !op || typeof op !== 'object' ) return op;
     switch ( op.type ) {
-        case 'symbol': return resolveName( vm, op.name );
-        case 'negate': return -resolveOperand( vm, op.operand );
-        case 'add':    return resolveOperand( vm, op.left ) + resolveOperand( vm, op.right );
-        case 'sub':    return resolveOperand( vm, op.left ) - resolveOperand( vm, op.right );
-        case 'mul':    return resolveOperand( vm, op.left ) * resolveOperand( vm, op.right );
-        case 'list':   return op.items.map( item => resolveOperand( vm, item ) );
-        default:       throw new Error( `Unknown operand type: ${ op.type }` );
+        case 'symbol':
+            return resolveName( vm, op.name );
+        case 'negate':
+            return -resolveOperand( vm, op.operand );
+        case 'add':
+            return resolveOperand( vm, op.left ) +
+                resolveOperand( vm, op.right );
+        case 'sub':
+            return resolveOperand( vm, op.left ) -
+                resolveOperand( vm, op.right );
+        case 'mul':
+            return resolveOperand( vm, op.left ) *
+                resolveOperand( vm, op.right );
+        case 'list':
+            return op.items.map( ( item ) => resolveOperand( vm, item ) );
+        default:
+            throw new Error( `Unknown operand type: ${op.type}` );
     }
 }
 

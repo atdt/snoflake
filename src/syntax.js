@@ -14,86 +14,86 @@ for ( let i = 0; i < BYTE_VALUES; i++ ) {
 }
 
 export const hostStrings = {
-    ALPHA   : ALPHA,
-    AMPST   : '&',
-    COLSTR  : ': ',
-    QTSTR   : "'",
+    ALPHA: ALPHA,
+    AMPST: '&',
+    COLSTR: ': ',
+    QTSTR: "'",
 };
 
 // Machine parameters: PARMS-style names whose values are fixed by the host.
 // Macros may import these directly. The assembler also seeds them into its
 // scratch symbol table so SIL operands like `TTL+STTL` resolve.
 export const constants = {
-    ALPHSZ  : ALPHA.length,
-    CPA     : 1,
-    DESCR   : D,
-    SPEC    : 2 * D,
-    SIZLIM  : 0x7FFFFFFF,
+    ALPHSZ: ALPHA.length,
+    CPA: 1,
+    DESCR: D,
+    SPEC: 2 * D,
+    SIZLIM: 0x7FFFFFFF,
 
     // Match CSNOBOL4's machine parameters in include/snotypes.h. Keeping PTR
     // out of the low bit positions prevents SPEC length fields from being
     // mistaken for pointer flags when resident static blocks are scanned.
-    FNC     : 0o01,
-    TTL     : 0o02,
-    STTL    : 0o04,
-    MARK    : 0o10,
-    PTR     : 0o20,
+    FNC: 0o01,
+    TTL: 0o02,
+    STTL: 0o04,
+    MARK: 0o10,
+    PTR: 0o20,
 
-    UNITI   : 5,
-    UNITO   : 6,
-    UNITP   : 7,
+    UNITI: 5,
+    UNITO: 6,
+    UNITP: 7,
 
-    MLINK   : -1,
-    PARMS   : -1,
-    MDATA   : -1,
+    MLINK: -1,
+    PARMS: -1,
+    MDATA: -1,
 };
 
 // Defaults for symbols the SIL program assigns itself: stack base, variable
 // bin count, and stack size. The assembled image carries the program's chosen
 // values. These defaults are only visible in tests that drive macros directly.
 export const defaults = {
-    STACK   : 2002 * D,
-    OBSIZ   : 256,
-    STSIZE  : 1000,
+    STACK: 2002 * D,
+    OBSIZ: 256,
+    STSIZE: 1000,
 };
 
 // See section 4.1 (Characters) in S4D58
 const characterClasses = {
-    ALPHANUMERIC : /[a-z0-9]/i,
-    AT           : /@/,
-    BLANK        : /[ \t]/,
-    BREAK        : /[._]/,
-    CMT          : /\*/,
-    CNT          : /[+.]/,
-    COLON        : /:/,
-    COMMA        : /,/,
-    CTL          : /-/,
-    DOLLAR       : /\$/,
-    DOT          : /\./,
-    DQUOTE       : /"/,
-    EOS          : /;/,
-    EQUAL        : /=/,
-    FGOSYM       : /F/,
-    KEYSYM       : /&/,
-    LEFTBR       : /[[<]/,
-    LEFTPAREN    : /\(/,
-    LETTER       : /[a-z]/i,
-    MINUS        : /-/,
-    NOTSYM       : /~/,
-    NUMBER       : /\d/,
-    ORSYM        : /\|/,
-    PERCENT      : /%/,
-    PLUS         : /\+/,
-    POUND        : /#/,
-    QUESYM       : /\?/,
-    RAISE        : /\^/,
-    RIGHTBR      : /[>\]]/,
-    RIGHTPAREN   : /\)/,
-    SGOSYM       : /S/,
-    SLASH        : /\//,
-    SQUOTE       : /'/,
-    STAR         : /\*/,
-    TERMINATOR   : /[;)>,\] \t]/,
+    ALPHANUMERIC: /[a-z0-9]/i,
+    AT: /@/,
+    BLANK: /[ \t]/,
+    BREAK: /[._]/,
+    CMT: /\*/,
+    CNT: /[+.]/,
+    COLON: /:/,
+    COMMA: /,/,
+    CTL: /-/,
+    DOLLAR: /\$/,
+    DOT: /\./,
+    DQUOTE: /"/,
+    EOS: /;/,
+    EQUAL: /=/,
+    FGOSYM: /F/,
+    KEYSYM: /&/,
+    LEFTBR: /[[<]/,
+    LEFTPAREN: /\(/,
+    LETTER: /[a-z]/i,
+    MINUS: /-/,
+    NOTSYM: /~/,
+    NUMBER: /\d/,
+    ORSYM: /\|/,
+    PERCENT: /%/,
+    PLUS: /\+/,
+    POUND: /#/,
+    QUESYM: /\?/,
+    RAISE: /\^/,
+    RIGHTBR: /[>\]]/,
+    RIGHTPAREN: /\)/,
+    SGOSYM: /S/,
+    SLASH: /\//,
+    SQUOTE: /'/,
+    STAR: /\*/,
+    TERMINATOR: /[;)>,\] \t]/,
 };
 
 // STREAM asks this matcher about every scanned character, so compile the
@@ -101,27 +101,27 @@ const characterClasses = {
 const characterClassBitsets = {};
 for ( const name in characterClasses ) {
     const bitset = new Uint8Array( BYTE_VALUES ),
-          pattern = characterClasses[ name ];
+        pattern = characterClasses[name];
 
     for ( let code = 0; code < bitset.length; code++ ) {
-        bitset[ code ] = pattern.test( String.fromCharCode( code ) ) ? 1 : 0;
+        bitset[code] = pattern.test( String.fromCharCode( code ) ) ? 1 : 0;
     }
 
-    characterClassBitsets[ name ] = bitset;
+    characterClassBitsets[name] = bitset;
 }
 
 export function match( characterClass, char ) {
     const code = typeof char === 'number' ? char : char.charCodeAt( 0 );
-    return characterClassBitsets[ characterClass ][ code ] === 1;
+    return characterClassBitsets[characterClass][code] === 1;
 }
 
 export const Action = {
     CONTIN: 0,
     STOPSH: 1,
-    STOP:   2,
-    ERROR:  3,
+    STOP: 2,
+    ERROR: 3,
     RUNOUT: 4,
-    GOTO:   5,
+    GOTO: 5,
 };
 
 // Reserved keywords that the assembler hands to STREAM/CLERTB/PLUGTB by
@@ -137,7 +137,7 @@ export function normalizeToken( table, mem, start, length, caseFold ) {
     if ( caseFold && table.foldable ) {
         const end = start + length;
         for ( let i = start; i < end; i++ ) {
-            mem[ i ] = foldAsciiUpperByte( mem[ i ] );
+            mem[i] = foldAsciiUpperByte( mem[i] );
         }
     }
 }
@@ -147,15 +147,15 @@ export function normalizeToken( table, mem, start, length, caseFold ) {
 const emptyEntry = {
     put: 0,
     action: Action.RUNOUT,
-    next: null
+    next: null,
 };
 Object.freeze( emptyEntry );
 
 function emptyTable( foldable, foldsLookups ) {
     return {
-        puts:     new Int32Array( BYTE_VALUES ),
-        actions:  new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
-        next:     Array.from( { length: BYTE_VALUES }, () => null ),
+        puts: new Int32Array( BYTE_VALUES ),
+        actions: new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
+        next: Array.from( { length: BYTE_VALUES }, () => null ),
         fallback: emptyEntry,
         foldable,
         foldsLookups,
@@ -165,7 +165,7 @@ function emptyTable( foldable, foldsLookups ) {
 // CLERTB rewrites byte rows. Wider host code units remain a miss.
 export function clearTable( table, actionName ) {
     table.puts.fill( 0 );
-    table.actions.fill( Action[ actionName ] );
+    table.actions.fill( Action[actionName] );
     table.next.fill( null );
     table.fallback = emptyEntry;
 }
@@ -186,19 +186,19 @@ const tableDefinitions = {
         [ 'KEYSYM', 'BIAMFN', 'TBLKTB' ],
         [ 'NOTSYM', 'BINGFN', 'TBLKTB' ],
         [ 'QUESYM', 'BIQSFN', 'TBLKTB' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     CARDTB: [
         [ 'CMT', 'CMTTYP', 'STOPSH' ],
         [ 'CTL', 'CTLTYP', 'STOPSH' ],
         [ 'CNT', 'CNTTYP', 'STOPSH' ],
-        [ 'ELSE', 'NEWTYP', 'STOPSH' ]
+        [ 'ELSE', 'NEWTYP', 'STOPSH' ],
     ],
 
     DQLITB: [
         [ 'DQUOTE', null, 'STOP' ],
-        [ 'ELSE', null, 'CONTIN' ]
+        [ 'ELSE', null, 'CONTIN' ],
     ],
 
     ELEMTB: [
@@ -207,18 +207,18 @@ const tableDefinitions = {
         [ 'SQUOTE', 'QLITYP', 'SQLITB' ],
         [ 'DQUOTE', 'QLITYP', 'DQLITB' ],
         [ 'LEFTPAREN', 'NSTTYP', 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     EOSTB: [
         [ 'EOS', null, 'STOP' ],
-        [ 'ELSE', null, 'CONTIN' ]
+        [ 'ELSE', null, 'CONTIN' ],
     ],
 
     FLITB: [
         [ 'NUMBER', null, 'CONTIN' ],
         [ 'TERMINATOR', null, 'STOPSH' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     FRWDTB: [
@@ -229,13 +229,13 @@ const tableDefinitions = {
         [ 'COMMA', 'CMATYP', 'STOP' ],
         [ 'COLON', 'CLNTYP', 'STOP' ],
         [ 'EOS', 'EOSTYP', 'STOP' ],
-        [ 'ELSE', 'NBTYP', 'STOPSH' ]
+        [ 'ELSE', 'NBTYP', 'STOPSH' ],
     ],
 
     GOTFTB: [
         [ 'LEFTPAREN', 'FGOTYP', 'STOP' ],
         [ 'LEFTBR', 'FTOTYP', 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     GOTOTB: [
@@ -243,44 +243,44 @@ const tableDefinitions = {
         [ 'FGOSYM', null, 'GOTFTB' ],
         [ 'LEFTPAREN', 'UGOTYP', 'STOP' ],
         [ 'LEFTBR', 'UTOTYP', 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     GOTSTB: [
         [ 'LEFTPAREN', 'SGOTYP', 'STOP' ],
         [ 'LEFTBR', 'STOTYP', 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     IBLKTB: [
         [ 'BLANK', null, 'FRWDTB' ],
         [ 'EOS', 'EOSTYP', 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     INTGTB: [
         [ 'NUMBER', null, 'CONTIN' ],
         [ 'TERMINATOR', 'ILITYP', 'STOPSH' ],
         [ 'DOT', 'FLITYP', 'FLITB' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     LBLTB: [
         [ 'ALPHANUMERIC', null, 'LBLXTB' ],
         [ 'BLANK', null, 'STOPSH' ],
         [ 'EOS', null, 'STOPSH' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     LBLXTB: [
         [ 'BLANK', null, 'STOPSH' ],
         [ 'EOS', null, 'STOPSH' ],
-        [ 'ELSE', null, 'CONTIN' ]
+        [ 'ELSE', null, 'CONTIN' ],
     ],
 
     NBLKTB: [
         [ 'TERMINATOR', null, 'ERROR' ],
-        [ 'ELSE', null, 'STOPSH' ]
+        [ 'ELSE', null, 'STOPSH' ],
     ],
 
     NUMBTB: [
@@ -296,29 +296,29 @@ const tableDefinitions = {
         [ 'NUMBER', null, 'CONTIN' ],
         [ 'COMMA', 'CMATYP', 'STOPSH' ],
         [ 'COLON', 'DIMTYP', 'STOPSH' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     SNABTB: [
         [ 'FGOSYM', null, 'STOP' ],
         [ 'SGOSYM', null, 'STOPSH' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     SQLITB: [
         [ 'SQUOTE', null, 'STOP' ],
-        [ 'ELSE', null, 'CONTIN' ]
+        [ 'ELSE', null, 'CONTIN' ],
     ],
 
     STARTB: [
         [ 'BLANK', null, 'STOP' ],
         [ 'STAR', 'EXPFN', 'TBLKTB' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     TBLKTB: [
         [ 'BLANK', null, 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     UNOPTB: [
@@ -336,14 +336,14 @@ const tableDefinitions = {
         [ 'ORSYM', 'BARFN', 'NBLKTB' ],
         [ 'QUESYM', 'QUESFN', 'NBLKTB' ],
         [ 'RAISE', 'AROWFN', 'NBLKTB' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     VARATB: [
         [ 'LETTER', null, 'VARBTB' ],
         [ 'COMMA', 'CMATYP', 'STOPSH' ],
         [ 'RIGHTPAREN', 'RPTYP', 'STOPSH' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     VARBTB: [
@@ -352,7 +352,7 @@ const tableDefinitions = {
         [ 'LEFTPAREN', 'LPTYP', 'STOPSH' ],
         [ 'COMMA', 'CMATYP', 'STOPSH' ],
         [ 'RIGHTPAREN', 'RPTYP', 'STOPSH' ],
-        [ 'ELSE', null, 'ERROR' ]
+        [ 'ELSE', null, 'ERROR' ],
     ],
 
     VARTB: [
@@ -361,8 +361,8 @@ const tableDefinitions = {
         [ 'TERMINATOR', 'VARTYP', 'STOPSH' ],
         [ 'LEFTPAREN', 'FNCTYP', 'STOP' ],
         [ 'LEFTBR', 'ARYTYP', 'STOP' ],
-        [ 'ELSE', null, 'ERROR' ]
-    ]
+        [ 'ELSE', null, 'ERROR' ],
+    ],
 };
 
 export const tableNames = Object.keys( tableDefinitions );
@@ -373,9 +373,9 @@ export function buildSyntaxTables() {
     const tables = {};
     for ( const name in tableDefinitions ) {
         // All tables fold under &CASE except SNABTB, which holds literal user bytes.
-        tables[ name ] = emptyTable(
+        tables[name] = emptyTable(
             FOLDABLE_TABLES.includes( name ),
-            name !== 'SNABTB'
+            name !== 'SNABTB',
         );
     }
     return tables;
@@ -384,7 +384,12 @@ export function buildSyntaxTables() {
 // Resolve symbolic PUT and GOTO operands after the image symbols are loaded.
 export function bindSyntaxTables( tables, resolveSymbol ) {
     for ( const name in tableDefinitions ) {
-        bindTable( tables, tables[ name ], tableDefinitions[ name ], resolveSymbol );
+        bindTable(
+            tables,
+            tables[name],
+            tableDefinitions[name],
+            resolveSymbol,
+        );
     }
 }
 
@@ -400,19 +405,21 @@ function bindTable( tables, table, rows, resolveSymbol ) {
         const put = putName === null ? 0 : resolveSymbol( putName );
 
         if ( Object.hasOwn( Action, actionName ) ) {
-            return { put, action: Action[ actionName ], next: null };
+            return { put, action: Action[actionName], next: null };
         }
 
-        return { put, action: Action.GOTO, next: tables[ actionName ] };
+        return { put, action: Action.GOTO, next: tables[actionName] };
     }
 
     for ( let code = 0; code < BYTE_VALUES; code++ ) {
         // ELSE is the catch-all for byte values no class row matched.
-        const entry = bindEntry( rows.find( ( r ) => r[ 0 ] === 'ELSE' || match( r[ 0 ], code ) ) );
-        table.puts[ code ] = entry.put;
-        table.actions[ code ] = entry.action;
-        table.next[ code ] = entry.next;
+        const entry = bindEntry(
+            rows.find( ( r ) => r[0] === 'ELSE' || match( r[0], code ) ),
+        );
+        table.puts[code] = entry.put;
+        table.actions[code] = entry.action;
+        table.next[code] = entry.next;
     }
 
-    table.fallback = bindEntry( rows.find( ( r ) => r[ 0 ] === 'ELSE' ) );
+    table.fallback = bindEntry( rows.find( ( r ) => r[0] === 'ELSE' ) );
 }
