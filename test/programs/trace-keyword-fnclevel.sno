@@ -1,0 +1,17 @@
+* @title Trace the &FNCLEVEL keyword across a call
+* @match substring
+* @expect >>>
+* STATEMENT 5: &FNCLEVEL = 1
+* <<<
+* Keyword tracing watches a system keyword instead of a program variable.
+* &FNCLEVEL records the function-call nesting depth, so tracing it prints a line
+* whenever the depth changes: up to 1 as GREET is entered, back to 0 as it
+* returns. (Only a handful of system keywords -- &FNCLEVEL, &STCOUNT,
+* &STFCOUNT -- are checked for keyword traces; ordinary keyword assignments are
+* not.)
+        DEFINE('GREET(WHO)')          :(MAIN)
+GREET   GREET = 'HI ' WHO            :(RETURN)
+MAIN    &TRACE = 100
+        TRACE('FNCLEVEL','KEYWORD')
+        OUTPUT = GREET('WORLD')
+END

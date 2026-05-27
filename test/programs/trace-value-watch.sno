@@ -1,0 +1,17 @@
+* @title Watch a variable with default value tracing
+* @match substring
+* @expect >>>
+* STATEMENT 5: TOTAL = 42
+* <<<
+* Turning on &TRACE and naming a variable with TRACE(...,'VALUE') makes the
+* interpreter print the variable every time it is assigned -- the SNOBOL4
+* equivalent of a watchpoint. With no trace function supplied the built-in
+* printer formats each change as "STATEMENT n: NAME = value". The ,TIME= suffix
+* is wall-clock dependent, so we match only the stable prefix.
+        &TRACE = 100
+        TRACE('TOTAL','VALUE')
+        TOTAL = 0
+        TOTAL = TOTAL + 17
+        TOTAL = TOTAL + 25
+        OUTPUT = 'FINAL ' TOTAL
+END

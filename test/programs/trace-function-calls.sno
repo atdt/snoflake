@@ -1,0 +1,18 @@
+* @title Trace calls and returns of a recursive function
+* @match substring
+* @expect >>>
+* LEVEL 0 RETURN OF FACT = 6
+* <<<
+* TRACE(name,'FUNCTION') asks the interpreter to announce every call and every
+* return of a defined function, with the nesting depth in &FNCLEVEL. Running it
+* over a recursive factorial prints the classic descend/ascend ladder:
+*   LEVEL 0 CALL OF FACT(3) ... LEVEL 2 RETURN OF FACT = 1 ... and back up.
+* We match the final top-level return, which only appears once the whole
+* recursion has unwound correctly.
+        DEFINE('FACT(N)')             :(MAIN)
+FACT    FACT = LE(N,1) 1             :S(RETURN)
+        FACT = N * FACT(N - 1)       :(RETURN)
+MAIN    &TRACE = 100
+        TRACE('FACT','FUNCTION')
+        OUTPUT = FACT(3)
+END

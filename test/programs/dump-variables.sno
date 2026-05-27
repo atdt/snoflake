@@ -1,0 +1,13 @@
+* @title Snapshot all variables with DUMP
+* @match substring
+* @expect >>>
+* FRUIT = 'apple'
+* <<<
+* DUMP(1) prints every natural variable and its current value -- a quick way to
+* see program state. The listing mixes the built-in pattern variables (ABORT,
+* ARB, ...) with the program's own, in storage order, so we match a single
+* known line rather than the whole dump.
+        FRUIT = 'apple'
+        BASKETS = 3
+        DUMP(1)
+END

@@ -1,0 +1,14 @@
+* @title Reset all variables with CLEAR
+* @expect >>>
+* BEFORE: hello world
+* AFTER:  [][]
+* <<<
+* CLEAR() sets every natural variable back to the null string in one call,
+* without disturbing function or keyword definitions. After CLEAR the once-set
+* X and Y read as empty.
+        X = 'hello'
+        Y = 'world'
+        OUTPUT = 'BEFORE: ' X ' ' Y
+        CLEAR()
+        OUTPUT = 'AFTER:  [' X '][' Y ']'
+END

@@ -1,0 +1,25 @@
+* @title Stop value and function traces with STOPTR
+* @expect >>>
+* SET SCORE = 5
+* RESULT 42
+* <<<
+* STOPTR removes a trace association that TRACE installed, for either a value
+* trace or a function trace. The value trace on SCORE uses a small trace
+* function (WATCH) so its output is deterministic: it fires for the first
+* assignment, then STOPTR detaches it, so the second assignment is silent. The
+* function trace on DBL is stopped before DBL is ever called. Exact matching
+* would fail if either STOPTR left its trace in place -- a stray "SET SCORE =
+* 99" line, or a timed CALL/RETURN ladder around RESULT.
+        DEFINE('WATCH(NAME,TAG)')
+        DEFINE('DBL(X)')                        :(START)
+WATCH   OUTPUT = 'SET ' NAME ' = ' $NAME         :(RETURN)
+DBL     DBL = X + X                              :(RETURN)
+START   &TRACE = 100
+        TRACE('SCORE','VALUE',,'WATCH')
+        TRACE('DBL','FUNCTION')
+        SCORE = 5
+        STOPTR('SCORE','VALUE')
+        STOPTR('DBL','FUNCTION')
+        SCORE = 99
+        OUTPUT = 'RESULT ' DBL(21)
+END

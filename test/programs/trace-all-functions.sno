@@ -1,0 +1,14 @@
+* @title Trace every function call with &FTRACE
+* @match substring
+* @expect >>>
+* LEVEL 0 RETURN OF DBL = 42
+* <<<
+* Setting &FTRACE turns on call/return tracing for all defined functions at
+* once, without naming each with TRACE. It is the blunt-instrument companion to
+* TRACE(...,'FUNCTION'): handy when you do not yet know which function is
+* misbehaving. The output format is the same call/return ladder.
+        DEFINE('DBL(X)')              :(MAIN)
+DBL     DBL = X + X                   :(RETURN)
+MAIN    &FTRACE = 10
+        OUTPUT = DBL(21)
+END

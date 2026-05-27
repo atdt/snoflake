@@ -1,0 +1,15 @@
+* @title Follow control flow with label tracing
+* @match substring
+* @expect >>>
+* TRANSFER TO STEP
+* <<<
+* TRACE(label,'LABEL') prints a line every time control transfers to that
+* label, which is handy for confirming a loop actually iterates. Here STEP is
+* re-entered on each successful pass, so "TRANSFER TO STEP" is printed once per
+* loop trip before the program reports the final count.
+        &TRACE = 100
+        TRACE('STEP','LABEL')
+        N = 0
+STEP    N = LT(N,3) N + 1            :S(STEP)
+        OUTPUT = 'COUNTED TO ' N
+END

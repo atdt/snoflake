@@ -1,0 +1,13 @@
+* @title Reclaim a built-in name with UNLOAD
+* @expect >>>
+* SIZE OF CAT IS 3
+* reused as a variable
+* <<<
+* UNLOAD removes a function definition, so the name reverts to an ordinary
+* variable. After UNLOAD('SIZE'), the built-in SIZE function is gone and SIZE
+* becomes a plain variable we can assign to.
+        OUTPUT = 'SIZE OF CAT IS ' SIZE('CAT')
+        UNLOAD('SIZE')
+        SIZE = 'reused as a variable'
+        OUTPUT = SIZE
+END

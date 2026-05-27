@@ -1,0 +1,16 @@
+* @title Inspect a function's formals with ARG and LOCAL
+* @expect >>>
+* FORMAL ARGS: W H
+* LOCAL VAR:   PROD
+* AREA(4,5) =  20
+* <<<
+* ARG(f,n) and LOCAL(f,n) report the name of the n-th formal argument and n-th
+* local variable of a defined function -- introspection used by debuggers and
+* meta-programs. AREA is defined with formals W, H and one local PROD.
+        DEFINE('AREA(W,H)PROD')       :(MAIN)
+AREA    PROD = W * H
+        AREA = PROD                   :(RETURN)
+MAIN    OUTPUT = 'FORMAL ARGS: ' ARG('AREA',1) ' ' ARG('AREA',2)
+        OUTPUT = 'LOCAL VAR:   ' LOCAL('AREA',1)
+        OUTPUT = 'AREA(4,5) =  ' AREA(4,5)
+END
