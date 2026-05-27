@@ -78,11 +78,17 @@ function extractComment( operands ) {
 // line, opcode, comment, and enclosing procedure. The slot count must match
 // image.instructions.length exactly; a mismatch means the classification here
 // has drifted from src/assemble.js.
+//
+// Each slot records its enclosing region: the nearest preceding PROC, or, when
+// a TITLE section opens code that no PROC heads, the section itself. TITLE acts
+// as a region boundary so a procedure cannot absorb the non-procedure common
+// code that follows it -- without this, TRIM (the file's last PROC) would
+// swallow the entire Common Code / Termination / Error Handling tail.
 function buildSourceMap() {
     const text = fs.readFileSync( SIL_PATH, 'utf8' ),
         lines = text.split( /\r?\n/ ),
         slots = [];
-    let proc = null; // { name, line, comment } of the nearest preceding PROC
+    let region = null; // { kind, name, line, comment }
 
     for ( let i = 0; i < lines.length; i++ ) {
         const line = lines[i];
@@ -100,7 +106,13 @@ function buildSourceMap() {
             comment = extractComment( operands );
 
         if ( macro === 'PROC' ) {
-            proc = { name: label, line: i + 1, comment };
+            region = { kind: 'proc', name: label, line: i + 1, comment };
+            continue;
+        }
+        if ( macro === 'TITLE' ) {
+            // The operand is the quoted section name; strip the quotes.
+            const name = operands.replace( /^\s*'|'.*$/g, '' ).trim();
+            region = { kind: 'section', name, line: i + 1, comment: '' };
             continue;
         }
         if (
@@ -114,7 +126,7 @@ function buildSourceMap() {
             label: label ?? null,
             macro,
             comment,
-            proc,
+            region,
         } );
     }
 
@@ -178,28 +190,30 @@ function pct( n, d ) {
     return d === 0 ? '0.0' : ( ( 100 * n ) / d ).toFixed( 1 );
 }
 
-// Group slots by enclosing procedure, preserving source order. Slots before
-// the first PROC fall under a synthetic "(startup / top level)" bucket.
-function groupByProc( slots ) {
-    const procs = new Map();
+// Group slots by enclosing region (PROC or section TITLE), preserving source
+// order. Slots before the first marker fall under a synthetic top-level bucket.
+function groupByRegion( slots ) {
+    const regions = new Map();
     slots.forEach( ( slot, idx ) => {
-        const key = slot.proc ? `${slot.proc.name}@${slot.proc.line}` : '(top)';
-        let entry = procs.get( key );
+        const r = slot.region,
+            key = r ? `${r.kind}:${r.name}@${r.line}` : '(top)';
+        let entry = regions.get( key );
         if ( !entry ) {
             entry = {
-                name: slot.proc ? slot.proc.name : '(startup / top level)',
-                line: slot.proc ? slot.proc.line : slot.line,
-                comment: slot.proc ? slot.proc.comment : '',
+                kind: r ? r.kind : 'section',
+                name: r ? r.name : '(startup / top level)',
+                line: r ? r.line : slot.line,
+                comment: r ? r.comment : '',
                 total: 0,
                 covered: 0,
                 firstSlot: idx,
             };
-            procs.set( key, entry );
+            regions.set( key, entry );
         }
         entry.total++;
         if ( hits[idx] > 0 ) entry.covered++;
     } );
-    return [ ...procs.values() ];
+    return [ ...regions.values() ];
 }
 
 // For each opcode, how many of its instruction slots ran. Opcodes with zero
@@ -219,14 +233,14 @@ function groupByMacro( slots ) {
     return [ ...macros.values() ];
 }
 
-function writeReports( slots, procs, macros, ranAt ) {
+function writeReports( slots, regions, macros, ranAt ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
 
     // Per-slot detail, for drilling into a specific routine.
     const detail = slots.map( ( slot, idx ) => ( {
         slot: idx,
         line: slot.line,
-        proc: slot.proc ? slot.proc.name : null,
+        region: slot.region ? slot.region.name : null,
         label: slot.label,
         macro: slot.macro,
         hits: hits[idx],
@@ -234,27 +248,34 @@ function writeReports( slots, procs, macros, ranAt ) {
     } ) );
     fs.writeFileSync(
         path.join( TMP_DIR, 'coverage.json' ),
-        JSON.stringify( { ranAt, procs, macros, slots: detail }, null, 2 ),
+        JSON.stringify( { ranAt, regions, macros, slots: detail }, null, 2 ),
     );
 
     // An annotated listing: every uncovered instruction, in source order,
-    // marked with its procedure so cold regions read at a glance.
+    // tagged with its region so cold stretches read at a glance.
     const cold = detail.filter( ( d ) => d.hits === 0 );
     const lines = cold.map( ( d ) =>
-        `${String( d.line ).padStart( 5 )}  ${( d.proc || '-' ).padEnd( 8 )} ` +
-        `${d.macro.padEnd( 8 )} ${d.comment}`.trimEnd()
+        ( `${String( d.line ).padStart( 5 )}  ` +
+            `${( d.region || '-' ).padEnd( 16 )} ` +
+            `${d.macro.padEnd( 8 )} ${d.comment}` ).trimEnd()
     );
     fs.writeFileSync(
         path.join( TMP_DIR, 'uncovered.txt' ),
         `Uncovered SIL instructions (${cold.length})\n` +
-            'line   proc     macro    comment\n' +
+            'line   region           macro    comment\n' +
             lines.join( '\n' ) + '\n',
     );
 }
 
+// Tag a region with its kind so procedures and sections are distinguishable
+// in the listing (sections always run; a dead "region" is always a PROC).
+function tag( r ) {
+    return ( r.kind === 'proc' ? 'P ' : 'S ' ) + r.name;
+}
+
 function main() {
     const argv = process.argv.slice( 2 ),
-        showAllProcs = argv.includes( '--procs' ),
+        showAll = argv.includes( '--procs' ),
         jsonArg = argv.find( ( a ) => a.startsWith( '--json' ) );
 
     const slots = buildSourceMap();
@@ -268,26 +289,30 @@ function main() {
 
     const total = slots.length,
         covered = hits.reduce( ( n, h ) => n + ( h > 0 ? 1 : 0 ), 0 ),
-        procs = groupByProc( slots ),
+        regions = groupByRegion( slots ),
         macros = groupByMacro( slots );
 
     const ranAt = new Date().toISOString();
-    writeReports( slots, procs, macros, ranAt );
+    writeReports( slots, regions, macros, ranAt );
     if ( jsonArg ) {
         const dest = jsonArg.includes( '=' )
             ? jsonArg.split( '=' )[1]
             : path.join( TMP_DIR, 'coverage.json' );
         fs.writeFileSync(
             dest,
-            JSON.stringify( { ranAt, total, covered, procs, macros }, null, 2 ),
+            JSON.stringify(
+                { ranAt, total, covered, regions, macros },
+                null,
+                2,
+            ),
         );
     }
 
-    const deadProcs = procs
-            .filter( ( p ) => p.covered === 0 )
+    const deadRegions = regions
+            .filter( ( r ) => r.covered === 0 )
             .sort( ( a, b ) => a.firstSlot - b.firstSlot ),
-        partialProcs = procs
-            .filter( ( p ) => p.covered > 0 && p.covered < p.total )
+        partialRegions = regions
+            .filter( ( r ) => r.covered > 0 && r.covered < r.total )
             .sort( ( a, b ) =>
                 a.covered / a.total - b.covered / b.total ||
                 b.total - a.total
@@ -313,36 +338,36 @@ function main() {
         `  uncovered:   ${total - covered} (${pct( total - covered, total )}%)`,
     );
     out.push(
-        `Procedures:    ${procs.length} total, ` +
-            `${deadProcs.length} never entered`,
+        `Regions:       ${regions.length} total (PROCs + sections), ` +
+            `${deadRegions.length} never entered`,
     );
     out.push( '' );
 
-    out.push( `Procedures never entered (${deadProcs.length}):` );
-    out.push( '  line   proc       n  comment' );
-    for ( const p of deadProcs ) {
+    out.push( `Regions never entered (${deadRegions.length}):` );
+    out.push( '  line   region              n  comment' );
+    for ( const r of deadRegions ) {
         out.push(
-            `  ${String( p.line ).padStart( 5 )}  ${p.name.padEnd( 8 )} ` +
-                `${String( p.total ).padStart( 3 )}  ${p.comment}`,
+            `  ${String( r.line ).padStart( 5 )}  ${tag( r ).padEnd( 18 )} ` +
+                `${String( r.total ).padStart( 3 )}  ${r.comment}`,
         );
     }
     out.push( '' );
 
-    const partialShown = showAllProcs
-        ? partialProcs
-        : partialProcs.slice( 0, 20 );
+    const partialShown = showAll
+        ? partialRegions
+        : partialRegions.slice( 0, 20 );
     out.push(
-        `Partially covered procedures` +
-            ( showAllProcs ? '' : ` (worst ${partialShown.length})` ) + ':',
+        `Partially covered regions` +
+            ( showAll ? '' : ` (worst ${partialShown.length})` ) + ':',
     );
-    out.push( '  cover%  hit/tot  line   proc       comment' );
-    for ( const p of partialShown ) {
+    out.push( '  cover%  hit/tot  line   region              comment' );
+    for ( const r of partialShown ) {
         out.push(
-            `  ${pct( p.covered, p.total ).padStart( 5 )}%  ` +
-                `${String( p.covered ).padStart( 3 )}/` +
-                `${String( p.total ).padEnd( 3 )}  ` +
-                `${String( p.line ).padStart( 5 )}  ${p.name.padEnd( 8 )} ` +
-                `${p.comment}`,
+            `  ${pct( r.covered, r.total ).padStart( 5 )}%  ` +
+                `${String( r.covered ).padStart( 3 )}/` +
+                `${String( r.total ).padEnd( 3 )}  ` +
+                `${String( r.line ).padStart( 5 )}  ${tag( r ).padEnd( 18 )} ` +
+                `${r.comment}`,
         );
     }
     out.push( '' );
