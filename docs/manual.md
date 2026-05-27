@@ -212,6 +212,8 @@ The options:
     banner        true to print the startup/termination banner.
     statistics    true to print the exit statistics summary.
     list          true to print the compile-time source listing.
+    stlimit       Initial &STLIMIT, the statement-execution limit. -1
+                  (the default) means unlimited.
     stdout        A writer object capturing program output (see below).
     stderr        A writer object for error output.
     loader        An object that reads files on the program's behalf.

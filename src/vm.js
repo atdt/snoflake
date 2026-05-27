@@ -26,20 +26,15 @@ function wordsToBytes( words ) {
     return words * WORD_SIZE;
 }
 
-const DEFAULT_OPTIONS = {
-    case: true,
-    list: false,
-    banner: false,
-    statistics: false,
-};
-
-// System-variable descriptors whose initial integer value is seeded from
-// the matching host option after the image loads.
-const HOST_SWITCHES = {
-    LISTCL: 'list',
-    BANRCL: 'banner',
-    STATCL: 'statistics',
-    CASECL: 'case',
+// Each host keyword maps a VM option to the SIL descriptor holding its runtime
+// value, plus the default applied when the option is unset. An entry without a
+// default (stlimit) keeps whatever value the image loaded.
+const HOST_KEYWORDS = {
+    case: { symbol: 'CASECL', default: true },
+    list: { symbol: 'LISTCL', default: false },
+    banner: { symbol: 'BANRCL', default: false },
+    statistics: { symbol: 'STATCL', default: false },
+    stlimit: { symbol: 'EXLMCL' }, // &STLIMIT: -1 means unlimited
 };
 
 // SNOBOL type names used in LOAD prototypes, keyed by extension kind.
@@ -53,7 +48,7 @@ const TYPE_NAMES = {
 
 export class VM {
     constructor( options = {} ) {
-        this.options = { ...DEFAULT_OPTIONS, ...options };
+        this.options = { ...options };
         this.loader = this.options.loader || defaultLoader;
         // Host extensions merge over the defaults. Pass `null` to start
         // empty (intended for tests that need a bare runtime). Function
@@ -109,7 +104,7 @@ export class VM {
         this.reset();
         this.loadImage( image );
         this.ip = 0;
-        this.applyHostSwitches();
+        this.applyHostKeywords();
         return this.compileInstructions( image.instructions );
     }
 
@@ -136,14 +131,17 @@ export class VM {
         );
     }
 
-    applyHostSwitches() {
-        // LISTCL, BANRCL, and STATCL are descriptors in the loaded image.
-        // After loading, overwrite them from the VM options for this run.
-        for ( const symbol in HOST_SWITCHES ) {
-            if ( Object.hasOwn( this.symbols, symbol ) ) {
-                const option = HOST_SWITCHES[symbol],
-                    enabled = this.options[option] ? 1 : 0;
-                this.d( symbol ).addr = enabled;
+    applyHostKeywords() {
+        // The image loads each keyword descriptor with its SIL default;
+        // override it from the host option, or the keyword's own default when
+        // the option is unset.
+        for ( const option in HOST_KEYWORDS ) {
+            const { symbol, default: fallback } = HOST_KEYWORDS[option],
+                value = this.options[option] ?? fallback;
+            if (
+                value !== undefined && Object.hasOwn( this.symbols, symbol )
+            ) {
+                this.d( symbol ).addr = Number( value );
             }
         }
     }

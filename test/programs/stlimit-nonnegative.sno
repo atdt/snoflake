@@ -1,4 +1,4 @@
-* @title Explicit small &STLIMIT still limits execution
+* @title Nonnegative &STLIMIT limits execution
 * @match error
 * @expect LIMIT ON STATEMENT EXECUTION EXCEEDED
         &STLIMIT = 2
