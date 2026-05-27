@@ -119,6 +119,13 @@ tests).
 - `make bench-vs-csnobol4` (or `node tools/bench-vs-csnobol4.js [opts]`):
   wall-clock comparison against CSNOBOL4. Requires `snobol4` on PATH;
   override with `--snobol4=PATH`.
+- `make coverage` (or `node tools/sil-coverage.js [--procs] [--json=PATH]`):
+  trace which SIL instructions in the assembled image are executed by the
+  program fixtures, and report the procedures and opcodes the suite never
+  reaches. This measures coverage of the SNOBOL4 *stream* (the assembled
+  system), which is distinct from unit-test coverage of the JS macros in
+  `src/sil.js`. Per-slot detail and an annotated list of uncovered
+  instructions land in `tmp/sil-coverage/`.
 - `make profile` (or `node tools/profile.js [bench-snoflake.js opts]`):
   capture a V8 tick profile of `bench-snoflake.js --mode=vm` and post-
   process it into a report under `tmp/profiles/`. The first ~60 lines
