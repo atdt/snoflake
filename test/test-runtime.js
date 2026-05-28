@@ -956,8 +956,8 @@ describe('Program Execution', function () {
                 symbols: {},
                 memory: new Uint32Array( 0 ),
                 instructions: [
-                    [ null, 'TEST_SELF_BRANCH', [] ],
-                    [ null, 'END', [] ],
+                    [ 'TEST_SELF_BRANCH', [] ],
+                    [ 'END', [] ],
                 ],
             } );
             assert.equal( vm.selfBranchCount, 3 );

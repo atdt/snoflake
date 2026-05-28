@@ -146,12 +146,10 @@ export class VM {
         }
     }
 
-    // Compile each [label, macro, args] image entry into a bound call.
+    // Compile each [macro, args] image entry into a bound call.
     compileInstructions( instructions ) {
-        return instructions.map( ( stmt, idx ) => {
-            const [ /*label*/, macro, args ] = stmt,
-                impl = sil[macro];
-
+        return instructions.map( ( [ macro, args ], idx ) => {
+            const impl = sil[macro];
             if ( !impl ) {
                 throw new Error(
                     `Unknown SIL macro "${macro}" at instruction ${idx}`,

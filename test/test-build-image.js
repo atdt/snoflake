@@ -23,7 +23,7 @@ describe('SIL build pipeline', function () {
             ),
             image = assemble( listing );
 
-        assert.deepEqual( image.instructions[0][2], [ 3, 2, -6 ] );
+        assert.deepEqual( image.instructions[0][1], [ 3, 2, -6 ] );
     });
 
     it('treats a trailing comma before a comment as punctuation', function () {

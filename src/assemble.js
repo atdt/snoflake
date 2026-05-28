@@ -52,7 +52,6 @@ export function assemble( program ) {
         memory: vm.mem.slice( 0, dataEnd ),
         // Resolve instruction operands now, with every label bound.
         instructions: instructions.map( ( stmt ) => [
-            stmt.label,
             stmt.macro,
             stmt.operands.map( ( o ) => resolveOperand( vm, o ) ),
         ] ),
