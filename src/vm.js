@@ -28,14 +28,13 @@ function wordsToBytes( words ) {
 }
 
 // Each host keyword maps a VM option to the SIL descriptor holding its runtime
-// value, plus the default applied when the option is unset. An entry without a
-// default (stlimit) keeps whatever value the image loaded.
+// value, plus the default applied when the option is unset.
 const HOST_KEYWORDS = {
-    case: { symbol: 'CASECL', default: true },
-    list: { symbol: 'LISTCL', default: false },
-    banner: { symbol: 'BANRCL', default: false },
-    statistics: { symbol: 'STATCL', default: false },
-    stlimit: { symbol: 'EXLMCL' }, // &STLIMIT: -1 means unlimited
+    case: { symbol: 'CASECL', defaultValue: true },
+    list: { symbol: 'LISTCL', defaultValue: false },
+    banner: { symbol: 'BANRCL', defaultValue: false },
+    statistics: { symbol: 'STATCL', defaultValue: false },
+    stlimit: { symbol: 'EXLMCL', defaultValue: -1 }, // -1 means unlimited
 };
 
 // SNOBOL type names used in LOAD prototypes, keyed by extension kind.
@@ -137,11 +136,9 @@ export class VM {
         // override it from the host option, or the keyword's own default when
         // the option is unset.
         for ( const option in HOST_KEYWORDS ) {
-            const { symbol, default: fallback } = HOST_KEYWORDS[option],
-                value = this.options[option] ?? fallback;
-            if (
-                value !== undefined && Object.hasOwn( this.symbols, symbol )
-            ) {
+            const { symbol, defaultValue } = HOST_KEYWORDS[option],
+                value = this.options[option] ?? defaultValue;
+            if ( Object.hasOwn( this.symbols, symbol ) ) {
                 this.d( symbol ).addr = Number( value );
             }
         }
