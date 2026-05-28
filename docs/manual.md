@@ -28,9 +28,7 @@ runtime* -- a program that executes `.js` files the way `perl` executes
 A few terms you will meet:
 
 - **package** -- a named, versioned bundle of code you can install.
-  Snoflake's package is named `@ath0/snoflake`. The leading `@ath0/` is
-  just a namespace prefix. It groups packages under one owner and is part
-  of the name.
+  Snoflake's package is named `snoflake`.
 
 - **ES module** -- the modern file format for JavaScript libraries. You
   pull a named function out of one with an `import` statement, naming the
@@ -50,7 +48,7 @@ That is the whole vocabulary. Everything past here is concrete.
 
 With Node:
 
-    npm install -g @ath0/snoflake
+    npm install -g snoflake
 
 The `-g` flag installs *globally*, putting a `snoflake` command on your
 `PATH` instead of dropping files in the current directory. Confirm it:
@@ -62,8 +60,8 @@ The `-g` flag installs *globally*, putting a `snoflake` command on your
 If you would rather not install anything, run the latest published
 version on demand:
 
-    npx @ath0/snoflake hello.sno          # Node
-    deno run -A npm:@ath0/snoflake hello.sno   # Deno
+    npx snoflake hello.sno          # Node
+    deno run -A npm:snoflake hello.sno   # Deno
 
 `npx` downloads the package to a cache and runs it. The next invocation
 is fast. Deno's `-A` grants the program full permissions (file and stdin
@@ -164,12 +162,12 @@ Create a directory, install Snoflake locally (no `-g` this time), and
 write a script:
 
     mkdir myproj && cd myproj
-    npm install @ath0/snoflake
+    npm install snoflake
 
 Save this as `drive.js`:
 
     // Pull the run() function out of the Snoflake package.
-    import { run } from '@ath0/snoflake';
+    import { run } from 'snoflake';
 
     // run() compiles and executes a program, returning a result object.
     // Here we hand it inline source via the `source` option.
@@ -231,7 +229,7 @@ By default program output goes to the console. To capture it, pass a
 `close()`). Snoflake calls `write` once per output line, without the
 trailing newline:
 
-    import { run } from '@ath0/snoflake';
+    import { run } from 'snoflake';
 
     const lines = [];
     const out = { write: ( line ) => lines.push( line ) };
@@ -254,7 +252,7 @@ installs one that reads the real filesystem. In your own script you can
 do the same, or supply an in-memory loader so the program sees a virtual
 filesystem you control:
 
-    import { run } from '@ath0/snoflake';
+    import { run } from 'snoflake';
 
     // Map filenames to their contents. A loader needs a load(path)
     // method returning a string or byte array.
@@ -292,7 +290,7 @@ through, it runs until a read finds no waiting line, *suspends* there, and
 resumes where it left off when you hand it the next line. You drive it
 with three methods, and receive output through callbacks:
 
-    import { createSession } from '@ath0/snoflake';
+    import { createSession } from 'snoflake';
 
     const session = createSession( {
         source:   elizaSource,                 // or file: + loader:
@@ -360,7 +358,7 @@ straight from the esm.sh CDN, so nothing is installed locally:
     <script type="module">
       // The CDN serves the published package over HTTPS. The browser
       // fetches it on load. There is no build step.
-      import { run } from 'https://esm.sh/@ath0/snoflake';
+      import { run } from 'https://esm.sh/snoflake';
 
       run( { source: " OUTPUT = 'HELLO, WORLD'\nEND\n" } );
       // Output goes to the JavaScript console by default. Open the
@@ -393,7 +391,7 @@ array.
     <pre id="out"></pre>
 
     <script type="module">
-      import { run } from 'https://esm.sh/@ath0/snoflake';
+      import { run } from 'https://esm.sh/snoflake';
 
       const src = document.querySelector( '#src' );
       const out = document.querySelector( '#out' );
@@ -466,7 +464,7 @@ You register extensions through the `extensions` option. The simplest
 form encodes the function's name and types in the key and gives the
 implementation as the value:
 
-    import { run } from '@ath0/snoflake';
+    import { run } from 'snoflake';
 
     run( {
         source: " OUTPUT = RHALF(3.5)\nEND\n",
@@ -510,7 +508,7 @@ A SNOBOL function can *fail* -- the language's distinct notion, separate
 from returning a value. To make a call fail, import the `FAIL` sentinel
 and either return it or throw it:
 
-    import { run, FAIL } from '@ath0/snoflake';
+    import { run, FAIL } from 'snoflake';
 
     run( {
         source: " OUTPUT = LOOKUP('cat')\nEND\n",
@@ -549,7 +547,7 @@ embedder needs.
     <pre id="out"></pre>
 
     <script type="module">
-      import { run } from 'https://esm.sh/@ath0/snoflake';
+      import { run } from 'https://esm.sh/snoflake';
 
       const out = document.querySelector( '#out' );
       const writer = { write( line ) { out.textContent += line + '\n'; } };

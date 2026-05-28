@@ -1,8 +1,8 @@
 {
-  "name": "@ath0/snoflake",
+  "name": "snoflake",
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
-  "version": "1.1.0",
+  "version": "1.0.2",
   "license": "BSD-2-Clause",
   "type": "module",
   "publishConfig": {

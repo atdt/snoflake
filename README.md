@@ -30,7 +30,7 @@ JavaScript library, and in the browser.
 Install from npm and run a SNOBOL program:
 
 ```
-npm install -g @ath0/snoflake
+npm install -g snoflake
 snoflake hello.sno
 ```
 
@@ -51,7 +51,7 @@ continues runtime `INPUT` reads from standard input after the source and any
 Snoflake is a standard ES module:
 
 ```js
-import { run } from '@ath0/snoflake';
+import { run } from 'snoflake';
 
 const result = run( { file: 'hello.sno', interactive: true } );
 process.exitCode = result.exitCode;
@@ -74,7 +74,7 @@ With no build step or install, import it straight from a CDN such as
 
 ```html
 <script type="module">
-  import { run } from 'https://esm.sh/@ath0/snoflake';
+  import { run } from 'https://esm.sh/snoflake';
   run( { source: " OUTPUT = 'HELLO, WORLD'\nEND\n" } );
 </script>
 ```
