@@ -330,6 +330,15 @@ function checkOne( filePath, opts ) {
             message: 'parse error: ' + e.message,
         };
     }
+    if ( header.nonstandard ) {
+        // Output is implementation-defined; CSNOBOL4 is not expected to agree.
+        return {
+            ok: true,
+            skipped: true,
+            title: header.title,
+            reason: header.nonstandardReason,
+        };
+    }
     const warnings = semanticOptionWarnings( header.options );
     let run;
     try {
@@ -472,7 +481,7 @@ function main( argv ) {
         process.stderr.write( 'no fixtures to check\n' );
         return 2;
     }
-    let passed = 0, failed = 0, updated = 0;
+    let passed = 0, failed = 0, updated = 0, skipped = 0;
     files.forEach( function ( filePath ) {
         const rel = path.relative( ROOT, filePath );
         const r = checkOne( filePath, { update: update } );
@@ -481,6 +490,14 @@ function main( argv ) {
                 'WARN ' + rel + ': @options affects semantics (' +
                     r.warnings.join( ', ' ) + '); CSNOBOL4 ignores these\n',
             );
+        }
+        if ( r.skipped ) {
+            skipped++;
+            process.stdout.write(
+                'SKIP ' + rel + ' — ' + r.title + ' (@nonstandard' +
+                    ( r.reason ? ': ' + r.reason : '' ) + ')\n',
+            );
+            return;
         }
         if ( r.updated ) {
             updated++;
@@ -514,6 +531,9 @@ function main( argv ) {
     let summary = passed + ' passed, ' + failed + ' failed';
     if ( update ) {
         summary += ', ' + updated + ' updated';
+    }
+    if ( skipped ) {
+        summary += ', ' + skipped + ' skipped';
     }
     summary += ', ' + files.length + ' total\n';
     process.stdout.write( '\n' + summary );

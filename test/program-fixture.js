@@ -25,6 +25,8 @@ function parseHeader( filePath ) {
         match: 'exact',
         ignoreCase: false,
         attribution: null,
+        nonstandard: false,
+        nonstandardReason: null,
     };
     const seen = {};
     let i;
@@ -170,6 +172,17 @@ function applyDirective( filePath, header, key, value, isBlock ) {
             throw new Error( filePath + ': @attribution must not be empty' );
         }
         header.attribution = value;
+        return;
+    }
+    if ( key === 'nonstandard' ) {
+        // Marks output as implementation-defined: snoflake asserts it as usual,
+        // but reference cross-checks (e.g. CSNOBOL4) skip the fixture. Any text
+        // after the directive is a free-form reason.
+        if ( isBlock ) {
+            throw new Error( filePath + ': @nonstandard must be single-line' );
+        }
+        header.nonstandard = true;
+        header.nonstandardReason = value === '' ? null : value;
         return;
     }
     if ( key === 'match' ) {

@@ -2,6 +2,7 @@
 * @options {"stlimit": 2}
 * @match error
 * @expect LIMIT ON STATEMENT EXECUTION EXCEEDED
+* @nonstandard the stlimit host option has no CSNOBOL4 equivalent
 * The LT ceiling is a safety net: if stlimit is not applied the loop exits
 * normally at I=1000, so a regression fails the assertion instead of hanging.
 LOOP    I = I + 1

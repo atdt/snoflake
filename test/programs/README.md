@@ -50,6 +50,7 @@ silently dropping expectations.
 | `@expect`      | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                                      |
 | `@match`       | single     | no                                          | `exact` (default), `substring`, or `error`, with an optional `/i` modifier. |
 | `@attribution` | single     | no                                          | Free-text credit for where the program came from. Informational only. |
+| `@nonstandard` | single     | no                                          | Output is implementation-defined; reference cross-checks skip it. Optional reason. |
 
 ### `@options`
 
@@ -107,6 +108,12 @@ newline of the actual output is normalized when comparing.
 
 Optional single-line free text crediting the source of the program (e.g.
 `Griswold 1971, §3.4`). Informational; the runner does not act on it.
+
+### `@nonstandard`
+
+Marks output as implementation-defined: the runner still asserts `@expect`, but
+reference cross-checks (`tools/check-csnobol4.js`) skip the fixture. Trailing
+text is an optional reason.
 
 ### `@match`
 
