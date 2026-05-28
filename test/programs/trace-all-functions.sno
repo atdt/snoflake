@@ -1,5 +1,5 @@
 * @title Trace every function call with &FTRACE
-* @match substring
+* @match substring/i
 * @expect >>>
 * LEVEL 0 RETURN OF DBL = 42
 * <<<

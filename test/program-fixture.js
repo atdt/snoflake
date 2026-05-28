@@ -23,6 +23,7 @@ function parseHeader( filePath ) {
         input: null,
         expect: null,
         match: 'exact',
+        ignoreCase: false,
         attribution: null,
     };
     const seen = {};
@@ -90,7 +91,7 @@ function parseHeader( filePath ) {
         throw new Error( filePath + ': missing required @title' );
     }
     if (
-        ( header.match === 'exact' || header.match === 'substring' ) &&
+        header.match !== 'error' &&
         header.expect === null
     ) {
         throw new Error(
@@ -175,14 +176,38 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         if ( isBlock ) {
             throw new Error( filePath + ': @match must be single-line' );
         }
-        if ( VALID_MATCH_MODES.indexOf( value ) === -1 ) {
+        // A trailing "/i" modifier folds case in the comparison, for output
+        // whose casing differs between implementations. It composes with any
+        // mode whose comparison is case-sensitive (exact, substring); error
+        // mode already matches case-insensitively, so /i is rejected there.
+        let mode = value, ignoreCase = false;
+        const slash = value.indexOf( '/' );
+        if ( slash !== -1 ) {
+            const flag = value.slice( slash + 1 );
+            mode = value.slice( 0, slash );
+            if ( flag !== 'i' ) {
+                throw new Error(
+                    filePath + ': unknown @match modifier ' +
+                        JSON.stringify( '/' + flag ) + ' (only /i)',
+                );
+            }
+            ignoreCase = true;
+        }
+        if ( VALID_MATCH_MODES.indexOf( mode ) === -1 ) {
             throw new Error(
                 filePath + ': @match must be one of ' +
                     VALID_MATCH_MODES.join( '|' ) + ' (got ' +
-                    JSON.stringify( value ) + ')',
+                    JSON.stringify( mode ) + ')',
             );
         }
-        header.match = value;
+        if ( ignoreCase && mode === 'error' ) {
+            throw new Error(
+                filePath + ': @match error already matches case-insensitively;'
+                    + ' drop the /i',
+            );
+        }
+        header.match = mode;
+        header.ignoreCase = ignoreCase;
         return;
     }
     throw new Error( filePath + ': unknown directive @' + key );

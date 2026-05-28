@@ -1,5 +1,5 @@
 * @title Trace calls and returns of a recursive function
-* @match substring
+* @match substring/i
 * @expect >>>
 * LEVEL 0 RETURN OF FACT = 6
 * <<<

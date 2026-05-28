@@ -48,7 +48,7 @@ silently dropping expectations.
 | `@options`     | single     | no                                          | JSON object merged into `snoflake`'s options.                         |
 | `@input`       | multi-line | no                                          | Lines written to a tmp file; runner wires up `input` opt.             |
 | `@expect`      | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                                      |
-| `@match`       | single     | no                                          | `exact` (default), `substring`, or `error`.                           |
+| `@match`       | single     | no                                          | `exact` (default), `substring`, or `error`, with an optional `/i` modifier. |
 | `@attribution` | single     | no                                          | Free-text credit for where the program came from. Informational only. |
 
 ### `@options`
@@ -132,6 +132,10 @@ Match modes:
 - **`error`**: assert the run _did_ produce one of the recognized error markers.
   If `@expect` is present, it is matched as a substring against the captured
   stdout/stderr.
+
+Append `/i` to `exact` or `substring` (e.g. `@match substring/i`) to compare
+case-insensitively, for output whose casing is implementation-formatted (`error`
+already ignores case, so `/i` is rejected there).
 
 #### Recognized error markers
 

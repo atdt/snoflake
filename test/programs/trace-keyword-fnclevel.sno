@@ -1,7 +1,7 @@
 * @title Trace the &FNCLEVEL keyword across a call
 * @match substring
 * @expect >>>
-* STATEMENT 5: &FNCLEVEL = 1
+* &FNCLEVEL = 1
 * <<<
 * Keyword tracing watches a system keyword instead of a program variable.
 * &FNCLEVEL records the function-call nesting depth, so tracing it prints a line

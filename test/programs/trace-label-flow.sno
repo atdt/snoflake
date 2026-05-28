@@ -1,5 +1,5 @@
 * @title Follow control flow with label tracing
-* @match substring
+* @match substring/i
 * @expect >>>
 * TRANSFER TO STEP
 * <<<

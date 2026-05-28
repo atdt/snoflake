@@ -73,6 +73,12 @@ function trimTrailingNewlines( s ) {
     return s.replace( /\n+$/, '' );
 }
 
+// Apply the @match /i modifier: lower-case the comparand when the fixture
+// asked to ignore case, otherwise pass it through unchanged.
+function fold( s, header ) {
+    return header.ignoreCase ? s.toLowerCase() : s;
+}
+
 function findErrorMarker( output ) {
     const lower = output.toLowerCase();
     for ( let i = 0; i < ERROR_MARKERS.length; i++ ) {
@@ -229,7 +235,7 @@ function checkAgainstExpect( header, run ) {
 
     if ( header.match === 'substring' ) {
         const sub = trimTrailingNewlines( header.expect );
-        if ( run.stdout.indexOf( sub ) === -1 ) {
+        if ( fold( run.stdout, header ).indexOf( fold( sub, header ) ) === -1 ) {
             return {
                 ok: false,
                 message: 'expected substring not found in stdout: ' +
@@ -242,7 +248,7 @@ function checkAgainstExpect( header, run ) {
     // exact: CSNOBOL4 -b output IS the data section, no banner extraction.
     const actual = trimTrailingNewlines( run.stdout );
     const expect = trimTrailingNewlines( header.expect );
-    if ( actual !== expect ) {
+    if ( fold( actual, header ) !== fold( expect, header ) ) {
         return {
             ok: false,
             message: 'stdout did not match @expect\n--- expected ---\n' +

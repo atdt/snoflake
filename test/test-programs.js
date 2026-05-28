@@ -60,6 +60,12 @@ function trimTrailingNewlines( s ) {
     return s.replace( /\n+$/, '' );
 }
 
+// Apply the @match /i modifier: lower-case the comparand when the fixture
+// asked to ignore case, otherwise pass it through unchanged.
+function fold( s, header ) {
+    return header.ignoreCase ? s.toLowerCase() : s;
+}
+
 function runProgram( filePath, header ) {
     fs.mkdirSync( TMP_DIR, { recursive: true } );
     const name = path.basename( filePath, '.sno' );
@@ -133,7 +139,8 @@ function assertProgram( filePath, header, output ) {
 
     if ( header.match === 'substring' ) {
         const sub = trimTrailingNewlines( header.expect );
-        if ( output.indexOf( sub ) === -1 ) {
+        const haystack = fold( output, header ), needle = fold( sub, header );
+        if ( haystack.indexOf( needle ) === -1 ) {
             fail(
                 filePath,
                 output,
@@ -147,7 +154,7 @@ function assertProgram( filePath, header, output ) {
     // exact
     const actual = trimTrailingNewlines( output );
     const expect = trimTrailingNewlines( header.expect );
-    if ( actual !== expect ) {
+    if ( fold( actual, header ) !== fold( expect, header ) ) {
         fail(
             filePath,
             output,
