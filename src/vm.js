@@ -2,6 +2,7 @@
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
 import {
+    D,
     Descriptor,
     isFloat32,
     isInt32,
@@ -270,7 +271,7 @@ export class VM {
         throw new ReferenceError( `Unknown symbol "${key}"` );
     }
 
-    specify( text, $SPEC ) {
+    specify( text, $SPEC = this.alloc( 2 * D ) ) {
         const SPEC = this.s( $SPEC ),
             ptr = this.alloc( text.length );
         SPEC.set( ptr, 0, 0, 0, text.length );
@@ -278,11 +279,15 @@ export class VM {
         return SPEC.ptr;
     }
 
-    d( ptr ) {
+    // Return a Descriptor view over the cells at `ref`. `ref` is a
+    // storage pointer, or a symbol name that resolves to one.
+    d( ref ) {
+        const ptr = typeof ref === 'string' ? this.$( ref ) : ref;
         return new Descriptor( this, ptr );
     }
 
-    s( ptr ) {
+    s( ref ) {
+        const ptr = typeof ref === 'string' ? this.$( ref ) : ref;
         return new Specifier( this, ptr );
     }
 

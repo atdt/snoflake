@@ -908,7 +908,7 @@ sil.DEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // omitted.
 sil.DESCR = function ( A, F, V ) {
     // assemble descriptor
-    const DESCR = this.d();
+    const DESCR = this.d( this.alloc( D ) );
 
     DESCR.addr = A || 0;
     DESCR.flags = F || 0;
@@ -3743,7 +3743,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 //               +---------------------------------------+
 sil.SPEC = function ( A, F, V, O, L ) {
     // assemble specifier
-    const SPEC = this.s();
+    const SPEC = this.s( this.alloc( 2 * D ) );
 
     SPEC.addr = A || 0;
     SPEC.flags = F || 0;

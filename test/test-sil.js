@@ -120,7 +120,7 @@ describe('Macros that Assemble Data', function () {
 
     it('BUFFER', function () {
         const vm = new VM();
-        const s = vm.s();
+        const s = vm.s( vm.alloc( 2 * D ) );
         s.addr = sil.BUFFER.call( vm, 4 );
         s.length = 4;
         assert.equal( s.specified, '    ' );
@@ -183,8 +183,8 @@ describe('Branch Macros', function () {
 
     it('BRANIC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d1.addr = d2.ptr;
         d2.addr = 1234;
         sil.BRANIC.call( vm, d1.ptr, 0 );
@@ -193,7 +193,7 @@ describe('Branch Macros', function () {
 
     it('SELBRA', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             LOC1 = 222,
             LOC2 = 333,
             LOC3 = 555;
@@ -207,8 +207,8 @@ describe('Branch Macros', function () {
 describe('Comparison Macros', function () {
     it('ACOMP', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             GTLOC = 1,
             EQLOC = 2,
             LTLOC = 3;
@@ -226,7 +226,7 @@ describe('Comparison Macros', function () {
 
     it('ACOMPC', function () {
         const vm = new VM();
-        const DESCR = vm.d(),
+        const DESCR = vm.d( vm.alloc( D ) ),
             N = 4,
             GTLOC = 1,
             EQLOC = 2,
@@ -242,8 +242,8 @@ describe('Comparison Macros', function () {
 
     it('AEQL', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             NELOC = 1,
             EQLOC = 2;
 
@@ -258,7 +258,7 @@ describe('Comparison Macros', function () {
 
     it('AEQLC', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             N = 1000,
             NELOC = 1,
             EQLOC = 2;
@@ -276,9 +276,9 @@ describe('Comparison Macros', function () {
             EQLOC = 2,
             N1 = 50,
             N2 = 0;
-        const d1 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) );
         vm.alloc( 77 );
-        const d2 = vm.d();
+        const d2 = vm.d( vm.alloc( D ) );
 
         d1.addr = d2.ptr - N1;
         d2.addr = N2 - 500;
@@ -291,9 +291,9 @@ describe('Comparison Macros', function () {
 
     it('CHKVAL', function () {
         const vm = new VM();
-        const s = vm.s(),
-            d1 = vm.d(),
-            d2 = vm.d(),
+        const s = vm.s( vm.alloc( 2 * D ) ),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             GTLOC = 1,
             LTLOC = 2,
             EQLOC = 3;
@@ -321,8 +321,8 @@ describe('Comparison Macros', function () {
 
     it('DEQL', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             EQLOC = 1,
             NELOC = 2;
 
@@ -337,8 +337,8 @@ describe('Comparison Macros', function () {
 
     it('LCOMP', function () {
         const vm = new VM();
-        const s1 = vm.s(),
-            s2 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
+            s2 = vm.s( vm.alloc( 2 * D ) ),
             GTLOC = 1,
             EQLOC = 2,
             LTLOC = 3;
@@ -356,7 +356,7 @@ describe('Comparison Macros', function () {
 
     it('LEQLC', function () {
         const vm = new VM();
-        const s = vm.s(),
+        const s = vm.s( vm.alloc( 2 * D ) ),
             NELOC = 20,
             EQLOC = 30,
             N = 333;
@@ -369,8 +369,8 @@ describe('Comparison Macros', function () {
 
     it('LEXCMP', function () {
         const vm = new VM();
-        const SPEC1 = vm.s(),
-            SPEC2 = vm.s(),
+        const SPEC1 = vm.s( vm.alloc( 2 * D ) ),
+            SPEC2 = vm.s( vm.alloc( 2 * D ) ),
             GTLOC = 1,
             EQLOC = 2,
             LTLOC = 3;
@@ -397,7 +397,7 @@ describe('Comparison Macros', function () {
 
     it('TESTF', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             FLAG = 4,
             FLOC = 1,
             SLOC = 2;
@@ -410,12 +410,12 @@ describe('Comparison Macros', function () {
 
     it('TESTFI', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             FLAG = 4,
             FLOC = 1,
             SLOC = 2;
         vm.alloc( 50 );
-        const da = vm.d();
+        const da = vm.d( vm.alloc( D ) );
         d.addr = da.ptr;
         sil.TESTFI.call( vm, d.ptr, FLAG, FLOC, SLOC );
         assert.equal( vm.ip, 1 );
@@ -426,14 +426,14 @@ describe('Comparison Macros', function () {
 
     it('VCMPIC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             N = 5,
             GTLOC = 10,
             EQLOC = 20,
             LTLOC = 30;
         vm.alloc( 30 );
-        const src = vm.d();
+        const src = vm.d( vm.alloc( D ) );
         d1.addr = src.ptr - N;
 
         // V1 > V2
@@ -455,8 +455,8 @@ describe('Comparison Macros', function () {
 
     it('VEQL', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             NELOC = 1,
             EQLOC = 2;
         d1.value = 123;
@@ -470,7 +470,7 @@ describe('Comparison Macros', function () {
 
     it('VEQLC', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             N = 555,
             NELOC = 1,
             EQLOC = 2;
@@ -493,10 +493,10 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
 
     it('POP', function () {
         const vm = stackVM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d(),
-            d4 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            d4 = vm.d( vm.alloc( D ) ),
             cur = vm.CSTACK;
 
         d1.set( 2, 4, 6 );
@@ -513,7 +513,7 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
 
     it('PSTACK', function () {
         const vm = stackVM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         vm.CSTACK = 123;
         sil.PSTACK.call( vm, d.ptr );
         assert.deepEqual( d.cells(), [ 120, 0, 0 ] );
@@ -522,7 +522,7 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
     it('PUSH', function () {
         const vm = stackVM();
         const cur = vm.CSTACK;
-        let d = vm.d();
+        let d = vm.d( vm.alloc( D ) );
         d.set( 4, 1, 6 );
         sil.PUSH.call( vm, [ d.ptr ] );
         d = vm.d( cur + d.width );
@@ -539,10 +539,10 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
 
     it('SPOP', function () {
         const vm = stackVM();
-        const s1 = vm.s(),
-            s2 = vm.s(),
-            s3 = vm.s(),
-            s4 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
+            s2 = vm.s( vm.alloc( 2 * D ) ),
+            s3 = vm.s( vm.alloc( 2 * D ) ),
+            s4 = vm.s( vm.alloc( 2 * D ) ),
             cur = vm.CSTACK;
 
         s1.set( 0, 2, 4, 6, 8 );
@@ -559,7 +559,7 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
     it('SPUSH', function () {
         const vm = stackVM();
         const cur = vm.CSTACK;
-        let s = vm.s();
+        let s = vm.s( vm.alloc( 2 * D ) );
 
         s.set( 1, 2, 3, 4, 5 );
         sil.SPUSH.call( vm, [ s.ptr ] );
@@ -572,11 +572,11 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
 describe('Macros that Move and Set Descriptors', function () {
     it('GETD', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
         vm.alloc( 111 );
-        const src = vm.d();
+        const src = vm.d( vm.alloc( D ) );
         d2.addr = src.ptr - 55;
         d3.addr = 55;
         src.set( 555, 666, 777 );
@@ -586,11 +586,11 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('GETDC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d2.addr = 50;
         vm.alloc( 111 );
-        const di = vm.d(),
+        const di = vm.d( vm.alloc( D ) ),
             N = di.ptr - d2.addr;
         di.set( 4, 5, 6 );
         sil.GETDC.call( vm, d1.ptr, d2.ptr, N );
@@ -599,13 +599,13 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('MOVBLK', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
         vm.alloc( 99 );
         d2.addr = vm.memPtr - 3;
         for ( let i = 0; i < 10; i++ ) {
-            vm.d().set( i, i, i );
+            vm.d( vm.alloc( D ) ).set( i, i, i );
         }
         d3.addr = 10 * 3;
         // An offset of 9 makes sure source and destination regions overlap.
@@ -619,8 +619,8 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('MOVD', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d2.set( 123, 456, 789 );
         sil.MOVD.call( vm, d1.ptr, d2.ptr );
         assert.deepEqual( d1.cells(), [ 123, 456, 789 ] );
@@ -628,15 +628,15 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('MOVDIC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             N1 = 3,
             N2 = 4;
         vm.alloc( 11 );
-        const src = vm.d();
+        const src = vm.d( vm.alloc( D ) );
         d2.addr = src.ptr - N2;
         vm.alloc( 7 );
-        const dst = vm.d();
+        const dst = vm.d( vm.alloc( D ) );
         d1.addr = dst.ptr - N1;
         src.set( 4, 5, 6 );
         sil.MOVDIC.call( vm, d1.ptr, N1, d2.ptr, N2 );
@@ -645,13 +645,13 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('PUTD', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
         vm.alloc( 7 );
         d1.addr = vm.alloc( 9 );
         vm.alloc( 5 );
-        const dst = vm.d();
+        const dst = vm.d( vm.alloc( D ) );
         d2.addr = dst.ptr - d1.addr;
         d3.set( 555, 666, 777 );
         sil.PUTD.call( vm, d1.ptr, d2.ptr, d3.ptr );
@@ -660,12 +660,12 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('PUTDC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         vm.alloc( 50 );
         d1.addr = vm.alloc( 25 );
         vm.alloc( 17 );
-        const dst = vm.d(),
+        const dst = vm.d( vm.alloc( D ) ),
             N = dst.ptr - d1.addr;
         d2.set( 555, 666, 777 );
         sil.PUTDC.call( vm, d1.ptr, N, d2.ptr );
@@ -674,12 +674,12 @@ describe('Macros that Move and Set Descriptors', function () {
 
     it('ZERBLK', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         vm.alloc( 60 );
-        const before = vm.d(),
+        const before = vm.d( vm.alloc( D ) ),
             ptr = vm.alloc( 60, 1 ),
-            after = vm.d();
+            after = vm.d( vm.alloc( D ) );
         before.set( 1, 1, 1 );
         after.set( 1, 1, 1 );
 
@@ -698,10 +698,10 @@ describe('Macros that Move and Set Descriptors', function () {
 describe('Macros that Modify Address Fields of Descriptors', function () {
     it('ADJUST', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d(),
-            di = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            di = vm.d( vm.alloc( D ) );
         di.addr = 5;
         d2.addr = di.ptr;
         d3.addr = 7;
@@ -711,9 +711,9 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('BKSIZE', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            di = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            di = vm.d( vm.alloc( D ) );
         let FV;
         d2.addr = di.ptr;
 
@@ -732,7 +732,7 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('DECRA', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         d.addr = 55;
         sil.DECRA.call( vm, d.ptr, 33 );
         assert.equal( d.addr, 22 );
@@ -742,11 +742,11 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('GETAC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             N = 5;
         vm.alloc( 10 );
-        const src = vm.d();
+        const src = vm.d( vm.alloc( D ) );
         d2.addr = src.ptr - N;
         src.addr = 123;
         sil.GETAC.call( vm, d1.ptr, d2.ptr, N );
@@ -755,8 +755,8 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('GETLG', function () {
         const vm = new VM();
-        const s = vm.s(),
-            d = vm.d();
+        const s = vm.s( vm.alloc( 2 * D ) ),
+            d = vm.d( vm.alloc( D ) );
         s.length = 1212;
         sil.GETLG.call( vm, d.ptr, s.ptr );
         assert.deepEqual( d.cells(), [ s.length, 0, 0 ] );
@@ -765,8 +765,8 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
     it('GETLTH', function () {
         const vm = new VM();
         const s = 'Beauty is truth, truth beauty',
-            d1 = vm.d(),
-            d2 = vm.d();
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d2.addr = s.length;
         // F(L) = D*(3 + ceil(L/CPD)); here D=3, CPD=3, L=29 → 3*(3+10) = 39.
         sil.GETLTH.call( vm, d1.ptr, d2.ptr );
@@ -792,8 +792,8 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('MOVA', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d1.addr = 111;
         d2.addr = 999;
         sil.MOVA.call( vm, d1.ptr, d2.ptr );
@@ -803,11 +803,11 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('PUTAC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         vm.alloc( 100 );
         d1.addr = 15;
-        const d3 = vm.d(),
+        const d3 = vm.d( vm.alloc( D ) ),
             N = d3.ptr - d1.addr;
         d2.addr = 789;
         sil.PUTAC.call( vm, d1.ptr, N, d2.ptr );
@@ -816,7 +816,7 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('SETAC', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             N = 123;
         d.set( 5, 6, 7 );
         sil.SETAC.call( vm, d.ptr, N );
@@ -825,8 +825,8 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 
     it('SETAV', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d1.set( 1, 2, 3 );
         d2.set( 5, 6, 7 );
         sil.SETAV.call( vm, d1.ptr, d2.ptr );
@@ -837,7 +837,7 @@ describe('Macros that Modify Address Fields of Descriptors', function () {
 describe('Macros that Modify Value Fields of Descriptors', function () {
     it('INCRV', function () {
         const vm = new VM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             N = 55;
         d.value = 44;
         sil.INCRV.call( vm, d.ptr, N );
@@ -846,8 +846,8 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
 
     it('MOVV', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d2.value = 999;
         sil.MOVV.call( vm, d1.ptr, d2.ptr );
         assert.equal( d1.value, 999 );
@@ -855,11 +855,11 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
 
     it('PUTVC', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
             N = 3;
         vm.alloc( 13 );
-        const dst = vm.d();
+        const dst = vm.d( vm.alloc( D ) );
         d1.addr = dst.ptr - N;
         d2.value = 777;
         sil.PUTVC.call( vm, d1.ptr, N, d2.ptr );
@@ -868,9 +868,9 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
 
     it('SETSIZ', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            dst = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            dst = vm.d( vm.alloc( D ) );
         d1.addr = dst.ptr;
         d2.addr = 12345;
         sil.SETSIZ.call( vm, d1.ptr, d2.ptr );
@@ -879,8 +879,8 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
 
     it('SETVA', function () {
         const vm = new VM();
-        const d1 = vm.d(),
-            d2 = vm.d();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
         d2.addr = 999;
         sil.SETVA.call( vm, d1.ptr, d2.ptr );
         assert.equal( d1.value, 999 );
@@ -888,14 +888,14 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
 
     it('SETVC', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         sil.SETVC.call( vm, d.ptr, 77 );
         assert.equal( d.value, 77 );
     });
 
     it('SETVC accepts zero', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         d.value = 77;
         sil.SETVC.call( vm, d.ptr, 0 );
         assert.equal( d.value, 0 );
@@ -905,7 +905,7 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
 describe('Macros that Modify Flag Fields of Descriptors', function () {
     it('RESETF', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         d.flags = 0x8 | 0x4 | 0x2;
         sil.RESETF.call( vm, d.ptr, 0x4 );
         assert.equal( d.flags, 0x8 | 0x2 );
@@ -915,10 +915,10 @@ describe('Macros that Modify Flag Fields of Descriptors', function () {
 
     it('RSETFI', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
 
         vm.alloc( 50 );
-        const a = vm.d();
+        const a = vm.d( vm.alloc( D ) );
         d.addr = a.ptr;
         a.flags |= 5;
         sil.RSETFI.call( vm, d.ptr, 4 );
@@ -931,7 +931,7 @@ describe('Macros that Modify Flag Fields of Descriptors', function () {
 
     it('SETF', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         sil.SETF.call( vm, d.ptr, 0x4 );
         assert.equal( d.flags, 0x4 );
         sil.SETF.call( vm, d.ptr, 0x8 );
@@ -942,8 +942,8 @@ describe('Macros that Modify Flag Fields of Descriptors', function () {
 
     it('SETFI', function () {
         const vm = new VM();
-        const d = vm.d(),
-            dst = vm.d();
+        const d = vm.d( vm.alloc( D ) ),
+            dst = vm.d( vm.alloc( D ) );
         d.addr = dst.ptr;
         sil.SETFI.call( vm, d.ptr, 0x4 );
         assert.equal( dst.flags, 0x4 );
@@ -953,9 +953,9 @@ describe('Macros that Modify Flag Fields of Descriptors', function () {
 describe('Macros that Perform Integer Arithmetic on Address Fields', function () {
     it('DIVIDE truncates toward zero and preserves type fields', function () {
         const vm = new VM(),
-            d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
 
         d2.set( -7, 44, 55 );
         d3.addr = 3;
@@ -990,9 +990,9 @@ describe('Macros that Perform Integer Arithmetic on Address Fields', function ()
     it('SUM', function () {
         const vm = new VM();
         const INT32_MAX = 0x7fffffff,
-            d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
             FLOC = 7,
             SLOC = 9;
         d2.set( 555, 666, 777 );
@@ -1023,9 +1023,9 @@ describe('Macros that Deal with Real Numbers', function () {
 
     it('DVREAL divides real values and preserves type fields', function () {
         const vm = new VM(),
-            d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
 
         d2.raddr = 7.5;
         d2.flags = 44;
@@ -1053,9 +1053,9 @@ describe('Macros that Deal with Real Numbers', function () {
 
     it('MPREAL multiplies real values and preserves type fields', function () {
         const vm = new VM(),
-            d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
 
         d2.raddr = 1.5;
         d2.flags = 44;
@@ -1079,8 +1079,8 @@ describe('Macros that Deal with Real Numbers', function () {
 
     it('RLINT discards the fractional part', function () {
         const vm = new VM(),
-            d1 = vm.d(),
-            d2 = vm.d();
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
 
         vm.define( 'I', 6 );
 
@@ -1099,9 +1099,9 @@ describe('Macros that Deal with Real Numbers', function () {
 
     it('SBREAL subtracts real values and preserves type fields', function () {
         const vm = new VM(),
-            d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d();
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
 
         d2.raddr = 5.5;
         d2.flags = 44;
@@ -1117,7 +1117,7 @@ describe('Macros that Deal with Real Numbers', function () {
 
     it('SPREAL', function () {
         const vm = new VM();
-        const d = vm.d(), s = sil.STRING.call( vm, '-0.5' );
+        const d = vm.d( vm.alloc( D ) ), s = sil.STRING.call( vm, '-0.5' );
         vm.define( 'R', 9 );
         sil.SPREAL.call( vm, d.ptr, s, 1, 2 );
         assert.equal( d.raddr, -0.5 );
@@ -1129,9 +1129,9 @@ describe('Macros that Move Specifiers', function () {
     it('GETSPC', function () {
         const vm = new VM();
         const N = 10,
-            d = vm.d();
+            d = vm.d( vm.alloc( D ) );
         vm.alloc( 32 );
-        const s = vm.s();
+        const s = vm.s( vm.alloc( 2 * D ) );
         s.set( 11, 22, 33, 44, 55 );
         vm.alloc( 32 );
         sil.GETSPC.call( vm, s.ptr, d.ptr, N );
@@ -1141,10 +1141,10 @@ describe('Macros that Move Specifiers', function () {
 
     it('PUTSPC', function () {
         const vm = new VM();
-        const d = vm.d(),
-            src = vm.s();
+        const d = vm.d( vm.alloc( D ) ),
+            src = vm.s( vm.alloc( 2 * D ) );
         d.addr = vm.alloc( 100 );
-        const dst = vm.s();
+        const dst = vm.s( vm.alloc( 2 * D ) );
         src.set( 55, 44, 33, 22, 11 );
         sil.PUTSPC.call( vm, d.ptr, dst.ptr - d.addr, src.ptr );
         assert.deepEqual( src.cells(), dst.cells() );
@@ -1152,8 +1152,8 @@ describe('Macros that Move Specifiers', function () {
 
     it('SETSP', function () {
         const vm = new VM();
-        const s1 = vm.s(),
-            s2 = vm.s();
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
+            s2 = vm.s( vm.alloc( 2 * D ) );
         s1.set( 10, 11, 12, 13, 14 );
         s2.set( 20, 21, 22, 23, 24 );
         sil.SETSP.call( vm, s1.ptr, s2.ptr );
@@ -1165,8 +1165,8 @@ describe('Macros that Move Specifiers', function () {
 describe('Macros that Operate on Specifiers', function () {
     it('ADDLG', function () {
         const vm = new VM();
-        const s = vm.s(),
-            d = vm.d();
+        const s = vm.s( vm.alloc( 2 * D ) ),
+            d = vm.d( vm.alloc( D ) );
         s.length = 123;
         d.addr = 5;
         sil.ADDLG.call( vm, s.ptr, d.ptr );
@@ -1175,8 +1175,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('ADDLG accepts a zero increment', function () {
         const vm = new VM();
-        const s = vm.s(),
-            d = vm.d();
+        const s = vm.s( vm.alloc( 2 * D ) ),
+            d = vm.d( vm.alloc( D ) );
         s.length = 123;
         d.addr = 0;
         sil.ADDLG.call( vm, s.ptr, d.ptr );
@@ -1206,7 +1206,7 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('FSHRTN', function () {
         const vm = new VM();
-        const s = vm.s(),
+        const s = vm.s( vm.alloc( 2 * D ) ),
             N = 4;
         s.set( 4, 5, 6, 7, 8 );
         sil.FSHRTN.call( vm, s.ptr, N );
@@ -1216,8 +1216,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('GETBAL consumes the shortest balanced substring', function () {
         const vm = new VM();
-        const spec = vm.s(),
-            max = vm.d(),
+        const spec = vm.s( vm.alloc( 2 * D ) ),
+            max = vm.d( vm.alloc( D ) ),
             SLOC = 111,
             FLOC = 222;
 
@@ -1233,8 +1233,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('GETBAL consumes one non-parenthesis character', function () {
         const vm = new VM();
-        const spec = vm.s(),
-            max = vm.d(),
+        const spec = vm.s( vm.alloc( 2 * D ) ),
+            max = vm.d( vm.alloc( D ) ),
             SLOC = 111,
             FLOC = 222;
 
@@ -1250,8 +1250,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('GETBAL fails on right parenthesis', function () {
         const vm = new VM();
-        const spec = vm.s(),
-            max = vm.d(),
+        const spec = vm.s( vm.alloc( 2 * D ) ),
+            max = vm.d( vm.alloc( D ) ),
             SLOC = 111,
             FLOC = 222;
 
@@ -1267,8 +1267,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('INTSPC', function () {
         const vm = new VM();
-        const d = vm.d(),
-            s = vm.s();
+        const d = vm.d( vm.alloc( D ) ),
+            s = vm.s( vm.alloc( 2 * D ) );
         d.addr = -58;
         sil.INTSPC.call( vm, s.ptr, d.ptr );
         assert.equal( s.specified, '-58' );
@@ -1277,8 +1277,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('INTSPC uses a private conversion buffer', function () {
         const vm = new VM();
-        const d = vm.d(),
-            s = vm.s();
+        const d = vm.d( vm.alloc( D ) ),
+            s = vm.s( vm.alloc( 2 * D ) );
 
         vm.specify( 'abc', s.ptr );
         const original = s.addr;
@@ -1294,8 +1294,8 @@ describe('Macros that Operate on Specifiers', function () {
     it('LOCSP', function () {
         const vm = new VM();
         const CPD = 3,
-            s = vm.s(),
-            d = vm.d();
+            s = vm.s( vm.alloc( 2 * D ) ),
+            d = vm.d( vm.alloc( D ) );
 
         // A = 0 (empty string)
         d.set( 0, 555, 666 );
@@ -1305,7 +1305,7 @@ describe('Macros that Operate on Specifiers', function () {
 
         // A != 0
         vm.alloc( 100 );
-        const di = vm.d();
+        const di = vm.d( vm.alloc( D ) );
         d.addr = di.ptr;
         di.value = 9;
         sil.LOCSP.call( vm, s.ptr, d.ptr );
@@ -1321,8 +1321,8 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('PUTLG', function () {
         const vm = new VM();
-        const s = vm.s(),
-            d = vm.d();
+        const s = vm.s( vm.alloc( 2 * D ) ),
+            d = vm.d( vm.alloc( D ) );
         d.addr = 123;
         sil.PUTLG.call( vm, s.ptr, d.ptr );
         assert.equal( s.length, d.addr );
@@ -1330,9 +1330,9 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('REMSP', function () {
         const vm = new VM();
-        const s1 = vm.s(),
-            s2 = vm.s(),
-            s3 = vm.s();
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
+            s2 = vm.s( vm.alloc( 2 * D ) ),
+            s3 = vm.s( vm.alloc( 2 * D ) );
         s2.set( 1, 2, 3, 9, 5 );
         s3.set( 1, 2, 3, 4, 2 );
         sil.REMSP.call( vm, s1.ptr, s2.ptr, s3.ptr );
@@ -1362,14 +1362,14 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('SETLC', function () {
         const vm = new VM();
-        const s = vm.s();
+        const s = vm.s( vm.alloc( 2 * D ) );
         sil.SETLC.call( vm, s.ptr, 555 );
         assert.equal( s.length, 555 );
     });
 
     it('SHORTN', function () {
         const vm = new VM();
-        const s = vm.s(),
+        const s = vm.s( vm.alloc( 2 * D ) ),
             N = 4;
         s.length = 9;
         sil.SHORTN.call( vm, s.ptr, N );
@@ -1378,9 +1378,9 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('STREAM', function () {
         const vm = new VM();
-        const s1 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
             s2 = vm.s( sil.STRING.call( vm, '43.2   ' ) ),
-            stype = vm.d();
+            stype = vm.d( vm.alloc( D ) );
 
         vm.define( 'STYPE', stype.ptr );
         vm.define( 'FLITYP', 6 );
@@ -1392,9 +1392,9 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('STREAM runout', function () {
         const vm = new VM();
-        const s1 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
             s2 = vm.s( sil.STRING.call( vm, '   ' ) ),
-            stype = vm.d(),
+            stype = vm.d( vm.alloc( D ) ),
             error = 1,
             runout = 2,
             sloc = 3;
@@ -1412,9 +1412,9 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('STREAM stop branches to success after consuming token', function () {
         const vm = new VM();
-        const s1 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
             s2 = vm.s( sil.STRING.call( vm, ' = X' ) ),
-            stype = vm.d(),
+            stype = vm.d( vm.alloc( D ) ),
             error = 1,
             runout = 2,
             sloc = 3;
@@ -1433,9 +1433,9 @@ describe('Macros that Operate on Specifiers', function () {
     it('STREAM routes non-byte characters to the table fallback', function () {
         const vm = new VM();
         const nonByteDigit = String.fromCharCode( 0x130 );
-        const s1 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
             s2 = vm.s( sil.STRING.call( vm, nonByteDigit ) ),
-            stype = vm.d(),
+            stype = vm.d( vm.alloc( D ) ),
             error = 1,
             runout = 2,
             sloc = 3;
@@ -1451,9 +1451,9 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('SUBSP', function () {
         const vm = new VM();
-        const s1 = vm.s(),
-            s2 = vm.s(),
-            s3 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
+            s2 = vm.s( vm.alloc( 2 * D ) ),
+            s3 = vm.s( vm.alloc( 2 * D ) ),
             FLOC = 1,
             SLOC = 2;
         // L3 > L2
@@ -1482,7 +1482,7 @@ describe('Macros that Operate on Specifiers', function () {
 
     it('TRIMSP', function () {
         const vm = new VM();
-        const s1 = vm.s(),
+        const s1 = vm.s( vm.alloc( 2 * D ) ),
             s2 = vm.s( vm.specify( 'abcd   ' ) );
 
         sil.TRIMSP.call( vm, s1.ptr, s2.ptr );
@@ -1560,12 +1560,12 @@ describe('Macros that Operate on Syntax Tables', function () {
 describe('Macros that Construct Pattern Nodes', function () {
     it('CPYPAT', function () {
         const vm = new VM();
-        const dst = vm.d(),
-            src = vm.d(),
-            shift = vm.d(),
-            offset = vm.d(),
-            next = vm.d(),
-            size = vm.d();
+        const dst = vm.d( vm.alloc( D ) ),
+            src = vm.d( vm.alloc( D ) ),
+            shift = vm.d( vm.alloc( D ) ),
+            offset = vm.d( vm.alloc( D ) ),
+            next = vm.d( vm.alloc( D ) ),
+            size = vm.d( vm.alloc( D ) );
 
         dst.addr = vm.alloc( 20 );
         const dstBase = dst.addr;
@@ -1624,8 +1624,8 @@ describe('Input and Output Macros', function () {
                 os.tmpdir(),
                 'snoflake-enfile-' + process.pid + '.sno',
             ),
-            unit = vm.d(),
-            spec = vm.s(),
+            unit = vm.d( vm.alloc( D ) ),
+            spec = vm.s( vm.alloc( 2 * D ) ),
             eof = 1,
             error = 2,
             success = 3,
@@ -1658,7 +1658,7 @@ describe('Input and Output Macros', function () {
 
     it('OUTPUT handles line-printer carriage control', function () {
         const vm = createVM();
-        const unit = vm.d(),
+        const unit = vm.d( vm.alloc( D ) ),
             format = sil.FORMAT.call(
                 vm,
                 '(37H1SNOBOL4 (VERSION 3.11, MAY 19, 1975)/8H+_______)',
@@ -1689,8 +1689,8 @@ describe('Input and Output Macros', function () {
 
     it('STPRNT handles line-printer carriage control', function () {
         const vm = createVM();
-        const key = vm.d(),
-            block = vm.d(),
+        const key = vm.d( vm.alloc( D ) ),
+            block = vm.d( vm.alloc( D ) ),
             formatBase = vm.alloc( 20 ),
             item = sil.STRING.call( vm, 'HELLO' ),
             logs = [],
@@ -1721,8 +1721,8 @@ describe('Input and Output Macros', function () {
 
     it('STPRNT does not treat letters in format control words as A-conversions', function () {
         const vm = createVM();
-        const key = vm.d(),
-            block = vm.d(),
+        const key = vm.d( vm.alloc( D ) ),
+            block = vm.d( vm.alloc( D ) ),
             formatBase = vm.alloc( 40 ),
             item = sil.STRING.call( vm, 'HELLO' ),
             logs = [],
@@ -1753,8 +1753,8 @@ describe('Input and Output Macros', function () {
 
     it('STPRNT preserves leading data characters when the format starts with A', function () {
         const vm = createVM();
-        const key = vm.d(),
-            block = vm.d(),
+        const key = vm.d( vm.alloc( D ) ),
+            block = vm.d( vm.alloc( D ) ),
             formatBase = vm.alloc( 20 ),
             item = sil.STRING.call( vm, '0 DATA' ),
             logs = [],
@@ -1789,8 +1789,8 @@ describe('Input and Output Macros', function () {
                 os.tmpdir(),
                 'snoflake-stread-' + process.pid + '.sno',
             ),
-            unit = vm.d(),
-            spec = vm.s(),
+            unit = vm.d( vm.alloc( D ) ),
+            spec = vm.s( vm.alloc( 2 * D ) ),
             eof = 1,
             error = 2,
             success = 3,
@@ -1858,8 +1858,8 @@ describe('Input and Output Macros', function () {
                 os.tmpdir(),
                 'snoflake-stread-input-' + process.pid + '.txt',
             ),
-            unit = vm.d(),
-            spec = vm.s(),
+            unit = vm.d( vm.alloc( D ) ),
+            spec = vm.s( vm.alloc( 2 * D ) ),
             eof = vm.alloc( 1, 1 ),
             error = vm.alloc( 1, 2 ),
             success = vm.alloc( 1, 3 ),
@@ -1911,8 +1911,8 @@ describe('Input and Output Macros', function () {
                 os.tmpdir(),
                 'snoflake-stread-input-blanks-' + process.pid + '.txt',
             ),
-            unit = vm.d(),
-            spec = vm.s(),
+            unit = vm.d( vm.alloc( D ) ),
+            spec = vm.s( vm.alloc( 2 * D ) ),
             eof = vm.alloc( 1, 1 ),
             error = vm.alloc( 1, 2 ),
             success = vm.alloc( 1, 3 ),
@@ -1945,8 +1945,8 @@ describe('Input and Output Macros', function () {
                 os.tmpdir(),
                 'snoflake-stread-input-empty-' + process.pid + '.txt',
             ),
-            unit = vm.d(),
-            spec = vm.s(),
+            unit = vm.d( vm.alloc( D ) ),
+            spec = vm.s( vm.alloc( 2 * D ) ),
             eof = vm.alloc( 1, 1 ),
             error = vm.alloc( 1, 2 ),
             success = vm.alloc( 1, 3 ),
@@ -1982,7 +1982,7 @@ describe('Input and Output Macros', function () {
 describe('Macros that Depend on Operating System Facilities', function () {
     it('DATE', function () {
         const vm = new VM();
-        const s = vm.s(),
+        const s = vm.s( vm.alloc( 2 * D ) ),
             year = new Date().getFullYear();
         sil.DATE.call( vm, s.ptr );
         assert( s.specified.includes( year ) );
@@ -1994,9 +1994,9 @@ describe('Macros that Depend on Operating System Facilities', function () {
 
     it('INIT', function () {
         const vm = new VM();
-        vm.define( 'FRSGPT', vm.d().ptr );
-        vm.define( 'HDSGPT', vm.d().ptr );
-        vm.define( 'TLSGP1', vm.d().ptr );
+        vm.define( 'FRSGPT', vm.d( vm.alloc( D ) ).ptr );
+        vm.define( 'HDSGPT', vm.d( vm.alloc( D ) ).ptr );
+        vm.define( 'TLSGP1', vm.d( vm.alloc( D ) ).ptr );
 
         sil.INIT.call( vm );
         assert.equal(
@@ -2017,7 +2017,7 @@ describe('Macros that Depend on Operating System Facilities', function () {
 
     it('MSTIME', function () {
         const vm = new VM();
-        const d = vm.d();
+        const d = vm.d( vm.alloc( D ) );
         d.set( 1, 2, 3 );
         sil.MSTIME.call( vm, d.ptr );
         assert.deepEqual( d.cells(), [ 0, 0, 0 ] );
@@ -2048,9 +2048,9 @@ describe('Miscellaneous Macros', function () {
             ZEROCL = [ 0, 0, 0 ],
             SECOND_VALUE_DESCRIPTOR = [ 43, 0, 3 ],
             SAME_ADDRESS_DIFFERENT_FLAGS = [ 99, 0, 0 ],
-            result = vm.d(),
-            list = vm.d(),
-            key = vm.d(),
+            result = vm.d( vm.alloc( D ) ),
+            list = vm.d( vm.alloc( D ) ),
+            key = vm.d( vm.alloc( D ) ),
             found = FOUND_IP,
             missing = MISSING_IP,
             base = vm.alloc( DESCR + ( PAIR_COUNT * PAIR_WIDTH ) ),
@@ -2096,9 +2096,9 @@ describe('Miscellaneous Macros', function () {
 
     it('LOCAPV', function () {
         const vm = miscVM();
-        const result = vm.d(),
-            list = vm.d(),
-            key = vm.d(),
+        const result = vm.d( vm.alloc( D ) ),
+            list = vm.d( vm.alloc( D ) ),
+            key = vm.d( vm.alloc( D ) ),
             found = 123,
             missing = 456,
             base = vm.alloc( 15 );
@@ -2126,8 +2126,8 @@ describe('Miscellaneous Macros', function () {
         const vm = miscVM();
         const values = [ 42, 28, 96, 14, 2, 77 ],
             least = Math.min.apply( Math, values ),
-            DESCR1 = vm.d(),
-            DESCR2 = vm.d(),
+            DESCR1 = vm.d( vm.alloc( D ) ),
+            DESCR2 = vm.d( vm.alloc( D ) ),
             step = 2 * 3;
         let offset = 0;
 
@@ -2210,8 +2210,8 @@ describe('Miscellaneous Macros', function () {
 
     it('SPCINT', function () {
         const vm = miscVM();
-        const d = vm.d(),
-            s = vm.s(),
+        const d = vm.d( vm.alloc( D ) ),
+            s = vm.s( vm.alloc( 2 * D ) ),
             FLOC = 1,
             SLOC = 2,
             I = 6;
@@ -2226,14 +2226,14 @@ describe('Miscellaneous Macros', function () {
 
     it('TOP', function () {
         const vm = miscVM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
             block = [],
             TTL = constants.TTL;
         vm.define( 'TTL', TTL );
         for ( let i = 0; i < 10; i++ ) {
-            block.push( vm.d() );
+            block.push( vm.d( vm.alloc( D ) ) );
         }
 
         // N = 6
@@ -2254,13 +2254,13 @@ describe('Miscellaneous Macros', function () {
 
     it('TOP throws if no title descriptor is found', function () {
         const vm = miscVM();
-        const d1 = vm.d(),
-            d2 = vm.d(),
-            d3 = vm.d(),
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
             block = [];
         vm.define( 'TTL', constants.TTL );
         for ( let i = 0; i < 3; i++ ) {
-            block.push( vm.d() );
+            block.push( vm.d( vm.alloc( D ) ) );
         }
 
         d3.addr = block.at( -1 ).ptr;
@@ -2274,7 +2274,7 @@ describe('Miscellaneous Macros', function () {
 
     it('VARID', function () {
         const vm = miscVM();
-        const d = vm.d(),
+        const d = vm.d( vm.alloc( D ) ),
             s = vm.s( sil.STRING.call( vm, 'hello' ) );
 
         vm.define( 'OBSIZ', defaults.OBSIZ );

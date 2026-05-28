@@ -10,13 +10,11 @@ import {
     constants,
     createVM,
     decodeString,
-    Descriptor,
     FAIL,
     File,
     image,
     run,
     sil,
-    Specifier,
     VM,
     writeString,
 } from '../src/snobol.js';
@@ -825,7 +823,7 @@ function bufferedLineReader( lines ) {
 describe('Descriptor Datatype', function () {
     it('init', function () {
         const vm = new VM(),
-            orig = vm.d(),
+            orig = vm.d( sil.DESCR.call( vm ) ),
             copy = vm.d( orig.ptr );
         orig.addr = 90210;
         assert.equal( copy.addr, 90210 );
@@ -833,7 +831,7 @@ describe('Descriptor Datatype', function () {
 
     it('raw', function () {
         const vm = new VM(),
-            d = vm.d();
+            d = vm.d( sil.DESCR.call( vm ) );
         d.addr = 6;
         d.flags = 7;
         d.value = 8;
@@ -842,8 +840,8 @@ describe('Descriptor Datatype', function () {
 
     it('read', function () {
         const vm = new VM(),
-            src = vm.d(),
-            dst = vm.d();
+            src = vm.d( sil.DESCR.call( vm ) ),
+            dst = vm.d( sil.DESCR.call( vm ) );
         src.set( 6, 7, 8 );
         dst.copyFrom( src );
         assert.deepEqual( dst.cells(), src.cells() );
@@ -851,15 +849,15 @@ describe('Descriptor Datatype', function () {
 
     it('set', function () {
         const vm = new VM(),
-            d = new Descriptor( vm );
+            d = vm.d( sil.DESCR.call( vm ) );
         d.set( 6, 7, 8 );
         assert.deepEqual( d.cells(), [ 6, 7, 8 ] );
     });
 
     it('eq', function () {
         const vm = new VM(),
-            d1 = new Descriptor( vm ),
-            d2 = new Descriptor( vm );
+            d1 = vm.d( sil.DESCR.call( vm ) ),
+            d2 = vm.d( sil.DESCR.call( vm ) );
 
         d1.set( 6, 7, 8 );
         d2.set( 6, 7, 8 );
@@ -873,15 +871,15 @@ describe('Descriptor Datatype', function () {
 describe('Specifier Datatype', function () {
     it('init', function () {
         const vm = new VM(),
-            orig = new Specifier( vm ),
-            copy = new Specifier( vm, orig.ptr );
+            orig = vm.s( sil.SPEC.call( vm ) ),
+            copy = vm.s( orig.ptr );
         orig.offset = 90210;
         assert.equal( copy.offset, 90210 );
     });
 
     it('raw', function () {
         const vm = new VM(),
-            s = new Specifier( vm );
+            s = vm.s( sil.SPEC.call( vm ) );
         s.addr = 6;
         s.flags = 7;
         s.value = 8;
@@ -894,8 +892,8 @@ describe('Specifier Datatype', function () {
 
     it('read', function () {
         const vm = new VM(),
-            src = new Specifier( vm ),
-            dst = new Specifier( vm );
+            src = vm.s( sil.SPEC.call( vm ) ),
+            dst = vm.s( sil.SPEC.call( vm ) );
         src.set( 6, 7, 8, 9, 10 );
         dst.copyFrom( src );
         assert.deepEqual( dst.cells(), src.cells() );
@@ -903,7 +901,7 @@ describe('Specifier Datatype', function () {
 
     it('set', function () {
         const vm = new VM(),
-            s = new Specifier( vm );
+            s = vm.s( sil.SPEC.call( vm ) );
         s.set( 6, 7, 8, 9, 10 );
         assert.deepEqual( s.cells(), [ 6, 7, 8, 9, 0, 10 ] );
         assert.equal( vm.mem[s.ptr + 4], 0 );
@@ -912,8 +910,8 @@ describe('Specifier Datatype', function () {
 
     it('eq', function () {
         const vm = new VM(),
-            s1 = new Specifier( vm ),
-            s2 = new Specifier( vm );
+            s1 = vm.s( sil.SPEC.call( vm ) ),
+            s2 = vm.s( sil.SPEC.call( vm ) );
 
         s1.set( 6, 7, 8, 9, 10 );
         s2.set( 6, 7, 8, 9, 10 );

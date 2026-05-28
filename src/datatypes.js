@@ -37,14 +37,11 @@ export function isFloat32( value ) {
 // In this port each field is one 32-bit cell of the VM's backing buffer,
 // readable as int, uint, or real via overlapping typed-array views.
 export class Descriptor {
+    // A descriptor is a typed view over `width` cells at `ptr`. It does
+    // not own that storage: callers allocate it (`vm.alloc`) or resolve
+    // it (`vm.$`) and hand the pointer in. See `vm.d`/`vm.s`.
     constructor( vm, ptr ) {
         this.vm = vm;
-
-        if ( ptr === undefined ) {
-            ptr = vm.alloc( this.width );
-        } else if ( typeof ptr === 'string' ) {
-            ptr = vm.$( ptr );
-        }
         this.ptr = ptr;
     }
 
