@@ -235,7 +235,9 @@ function checkAgainstExpect( header, run ) {
 
     if ( header.match === 'substring' ) {
         const sub = trimTrailingNewlines( header.expect );
-        if ( fold( run.stdout, header ).indexOf( fold( sub, header ) ) === -1 ) {
+        if (
+            fold( run.stdout, header ).indexOf( fold( sub, header ) ) === -1
+        ) {
             return {
                 ok: false,
                 message: 'expected substring not found in stdout: ' +

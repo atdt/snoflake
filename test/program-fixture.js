@@ -215,8 +215,9 @@ function applyDirective( filePath, header, key, value, isBlock ) {
         }
         if ( ignoreCase && mode === 'error' ) {
             throw new Error(
-                filePath + ': @match error already matches case-insensitively;'
-                    + ' drop the /i',
+                filePath +
+                    ': @match error already matches case-insensitively;' +
+                    ' drop the /i',
             );
         }
         header.match = mode;

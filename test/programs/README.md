@@ -42,14 +42,14 @@ silently dropping expectations.
 
 ## Directives
 
-| Directive      | Form       | Required                                    | Purpose                                                               |
-| -------------- | ---------- | ------------------------------------------- | --------------------------------------------------------------------- |
-| `@title`       | single     | yes                                         | Used as the test name.                                                |
-| `@options`     | single     | no                                          | JSON object merged into `snoflake`'s options.                         |
-| `@input`       | multi-line | no                                          | Lines written to a tmp file; runner wires up `input` opt.             |
-| `@expect`      | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                                      |
-| `@match`       | single     | no                                          | `exact` (default), `substring`, or `error`, with an optional `/i` modifier. |
-| `@attribution` | single     | no                                          | Free-text credit for where the program came from. Informational only. |
+| Directive      | Form       | Required                                    | Purpose                                                                            |
+| -------------- | ---------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `@title`       | single     | yes                                         | Used as the test name.                                                             |
+| `@options`     | single     | no                                          | JSON object merged into `snoflake`'s options.                                      |
+| `@input`       | multi-line | no                                          | Lines written to a tmp file; runner wires up `input` opt.                          |
+| `@expect`      | either     | yes for `exact`/`substring`, no for `error` | Expected output.                                                                   |
+| `@match`       | single     | no                                          | `exact` (default), `substring`, or `error`, with an optional `/i` modifier.        |
+| `@attribution` | single     | no                                          | Free-text credit for where the program came from. Informational only.              |
 | `@nonstandard` | single     | no                                          | Output is implementation-defined; reference cross-checks skip it. Optional reason. |
 
 ### `@options`
