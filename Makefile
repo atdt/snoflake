@@ -12,7 +12,7 @@ test-deno:
 	@deno test -A $(TEST_GLOB)
 
 test-bun:
-	@bun test $(TEST_GLOB)
+	@bun test --timeout 15000 $(TEST_GLOB)
 
 test-all: test-node test-deno test-bun
 

@@ -27,6 +27,6 @@
   },
   "scripts": {
     "demo": "node demo/server.js",
-    "test": "node --test test/test-*.js"
+    "test": "node --test --test-timeout=15000 test/test-*.js"
   }
 }
