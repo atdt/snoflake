@@ -50,7 +50,9 @@ export function assemble( program ) {
     return {
         symbols: { ...vm.symbols },
         memory: vm.mem.slice( 0, dataEnd ),
-        // Resolve instruction operands now, with every label bound.
+        // Resolve instruction operands now, with every label bound. List
+        // operands (canonicalized by normalizeListOperands at parse time)
+        // resolve to arrays, so macro bodies can iterate unconditionally.
         instructions: instructions.map( ( stmt ) => [
             stmt.macro,
             stmt.operands.map( ( o ) => resolveOperand( vm, o ) ),

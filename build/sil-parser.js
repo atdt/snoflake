@@ -42,6 +42,38 @@ export function parse( input ) {
     throw new Error( 'Missing SIL END directive' );
 }
 
+// Some macros accept an operand written as a single value or a parenthesized
+// list (OUTPUT args, the stack push/pop macros, RCALL). We scan the listing
+// for polymorphic operand positions and normalize single values to lists.
+// This way macro bodies always iterate an array.
+export function normalizeListOperands( statements ) {
+    const listPositions = findListOperandPositions( statements );
+    for ( const stmt of statements ) {
+        for ( const idx of listPositions[stmt.macro] ?? [] ) {
+            const operand = stmt.operands[idx];
+            if ( operand?.type !== 'list' ) {
+                stmt.operands[idx] = {
+                    type: 'list',
+                    items: [ operand ?? null ],
+                };
+            }
+        }
+    }
+    return statements;
+}
+
+function findListOperandPositions( statements ) {
+    const positions = {};
+    for ( const stmt of statements ) {
+        for ( let i = 0; i < stmt.operands.length; i++ ) {
+            if ( stmt.operands[i]?.type === 'list' ) {
+                ( positions[stmt.macro] ??= new Set() ).add( i );
+            }
+        }
+    }
+    return positions;
+}
+
 function parseStatement( line, lineNumber ) {
     const match = STATEMENT.exec( line );
 

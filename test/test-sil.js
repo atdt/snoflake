@@ -524,7 +524,7 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
         const cur = vm.CSTACK;
         let d = vm.d();
         d.set( 4, 1, 6 );
-        sil.PUSH.call( vm, d.ptr );
+        sil.PUSH.call( vm, [ d.ptr ] );
         d = vm.d( cur + d.width );
         assert.deepEqual( d.cells(), [ 4, 1, 6 ] );
     });
@@ -562,7 +562,7 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
         let s = vm.s();
 
         s.set( 1, 2, 3, 4, 5 );
-        sil.SPUSH.call( vm, s.ptr );
+        sil.SPUSH.call( vm, [ s.ptr ] );
 
         s = vm.s( cur + D );
         assert.deepEqual( s.cells(), [ 1, 2, 3, 4, 0, 5 ] );
@@ -1672,7 +1672,7 @@ describe('Input and Output Macros', function () {
             },
         };
         try {
-            sil.OUTPUT.call( vm, unit.ptr, format );
+            sil.OUTPUT.call( vm, unit.ptr, format, [] );
         } finally {
             vm.units.stdout = oldStdout;
         }

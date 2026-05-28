@@ -5,7 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { assemble } from '../src/assemble.js';
-import { parse as parseSil } from './sil-parser.js';
+import { normalizeListOperands, parse as parseSil } from './sil-parser.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const sourcePath = path.join(
@@ -15,7 +15,9 @@ const sourcePath = path.join(
     'v311-snoflake.sil',
 );
 
-const listing = parseSil( fs.readFileSync( sourcePath, 'utf8' ) );
+const listing = normalizeListOperands(
+    parseSil( fs.readFileSync( sourcePath, 'utf8' ) ),
+);
 const image = assemble( listing );
 const code = generatedFileHeader() + serializeImage( image );
 

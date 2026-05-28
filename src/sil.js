@@ -17,11 +17,6 @@ const CPD = 3; // Characters per descriptor
 
 const sil = {};
 
-// Normalize a SIL variadic operand list.
-function asArray( ARGs ) {
-    return Array.isArray( ARGs ) ? ARGs : [ ARGs ];
-}
-
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
 // being considered as signed integers.  If A1 >  A2,  transfer
@@ -2623,7 +2618,7 @@ sil.ORDVST = function () {
 sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
     const fmt = this.s( FORMAT ).specified,
-        descrs = asArray( ARGs ).map( this.d, this ),
+        descrs = ARGs.map( this.d, this ),
         lines = printerLines( fmt, descrs, { stripCarriageControl: true } ),
         unit = this.d( $DESCR ).addr;
 
@@ -2733,7 +2728,8 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
 // is detected.
 sil.POP = function ( DESCRs ) {
     const STACK_BASE = this.symbols.STACK;
-    for ( const dst of asArray( DESCRs ) ) {
+    for ( let i = 0; i < DESCRs.length; i++ ) {
+        const dst = DESCRs[i];
         if ( this.CSTACK - D < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
         }
@@ -2815,7 +2811,8 @@ sil.PSTACK = function ( $DESCR ) {
 // will result in an appropriate error termination.
 // 2.  See also SPUSH, POP, and SPOP.
 sil.PUSH = function ( DESCRs ) {
-    for ( const src of asArray( DESCRs ) ) {
+    for ( let i = 0; i < DESCRs.length; i++ ) {
+        const src = DESCRs[i];
         const dst = this.CSTACK + D;
         if ( dst > this.TSTACK ) {
             throw new RangeError( 'Stack overflow' );
@@ -3092,27 +3089,16 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR
         fallthroughLoc,
     } );
 
-    if ( Array.isArray( $DESCRs ) ) {
-        for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
-            const dst = this.CSTACK + D;
-            if ( dst > this.TSTACK ) {
-                throw new RangeError( 'Stack overflow' );
-            }
-            this.CSTACK = dst;
-            const src = $DESCRs[i];
-            mem[dst + 0] = mem[src + 0];
-            mem[dst + 1] = mem[src + 1];
-            mem[dst + 2] = mem[src + 2];
-        }
-    } else {
+    for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
         const dst = this.CSTACK + D;
         if ( dst > this.TSTACK ) {
             throw new RangeError( 'Stack overflow' );
         }
         this.CSTACK = dst;
-        mem[dst + 0] = mem[$DESCRs + 0];
-        mem[dst + 1] = mem[$DESCRs + 1];
-        mem[dst + 2] = mem[$DESCRs + 2];
+        const src = $DESCRs[i];
+        mem[dst + 0] = mem[src + 0];
+        mem[dst + 1] = mem[src + 1];
+        mem[dst + 2] = mem[src + 2];
     }
     this.jmp( $PROC );
 };
@@ -3407,9 +3393,7 @@ sil.RRTURN = function ( $DESCR, N ) {
     this.CSTACK = A;
     this.OSTACK = this.i32[A + D + 0];
 
-    const loc = Array.isArray( frame.locs )
-        ? frame.locs[N - 1]
-        : ( N === 1 ? frame.locs : undefined );
+    const loc = frame.locs[N - 1];
     this.jmp( typeof loc === 'number' ? loc : frame.fallthroughLoc );
 };
 
@@ -3807,7 +3791,8 @@ sil.SPEC = function ( A, F, V, O, L ) {
 // 2.  See also POP, SPUSH, and PUSH.
 sil.SPOP = function ( SPECs ) {
     const STACK_BASE = this.$( 'STACK' );
-    for ( const arg of asArray( SPECs ) ) {
+    for ( let i = 0; i < SPECs.length; i++ ) {
+        const arg = SPECs[i];
         const dst = this.s( arg );
         if ( this.CSTACK - dst.width < STACK_BASE ) {
             throw new RangeError( 'Stack underflow' );
@@ -3895,7 +3880,8 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
 // will result in an appropriate error termination.
 // 2.  See also PUSH, POP, and SPOP.
 sil.SPUSH = function ( SPECs ) {
-    for ( const arg of asArray( SPECs ) ) {
+    for ( let i = 0; i < SPECs.length; i++ ) {
+        const arg = SPECs[i];
         const src = this.s( arg );
         if ( this.CSTACK + src.width > this.TSTACK ) {
             throw new RangeError( 'Stack overflow' );
