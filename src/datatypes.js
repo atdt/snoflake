@@ -55,6 +55,7 @@ export class Descriptor {
     get addr() {
         return this.vm.getInt( this.ptr );
     }
+
     set addr( n ) {
         this.vm.setInt( this.ptr, n );
     }
@@ -62,6 +63,7 @@ export class Descriptor {
     get raddr() {
         return this.vm.getReal( this.ptr );
     }
+
     set raddr( n ) {
         this.vm.setReal( this.ptr, n );
     }
@@ -69,6 +71,7 @@ export class Descriptor {
     get flags() {
         return this.vm.getUint( this.ptr + 1 );
     }
+
     set flags( n ) {
         this.vm.setUint( this.ptr + 1, n );
     }
@@ -76,6 +79,7 @@ export class Descriptor {
     get value() {
         return this.vm.getUint( this.ptr + 2 );
     }
+
     set value( n ) {
         this.vm.setUint( this.ptr + 2, n );
     }
@@ -139,6 +143,7 @@ export class Specifier extends Descriptor {
     get offset() {
         return this.vm.getUint( this.ptr + 3 );
     }
+
     set offset( n ) {
         this.vm.setUint( this.ptr + 3, n );
     }
@@ -146,6 +151,7 @@ export class Specifier extends Descriptor {
     get length() {
         return this.vm.getUint( this.ptr + 5 );
     }
+
     set length( n ) {
         this.vm.setUint( this.ptr + 5, n );
     }

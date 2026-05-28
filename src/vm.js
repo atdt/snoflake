@@ -218,9 +218,11 @@ export class VM {
     getUint( ptr ) {
         return this.mem[ptr];
     }
+
     getInt( ptr ) {
         return this.i32[ptr];
     }
+
     getReal( ptr ) {
         return this.f32[ptr];
     }
