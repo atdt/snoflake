@@ -486,8 +486,10 @@ describe('Comparison Macros', function () {
 describe('Macros that Relate to Recursive Procedures and Stack Management', function () {
     it('ISTACK', function () {
         const vm = stackVM();
+        vm.callbacks.push( { dest: 0, locs: [], fallthroughLoc: 0, base: 0 } );
         sil.ISTACK.call( vm );
         assert.equal( vm.CSTACK, defaults.STACK );
+        assert.equal( vm.callbacks.length, 0 );
     });
 
     it('POP', function () {

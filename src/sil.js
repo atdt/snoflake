@@ -1616,6 +1616,8 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 sil.ISTACK = function () {
     this.CSTACK = this.$( 'STACK' );
     this.TSTACK = this.CSTACK + D * this.$( 'STSIZE' );
+    // The callbacks stack mirrors the physical stack, so a reset clears both.
+    this.callbacks.length = 0;
 };
 
 //     LCOMP is used to compare the lengths of two specifiers.
