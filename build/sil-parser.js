@@ -44,8 +44,9 @@ export function parse( input ) {
 
 // Some macros accept an operand written as a single value or a parenthesized
 // list (OUTPUT args, the stack push/pop macros, RCALL). We scan the listing
-// for polymorphic operand positions and normalize single values to lists.
-// This way macro bodies always iterate an array.
+// for polymorphic operand positions and normalize single values to lists, and
+// an omitted operand to the empty list. This way macro bodies always iterate
+// an array.
 export function normalizeListOperands( statements ) {
     const listPositions = findListOperandPositions( statements );
     for ( const stmt of statements ) {
@@ -54,9 +55,14 @@ export function normalizeListOperands( statements ) {
             if ( operand?.type !== 'list' ) {
                 stmt.operands[idx] = {
                     type: 'list',
-                    items: [ operand ?? null ],
+                    items: operand == null ? [] : [ operand ],
                 };
             }
+            // Drop trailing nulls. They are inert -- RCALL falls through past
+            // the end of $LOCs, and operand iteration pushes nothing for a
+            // null slot.
+            const { items } = stmt.operands[idx];
+            while ( items.length && items.at( -1 ) == null ) items.pop();
         }
     }
     return statements;
