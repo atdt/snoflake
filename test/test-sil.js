@@ -530,8 +530,54 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
         assert.deepEqual( d.cells(), [ 4, 1, 6 ] );
     });
 
-    it('RCALL', function () { // stub
-        assert( sil.RCALL );
+    it('RCALL reserves a bookkeeping slot and pushes arguments', function () {
+        const vm = stackVM();
+        const base = vm.CSTACK,
+            dest = vm.alloc( D ),
+            arg = vm.d( vm.alloc( D ) );
+        arg.set( 7, 1, 9 );
+        vm.ip = 42; // operation following the call
+
+        sil.RCALL.call( vm, dest, 100, [ arg.ptr ], [ 55 ] );
+
+        assert.equal( vm.ip, 100, 'jumps to PROC' );
+        assert.deepEqual(
+            vm.d( base + D ).cells(),
+            [ 0, 0, 0 ],
+            'inert A0 slot',
+        );
+        assert.deepEqual(
+            vm.d( base + 2 * D ).cells(),
+            [ 7, 1, 9 ],
+            'arg at A+2D',
+        );
+        assert.equal( vm.CSTACK, base + 2 * D );
+
+        assert.equal( vm.callbacks.length, 1 );
+        const frame = vm.callbacks[0];
+        assert.equal( frame.dest, dest );
+        assert.equal( frame.base, base );
+        assert.equal( frame.fallthroughLoc, 42 );
+        assert.deepEqual( frame.locs, [ 55 ] );
+    });
+
+    it('RCALL checks the whole frame against the stack limit', function () {
+        function call( nargs ) {
+            const vm = stackVM();
+            const args = [];
+            for ( let i = 0; i < nargs; i++ ) {
+                const a = vm.alloc( D );
+                vm.d( a ).set( 1, 0, 0 );
+                args.push( a );
+            }
+            // Leave room for exactly two slots above CSTACK.
+            vm.TSTACK = vm.CSTACK + 2 * D;
+            return () => sil.RCALL.call( vm, 0, 1, args, [] );
+        }
+        // One argument needs the bookkeeping slot plus one: exactly two slots.
+        assert.doesNotThrow( call( 1 ) );
+        // Two arguments need three slots and overrun the limit.
+        assert.throws( call( 2 ), /Stack overflow/ );
     });
 
     it('RRTURN', function () { // stub

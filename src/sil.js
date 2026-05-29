@@ -3042,6 +3042,12 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,(DESCR1
     // recursive call
     const mem = this.mem;
 
+    // The frame occupies 1 + N slots above CSTACK -- the bookkeeping slot and
+    // the N arguments. Check the whole extent once, before any write lands.
+    if ( this.CSTACK + ( 1 + $DESCRs.length ) * D > this.TSTACK ) {
+        throw new RangeError( 'Stack overflow' );
+    }
+
     // Reserve an inert bookkeeping slot at A+D. Garbage collection bounds its
     // stack scan one descriptor below the stack pointer (it posts CSTACK - D),
     // so this sacrificial slot is what keeps a frame's top live descriptor
@@ -3059,12 +3065,9 @@ sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,(DESCR1
     this.CSTACK += D;
 
     for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
-        const dst = this.CSTACK + D;
-        if ( dst > this.TSTACK ) {
-            throw new RangeError( 'Stack overflow' );
-        }
-        this.CSTACK = dst;
-        const src = $DESCRs[i];
+        this.CSTACK += D;
+        const dst = this.CSTACK,
+            src = $DESCRs[i];
         mem[dst + 0] = mem[src + 0];
         mem[dst + 1] = mem[src + 1];
         mem[dst + 2] = mem[src + 2];
