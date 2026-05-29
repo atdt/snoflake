@@ -38,13 +38,7 @@ sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
         A1 = i32[$DESCR1 + 0],
         A2 = i32[$DESCR2 + 0];
 
-    if ( A1 > A2 ) {
-        this.jmp( GTLOC );
-    } else if ( A1 < A2 ) {
-        this.jmp( LTLOC );
-    } else {
-        this.jmp( EQLOC );
-    }
+    this.jmp( A1 > A2 ? GTLOC : A1 < A2 ? LTLOC : EQLOC );
 };
 
 //     ACOMPC is used  to  compare  the  address  field  of  a
@@ -63,13 +57,7 @@ sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 4.  See also ACOMP, AEQL, AEQLC, and AEQLIC.
 sil.ACOMPC = function ( $DESCR, N, GTLOC, EQLOC, LTLOC ) {
     const A = this.i32[$DESCR + 0];
-    if ( A > N ) {
-        this.jmp( GTLOC );
-    } else if ( A < N ) {
-        this.jmp( LTLOC );
-    } else {
-        this.jmp( EQLOC );
-    }
+    this.jmp( A > N ? GTLOC : A < N ? LTLOC : EQLOC );
 };
 
 //     ADDLG is used to add an integer  to  the  length  of  a
@@ -544,13 +532,7 @@ sil.CHKVAL = function ( $DESCR1, $DESCR2, $SPEC, GTLOC, EQLOC, LTLOC ) {
         SPEC = this.s( $SPEC ),
         L = SPEC.length;
 
-    if ( L + I2 > I1 ) {
-        this.jmp( GTLOC );
-    } else if ( L + I2 === I1 ) {
-        this.jmp( EQLOC );
-    } else {
-        this.jmp( LTLOC );
-    }
+    this.jmp( L + I2 > I1 ? GTLOC : L + I2 < I1 ? LTLOC : EQLOC );
 };
 
 //     CLERTB is used to  set  the  indicator  fields  of  all
@@ -1656,13 +1638,7 @@ sil.LCOMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
         SPEC2 = this.s( $SPEC2 ),
         L2 = SPEC2.length;
 
-    if ( L1 > L2 ) {
-        this.jmp( GTLOC );
-    } else if ( L1 === L2 ) {
-        this.jmp( EQLOC );
-    } else {
-        this.jmp( LTLOC );
-    }
+    this.jmp( L1 > L2 ? GTLOC : L1 < L2 ? LTLOC : EQLOC );
 };
 
 //     LEQLC is used to compare the length of a specifier to a
@@ -1725,10 +1701,9 @@ sil.LEXCMP = function ( $SPEC1, $SPEC2, GTLOC, EQLOC, LTLOC ) {
     // JS string comparison is UTF-16 code-unit lex order, identical to the
     // charCodeAt-by-charCodeAt order the spec describes.
     const STR1 = this.s( $SPEC1 ).specified,
-        STR2 = this.s( $SPEC2 ).specified,
-        branch = STR1 < STR2 ? LTLOC : STR1 > STR2 ? GTLOC : EQLOC;
+        STR2 = this.s( $SPEC2 ).specified;
 
-    this.jmp( branch );
+    this.jmp( STR1 > STR2 ? GTLOC : STR1 < STR2 ? LTLOC : EQLOC );
 };
 
 //     LHERE  is  used  to establish the equivalence of LOC as
