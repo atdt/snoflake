@@ -487,7 +487,6 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
     it('ISTACK', function () {
         const vm = stackVM();
         sil.ISTACK.call( vm );
-        assert.equal( vm.OSTACK, 0 );
         assert.equal( vm.CSTACK, defaults.STACK );
     });
 

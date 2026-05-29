@@ -85,7 +85,6 @@ export class VM {
         this.syntaxTables = buildSyntaxTables();
         // Keep frequently-accessed values as VM registers:
         this.CSTACK = 0; // Current stack pointer
-        this.OSTACK = 0; // Old stack pointer
         this.TSTACK = 0; // Stack top pointer
         this.ESAICL_ADDR = -1; // Count of compiler errors
         this.CSTNCL_ADDR = -1; // Compiler statement counter

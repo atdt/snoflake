@@ -1614,7 +1614,6 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
 // the first descriptor of the system stack.
 // 2.  See also PSTACK, RCALL, and RRTURN.
 sil.ISTACK = function () {
-    this.OSTACK = 0;
     this.CSTACK = this.$( 'STACK' );
     this.TSTACK = this.CSTACK + D * this.$( 'STSIZE' );
 };
@@ -3037,32 +3036,25 @@ sil.PUTVC = function ( $DESCR1, N, $DESCR2 ) {
 // flag fields  of  descriptors  used  to  save  program  state
 // information must be set to zero.
 // 9.  See also SELBRA.
-sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,( DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
+sil.RCALL = function ( $DESCR, $PROC, $DESCRs, $LOCs ) { // ( DESCR,PROC,(DESCR1,...,DESCRN),(LOC1,...,LOCM)) {
     // recursive call
-    const fallthroughLoc = this.ip,
-        mem = this.mem;
+    const mem = this.mem;
 
-    // Save the old stack pointer (A0) at A+D. Flags and value are cleared so
-    // the slot reads as a plain descriptor.
-    mem[this.CSTACK + D + 0] = this.OSTACK;
-    mem[this.CSTACK + D + 1] = 0;
-    mem[this.CSTACK + D + 2] = 0;
-    this.OSTACK = this.CSTACK;
-    this.CSTACK += D;
-
-    // The translated runtime carries the return continuation in callbacks,
-    // but still reserves the SIL LOC descriptor slot so the stack frame shape
-    // remains A+(2+N)*D with zeroed descriptor flags.
+    // Reserve an inert bookkeeping slot at A+D. Garbage collection bounds its
+    // stack scan one descriptor below the stack pointer (it posts CSTACK - D),
+    // so this sacrificial slot is what keeps a frame's top live descriptor
+    // inside the scanned region. Its zeroed flags read as a non-pointer. The
+    // saved base and return continuation ride in callbacks.
     mem[this.CSTACK + D + 0] = 0;
     mem[this.CSTACK + D + 1] = 0;
     mem[this.CSTACK + D + 2] = 0;
-    this.CSTACK += D;
-
     this.callbacks.push( {
         dest: $DESCR,
         locs: $LOCs,
-        fallthroughLoc,
+        fallthroughLoc: this.ip,
+        base: this.CSTACK,
     } );
+    this.CSTACK += D;
 
     for ( let i = $DESCRs.length - 1; i >= 0; i-- ) {
         const dst = this.CSTACK + D;
@@ -3354,22 +3346,20 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
 // executed.
 sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
-    const frame = this.callbacks.pop(),
-        mem = this.mem;
+    const frame = this.callbacks.pop();
 
-    if ( frame.dest !== undefined && $DESCR !== undefined ) {
+    // Discard the callee frame by restoring the caller's saved base.
+    this.CSTACK = frame.base;
+
+    // An omitted DESCR (null) returns no value and the copy is skipped, as the
+    // spec requires. This is the common path for failure and alternate exits.
+    if ( $DESCR != null ) {
+        const mem = this.mem;
         mem[frame.dest + 0] = mem[$DESCR + 0];
         mem[frame.dest + 1] = mem[$DESCR + 1];
         mem[frame.dest + 2] = mem[$DESCR + 2];
     }
-
-    // Restore CSTACK to A and OSTACK to saved A0 (at A+D).
-    const A = this.OSTACK;
-    this.CSTACK = A;
-    this.OSTACK = this.i32[A + D + 0];
-
-    const loc = frame.locs[N - 1];
-    this.jmp( typeof loc === 'number' ? loc : frame.fallthroughLoc );
+    this.jmp( frame.locs[N - 1] ?? frame.fallthroughLoc );
 };
 
 //     RSETFI is used to reset (delete) a flag from a descrip-
