@@ -3353,7 +3353,8 @@ sil.RRTURN = function ( $DESCR, N ) {
     // recursive return
     const frame = this.callbacks.pop();
 
-    // Discard the callee frame by restoring the caller's saved base.
+    // Restore the caller's stack pointer (the spec's OSTACK), which we
+    // keep per frame rather than in a register.
     this.CSTACK = frame.base;
 
     // An omitted DESCR (null) returns no value and the copy is skipped, as the
