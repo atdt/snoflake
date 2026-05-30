@@ -116,6 +116,13 @@ tests).
   Snoflake benchmark harness against a default fixture suite. Pass `-h`
   for full options. To benchmark an arbitrary `.sno` program, pass its
   path explicitly, e.g. `node tools/bench-snoflake.js tmp/example.sno`.
+- `make bench-deno` (or `deno bench -A tools/snoflake.bench.js`): the same
+  per-fixture VM benchmark driven by `Deno.bench`, which supplies warmup,
+  sampling, and percentile statistics. Pass fixtures or flags after `--`,
+  e.g. `deno bench -A tools/snoflake.bench.js -- --all` or `-- n-queens`.
+  Use `--baseline=PATH` to compare a worktree against this checkout; Deno
+  prints the relative speedup per fixture. `deno bench --json` emits
+  machine-readable results.
 - `make bench-vs-csnobol4` (or `node tools/bench-vs-csnobol4.js [opts]`):
   wall-clock comparison against CSNOBOL4. Requires `snobol4` on PATH;
   override with `--snobol4=PATH`.

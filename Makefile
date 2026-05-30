@@ -31,6 +31,9 @@ coverage:
 bench:
 	@node ./tools/bench-snoflake.js
 
+bench-deno:
+	@deno bench -A ./tools/snoflake.bench.js
+
 bench-vs-csnobol4:
 	@node ./tools/bench-vs-csnobol4.js
 
@@ -60,4 +63,4 @@ release: release-check
 	git push origin master "$$tag"; \
 	gh release create "$$tag" --verify-tag --title "$$tag" --generate-notes
 
-.PHONY: test test-node test-deno test-bun test-all build run profile coverage bench bench-vs-csnobol4 demo release-check release
+.PHONY: test test-node test-deno test-bun test-all build run profile coverage bench bench-deno bench-vs-csnobol4 demo release-check release
