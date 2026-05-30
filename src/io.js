@@ -154,7 +154,8 @@ export class UnitTable {
         if ( !entry ) return;
         entry.input?.close();
         entry.output?.close();
-        // Keep entry.input. A closed File yields EOF. Drop the writer.
+        // A closed input still yields EOF to readers. Keep it and drop
+        // the writer.
         entry.output = null;
     }
 

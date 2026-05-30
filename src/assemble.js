@@ -69,7 +69,6 @@ function bindLabelsAndClaimMemory( vm, program ) {
         let location;
         if ( ASSEMBLY_MACROS.includes( stmt.macro ) ) {
             // Assembly-time macros decide the label value.
-            // Storage macros also claim memory.
             location = runAssemblyMacro( vm, stmt );
         } else if ( MARKER_MACROS.includes( stmt.macro ) ) {
             // Markers alias the next memory or instruction slot.

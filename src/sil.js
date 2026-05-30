@@ -996,7 +996,6 @@ sil.END = function () {
 sil.ENDEX = function ( $DESCR ) {
     // end execution of SNOBOL4 run
     const I = this.d( $DESCR ).addr;
-    // Normalize exit code and terminate main loop
     this.exitCode = I === 0 ? 0 : 1;
     this.jmp( -1 );
     return I === 0;
@@ -3913,7 +3912,7 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
             stripCarriageControl: formatHasLeadingCarriageControl( fmt ),
         } );
 
-    // OUTPUT array layout: head descriptor at A, unit number one descriptor later.
+    // Unit number sits one descriptor past the head, at A+D.
     const unit = this.d( A + D ).addr;
     for ( const line of lines ) this.units.write( unit, line );
     this.d( $DESCR1 ).addr = 1;
@@ -4065,7 +4064,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // stream for token
     const SPEC1 = this.s( $SPEC1 ),
         SPEC2 = this.s( $SPEC2 ),
-        STYPE = this.d( 'STYPE' ); // Descriptor return by STREAM
+        STYPE = this.d( 'STYPE' );
 
     const A = SPEC2.addr,
         F = SPEC2.flags,

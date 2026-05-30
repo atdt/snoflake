@@ -162,7 +162,7 @@ function emptyTable( foldable, foldsLookups ) {
     };
 }
 
-// CLERTB rewrites byte rows. Wider host code units remain a miss.
+// Clearing resets only byte rows. Wider host code units stay a miss.
 export function clearTable( table, actionName ) {
     table.puts.fill( 0 );
     table.actions.fill( Action[actionName] );
