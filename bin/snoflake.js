@@ -1,9 +1,12 @@
 #!/usr/bin/env node
+import module from 'node:module';
 import { parseArgs } from 'node:util';
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
-import { run } from '../src/snobol.js';
-import { createHostLoader, stdinReader } from '../src/host.js';
+
+// Persist V8 bytecode across runs. The src/ imports below are dynamic so
+// they compile after this call and land in the cache.
+module.enableCompileCache?.();
 
 const HELP = `Usage: snoflake [options] [file]
 
@@ -87,6 +90,9 @@ if ( file === undefined ) {
     console.error( HELP );
     process.exit( 2 );
 }
+
+const { run } = await import( '../src/snobol.js' );
+const { createHostLoader, stdinReader } = await import( '../src/host.js' );
 
 const result = run( {
     file,
