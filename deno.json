@@ -15,7 +15,7 @@
     "spaceAround": true,
     "useBraces": "whenNotSingleLine",
     "useTabs": false,
-    "include": ["src/", "tools/", "test/", "build/"],
+    "include": ["src/", "tools/", "test/", "build/", "docs/", "*.md"],
     "exclude": ["**/generated-*.js"]
   }
 }
