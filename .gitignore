@@ -7,3 +7,4 @@ bun.lockb
 bun.lock
 .claude
 tmp/
+dist/

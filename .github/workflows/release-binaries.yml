@@ -1,0 +1,68 @@
+name: Release binaries
+
+on:
+    release:
+        types: [published]
+
+permissions:
+    contents: write # upload release assets
+    id-token: write # cosign keyless signing via OIDC
+
+jobs:
+    compile:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    - {
+                          target: x86_64-unknown-linux-gnu,
+                          name: snoflake-linux-x86_64,
+                      }
+                    - {
+                          target: aarch64-unknown-linux-gnu,
+                          name: snoflake-linux-aarch64,
+                      }
+                    - {
+                          target: x86_64-apple-darwin,
+                          name: snoflake-macos-x86_64,
+                      }
+                    - {
+                          target: aarch64-apple-darwin,
+                          name: snoflake-macos-aarch64,
+                      }
+                    - {
+                          target: x86_64-pc-windows-msvc,
+                          name: snoflake-windows-x86_64.exe,
+                      }
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.x
+
+            - name: Compile
+              run: |
+                  deno compile --allow-all \
+                    --target=${{ matrix.target }} \
+                    --output=dist/${{ matrix.name }} \
+                    bin/snoflake.js
+
+            - name: Checksum
+              run: |
+                  cd dist
+                  shasum -a 256 ${{ matrix.name }} > ${{ matrix.name }}.sha256
+
+            - uses: sigstore/cosign-installer@v3
+
+            - name: Sign (keyless)
+              run: |
+                  cd dist
+                  cosign sign-blob --yes ${{ matrix.name }} \
+                    --output-signature ${{ matrix.name }}.sig \
+                    --output-certificate ${{ matrix.name }}.pem
+
+            - name: Upload to release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh release upload ${{ github.event.release.tag_name }} dist/* --clobber

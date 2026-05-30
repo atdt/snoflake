@@ -1,21 +1,25 @@
 {
-  "nodeModulesDir": "auto",
-  "lint": {
-    "exclude": ["**/generated-*.js"],
-    "rules": {
-      "exclude": ["no-control-regex"]
+    "nodeModulesDir": "auto",
+    "tasks": {
+        "compile": "deno compile --allow-all --output=dist/snoflake bin/snoflake.js",
+        "compile-all": "deno compile --allow-all --target=x86_64-unknown-linux-gnu --output=dist/snoflake-linux-x86_64 bin/snoflake.js && deno compile --allow-all --target=aarch64-unknown-linux-gnu --output=dist/snoflake-linux-aarch64 bin/snoflake.js && deno compile --allow-all --target=x86_64-apple-darwin --output=dist/snoflake-macos-x86_64 bin/snoflake.js && deno compile --allow-all --target=aarch64-apple-darwin --output=dist/snoflake-macos-aarch64 bin/snoflake.js && deno compile --allow-all --target=x86_64-pc-windows-msvc --output=dist/snoflake-windows-x86_64.exe bin/snoflake.js"
+    },
+    "lint": {
+        "exclude": ["**/generated-*.js"],
+        "rules": {
+            "exclude": ["no-control-regex"]
+        }
+    },
+    "fmt": {
+        "indentWidth": 4,
+        "lineWidth": 80,
+        "proseWrap": "always",
+        "semiColons": true,
+        "singleQuote": true,
+        "spaceAround": true,
+        "useBraces": "whenNotSingleLine",
+        "useTabs": false,
+        "include": ["src/", "tools/", "test/", "build/", "docs/", "*.md"],
+        "exclude": ["**/generated-*.js"]
     }
-  },
-  "fmt": {
-    "indentWidth": 4,
-    "lineWidth": 80,
-    "proseWrap": "always",
-    "semiColons": true,
-    "singleQuote": true,
-    "spaceAround": true,
-    "useBraces": "whenNotSingleLine",
-    "useTabs": false,
-    "include": ["src/", "tools/", "test/", "build/", "docs/", "*.md"],
-    "exclude": ["**/generated-*.js"]
-  }
 }
