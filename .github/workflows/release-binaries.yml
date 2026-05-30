@@ -3,6 +3,11 @@ name: Release binaries
 on:
     release:
         types: [published]
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: Existing release tag to build and upload
+                required: true
 
 permissions:
     contents: write # upload release assets
@@ -37,6 +42,10 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
+            - name: Resolve tag
+              id: tag
+              run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+
             - uses: denoland/setup-deno@v2
               with:
                   deno-version: v2.x
@@ -65,4 +74,4 @@ jobs:
             - name: Upload to release
               env:
                   GH_TOKEN: ${{ github.token }}
-              run: gh release upload ${{ github.event.release.tag_name }} dist/* --clobber
+              run: gh release upload ${{ steps.tag.outputs.tag }} dist/* --clobber
