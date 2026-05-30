@@ -113,7 +113,8 @@ export class VM {
             throw new Error( 'Malformed SNOBOL image' );
         }
 
-        this.symbols = { ...image.symbols };
+        // Share the image's symbol table; execution only reads it.
+        this.symbols = image.symbols;
         if ( image.memory.length > this.mem.length ) {
             this.grow( image.memory.length );
         }
