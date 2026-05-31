@@ -141,8 +141,21 @@ at a time and a `'...'` or `"..."` that doesn't close on the same line is a
 syntax error. Snoflake adds a third literal form, delimited by backticks, that
 can span lines:
 
-    LOAD('PRETTY(STRING)STRING',`
-        s => JSON.stringify(JSON.parse(s), null, 2)`)
+    LOAD('WORDS(STRING)STRING',`
+        function (s) {
+            var out = [];
+            for (var p of new Intl.Segmenter("en",
+                { granularity: "word" }).segment(s))
+                if (p.isWordLike) out.push(p.segment);
+            return out.join("|");
+        }`)
+
+    OUTPUT = WORDS("Hello world! こんにちは世界。 สวัสดีชาวโลก!")
+
+It prints:
+
+    // Output:
+    // Hello|world|こんにちは|世界|สวัสดี|ชาว|โลก
 
 A backtick range opens at any <code>&#x60;</code> outside a `'...'` or `"..."`
 literal and closes at the next <code>&#x60;</code>. Everything in between is
@@ -370,19 +383,27 @@ straight from the esm.sh CDN, so nothing is installed locally:
     <!doctype html>
     <meta charset="utf-8">
     <title>Snoflake</title>
+    <pre id="out"></pre>
 
     <script type="module">
-      // The CDN serves the published package over HTTPS. The browser
-      // fetches it on load. There is no build step.
-      import { run } from 'https://esm.sh/snoflake';
+      import * as SNOBOL from 'https://esm.sh/snoflake';
 
-      run( { source: " OUTPUT = 'HELLO, WORLD'\nEND\n" } );
-      // Output goes to the JavaScript console by default. Open the
-      // browser's developer tools to see it.
+      const out = document.querySelector( '#out' );
+
+      SNOBOL.run( {
+          stdout: { write: ( line ) => out.textContent += line + '\n' },
+          source: `
+     WORD = 'SNOBOL'
+     WORD LEN(3) . HEAD REM . TAIL
+     OUTPUT = TAIL HEAD
+    END
+    `,
+      } );
     </script>
 
 `type="module"` is required: it tells the browser this script may use `import`.
-Without it, the import line is a syntax error.
+Without it, the import line is a syntax error. The `stdout` writer routes
+SNOBOL's `OUTPUT` into the page instead of the JavaScript console.
 
 ## Source in one element, output in another
 
@@ -405,7 +426,7 @@ element, exactly as the script recipe captured output into an array.
     <pre id="out"></pre>
 
     <script type="module">
-      import { run } from 'https://esm.sh/snoflake';
+      import * as SNOBOL from 'https://esm.sh/snoflake';
 
       const src = document.querySelector( '#src' );
       const out = document.querySelector( '#out' );
@@ -418,7 +439,7 @@ element, exactly as the script recipe captured output into an array.
               write( line ) { out.textContent += line + '\n'; },
           };
 
-          run( {
+          SNOBOL.run( {
               source: src.value,
               stdout: writer,   // program OUTPUT -> the <pre>
               stderr: writer,   // errors land there too
@@ -436,7 +457,7 @@ canvas graphics -- but the core wiring is these few lines.
 The CDN is convenient but fetches code over the network. To serve Snoflake from
 your own copy, point the import at the package's main module, `src/snobol.js`:
 
-    import { run } from './path/to/snoflake/src/snobol.js';
+    import * as SNOBOL from './path/to/snoflake/src/snobol.js';
 
 Browsers refuse module imports loaded over `file://`, so you must serve the page
 over HTTP. Any static server works, and the repository ships one:
@@ -470,17 +491,32 @@ You register extensions through the `extensions` option. The simplest form
 encodes the function's name and types in the key and gives the implementation as
 the value:
 
-    import { run } from 'snoflake';
+    import * as SNOBOL from 'snoflake';
 
-    run( {
-        source: " OUTPUT = RHALF(3.5)\nEND\n",
+    SNOBOL.run( {
         extensions: {
-            // NAME :: (argtypes) => resulttype
-            'RHALF :: (real) => real':     ( x ) => x / 2,
-            'NOTE  :: (string) => void':   ( s ) => console.log( s ),
-            'NOW   :: () => int':          () => Date.now(),
+            'JSONGET :: (string, string) => string': function ( text, key ) {
+                const data = JSON.parse( text );
+                return Object.hasOwn( data, key )
+                    ? String( data[ key ] )
+                    : SNOBOL.FAIL;
+            },
         },
+
+        source: `
+     DATA = '{"name":"Snoflake","host":"JavaScript"}'
+     OUTPUT = JSONGET(DATA, 'name')
+     OUTPUT = JSONGET(DATA, 'host')
+     OUTPUT = JSONGET(DATA, 'missing')          :F(NOPE)
+    NOPE    OUTPUT = 'missing key failed as SNOBOL failure'
+    END
+    `,
     } );
+
+    // Output:
+    // Snoflake
+    // JavaScript
+    // missing key failed as SNOBOL failure
 
 The signature reads left to right: the SNOBOL-visible name, `::`, a
 parenthesized list of argument types, `=>`, and the result type. The parentheses
@@ -520,7 +556,11 @@ everything into a string. The key is the bare name, and the value spells out the
 parts:
 
     extensions: {
-        RHALF: { args: [ 'real' ], result: 'real', impl: ( x ) => x / 2 },
+        JSONGET: {
+            args: [ 'string', 'string' ],
+            result: 'string',
+            impl: ( text, key ) => String( JSON.parse( text )[ key ] ),
+        },
     }
 
 The two forms may be mixed freely in one registry.
@@ -531,16 +571,16 @@ A SNOBOL function can _fail_ -- the language's distinct notion, separate from
 returning a value. To make a call fail, import the `FAIL` sentinel and either
 return it or throw it:
 
-    import { run, FAIL } from 'snoflake';
+    import * as SNOBOL from 'snoflake';
 
-    run( {
+    SNOBOL.run( {
         source: " OUTPUT = LOOKUP('cat')\nEND\n",
         extensions: {
             'LOOKUP :: (string) => string': ( key ) => {
                 const table = { cat: 'FELINE' };
                 // A missing key makes the SNOBOL call fail, so the
                 // program can branch on :F(...) as usual.
-                return key in table ? table[ key ] : FAIL;
+                return key in table ? table[ key ] : SNOBOL.FAIL;
             },
         },
     } );
@@ -566,20 +606,20 @@ current year and prints a message. This is the whole pattern an embedder needs.
     <pre id="out"></pre>
 
     <script type="module">
-      import { run } from 'https://esm.sh/snoflake';
+      import * as SNOBOL from 'https://esm.sh/snoflake';
 
       const out = document.querySelector( '#out' );
       const writer = { write( line ) { out.textContent += line + '\n'; } };
 
-      run( {
+      SNOBOL.run( {
+          extensions: {
+              'THISYEAR :: () => int': () => new Date().getFullYear(),
+          },
           source:
               " YEAR = THISYEAR()\n" +
               " OUTPUT = 'THE YEAR IS ' YEAR\n" +
               "END\n",
           stdout: writer,
-          extensions: {
-              'THISYEAR :: () => int': () => new Date().getFullYear(),
-          },
       } );
     </script>
 
