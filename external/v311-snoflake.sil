@@ -31,6 +31,11 @@
 *                       folding.
 *        [PLB81]      — &MAXLNGTH defaults to SIZLIM instead of 5000, so
 *                       string-length checks do not trip on modern inputs.
+*        [PLB87]      — LNKFNC pads omitted trailing arguments to an
+*                       external function with the null string, so a call
+*                       may supply fewer arguments than the prototype
+*                       declares.  WCL counts formal arguments and WPTR
+*                       counts those actually pushed.
 *        [SNF1]       — -UNHIDE re-enables listing and statement numbering
 *                       after -HIDE without listing the control card itself.
 *        [SNF2]       — Backtick-delimited literals may span source cards.
@@ -3532,18 +3537,20 @@ UNLOAD PROC    ,		   UNLOAD(F)
 LNKFNC PROC    ,		   Procedure to link to externals
        SETAV   XCL,INCL 	   Get actual number of arguments
        MOVD    YCL,INCL 	   Save function descriptor
-       SETAV   WCL,YCL						E3.9.1
+       GETDC   WCL,YCL,0	   Get procedure descriptor	[PLB87]
+       SETAV   WCL,WCL		   Get formal argument count	[PLB87]
+       MOVD    WPTR,ZEROCL	   Clear count of passed args	[PLB87]
        GETDC   ZCL,YCL,DESCR	   Get definition block
        PSTACK  YPTR		   Post stack position
        SETAC   TCL,2*DESCR	   Set offset for first argument
-LNKF1  PUSH    (XCL,ZCL,TCL,YPTR,WCL,YCL)
+LNKF1  PUSH    (XCL,ZCL,TCL,YPTR,WCL,YCL,WPTR)			[PLB87]
 *				   Save working descriptors
        RCALL   XPTR,ARGVAL,,FAIL   Evaluate argument
-       POP     (YCL,WCL,YPTR,TCL,ZCL,XCL)
+       POP     (WPTR,YCL,WCL,YPTR,TCL,ZCL,XCL)			[PLB87]
 *				   Restore working descriptors
        DECRA   WCL,1						E3.9.1
-       ACOMPC  WCL,0,,,LNKF8					E3.9.1
-LNKF7  GETD    ZPTR,ZCL,TCL	   Get data type required
+       ACOMPC  WCL,0,,,LNKF6	   Pass extras w/o conversion	[PLB87]
+       GETD    ZPTR,ZCL,TCL	   Get data type required
        VEQLC   ZPTR,0,,LNKF6	   Check for possible conversion
        VEQL    ZPTR,XPTR,,LNKF6    Skip if data types the same
        SETAV   DTCL,XPTR	   Data type of argument
@@ -3578,12 +3585,12 @@ LNKVI  LOCSP   XSP,XPTR 	   Get specifier
 *				   Convert STRING to REAL
 LNKF6  INCRA   TCL,DESCR	   Increment offset
        PUSH    XPTR		   Save argument
-LNKF8  DECRA   XCL,1						E3.9.1
+       INCRA   WPTR,1		   Keep count			[PLB87]
+       DECRA   XCL,1						E3.9.1
        ACOMPC  XCL,0,LNKF1					E3.9.1
-       GETDC   WPTR,YCL,0	   Get procedure descriptor
-       SETAV   WPTR,WPTR	   Get argument count required
 LNKF4  ACOMPC  WCL,0,,LNKF5,LNKF5				E3.9.1
        PUSH    NULVCL						E3.9.1
+       INCRA   WPTR,1		   Keep count			[PLB87]
        DECRA   WCL,1		   Decrement argument count
        BRANCH  LNKF4		   Continue
 *_
