@@ -63,6 +63,11 @@ demand:
 Deno's `-A` grants the program full permissions (file and stdin access), which
 Snoflake needs to read your source and any input.
 
+If you'd rather not have Node or Deno on hand, pre-built single-file binaries
+for Linux, macOS, and Windows (x86_64 and arm64 where applicable) are attached
+to each release at https://github.com/atdt/snoflake/releases. Download the one
+for your platform, mark it executable, and run it directly.
+
 ## Running a program
 
 A SNOBOL source file is the only required argument:
