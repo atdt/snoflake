@@ -1,12 +1,12 @@
-# Repository Guidelines
-
-This repository is a JavaScript port of the macro implementation of SNOBOL4.
+Snoflake is a JavaScript port of the macro implementation of SNOBOL4.
 
 ## Project Intent
 
 It is an homage to a piece of computing history and a pedagogical tool for
 understanding the SNOBOL4 macro implementation. The code should be
-crystal-clear, beautiful, simple, and well-documented.
+crystal-clear, beautiful, simple, and well-documented. Reading it should be
+pleasurable and instructive, so treat cleanliness as a primary goal rather than
+a finishing step.
 
 ## Repository Structure
 
@@ -14,153 +14,70 @@ crystal-clear, beautiful, simple, and well-documented.
 - `build/`: handwritten SIL parser (`sil-parser.js`), and build script
   (`build-image.js`) that together emit `src/generated-snobol-image.js`.
 - `external/`: Upstream SIL and syntax-table sources.
-  - `v311.sil`: Untouched historical reference source.
-  - `v311-snoflake.sil`: Snoflake's working SIL input for translation. Began as
-    a copy of `v311.sil`; annotated snoflake fixes belong here.
+  - `v311.sil`: Untouched historical baseline (the 1985 macro implementation).
+  - `v311-csnobol4.sil`: Phil Budne's CSNOBOL4 SIL, the source that ported
+    `[PLBnn]` fixes are lifted from.
+  - `v311-snoflake.sil`: Snoflake's working SIL input, derived from `v311.sil`.
+    Annotated snoflake fixes belong here. See "Working on the SIL".
   - `syntax.tbl`: Historical syntax-table source.
 - `src/`: Runtime.
   - `snobol.js`: Runtime assembly and entry point.
   - `sil.js`: JS implementations of SIL macros (authoritative spec).
-  - `generated-snobol-image.js`: Generated translation (regenerate via
-    `make build`).
+  - `generated-snobol-image.js`: Generated translation; do not hand-edit,
+    regenerate via `make build`.
   - `{vm,mem,datatypes,string,file,syntax}.js`: Core VM components.
 - `test/`: Focused macro/runtime tests (`test-*.js`) and end-to-end `*.sno`
   fixtures (`test/programs/`).
 - `tmp/`: Scratch programs, probes, and logs (do not commit).
 - `SIL-CHANGES.md`: Notes on candidate fixes from later CSNOBOL4 SIL.
 
-## Extensions API
+## Pipeline
 
-Hosts can register JS functions that SNOBOL programs call as ordinary built-ins.
-Register them on the VM via the `extensions` option:
+Build time turns SIL into a runnable image. `build/sil-parser.js` parses
+`external/v311-snoflake.sil` into statements, `src/assemble.js` runs a two-pass
+assembler that binds labels and lays out memory, and `build/build-image.js`
+serializes the result to `src/generated-snobol-image.js`. Run time (`run()`, the
+CLI, the browser demo) loads that image into the VM (`src/vm.js`), which runs
+its dispatch loop and feeds your `.sno` program in as input to the running
+SNOBOL4 system.
 
-```js
-run( {
-    source: ' OUTPUT = RHALF(3.5)\nEND\n',
-    extensions: {
-        'RHALF :: (real) => real': ( x ) => x / 2,
-        'NOTE  :: (string) => void': ( s ) => console.log( s ),
-    },
-} );
-```
+## Working on the SIL
 
-Two registration forms are accepted and may be mixed:
+Edit `external/v311-snoflake.sil`, never `v311.sil` (the untouched baseline) or
+`v311-csnobol4.sil` (Budne's reference). Consult those two when changing the
+working SIL: diff against `v311.sil` to see what an edit actually changes, and
+read `v311-csnobol4.sil` to lift a CSNOBOL4 fix faithfully. Tag every change as
+the file's header comment establishes, `[PLBnn]` for a fix ported from Budne and
+`[SNFnn]` for a snoflake-local extension, and add a matching header entry.
+Regenerate the image with `make build` afterward.
 
-- **Signature form** -- key encodes name and types, value is the impl:
-  `'NAME :: (t1, t2) => result'`. Parens are required even when empty
-  (`'NOW :: () => int'`).
-- **Object form** -- key is the name, value is `{ args, result, impl }`. This is
-  the canonical shape; defaults in `src/extensions.js` use it.
+To watch a change run, `tools/sil-trace.js` runs a program and emits the SIL
+source line behind every executed instruction (trace on stderr, program output
+on stdout). It assembles the image from the working SIL on each run, so edits
+trace without `make build`. It also exports `runWithTrace()` for debugging from
+a short script.
 
-Type kinds:
+## Code style
 
-- `args`: `'int'`, `'real'`, or `'string'` -- `LNKFNC` coerces the
-  ARGVAL-evaluated descriptors before calling `impl`.
-- `result`: arg kinds plus `'void'` (returns the null string to SNOBOL).
+- `deno fmt` formats (4-space indent, 80 cols) and `deno lint` checks the code.
+  Formatting runs on a post-edit hook, so match the surrounding style rather
+  than hand-formatting.
+- Comments are calm and quiet. Say only what the code, its location, and common
+  knowledge do not already supply, then stop. Do not narrate the obvious,
+  restate the code, or recount change history. Avoid em dashes and semicolons,
+  and prefer two short sentences to one clause-spliced line.
 
-Failure signaling: an impl can throw or return the `FAIL` sentinel (exported
-from `src/extensions.js`) to make the call fail in SNOBOL. Any other thrown
-value propagates to the host.
+## Runtime and tests
 
-Defaults (currently `CHAR` and `ORD`) merge under the host registry; pass
-`extensions: null` to start with a bare runtime (intended for tests).
-
-## Rules & Workflow
-
-### Source of truth
-
-- The macro comment blocks in `src/sil.js` are the canonical local spec. When
-  tests or guesses disagree with those comments, trust the comments until you
-  have strong evidence.
-- Do not hand-edit `src/generated-snobol-image.js`. Regenerate it with
-  `make build` when the translator or SIL input changes.
-- When reading commit diffs, exclude `src/generated-snobol-image.js` unless the
-  generated artifact itself is the subject of review; it is large and pollutes
-  context. For example:
-  `git show --stat -- . ':(exclude)src/generated-snobol-image.js'` and
-  `git diff HEAD~1..HEAD -- . ':(exclude)src/generated-snobol-image.js'`.
-- `make build` reads `external/v311-snoflake.sil`. Keep `external/v311.sil` as
-  the historical baseline and compare against it when reviewing local SIL edits.
-
-### Code & commits
-
-- Write clean, well-documented code. Comments should illuminate complex logic or
-  historical conventions, not narrate the obvious.
-- Commit each logical fix separately with an imperative subject. The body should
-  explain why the change is correct, what evidence supports it, and which
-  macro/spec invariant it preserves.
-
-### Tests
-
-- Prefer focused tests in `test/test-*.js` for changed macro/runtime behavior.
-- Use program-level fixtures under `test/programs/`. Read
-  `test/programs/README.md` first to understand the fixture format.
-
-### Running & debugging
-
-- Keep scratch programs and logs in `tmp/`; do not commit them.
-- Avoid ingesting huge runtime output. Redirect probe output to `tmp/`, check
-  size, and inspect targeted excerpts.
+- Keep the runtime dependency-free and portable across Node, Bun, and Deno.
+- `make test` is enough for almost every change. Reach for `make test-all` (all
+  three runtimes) only when a change might depend on one runtime's
+  idiosyncrasies.
+- Program fixtures under `test/programs/` use a small header syntax for
+  declaring input and expected output. Read `test/programs/README.md` before
+  adding one.
+- Benchmark with `make bench-deno`.
 
 ## Commands
 
-- `npm test` (or `make test`): run all tests.
-- `node --test test/test-programs.js`: run only the program-level tests.
-- `node --test test/test-sil.js`: run a specific unit test file.
-- `npm test -- -g "Arbitrarily long integers"`: run a specific test by title.
-- `make build`: regenerate `src/generated-snobol-image.js`.
-- `node bin/snoflake.js --file=tmp/example.sno`: run a SNOBOL program.
-- `make bench` (or `node tools/bench-snoflake.js [opts]`): run the Snoflake
-  benchmark harness against a default fixture suite. Pass `-h` for full options.
-  To benchmark an arbitrary `.sno` program, pass its path explicitly, e.g.
-  `node tools/bench-snoflake.js tmp/example.sno`.
-- `make bench-deno` (or `deno bench -A tools/snoflake.bench.js`): the same
-  per-fixture VM benchmark driven by `Deno.bench`, which supplies warmup,
-  sampling, and percentile statistics. Pass fixtures or flags after `--`, e.g.
-  `deno bench -A tools/snoflake.bench.js -- --all` or `-- n-queens`. Use
-  `--baseline=PATH` to compare a worktree against this checkout; Deno prints the
-  relative speedup per fixture. `deno bench --json` emits machine-readable
-  results.
-- `make bench-vs-csnobol4` (or `node tools/bench-vs-csnobol4.js [opts]`):
-  wall-clock comparison against CSNOBOL4. Requires `snobol4` on PATH; override
-  with `--snobol4=PATH`.
-- `make coverage` (or `node tools/sil-coverage.js [--procs] [--json=PATH]`):
-  trace which SIL instructions in the assembled image are executed by the
-  program fixtures, and report the procedures and opcodes the suite never
-  reaches. This measures coverage of the SNOBOL4 _stream_ (the assembled
-  system), which is distinct from unit-test coverage of the JS macros in
-  `src/sil.js`. Per-slot detail and an annotated list of uncovered instructions
-  land in `tmp/sil-coverage/`.
-- `make profile` (or `node tools/profile.js [bench-snoflake.js opts]`): capture
-  a V8 tick profile of `bench-snoflake.js --mode=vm` and post- process it into a
-  report under `tmp/profiles/`. The first ~60 lines (Summary + JavaScript hot
-  list) are printed; a full timestamped report path is logged at the end.
-  Forward any `bench-snoflake.js` flag to scope the profile (e.g.
-  `node tools/profile.js --iterations=10
-  kalah-opening-search`). To profile an
-  arbitrary `.sno` program, pass its path directly, e.g.
-  `node tools/profile.js tmp/example.sno`.
-
-### Sample debug commands
-
-- Create and run the minimal visible-output probe:
-  ```sh
-  printf " OUTPUT = 'HELLO, WORLD'\nEND\n" > tmp/min-output.sno
-  node bin/snoflake.js --file=tmp/min-output.sno
-  ```
-- Run noisy probes through a log-size check before inspection:
-  ```sh
-  node bin/snoflake.js --file=tmp/min-output.sno > tmp/min-output.log 2>&1
-  wc -l tmp/min-output.log
-  tail -n 80 tmp/min-output.log
-  ```
-- Capture a run for later searching:
-  ```sh
-  node bin/snoflake.js --file=tmp/min-output.sno > tmp/min-output.log 2>&1
-  rg "XLATRN|XLATNX|INTERP|ASGN|PUTOUT|END" tmp/min-output.log
-  ```
-- **Custom descriptor probes:** to capture descriptor contents during execution,
-  write a short Node script that instantiates `vm`, overrides
-  `vm.exec = function (label, macro, args, comment) { ... }` to log values like
-  `vm.d('OCBSCL').raw()` or `vm.s('IOSP').specified` on specific `label` or
-  `comment` matches, then calls the original `exec` and runs the interpreter.
+Read @Makefile
