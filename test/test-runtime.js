@@ -402,6 +402,111 @@ describe('SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '42\n' );
     });
 
+    it('loads JavaScript helper source from SNOBOL LOAD', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                " LOAD('FROMC(INTEGER)STRING', 'n => String.fromCharCode(n)')",
+                ' LOAD(\'JOINJS(INTEGER,REAL,STRING)STRING\', \'(n, r, s) => n + ":" + r.toFixed(1) + ":" + s\')',
+                ' LOAD(\'CHAR(INTEGER)STRING\', \'n => "[" + n + "]"\')',
+                ' OUTPUT = FROMC(65)',
+                " OUTPUT = JOINJS('7', '3.5', 42)",
+                ' OUTPUT = CHAR(65)',
+                'END',
+                '',
+            ].join( '\n' ),
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), 'A\n7:3.5:42\n[65]\n' );
+    });
+
+    it('SNOBOL LOAD without a library argument binds a host extension', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                " LOAD('DOUBLE(INTEGER)INTEGER')",
+                ' OUTPUT = DOUBLE(21)',
+                'END',
+                '',
+            ].join( '\n' ),
+            extensions: {
+                'DOUBLE :: (int) => int': ( n ) => n * 2,
+            },
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '42\n' );
+    });
+
+    it('SNOBOL-loaded JavaScript helpers can use Intl.Segmenter', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                ' LOAD(\'WORDS(STRING)STRING\', \'s => Array.from(new Intl.Segmenter("en", { granularity: "word" }).segment(s)).filter(x => x.isWordLike).map(x => x.segment).join("|")\')',
+                " OUTPUT = WORDS('Hello, 世界. café naïve.')",
+                'END',
+                '',
+            ].join( '\n' ),
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), 'Hello|世界|café|naïve\n' );
+    });
+
+    it('SNOBOL-loaded JavaScript helpers can use crypto.randomUUID', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                " LOAD('UUID()STRING', '() => crypto.randomUUID()')",
+                ' OUTPUT = UUID()',
+                'END',
+                '',
+            ].join( '\n' ),
+            stdout,
+        } );
+
+        assert.match(
+            joinLines( stdout.lines ),
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$/,
+        );
+    });
+
+    it('SNOBOL-loaded JavaScript helpers can be nullary and signal FAIL', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                " LOAD('JSNOW()INTEGER', '() => 42')",
+                " LOAD('POSJS(INTEGER)INTEGER', 'n => n > 0 ? n : FAIL')",
+                ' OUTPUT = JSNOW()',
+                ' POSJS(-1) :S(BAD)F(GOOD)',
+                "BAD      OUTPUT = 'unreachable' :(END)",
+                "GOOD     OUTPUT = 'failure routed'",
+                'END',
+                '',
+            ].join( '\n' ),
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '42\nfailure routed\n' );
+    });
+
+    it('rejects malformed JavaScript helper source in SNOBOL LOAD', function () {
+        assert.throws(
+            () =>
+                run( {
+                    source: " LOAD('BADJS(INTEGER)INTEGER', 'n =>')\nEND\n",
+                    stdout: captureWriter(),
+                } ),
+            /Invalid JavaScript extension for BADJS/,
+        );
+    });
+
     it('rejects malformed signature keys when value is a function', function () {
         const cases = [
             'BAD :: real -> real', // wrong arrow

@@ -462,6 +462,25 @@ Snoflake coerces each argument from the SNOBOL value to the declared kind before
 calling your function, and converts the return value back. `void` means the
 function returns nothing useful, so SNOBOL receives the null string.
 
+SNOBOL code can also define a JavaScript helper directly with `LOAD`. The first
+argument is the usual external-function prototype, using SNOBOL type names. The
+second argument is a JavaScript function expression:
+
+    LOAD('FROMC(INTEGER)STRING', 'n => String.fromCharCode(n)')
+    OUTPUT = FROMC(65)
+    END
+
+The helper runs through the same coercion, result conversion, and failure path
+as host-registered extensions. The `FAIL` sentinel is available by name inside
+the JavaScript expression:
+
+    LOAD('POSJS(INTEGER)INTEGER', 'n => n > 0 ? n : FAIL')
+
+When the second `LOAD` argument is omitted, Snoflake binds a function from the
+host's `extensions` registry. Any supplied second argument is evaluated as
+JavaScript in the host context, so only run this form for SNOBOL source you
+trust.
+
 There is an equivalent **object form**, useful when you would rather not pack
 everything into a string. The key is the bare name, and the value spells out the
 parts:

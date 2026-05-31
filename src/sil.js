@@ -1,7 +1,7 @@
 // JS implementations of the SIL macros.
 
 import { D } from './datatypes.js';
-import { FAIL } from './extensions.js';
+import { compileJavaScriptExtension, FAIL } from './extensions.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import {
     decodeString,
@@ -16,6 +16,50 @@ const { SIZLIM, STTL, TTL } = constants;
 const CPD = 3; // Characters per descriptor
 
 const sil = {};
+
+//     loadExtensionSignature reads the type signature SNOBOL's
+// LOAD procedure parsed into the function block before invoking
+// this macro. A no-arg prototype `(F)` is parsed as a single
+// argument slot holding 0.
+//      Block layout:
+//               +-------+-------+-------+
+//      ZCL      |   F                   |   F = function block
+//               +-----------------------+
+//               +-------+-------+-------+
+//      F        |                   N   |   N = argument count
+//               +-----------------------+
+//               +-------+-------+-------+
+//      F + D    |   B                   |   B = definition block
+//               +-----------------------+
+//               +-------+-------+-------+
+//   B + (2+i)*D |                   Ti  |   type code for arg i (i < N)
+//               +-----------------------+
+//               +-------+-------+-------+
+//   B + (2+N)*D |                   R   |   result type code
+//               +-----------------------+
+function loadExtensionSignature( vm, name ) {
+    const block = vm.d( 'ZCL' ).addr;
+    const argCount = vm.d( block ).value;
+    const definition = vm.d( block + D ).addr;
+    const codeAt = ( i ) => vm.d( definition + ( 2 + i ) * D ).value;
+
+    const kindAt = ( i ) => {
+        const code = codeAt( i );
+        if ( code === vm.$( 'I' ) ) return 'int';
+        if ( code === vm.$( 'R' ) ) return 'real';
+        if ( code === vm.$( 'S' ) ) return 'string';
+        throw new SyntaxError(
+            `Unsupported JavaScript extension type in ${name}`,
+        );
+    };
+
+    const isNullary = argCount === 1 && codeAt( 0 ) === 0;
+    const args = isNullary
+        ? []
+        : Array.from( { length: argCount }, ( _, i ) => kindAt( i ) );
+
+    return { args, result: kindAt( argCount ) };
+}
 
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
@@ -1884,12 +1928,21 @@ sil.LINKOR = function ( $DESCR1, $DESCR2 ) {
 //
 // Snoflake notes:
 // Binds a JS extension to the function block, so sil.LINK can dispatch
-// to it. Unknown names fail through FLOC.
-sil.LOAD = function ( $DESCR, $SPEC1, _$SPEC2, FLOC, _SLOC ) {
+// to it. An omitted library argument binds a host-registered extension by
+// name. Any supplied library string is compiled as a JS function expression
+// with the type signature from the LOAD prototype.
+sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, FLOC, _SLOC ) {
     const name = this.s( $SPEC1 ).specified,
-        ext = this.extensions[name];
+        source = this.s( $SPEC2 ).specified;
+    let ext;
 
-    if ( !ext ) return this.jmp( FLOC );
+    if ( source === '' ) {
+        ext = this.extensions[name];
+        if ( !ext ) return this.jmp( FLOC );
+    } else {
+        const { args, result } = loadExtensionSignature( this, name );
+        ext = compileJavaScriptExtension( name, source, args, result );
+    }
     this.d( $DESCR ).addr = this.extensionsBySlot.push( ext ) - 1;
 };
 

@@ -298,7 +298,7 @@ export class VM {
                 .map( ( k ) => TYPE_NAMES[k] )
                 .join( ',' );
             const resultType = TYPE_NAMES[ext.result];
-            loads.push( ` LOAD('${name}(${argTypes})${resultType}','JS')` );
+            loads.push( ` LOAD('${name}(${argTypes})${resultType}')` );
         }
         if ( !loads.length ) return '';
         return [ '-HIDE', ...loads, '-UNHIDE', '' ].join( '\n' );

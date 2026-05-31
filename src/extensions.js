@@ -59,3 +59,26 @@ export function parseSignature( key, impl ) {
 
     return [ name, { args, result, impl } ];
 }
+
+export function compileJavaScriptExtension( name, source, args, result ) {
+    let impl;
+    try {
+        impl = Function(
+            'FAIL',
+            `"use strict"; return (${source});`,
+        )( FAIL );
+    } catch ( e ) {
+        throw new SyntaxError(
+            `Invalid JavaScript extension for ${name}: ${e.message}`,
+        );
+    }
+
+    if ( typeof impl !== 'function' ) {
+        throw new TypeError(
+            `Invalid JavaScript extension for ${name}: ` +
+                'source did not evaluate to a function',
+        );
+    }
+
+    return { args, result, impl };
+}
