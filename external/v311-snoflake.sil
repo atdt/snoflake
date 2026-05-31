@@ -33,6 +33,8 @@
 *                       string-length checks do not trip on modern inputs.
 *        [SNF1]       — -UNHIDE re-enables listing and statement numbering
 *                       after -HIDE without listing the control card itself.
+*        [SNF2]       — Backtick-delimited literals may span source cards.
+*                       Controlled by the MULTILN host option.
 *
        TITLE   'Table of Contents'
 *
@@ -298,6 +300,7 @@ SPDLDR EQU     SPDLSZ*DESCR	   Size of pattern stack
 *      Equivalences
 *
 ARYTYP EQU     7		   Array reference
+BTLTYP EQU     8		   Backtick literal			[SNF2]
 CLNTYP EQU     5		   Goto field
 CMATYP EQU     2		   Comma
 CMTTYP EQU     2		   Comment card
@@ -1142,7 +1145,7 @@ CDIAG2 STPRNT  IOKEY,OUTBLK,ERRSP  Print error marker
        APDSP   CERRSP,TSP	   Append error message
        STPRNT  IOKEY,OUTBLK,CERRSP Print error message
        STPRNT  IOKEY,OUTBLK,BLSP   Print blank line
-CDIAG1 AEQLC   UNIT,0,,RTN1					E3.0.1
+CDIAG1 AEQLC   UNIT,0,,RTN2					E3.0.1	[SNF2]
        AEQLC   BRTYPE,EOSTYP,,RTN3				E3.0.1
        STREAM  XSP,TEXTSP,EOSTB,COMP3,,RTN3
 *				   Get to end of statement
@@ -1164,7 +1167,7 @@ ELEMNT PROC    ,		   Element analysis procedure
        RCALL   ELEMND,UNOP,,RTN2   Get tree of unary operators
        STREAM  XSP,TEXTSP,ELEMTB,ELEICH,ELEILI
 *				   Break out element
-ELEMN9 SELBRA  STYPE,(,ELEILT,ELEVBL,ELENST,ELEFNC,ELEFLT,ELEARY)
+ELEMN9 SELBRA  STYPE,(,ELEILT,ELEVBL,ELENST,ELEFNC,ELEFLT,ELEARY,ELERAW)
 *				   Branch on element type
        FSHRTN  XSP,1		   Delete initial quote
        SHORTN  XSP,1		   Remove terminal quote
@@ -1269,12 +1272,23 @@ ELEAR1 PUSH    ELEMND		   Save current node
        AEQLC   BRTYPE,CMATYP,ELECMA,ELEAR1
 *				   Verify comma
 *_
+ELERAW AEQLC   MULTILN,0,,ELEICH Check backtick extension switch	[SNF2]
+       FSHRTN  XSP,1		   Delete initial backtick	[SNF2]
+       SHORTN  XSP,1		   Remove terminal backtick	[SNF2]
+       RCALL   XPTR,GENVAR,(XSPPTR)				[SNF2]
+       BRANCH  ELEMN5						[SNF2]
+*_
 ELEICH SETAC   EMSGCL,ILCHAR	   'ILLEGAL CHARACTER IN ELEMENT'
        BRANCH  RTN1		   Error return
 *_
-ELEILI AEQLC   STYPE,QLITYP,ELEMN9 Check cause of run out
+ELEILI AEQLC   STYPE,BTLTYP,ELEILQ,ELEMRW			[SNF2]
+ELEILQ AEQLC   STYPE,QLITYP,ELEMN9 Check cause of run out
        SETAC   EMSGCL,OPNLIT	   'UNCLOSED LITERAL'
        BRANCH  RTN1		   Error return
+*_
+ELEMRW AEQLC   MULTILN,0,,ELEICH Check backtick extension switch	[SNF2]
+       RCALL   XPTR,RAWLIT,,RTN1  Read rest of raw literal	[SNF2]
+       BRANCH  ELEMN5						[SNF2]
 *_
 ELEINT SETAC   EMSGCL,ILLINT	   'ILLEGAL INTEGER'
        BRANCH  RTN1		   Error return
@@ -1284,6 +1298,59 @@ ELEDEC SETAC   EMSGCL,ILLDEC	   'ILLEGAL REAL'
 *_
 ELECMA SETAC   EMSGCL,ILLBRK	   'ILLEGAL BREAK CHARACTER'
        BRANCH  RTN1		   Error return
+*_
+*---------------------------------------------------------------------*
+*
+*      Backtick Literal Analysis					[SNF2]
+*
+RAWLIT PROC    ,		   Complete a raw literal after runout	[SNF2]
+       SETAC   RAWCAP,CARDSZ	   Start with one card of space	[SNF2]
+       RCALL   RAWPTR,CONVAR,(RAWCAP)				[SNF2]
+       LOCSP   RAWSP,RAWPTR					[SNF2]
+       SETLC   RAWSP,0						[SNF2]
+       FSHRTN  XSP,1		   Drop opening delimiter	[SNF2]
+       TRIMSP  XSP,XSP		   Drop card padding		[SNF2]
+       RCALL   ,RAPPND						[SNF2]
+       SETSP   XSP,LFSP		   Preserve card break		[SNF2]
+       RCALL   ,RAPPND						[SNF2]
+RAWRD  AEQLC   LISTCL,0,,RAWRD1    List consumed card if needed	[SNF2]
+       STPRNT  IOKEY,OUTBLK,LNBFSP				[SNF2]
+RAWRD1 STREAD  INBFSP,UNIT,RAWERR,COMP5			[SNF2]
+       SETSP   TEXTSP,NEXTSP	   Set up raw literal card	[SNF2]
+       STREAM  XSP,TEXTSP,BTLITB,COMP3,RAWRUN		[SNF2]
+       SHORTN  XSP,1		   Remove closing delimiter	[SNF2]
+       RCALL   ,RAPPND						[SNF2]
+       GETLG   RAWLEN,RAWSP					[SNF2]
+       RCALL   XPTR,GNVARS,RAWLEN				[SNF2]
+       BRANCH  RTXNAM						[SNF2]
+*_
+RAWRUN TRIMSP  XSP,XSP		   Drop card padding		[SNF2]
+       RCALL   ,RAPPND						[SNF2]
+       SETSP   XSP,LFSP		   Preserve card break		[SNF2]
+       RCALL   ,RAPPND						[SNF2]
+       BRANCH  RAWRD						[SNF2]
+*_
+RAWERR SETAC   EMSGCL,OPNLIT	   'UNCLOSED LITERAL'		[SNF2]
+       BRANCH  RTN1						[SNF2]
+*_
+RAPPND PROC    ,		   Append XSP to raw literal buffer	[SNF2]
+       GETLG   XCL,XSP						[SNF2]
+       CHKVAL  RAWCAP,XCL,RAWSP,RAPGRW,RAPADD,RAPADD	[SNF2]
+*_
+RAPGRW GETLG   YCL,RAWSP					[SNF2]
+RAPDBL SUM     RAWCAP,RAWCAP,RAWCAP				[SNF2]
+       CHKVAL  RAWCAP,XCL,RAWSP,RAPDBL,RAPCPY,RAPCPY	[SNF2]
+*_
+RAPCPY LHERE   ,						[SNF2]
+       RCALL   XPTR,GNVARS,YCL					[SNF2]
+       LOCSP   YSP,XPTR						[SNF2]
+       RCALL   RAWPTR,CONVAR,(RAWCAP)				[SNF2]
+       LOCSP   RAWSP,RAWPTR					[SNF2]
+       SETLC   RAWSP,0						[SNF2]
+       APDSP   RAWSP,YSP					[SNF2]
+*_
+RAPADD APDSP   RAWSP,XSP					[SNF2]
+       BRANCH  RTN1						[SNF2]
 *_
 *---------------------------------------------------------------------*
 *
@@ -5563,6 +5630,7 @@ TIMECL DESCR   0,0,0		   Millisecond time
 *
 ALCL   DESCR   0,0,0		   Entry point switch for ARG(F,N)
 BANRCL DESCR   0,0,0		   Display startup banner	[PLB12]
+MULTILN DESCR 1,0,0		   Backtick literals enabled	[SNF2]
 STATCL DESCR   0,0,0		   Display statistics		[PLB12]
 ARRMRK DESCR   0,0,0		   Prototype end switch for ARRAY(P,V)
 CUTNO  DESCR   0,0,0						E3.2.2
@@ -5739,6 +5807,7 @@ COLSP  SPEC    COLSTR,0,0,0,2	   Colon for trace messages
 DMPSP  SPEC    ANYSP,0,0,0,0	   Buffer specifier
 DTARSP SPEC    DTARBF,0,0,0,ARRLEN+9
 *				   Array representation specifier
+LFSP   SPEC    ALPHA,0,0,10,1	   Line feed			[SNF2]
 PROTSP SPEC    ANYSP,0,0,0,0	   Buffer specifier
 QTSP   SPEC    QTSTR,0,0,0,1	   Quote for messages
 REALSP SPEC    REALBF,0,0,0,10	   Specifier for real conversion
@@ -5854,6 +5923,9 @@ FORMND DESCR   0,0,0		   Object node
 FRNCL  DESCR   0,0,0		   Failure return descriptor
 GOTOND DESCR   0,0,0		   Goto node
 PATND  DESCR   0,0,0		   Pattern node
+RAWCAP DESCR   0,0,0		   Backtick literal capacity	[SNF2]
+RAWLEN DESCR   0,0,0		   Backtick literal length	[SNF2]
+RAWPTR DESCR   0,0,0		   Backtick literal pointer	[SNF2]
 SGOND  DESCR   0,0,0		   Success goto node
 SUBJND DESCR   0,0,0		   Subject node
 *
@@ -5874,6 +5946,7 @@ HEADSP SPEC    0,0,0,0,0	   Matching head specifier
 IOSP   SPEC    0,0,0,0,0	   I/O specifier
 TAILSP SPEC    0,0,0,0,0	   Matching tail specifier
 TEXTSP SPEC    0,0,0,0,0	   Compiler statement specifier
+RAWSP  SPEC    0,0,0,0,0	   Backtick literal buffer	[SNF2]
 TSP    SPEC    0,0,0,0,0	   Scratch specifier
 TXSP   SPEC    0,0,0,0,0	   Scratch specifier
 VSP    SPEC    0,0,0,0,0	   Scratch specifier

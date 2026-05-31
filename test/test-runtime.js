@@ -970,11 +970,56 @@ describe('Multi-line strings', function () {
         assert.equal( joinLines( stdout.lines ), 'ok\n' );
     });
 
-    it('throws on an unclosed backtick range', function () {
-        assert.throws(
-            () => run( { source: ' X = `oops\nEND\n' } ),
-            /Unclosed backtick/,
-        );
+    it('reports an unclosed backtick range as a compile error', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: ' X = `oops\nEND\n',
+            stdout,
+        } );
+        assert.match( joinLines( stdout.lines ), /UNCLOSED LITERAL/ );
+        assert.match( joinLines( stdout.lines ), /at prog\.sno:1/ );
+    });
+
+    it('reports an unclosed multi-card backtick without a system error', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: ' X = `one\ntwo\nEND\n',
+            stdout,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /UNCLOSED LITERAL/ );
+        assert.match( output, /ERROR 28 IN STATEMENT\s+1/ );
+        assert.doesNotMatch( output, /ERROR 17 IN STATEMENT\s+0/ );
+        assert.doesNotMatch( output, /ERROR IN SNOBOL4 SYSTEM/ );
+    });
+
+    it('grows the raw literal buffer for large backtick strings', function () {
+        const payload = Array.from(
+            { length: 180 },
+            ( _, i ) => `line-${String( i ).padStart( 3, '0' )}`,
+        ).join( '\n' );
+        const stdout = captureWriter();
+        run( {
+            source: ` X = \`${payload}\`\n OUTPUT = SIZE(X)\nEND\n`,
+            stdout,
+        } );
+        assert.equal( joinLines( stdout.lines ), `${payload.length}\n` );
+    });
+
+    it('lists each card consumed by a multi-card backtick literal', function () {
+        const stdout = captureWriter();
+        run( {
+            source: ' X = `one\ntwo\nthree`\n OUTPUT = X\nEND\n',
+            stdout,
+            list: true,
+        } );
+        const output = joinLines( stdout.lines );
+        assert.match( output, /X = `one/ );
+        assert.match( output, /two/ );
+        assert.match( output, /three`/ );
+        assert.match( output, /one\ntwo\nthree/ );
     });
 });
 

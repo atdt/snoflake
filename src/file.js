@@ -107,7 +107,7 @@ export class File {
         } );
     }
 
-    includeSource( filename, loader, prepare = ( content ) => content ) {
+    includeSource( filename, loader ) {
         const includePath = stripTrailingBlanks( filename ),
             included = loader.loadInclude?.( includePath ) ?? null;
 
@@ -120,7 +120,7 @@ export class File {
             return;
         }
 
-        this.include( prepare( included.content ), included.path );
+        this.include( included.content, included.path );
         this.includedFiles.add( included.path );
     }
 

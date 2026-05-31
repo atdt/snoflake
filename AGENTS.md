@@ -20,6 +20,7 @@ a finishing step.
   - `v311-snoflake.sil`: Snoflake's working SIL input, derived from `v311.sil`.
     Annotated snoflake fixes belong here. See "Working on the SIL".
   - `syntax.tbl`: Historical syntax-table source.
+  - `syntax-snoflake.tbl`: Snoflake's working syntax-table source.
 - `src/`: Runtime.
   - `snobol.js`: Runtime assembly and entry point.
   - `sil.js`: JS implementations of SIL macros (authoritative spec).

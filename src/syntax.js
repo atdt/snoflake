@@ -61,6 +61,7 @@ export const defaults = {
 const characterClasses = {
     ALPHANUMERIC: /[a-z0-9]/i,
     AT: /@/,
+    BACKTICK: /`/,
     BLANK: /[ \t]/,
     BREAK: /[._]/,
     CMT: /\*/,
@@ -201,11 +202,17 @@ const tableDefinitions = {
         [ 'ELSE', null, 'CONTIN' ],
     ],
 
+    BTLITB: [
+        [ 'BACKTICK', null, 'STOP' ],
+        [ 'ELSE', null, 'CONTIN' ],
+    ],
+
     ELEMTB: [
         [ 'NUMBER', 'ILITYP', 'INTGTB' ],
         [ 'LETTER', 'VARTYP', 'VARTB' ],
         [ 'SQUOTE', 'QLITYP', 'SQLITB' ],
         [ 'DQUOTE', 'QLITYP', 'DQLITB' ],
+        [ 'BACKTICK', 'BTLTYP', 'BTLITB' ],
         [ 'LEFTPAREN', 'NSTTYP', 'STOP' ],
         [ 'ELSE', null, 'ERROR' ],
     ],

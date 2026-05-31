@@ -33,6 +33,7 @@ const HOST_KEYWORDS = {
     case: { symbol: 'CASECL', defaultValue: true },
     list: { symbol: 'LISTCL', defaultValue: false },
     banner: { symbol: 'BANRCL', defaultValue: false },
+    multilineStrings: { symbol: 'MULTILN', defaultValue: true },
     statistics: { symbol: 'STATCL', defaultValue: false },
     stlimit: { symbol: 'EXLMCL', defaultValue: -1 }, // -1 means unlimited
 };

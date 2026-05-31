@@ -29,6 +29,17 @@ describe('Character Classes', function () {
         }
     });
 
+    it('BACKTICK (raw string delimiter)', function () {
+        const characters = '`';
+        for ( let ch = 0; ch <= 0x7F; ch++ ) {
+            const char = String.fromCharCode( ch );
+            assert.equal(
+                match( 'BACKTICK', char ),
+                characters.includes( char ),
+            );
+        }
+    });
+
     it('BLANK (separator and operator)', function () {
         const characters = ' \t';
         for ( let ch = 0; ch <= 0x7F; ch++ ) {
