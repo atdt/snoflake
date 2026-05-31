@@ -5,6 +5,7 @@
         "compile-all": "deno compile --allow-all --target=x86_64-unknown-linux-gnu --output=dist/snoflake-linux-x86_64 bin/snoflake.js && deno compile --allow-all --target=aarch64-unknown-linux-gnu --output=dist/snoflake-linux-aarch64 bin/snoflake.js && deno compile --allow-all --target=x86_64-apple-darwin --output=dist/snoflake-macos-x86_64 bin/snoflake.js && deno compile --allow-all --target=aarch64-apple-darwin --output=dist/snoflake-macos-aarch64 bin/snoflake.js && deno compile --allow-all --target=x86_64-pc-windows-msvc --output=dist/snoflake-windows-x86_64.exe bin/snoflake.js"
     },
     "lint": {
+        "include": ["src/", "tools/", "test/", "build/"],
         "exclude": ["**/generated-*.js"],
         "rules": {
             "exclude": ["no-control-regex"]
