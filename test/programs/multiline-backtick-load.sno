@@ -1,0 +1,19 @@
+* @title Multi-line backtick literal feeds an inline JS LOAD
+* @expect Hello|world|こんにちは|世界|สวัสดี|ชาว|โลก|A|café|in|Zürich|Naïve|isn't|it
+* @nonstandard backtick raw strings and inline JS LOAD are snoflake extensions
+* Exercises two snoflake extensions together: a multi-line backtick literal
+* carrying JavaScript source, fed to LOAD as an inline helper. WORDS splits a
+* string by Unicode word boundaries via Intl.Segmenter, keeps the word-like
+* segments, and joins them with '|'. The input mixes spaced English with
+* unspaced Japanese and Thai, plus diacritics and contractions, to exercise
+* the segmenter rather than a naive split-on-blanks.
+        LOAD('WORDS(STRING)STRING',`
+            function (s) {
+                var out = [];
+                for (var p of new Intl.Segmenter("en", { granularity: "word" }).segment(s))
+                    if (p.isWordLike) out.push(p.segment);
+                return out.join("|");
+            }`)
+
+        OUTPUT = WORDS("Hello world! こんにちは世界。 สวัสดีชาวโลก! A café in Zürich? Naïve—isn't it?")
+END

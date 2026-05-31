@@ -3,6 +3,7 @@
 import { D } from './datatypes.js';
 import { compileJavaScriptExtension, FAIL } from './extensions.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
+import { expandMultilineStrings } from './preprocess.js';
 import {
     decodeString,
     foldAsciiUpperByte,
@@ -703,8 +704,12 @@ sil.XINCLD = function ( $DESCR, $SPEC, FLOC, SLOC ) {
         filename = filename.slice( 1, -1 );
     }
 
+    const prepare = this.options.multilineStrings === false
+        ? undefined
+        : expandMultilineStrings;
+
     try {
-        this.units.open( unit ).includeSource( filename, this.loader );
+        this.units.open( unit ).includeSource( filename, this.loader, prepare );
         return this.jmp( SLOC );
     } catch {
         return this.jmp( FLOC );

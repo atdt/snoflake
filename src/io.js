@@ -19,6 +19,7 @@
 // Loading is synchronous because STREAD runs inside the VM dispatch loop.
 
 import { bufferedReader, File, stripTrailingBlanks } from './file.js';
+import { expandMultilineStrings } from './preprocess.js';
 import { constants } from './syntax.js';
 
 const { UNITI } = constants;
@@ -78,6 +79,10 @@ export class UnitTable {
     // corresponding option was supplied.
     #buildStdinSegments() {
         const { source, file, input, interactive, stdinReader } = this.options;
+        const prepareSource = ( raw ) =>
+            this.options.multilineStrings === false
+                ? raw
+                : expandMultilineStrings( raw );
         const segments = [];
 
         if ( this.preamble ) {
@@ -88,13 +93,15 @@ export class UnitTable {
         }
         if ( source !== undefined ) {
             segments.push( {
-                reader: bufferedReader( source ),
+                reader: bufferedReader( prepareSource( source ) ),
                 padReads: true,
                 path: file,
             } );
         } else if ( file ) {
             segments.push( {
-                reader: bufferedReader( this.loader.load( file ) ),
+                reader: bufferedReader(
+                    prepareSource( this.loader.load( file ) ),
+                ),
                 padReads: true,
                 path: file,
             } );

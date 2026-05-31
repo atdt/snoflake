@@ -897,6 +897,87 @@ describe('Error Diagnostics', function () {
     });
 });
 
+describe('Multi-line strings', function () {
+    it('expands a backtick range across cards into one logical string', function () {
+        const stdout = captureWriter();
+        run( {
+            source: ' X = `one\ntwo\nthree`\n OUTPUT = X\nEND\n',
+            stdout,
+        } );
+        assert.equal( joinLines( stdout.lines ), 'one\ntwo\nthree\n' );
+    });
+
+    it('lets a backtick range carry both quote flavors verbatim', function () {
+        const stdout = captureWriter();
+        run( {
+            source: ' X = `it\'s "ok"`\n OUTPUT = X\nEND\n',
+            stdout,
+        } );
+        assert.equal( joinLines( stdout.lines ), 'it\'s "ok"\n' );
+    });
+
+    it("keeps the closer line's suffix on the same SNOBOL statement", function () {
+        // The closing `)` sits after the closing backtick. Without
+        // continuation cards the LOAD call would split across statements.
+        const stdout = captureWriter();
+        run( {
+            source: " LOAD('ECHO(STRING)STRING',`\n   s => s + '!'`)\n" +
+                " OUTPUT = ECHO('hi')\nEND\n",
+            stdout,
+        } );
+        assert.equal( joinLines( stdout.lines ), 'hi!\n' );
+    });
+
+    it('opt-out leaves backtick as an illegal character', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: ' X = `hello`\nEND\n',
+            stdout,
+            multilineStrings: false,
+        } );
+        assert.match( joinLines( stdout.lines ), /ILLEGAL CHARACTER/ );
+    });
+
+    it('preserves source line numbers when reporting later errors', function () {
+        const stdout = captureWriter();
+        run( {
+            sourcePath: 'prog.sno',
+            source: ' X = `one\ntwo\nthree`\n Y = $%\nEND\n',
+            stdout,
+        } );
+        // The Y assignment is the fourth source line and must be reported
+        // as such, even though three of those lines were absorbed by the
+        // backtick range.
+        assert.match( joinLines( stdout.lines ), /at prog\.sno:4/ );
+    });
+
+    it('leaves a backtick inside a SNOBOL literal untouched', function () {
+        const stdout = captureWriter();
+        run( {
+            source: " X = 'has a ` inside'\n OUTPUT = X\nEND\n",
+            stdout,
+        } );
+        assert.equal( joinLines( stdout.lines ), 'has a ` inside\n' );
+    });
+
+    it('leaves a backtick on a comment line untouched', function () {
+        const stdout = captureWriter();
+        run( {
+            source: "* a ` in a comment\n OUTPUT = 'ok'\nEND\n",
+            stdout,
+        } );
+        assert.equal( joinLines( stdout.lines ), 'ok\n' );
+    });
+
+    it('throws on an unclosed backtick range', function () {
+        assert.throws(
+            () => run( { source: ' X = `oops\nEND\n' } ),
+            /Unclosed backtick/,
+        );
+    });
+});
+
 function captureWriter() {
     return {
         lines: [],

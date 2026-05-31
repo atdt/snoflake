@@ -19,6 +19,8 @@ Options:
                      terminal. Use this for conversational programs.
   --case=false       Preserve the source's letter case. By default
                      identifiers are folded to uppercase, as in SNOBOL4.
+  --multiline-strings=false
+                     Disable backtick multi-line strings.
   -b, --banner       Print the startup banner and termination message.
   -s, --statistics   Print the program-statistics summary at exit.
       --list         Print the source listing as the program compiles.
@@ -44,24 +46,26 @@ try {
     parsed = parseArgs( {
         args: process.argv.slice( 2 ),
         options: {
-            file:            { type: 'string' },
-            input:           { type: 'string' },
-            interactive:     { type: 'boolean', short: 'i' },
+            file: { type: 'string' },
+            input: { type: 'string' },
+            interactive: { type: 'boolean', short: 'i' },
             // Seeds &CASE: --case=false preserves the source's original
             // case. The SIL compiler folds identifiers to uppercase by
             // default to match historical SNOBOL4.
-            case:            { type: 'string' },
+            case: { type: 'string' },
+            // --multiline-strings=false disables backtick multi-line strings.
+            'multiline-strings': { type: 'string' },
             // -b restores the SNOBOL4 startup banner / termination
             // messages, which Snoflake suppresses by default.
-            banner:          { type: 'boolean', short: 'b' },
+            banner: { type: 'boolean', short: 'b' },
             // -s emits the program statistics summary at exit.
-            statistics:      { type: 'boolean', short: 's' },
-            list:            { type: 'boolean' },
+            statistics: { type: 'boolean', short: 's' },
+            list: { type: 'boolean' },
             // -I adds a directory to the SNOLIB search path for -INCLUDE
             // lookups. Repeatable.
-            snolib:          { type: 'string', short: 'I', multiple: true },
-            help:            { type: 'boolean', short: 'h' },
-            version:         { type: 'boolean', short: 'v' },
+            snolib: { type: 'string', short: 'I', multiple: true },
+            help: { type: 'boolean', short: 'h' },
+            version: { type: 'boolean', short: 'v' },
         },
         allowPositionals: true,
         strict: true,
@@ -84,7 +88,7 @@ if ( values.version ) {
     process.exit( 0 );
 }
 
-const file = values.file ?? positionals[ 0 ];
+const file = values.file ?? positionals[0];
 if ( file === undefined ) {
     console.error( 'snoflake: no source file given\n' );
     console.error( HELP );
@@ -96,13 +100,14 @@ const { createHostLoader, stdinReader } = await import( '../src/host.js' );
 
 const result = run( {
     file,
-    input:       values.input,
+    input: values.input,
     interactive: values.interactive,
-    case:        values.case !== 'false',
-    banner:      values.banner,
-    statistics:  values.statistics,
-    list:        values.list,
-    loader:      createHostLoader( { snolib: values.snolib } ),
+    case: values.case !== 'false',
+    multilineStrings: values['multiline-strings'] !== 'false',
+    banner: values.banner,
+    statistics: values.statistics,
+    list: values.list,
+    loader: createHostLoader( { snolib: values.snolib } ),
     stdinReader,
 } );
 

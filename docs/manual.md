@@ -125,6 +125,35 @@ file.
         directory wins over the search path for -INCLUDE. Analogous to
         cc's -I.
 
+    --multiline-strings=false
+        Disable backtick multi-line strings. See "Multi-line strings"
+        below.
+
+## Multi-line strings
+
+Standard SNOBOL4 literals are bounded to one card -- the tokenizer scans a line
+at a time and a `'...'` or `"..."` that doesn't close on the same line is a
+syntax error. Snoflake adds a third literal form, delimited by backticks, that
+can span lines:
+
+    LOAD('PRETTY(STRING)STRING',`
+        s => JSON.stringify(JSON.parse(s), null, 2)`)
+
+A backtick range opens at any <code>&#x60;</code> outside a `'...'` or `"..."`
+literal and closes at the next <code>&#x60;</code>. Everything in between is
+captured verbatim, including newlines and either flavor of quote.
+
+Backtick is not legal anywhere in SNOBOL4 syntax, so a program that doesn't use
+one is unaffected. Pass `--multiline-strings=false` (or
+`multilineStrings:
+false` to the JS API) to disable the extension.
+
+A backtick inside a regular `'...'` or `"..."` literal is just a byte. Inside a
+backtick range there is no escape; close the range and concatenate a
+single-character literal:
+
+    X = `before ` "`" ` after`
+
 ## Examples
 
     # Plain run.
