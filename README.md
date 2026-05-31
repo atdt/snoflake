@@ -78,6 +78,9 @@ With no build step or install, import it straight from a CDN such as
 </script>
 ```
 
+For the same idea with a tiny CodeMirror editor and a run button, see
+[`demo/cdn-editor.html`](demo/cdn-editor.html).
+
 To run the same demo against your local checkout:
 
 ```

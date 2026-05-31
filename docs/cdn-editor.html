@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!-- Minimal example of running Snoflake in the browser: a CodeMirror editor
+     and the Snoflake runtime, both loaded from CDN, with no build step. -->
+<meta charset="utf-8">
+<title>Snoflake</title>
+<style>
+    body { max-width: 42rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.5 system-ui, sans-serif; }
+    #editor { border: 1px solid #ccd3d1; }
+    button { margin: 0.75rem 0; }
+    #out { min-height: 5rem; margin: 0; padding: 0.75rem; background: black; color: white; }
+</style>
+
+<div id="editor"></div>
+<button id="run">Run</button>
+<pre id="out"></pre>
+
+<script type="module">
+    import { basicSetup, EditorView } from 'https://esm.sh/codemirror';
+    import { run } from 'https://esm.sh/snoflake';
+
+    const source = `
+        WORD = 'SNOBOL'
+        WORD LEN(3) . HEAD REM . TAIL
+        OUTPUT = TAIL HEAD
+END
+`;
+
+    const editor = new EditorView( {
+        doc: source,
+        extensions: [ basicSetup ],
+        parent: document.querySelector( '#editor' ),
+    } );
+
+    const out = document.querySelector( '#out' );
+
+    document.querySelector( '#run' ).onclick = () => {
+        out.textContent = '';
+        run( {
+            source: editor.state.doc.toString(),
+            stdout: { write: ( line ) => out.textContent += line + '\n' },
+        } );
+    };
+</script>

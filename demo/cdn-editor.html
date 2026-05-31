@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snoflake</title>
+<style>
+    body {
+        margin: 24px;
+        color: #1f252b;
+        font: 16px/1.45 system-ui, sans-serif;
+    }
+
+    #editor {
+        border: 1px solid #ccd3d1;
+    }
+
+    .cm-editor {
+        height: 16rem;
+    }
+
+    button {
+        margin: 12px 0;
+        padding: 8px 14px;
+        border: 1px solid #116466;
+        border-radius: 6px;
+        background: #116466;
+        color: white;
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    pre {
+        min-height: 7rem;
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        background: #11161a;
+        color: #d7e3dd;
+    }
+</style>
+
+<div id="editor"></div>
+<button id="run" type="button">Run</button>
+<pre id="out"></pre>
+
+<script type="module">
+    import { basicSetup, EditorView } from 'https://esm.sh/codemirror';
+    import * as SNOBOL from 'https://esm.sh/snoflake';
+
+    const editor = new EditorView( {
+            doc: `
+        WORD = 'SNOBOL'
+        WORD LEN(3) . HEAD REM . TAIL
+        OUTPUT = TAIL HEAD
+END
+`,
+            extensions: [ basicSetup ],
+            parent: document.querySelector( '#editor' ),
+        } ),
+        out = document.querySelector( '#out' ),
+        run = document.querySelector( '#run' );
+
+    function write( line ) {
+        out.textContent += line + '\n';
+    }
+
+    function runSource() {
+        out.textContent = '';
+
+        try {
+            SNOBOL.run( {
+                source: editor.state.doc.toString(),
+                stdout: { write },
+                stderr: { write },
+            } );
+        } catch ( e ) {
+            write( 'Execution error: ' + ( e?.message || e ) );
+        }
+    }
+
+    run.addEventListener( 'click', runSource );
+    runSource();
+</script>
