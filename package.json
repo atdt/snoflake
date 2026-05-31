@@ -2,7 +2,7 @@
   "name": "snoflake",
   "description": "An implementation of the SNOBOL4 programming language",
   "author": "Ori Livneh <ori.livneh@gmail.com>",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "license": "BSD-2-Clause",
   "type": "module",
   "publishConfig": {
