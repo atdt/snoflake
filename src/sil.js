@@ -3207,8 +3207,11 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( $SPEC, $DESCR ) {
     // convert real number to string
-    const DESCR = this.d( $DESCR );
-    return this.specify( DESCR.raddr.toString(), $SPEC );
+    let text = this.d( $DESCR ).raddr.toString();
+    // CSNOBOL4 extension: give a whole real a trailing point so it reads
+    // back as a REAL.
+    if ( !text.includes( '.' ) ) text += '.';
+    return this.specify( text, $SPEC );
 };
 
 //     REMSP is used to obtain a remainder specifier resulting
