@@ -20,7 +20,8 @@ const sil = {};
 //     loadExtensionSignature reads the type signature SNOBOL's
 // LOAD procedure parsed into the function block before invoking
 // this macro. A no-arg prototype `(F)` is parsed as a single
-// argument slot holding 0.
+// argument slot holding 0, and an omitted result type as a result
+// code of 0, reported as a null result type.
 //      Block layout:
 //               +-------+-------+-------+
 //      ZCL      |   F                   |   F = function block
@@ -45,7 +46,7 @@ function loadExtensionSignature( vm, name ) {
 
     const kindAt = ( i ) => {
         const code = codeAt( i );
-        if ( code === vm.$( 'I' ) ) return 'int';
+        if ( code === vm.$( 'I' ) ) return 'integer';
         if ( code === vm.$( 'R' ) ) return 'real';
         if ( code === vm.$( 'S' ) ) return 'string';
         throw new SyntaxError(
@@ -58,7 +59,8 @@ function loadExtensionSignature( vm, name ) {
         ? []
         : Array.from( { length: argCount }, ( _, i ) => kindAt( i ) );
 
-    return { args, result: kindAt( argCount ) };
+    const result = codeAt( argCount ) === 0 ? null : kindAt( argCount );
+    return { args, result };
 }
 
 //     ACOMP is used to compare  the  address  fields  of  two
@@ -1827,7 +1829,7 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     const args = ext.args.map( ( kind, i ) => {
         const arg = this.d( argsAddr + i * D );
         switch ( kind ) {
-            case 'int':
+            case 'integer':
                 return arg.addr;
             case 'real':
                 return arg.raddr;
@@ -1854,7 +1856,7 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     if ( result === FAIL ) return this.jmp( FLOC );
 
     switch ( ext.result ) {
-        case 'int':
+        case 'integer':
             this.d( $DESCR1 ).set( result, 0, this.$( 'I' ) );
             break;
         case 'real': {
@@ -1869,10 +1871,10 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
             // bytes into a natural variable on the way out.
             this.d( $DESCR1 ).set( this.specify( result ), 0, this.$( 'L' ) );
             break;
-        case 'void':
-            // Hand SNOBOL the null string, matching LOAD's own RETNUL exit.
+        default:
+            // No result type. Hand SNOBOL the null string, matching LOAD's
+            // own RETNUL exit.
             this.d( $DESCR1 ).set( this.specify( '' ), 0, this.$( 'L' ) );
-            break;
     }
 };
 

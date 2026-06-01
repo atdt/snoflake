@@ -32,7 +32,7 @@ self.addEventListener( 'message', function ( event ) {
               },
               extensions: {
                   // The renderer's only entry point.
-                  'EMIT :: (int, int, int, int, int, int, string) => void':
+                  'EMIT(INTEGER,INTEGER,INTEGER,INTEGER,INTEGER,INTEGER,STRING)':
                       ( x, y, z, w, h, d, color ) => {
                           self.postMessage( {
                               type: 'box',

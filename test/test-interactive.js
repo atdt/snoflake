@@ -77,7 +77,7 @@ describe('interactive Session', function () {
         const c = collector();
         const s = createSession( {
             source: " OUTPUT = 'DOUBLE: ' DOUBLE(21)\nEND\n",
-            extensions: { 'DOUBLE :: (int) => int': ( n ) => n * 2 },
+            extensions: { 'DOUBLE(INTEGER)INTEGER': ( n ) => n * 2 },
             ...c,
         } );
 

@@ -158,19 +158,19 @@ export function makeTurtleExtensions( canvas, preset, onEmit ) {
 
     return {
         // Grammar parameters.
-        'AXIOM :: ()       => string': () => preset.axiom,
-        'DEPTH :: ()       => int':    () => preset.depth,
-        'STEP  :: ()       => real':   () => 1.0,
-        'ANGLE :: ()       => real':   () => preset.angle,
-        'LOOKUP :: (string) => string': ( c ) => preset.rules[ c ] || '',
-        'EMIT   :: (string) => void':   ( s ) => { if ( onEmit ) onEmit( s ); },
+        'AXIOM()STRING':        () => preset.axiom,
+        'DEPTH()INTEGER':       () => preset.depth,
+        'STEP()REAL':           () => 1.0,
+        'ANGLE()REAL':          () => preset.angle,
+        'LOOKUP(STRING)STRING': ( c ) => preset.rules[ c ] || '',
+        'EMIT(STRING)':         ( s ) => { if ( onEmit ) onEmit( s ); },
 
         // Turtle commands.
-        'BEGIN  :: ()      => void':   begin,
-        'MOVE   :: (real)  => void':   move,
-        'TURN   :: (real)  => void':   turn,
-        'PUSH   :: ()      => void':   push,
-        'POP    :: ()      => void':   pop,
-        'RENDER :: ()      => void':   render,
+        'BEGIN()':     begin,
+        'MOVE(REAL)':  move,
+        'TURN(REAL)':  turn,
+        'PUSH()':      push,
+        'POP()':       pop,
+        'RENDER()':    render,
     };
 }

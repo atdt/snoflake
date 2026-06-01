@@ -495,7 +495,7 @@ the value:
 
     SNOBOL.run( {
         extensions: {
-            'JSONGET :: (string, string) => string': function ( text, key ) {
+            'JSONGET(STRING,STRING)STRING': function ( text, key ) {
                 const data = JSON.parse( text );
                 return Object.hasOwn( data, key )
                     ? String( data[ key ] )
@@ -518,23 +518,23 @@ the value:
     // JavaScript
     // missing key failed as SNOBOL failure
 
-The signature reads left to right: the SNOBOL-visible name, `::`, a
-parenthesized list of argument types, `=>`, and the result type. The parentheses
-are required even when there are no arguments (`'NOW :: ()
-=> int'`).
+The key is the external-function prototype SNOBOL's own `LOAD` uses: the
+SNOBOL-visible name, then a parenthesized list of argument types, then the
+result type. The parentheses are required even when there are no arguments
+(`'NOW()INTEGER'`).
 
-Type kinds:
+Type names are case-insensitive:
 
-    Argument types:  int, real, string
-    Result types:    int, real, string, void
+    Argument types:  INTEGER, REAL, STRING
+    Result type:     INTEGER, REAL, STRING, or omitted
 
-Snoflake coerces each argument from the SNOBOL value to the declared kind before
-calling your function, and converts the return value back. `void` means the
-function returns nothing useful, so SNOBOL receives the null string.
+Snoflake coerces each argument from the SNOBOL value to the declared type before
+calling your function, and converts the return value back. Omitting the result
+type means the function returns nothing useful, so SNOBOL receives the null
+string (`'EMIT(STRING)'`).
 
-SNOBOL code can also define a JavaScript helper directly with `LOAD`. The first
-argument is the usual external-function prototype, using SNOBOL type names. The
-second argument is a JavaScript function expression:
+SNOBOL code can also define a JavaScript helper directly with `LOAD`, using the
+same prototype. The second argument is a JavaScript function expression:
 
     LOAD('FROMC(INTEGER)STRING', 'n => String.fromCharCode(n)')
     OUTPUT = FROMC(65)
@@ -563,7 +563,9 @@ parts:
         },
     }
 
-The two forms may be mixed freely in one registry.
+Here `args` holds the lowercased type names and `result` the result type; leave
+`result` off for a function with no result. The two forms may be mixed freely in
+one registry.
 
 ## Signalling failure
 
@@ -576,7 +578,7 @@ return it or throw it:
     SNOBOL.run( {
         source: " OUTPUT = LOOKUP('cat')\nEND\n",
         extensions: {
-            'LOOKUP :: (string) => string': ( key ) => {
+            'LOOKUP(STRING)STRING': ( key ) => {
                 const table = { cat: 'FELINE' };
                 // A missing key makes the SNOBOL call fail, so the
                 // program can branch on :F(...) as usual.
@@ -613,7 +615,7 @@ current year and prints a message. This is the whole pattern an embedder needs.
 
       SNOBOL.run( {
           extensions: {
-              'THISYEAR :: () => int': () => new Date().getFullYear(),
+              'THISYEAR()INTEGER': () => new Date().getFullYear(),
           },
           source:
               " YEAR = THISYEAR()\n" +

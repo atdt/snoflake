@@ -75,10 +75,10 @@ export function makeAutomatonExtensions( canvas, preset ) {
     const rows = [];
 
     return {
-        'RULE   :: ()       => string': () => ruleString( preset.rule ),
-        'INIT   :: ()       => string': () => initRow( preset.init ),
-        'HEIGHT :: ()       => int':    () => HEIGHT,
-        'EMIT   :: (string) => void':   ( s ) => { rows.push( s ); },
-        'RENDER :: ()       => void':   () => paintGrid( canvas, rows ),
+        'RULE()STRING':    () => ruleString( preset.rule ),
+        'INIT()STRING':    () => initRow( preset.init ),
+        'HEIGHT()INTEGER': () => HEIGHT,
+        'EMIT(STRING)':    ( s ) => { rows.push( s ); },
+        'RENDER()':        () => paintGrid( canvas, rows ),
     };
 }

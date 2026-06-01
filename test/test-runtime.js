@@ -267,8 +267,8 @@ describe('SNOBOL Program Execution', function () {
             ].join( '\n' ),
             extensions: {
                 POS: {
-                    args: [ 'int' ],
-                    result: 'int',
+                    args: [ 'integer' ],
+                    result: 'integer',
                     impl: ( n ) => {
                         if ( n <= 0 ) throw FAIL;
                         return n;
@@ -296,7 +296,6 @@ describe('SNOBOL Program Execution', function () {
             extensions: {
                 NOTE: {
                     args: [ 'string' ],
-                    result: 'void',
                     impl: ( s ) => {
                         log.push( s );
                     },
@@ -317,7 +316,6 @@ describe('SNOBOL Program Execution', function () {
                 extensions: {
                     BOOM: {
                         args: [],
-                        result: 'void',
                         impl: () => {
                             throw boom;
                         },
@@ -339,7 +337,7 @@ describe('SNOBOL Program Execution', function () {
             ].join( '\n' ),
             extensions: {
                 JOIN4: {
-                    args: [ 'int', 'string', 'real', 'int' ],
+                    args: [ 'integer', 'string', 'real', 'integer' ],
                     result: 'string',
                     impl: ( a, b, c, d ) => `${a}|${b}|${c}|${d}`,
                 },
@@ -350,7 +348,7 @@ describe('SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '1|two|3.5|4\n' );
     });
 
-    it('accepts extensions in signature form: NAME :: (types) => result', function () {
+    it('accepts extensions in prototype form: NAME(TYPES)RESULT', function () {
         const stdout = captureWriter();
 
         run( {
@@ -362,9 +360,9 @@ describe('SNOBOL Program Execution', function () {
                 '',
             ].join( '\n' ),
             extensions: {
-                'RHALF :: (real) => real': ( x ) => x / 2,
-                'RSTR  :: (real) => string': ( x ) => 'r=' + x.toFixed( 2 ),
-                'JOIN4 :: (int, string, real, int) => string': (
+                'RHALF(REAL)REAL': ( x ) => x / 2,
+                'RSTR(REAL)STRING': ( x ) => 'r=' + x.toFixed( 2 ),
+                'JOIN4(INTEGER,STRING,REAL,INTEGER)STRING': (
                     a,
                     b,
                     c,
@@ -380,7 +378,7 @@ describe('SNOBOL Program Execution', function () {
         );
     });
 
-    it('signature form accepts nullary () and void result', function () {
+    it('prototype form accepts nullary () and void result', function () {
         const stdout = captureWriter();
         const log = [];
 
@@ -392,13 +390,27 @@ describe('SNOBOL Program Execution', function () {
                 '',
             ].join( '\n' ),
             extensions: {
-                'NOW  :: () => int': () => 42,
-                'NOTE :: (string) => void': ( s ) => log.push( s ),
+                'NOW()INTEGER': () => 42,
+                'NOTE(STRING)': ( s ) => log.push( s ),
             },
             stdout,
         } );
 
         assert.deepEqual( log, [ 'hi' ] );
+        assert.equal( joinLines( stdout.lines ), '42\n' );
+    });
+
+    it('prototype type names are case-insensitive', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: ' OUTPUT = TWICE(21)\nEND\n',
+            extensions: {
+                'TWICE(integer)Integer': ( n ) => n * 2,
+            },
+            stdout,
+        } );
+
         assert.equal( joinLines( stdout.lines ), '42\n' );
     });
 
@@ -422,6 +434,24 @@ describe('SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), 'A\n7:3.5:42\n[65]\n' );
     });
 
+    it('a SNOBOL LOAD prototype with no result type is void', function () {
+        const stdout = captureWriter();
+
+        // Void discards the implementation's return, handing SNOBOL the
+        // null string, so the bracketed output is empty.
+        run( {
+            source: [
+                " LOAD('SHOUT(STRING)', 's => s.toUpperCase()')",
+                " OUTPUT = '[' SHOUT('hi') ']'",
+                'END',
+                '',
+            ].join( '\n' ),
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), '[]\n' );
+    });
+
     it('SNOBOL LOAD without a library argument binds a host extension', function () {
         const stdout = captureWriter();
 
@@ -433,7 +463,7 @@ describe('SNOBOL Program Execution', function () {
                 '',
             ].join( '\n' ),
             extensions: {
-                'DOUBLE :: (int) => int': ( n ) => n * 2,
+                'DOUBLE(INTEGER)INTEGER': ( n ) => n * 2,
             },
             stdout,
         } );
@@ -507,14 +537,13 @@ describe('SNOBOL Program Execution', function () {
         );
     });
 
-    it('rejects malformed signature keys when value is a function', function () {
+    it('rejects malformed prototype keys when value is a function', function () {
         const cases = [
-            'BAD :: real -> real', // wrong arrow
-            'BAD :: real => real', // missing parens
-            'BAD :: (frob) => int', // unknown arg type
-            'BAD :: () => frob', // unknown result type
-            'BAD :: (int,) => int', // trailing comma
-            'BAD :: (int int) => int', // missing comma
+            'BAD REAL', // missing parens
+            'BAD(frob)INTEGER', // unknown arg type
+            'BAD()frob', // unknown result type
+            'BAD(INTEGER,)INTEGER', // trailing comma
+            'BAD(INTEGER INTEGER)INTEGER', // missing comma
         ];
         for ( const key of cases ) {
             assert.throws(

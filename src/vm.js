@@ -12,7 +12,8 @@ import {
 import { Diagnostics } from './diagnostics.js';
 import {
     extensions as defaultExtensions,
-    parseSignature,
+    formatPrototype,
+    parsePrototype,
 } from './extensions.js';
 import { defaultLoader, defaultStdout, UnitTable } from './io.js';
 import { sil } from './sil.js';
@@ -38,23 +39,14 @@ const HOST_KEYWORDS = {
     stlimit: { symbol: 'EXLMCL', defaultValue: -1 }, // -1 means unlimited
 };
 
-// SNOBOL type names used in LOAD prototypes, keyed by extension kind.
-// Void maps to STRING because SNOBOL has no void result type.
-const TYPE_NAMES = {
-    int: 'INTEGER',
-    real: 'REAL',
-    string: 'STRING',
-    void: 'STRING',
-};
-
 export class VM {
     constructor( options = {} ) {
         this.options = { ...options };
         this.loader = this.options.loader || defaultLoader;
         // Host extensions merge over the defaults. Pass `null` to start
         // empty (intended for tests that need a bare runtime). Function
-        // values are signature-form keys ('NAME :: (types) => type').
-        // Object values are the canonical { args, result, impl } shape.
+        // values are prototype-form keys ('NAME(TYPES)RESULT'). Object
+        // values are the canonical { args, result, impl } shape.
         this.extensions = options.extensions === null
             ? {}
             : { ...defaultExtensions };
@@ -62,7 +54,7 @@ export class VM {
             const [ key, value ] of Object.entries( options.extensions || {} )
         ) {
             const [ name, entry ] = typeof value === 'function'
-                ? parseSignature( key, value )
+                ? parsePrototype( key, value )
                 : [ key, value ];
             this.extensions[name] = entry;
         }
@@ -293,14 +285,9 @@ export class VM {
     // source-language LOAD statement. -HIDE/-UNHIDE bracket the block so
     // the declarations don't appear in listings or advance &STNO.
     #buildPreamble() {
-        const loads = [];
-        for ( const [ name, ext ] of Object.entries( this.extensions ) ) {
-            const argTypes = ext.args
-                .map( ( k ) => TYPE_NAMES[k] )
-                .join( ',' );
-            const resultType = TYPE_NAMES[ext.result];
-            loads.push( ` LOAD('${name}(${argTypes})${resultType}')` );
-        }
+        const loads = Object.entries( this.extensions ).map(
+            ( [ name, ext ] ) => ` LOAD('${formatPrototype( name, ext )}')`,
+        );
         if ( !loads.length ) return '';
         return [ '-HIDE', ...loads, '-UNHIDE', '' ].join( '\n' );
     }
