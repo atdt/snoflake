@@ -1,0 +1,9 @@
+* @title &MAXINT and &PI report Snoflake's numeric ranges
+* @nonstandard Snoflake INTEGER is 32-bit and REAL is single precision
+* @expect >>>
+* 2147483647
+* 3.1415927410125732
+* <<<
+        OUTPUT = &MAXINT
+        OUTPUT = &PI
+END
