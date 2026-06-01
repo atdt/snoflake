@@ -68,12 +68,12 @@ npx snoflake hello.sno
 deno run -A npm:snoflake hello.sno
 ```
 
-The CLI accepts explicit source and input options:
+The CLI takes the source file as its first argument:
 
 ```sh
-snoflake --file=hello.sno
-snoflake --file=filter.sno --input=data.txt
-snoflake --file=eliza.sno --interactive
+snoflake hello.sno
+snoflake filter.sno --input=data.txt
+snoflake eliza.sno --interactive
 ```
 
 `--input` supplies a finite runtime input file. `--interactive` (or `-i`)

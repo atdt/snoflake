@@ -247,7 +247,7 @@ function optionArgs( options ) {
 function runCli( opts, fixture ) {
     const args = [
         path.join( opts.root, 'bin', 'snoflake.js' ),
-        '--file=' + fixture.filePath,
+        fixture.filePath,
         ...optionArgs( fixture.header.options ),
     ];
 

@@ -10,10 +10,9 @@ module.enableCompileCache?.();
 
 const HELP = `Usage: snoflake [options] [file]
 
-Run a SNOBOL4 program. The source is the first argument, or --file.
+Run a SNOBOL4 program. The source is the first argument.
 
 Options:
-  --file=PATH        SNOBOL source to run (same as the positional file).
   --input=PATH       Finite input file consumed by runtime INPUT reads.
   -i, --interactive  After --input is exhausted, read INPUT from the
                      terminal. Use this for conversational programs.
@@ -31,8 +30,8 @@ Options:
 
 Examples:
   snoflake hello.sno
-  snoflake --file=filter.sno --input=data.txt
-  snoflake --file=eliza.sno --interactive
+  snoflake filter.sno --input=data.txt
+  snoflake eliza.sno --interactive
 
 Full guide: https://github.com/atdt/snoflake/blob/master/docs/manual.md`;
 
@@ -46,7 +45,6 @@ try {
     parsed = parseArgs( {
         args: process.argv.slice( 2 ),
         options: {
-            file: { type: 'string' },
             input: { type: 'string' },
             interactive: { type: 'boolean', short: 'i' },
             // Seeds &CASE: --case=false preserves the source's original
@@ -88,7 +86,7 @@ if ( values.version ) {
     process.exit( 0 );
 }
 
-const file = values.file ?? positionals[0];
+const file = positionals[0];
 if ( file === undefined ) {
     console.error( 'snoflake: no source file given\n' );
     console.error( HELP );

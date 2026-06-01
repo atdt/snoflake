@@ -74,11 +74,6 @@ A SNOBOL source file is the only required argument:
 
     snoflake hello.sno
 
-The first positional argument is the source file. `--file=` names it explicitly
-and behaves identically:
-
-    snoflake --file=hello.sno
-
 Whatever the program writes via `OUTPUT` goes to standard output. Error output
 goes there too, in the historical SNOBOL4 style.
 
@@ -87,10 +82,6 @@ goes there too, in the historical SNOBOL4 style.
 All options are long-form `--name` or `--name=value`. A few also have a
 single-letter alias. They may appear in any order, before or after the source
 file.
-
-    --file=PATH
-        The SNOBOL source to run. Equivalent to giving PATH as the first
-        positional argument.
 
     --input=PATH
         A finite input file. The program's runtime INPUT reads consume
@@ -178,10 +169,10 @@ single-character literal:
     snoflake hello.sno
 
     # Filter a data file through a batch program.
-    snoflake --file=filter.sno --input=data.txt
+    snoflake filter.sno --input=data.txt
 
     # A conversational program reading from the keyboard.
-    snoflake --file=eliza.sno --interactive
+    snoflake eliza.sno --interactive
 
     # Preserve case, show the listing and exit statistics, and add two
     # include directories.

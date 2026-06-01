@@ -699,7 +699,7 @@ describe('SNOBOL Program Execution', function () {
 
         const output = childProcess.execFileSync( process.execPath, [
             path.join( root, 'bin/snoflake.js' ),
-            '--file=main.sno',
+            'main.sno',
         ], {
             cwd: dir,
             encoding: 'utf8',

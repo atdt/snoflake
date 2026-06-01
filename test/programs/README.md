@@ -16,7 +16,7 @@ behavior can be exercised at a single macro or helper.
 Each `.sno` file starts with a header consisting of contiguous SNOBOL comment
 lines (`*` in column 1). The header ends at the first non-comment line.
 Everything below is the SNOBOL program and runs unmodified under
-`node bin/snoflake.js --file=test/programs/<name>.sno`.
+`node bin/snoflake.js test/programs/<name>.sno`.
 
 Header lines take one of two forms.
 
