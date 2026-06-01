@@ -4,10 +4,25 @@
 <meta charset="utf-8">
 <title>Snoflake</title>
 <style>
-    body { max-width: 42rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.5 system-ui, sans-serif; }
-    #editor { border: 1px solid #ccd3d1; }
-    button { margin: 0.75rem 0; }
-    #out { min-height: 5rem; margin: 0; padding: 0.75rem; background: black; color: white; }
+    body {
+        max-width: 42rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        font: 1rem/1.5 system-ui, sans-serif;
+    }
+    #editor {
+        border: 1px solid #ccd3d1;
+    }
+    button {
+        margin: 0.75rem 0;
+    }
+    #out {
+        min-height: 5rem;
+        margin: 0;
+        padding: 0.75rem;
+        background: black;
+        color: white;
+    }
 </style>
 
 <div id="editor"></div>
@@ -16,6 +31,7 @@
 
 <script type="module">
     import { basicSetup, EditorView } from 'https://esm.sh/codemirror';
+    import { snobol } from 'https://esm.sh/codemirror-lang-snobol';
     import { run } from 'https://esm.sh/snoflake';
 
     const source = `
@@ -27,7 +43,7 @@ END
 
     const editor = new EditorView( {
         doc: source,
-        extensions: [ basicSetup ],
+        extensions: [ basicSetup, snobol() ],
         parent: document.querySelector( '#editor' ),
     } );
 

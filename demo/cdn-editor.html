@@ -45,6 +45,7 @@
 
 <script type="module">
     import { basicSetup, EditorView } from 'https://esm.sh/codemirror';
+    import { snobol } from 'https://esm.sh/codemirror-lang-snobol';
     import * as SNOBOL from 'https://esm.sh/snoflake';
 
     const editor = new EditorView( {
@@ -54,7 +55,7 @@
         OUTPUT = TAIL HEAD
 END
 `,
-            extensions: [ basicSetup ],
+            extensions: [ basicSetup, snobol() ],
             parent: document.querySelector( '#editor' ),
         } ),
         out = document.querySelector( '#out' ),
