@@ -1,0 +1,11 @@
+* @title &UCASE, &LCASE, and &DIGITS name the character sets
+* @attribution Ported from Phil Budne's CSNOBOL4 test suite (digits.sno).
+* @expect >>>
+* ABCDEFGHIJKLMNOPQRSTUVWXYZ
+* abcdefghijklmnopqrstuvwxyz
+* 0123456789
+* <<<
+	OUTPUT = &UCASE
+	OUTPUT = &LCASE
+	OUTPUT = &DIGITS
+END

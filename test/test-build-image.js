@@ -26,6 +26,27 @@ describe('SIL build pipeline', function () {
         assert.deepEqual( image.instructions[0][1], [ 3, 2, -6 ] );
     });
 
+    it('scans a decimal as a REAL literal operand', function () {
+        const listing = parse( 'PIVAL  REAL    3.5\n END\n' );
+
+        assert.deepEqual( listing[0], {
+            label: 'PIVAL',
+            macro: 'REAL',
+            operands: [ 3.5 ],
+        } );
+    });
+
+    it('assembles a REAL constant into a Float32 descriptor', function () {
+        const image = assemble(
+                parse( 'R      EQU     7\nPIVAL  REAL    3.5\n END\n' ),
+            ),
+            addr = image.symbols.PIVAL,
+            reals = new Float32Array( image.memory.buffer );
+
+        assert.equal( reals[addr], 3.5 );
+        assert.equal( image.memory[addr + 2], image.symbols.R );
+    });
+
     it('treats a trailing comma before a comment as punctuation', function () {
         const listing = parse(
             'BEGIN  INIT    ,          Initialize system\n END\n',

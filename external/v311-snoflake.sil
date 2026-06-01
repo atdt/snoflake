@@ -36,6 +36,12 @@
 *                       may supply fewer arguments than the prototype
 *                       declares.  WCL counts formal arguments and WPTR
 *                       counts those actually pushed.
+*        [PLB18]      — &UCASE and &LCASE name the upper- and lower-case
+*                       letters.  Both are slices of ALPHA, which is ASCII
+*                       here, so the letters are contiguous.
+*        [PLB105]     — &DIGITS names '0123456789', another ALPHA slice.
+*        [PLB106]     — &PI holds the REAL constant pi.
+*        [PLB108]     — &MAXINT holds the largest INTEGER value, MAXINT.
 *        [SNF1]       — -UNHIDE re-enables listing and statement numbering
 *                       after -HIDE without listing the control card itself.
 *        [SNF2]       — Backtick-delimited literals may span source cards.
@@ -5560,6 +5566,16 @@ EXNOCL DESCR   0,0,I		   &STCOUNT
 STCTKY DESCR   STCTSP,0,0
 LVLCL  DESCR   0,0,I		   &FNCLEVEL
 FNCLKY DESCR   FNCLSP,0,0
+UCASVL DESCR   0,0,0		   &UCASE			[PLB18]
+       DESCR   UCNMSP,0,0					[PLB18]
+LCASVL DESCR   0,0,0		   &LCASE			[PLB18]
+       DESCR   LCNMSP,0,0					[PLB18]
+DIGSVL DESCR   0,0,0		   &DIGITS			[PLB105]
+       DESCR   DGNMSP,0,0					[PLB105]
+       REAL    3.14159265358979	   &PI			[PLB106]
+       DESCR   PISP,0,0					[PLB106]
+       DESCR   MAXINT,0,I	   &MAXINT			[PLB108]
+       DESCR   MAXISP,0,0					[PLB108]
 KVEND  LHERE   ,
 *
 INLIST DESCR   INLIST,TTL+MARK,2*DESCR
@@ -5808,6 +5824,9 @@ RNOSP  SPEC    INBUF,0,0,CARDSZ+STNOSZ+1,STNOSZ
 *      Strings and Specifiers
 *
 ALPHSP SPEC    ALPHA,0,0,0,ALPHSZ  Alphabet
+UCASSP SPEC    ALPHA,0,0,65,26	   Upper case letters		[PLB18]
+LCASSP SPEC    ALPHA,0,0,97,26	   Lower case letters		[PLB18]
+DIGSSP SPEC    ALPHA,0,0,48,10	   Digits			[PLB105]
 AMPSP  SPEC    AMPST,0,0,0,1	   Ampersand
 CERRSP SPEC    ANYSP,0,0,0,0	   Buffer specifier
 COLSP  SPEC    COLSTR,0,0,0,2	   Colon for trace messages
@@ -6422,6 +6441,7 @@ DATSP  STRING  'DATE'
 DATASP STRING  'DATA'
 DEFISP STRING  'DEFINE'
 DIFFSP STRING  'DIFFER'
+DGNMSP STRING  'DIGITS'						[PLB105]
 DTCHSP STRING  'DETACH'
 DTSP   STRING  'DATATYPE'
 DUMPSP STRING  'DUMP'
@@ -6451,12 +6471,14 @@ ITEMSP STRING  'ITEM'
 TRKYSP STRING  'KEYWORD'
 TRLASP STRING  'LABEL'
 LSTNSP STRING  'LASTNO'
+LCNMSP STRING  'LCASE'						[PLB18]
 LENSP  STRING  'LEN'
 LESP   STRING  'LE'
 LGTSP  STRING  'LGT'
 LOADSP STRING  'LOAD'
 LOCSP  STRING  'LOCAL'
 LTSP   STRING  'LT'
+MAXISP STRING  'MAXINT'						[PLB108]
 MAXLSP STRING  'MAXLNGTH'
 NAMESP STRING  'NAME'
 NESP   STRING  'NE'
@@ -6465,6 +6487,7 @@ NRETSP STRING  'NRETURN'
 OPSNSP STRING  'OPSYN'
 OUTSP  STRING  'OUTPUT'
 PATSP  STRING  'PATTERN'
+PISP   STRING  'PI'						[PLB106]
 POSSP  STRING  'POS'
 PRTSP  STRING  'PROTOTYPE'
 PNCHSP STRING  'PUNCH'
@@ -6490,6 +6513,7 @@ TABSP  STRING  'TAB'
 TIMSP  STRING  'TIME'
 TRCESP STRING  'TRACE'
 TRMSP  STRING  'TRIM'
+UCNMSP STRING  'UCASE'						[PLB18]
 UNLDSP STRING  'UNLOAD'
 VALSP  STRING  'VALUE'
 *
@@ -6514,7 +6538,13 @@ ABNDB  LHERE   ,
        DESCR   NRETSP,0,0	   'NRETURN'
        DESCR   NRETCL,0,0
        DESCR   RETSP,0,0	   'RETURN'
-DTEND  DESCR   RETCL,0,0
+       DESCR   RETCL,0,0
+       DESCR   UCASSP,0,0	   &UCASE			[PLB18]
+       DESCR   UCASVL,0,0					[PLB18]
+       DESCR   LCASSP,0,0	   &LCASE			[PLB18]
+       DESCR   LCASVL,0,0					[PLB18]
+       DESCR   DIGSSP,0,0	   &DIGITS			[PLB105]
+DTEND  DESCR   DIGSVL,0,0					[PLB105]
 BUFEXT EQU     DTEND-ANYSP
 BUFLEN EQU     BUFEXT*CPA
 *

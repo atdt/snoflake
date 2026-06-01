@@ -1,0 +1,16 @@
+* @title &MAXINT and &PI hold the numeric constants
+* @expect >>>
+* 2147483647
+* INTEGER
+* maxint is the ceiling
+* arithmetic up to it
+* REAL
+* pi near 3.14159
+* <<<
+        OUTPUT = &MAXINT
+        OUTPUT = DATATYPE(&MAXINT)
+        OUTPUT = GT(&MAXINT, 0) GT(&MAXINT, 2000000000) 'maxint is the ceiling'
+        OUTPUT = EQ(&MAXINT - 1 + 1, &MAXINT) 'arithmetic up to it'
+        OUTPUT = DATATYPE(&PI)
+        OUTPUT = LT(3.14, &PI) GT(3.15, &PI) 'pi near 3.14159'
+END

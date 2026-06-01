@@ -30,6 +30,9 @@ export const constants = {
     SPEC: 2 * D,
     SIZLIM: 0x7FFFFFFF,
 
+    // Largest value an INTEGER cell holds, reported by &MAXINT.
+    MAXINT: 0x7FFFFFFF,
+
     // Match CSNOBOL4's machine parameters in include/snotypes.h. Keeping PTR
     // out of the low bit positions prevents SPEC length fields from being
     // mistaken for pointer flags when resident static blocks are scanned.

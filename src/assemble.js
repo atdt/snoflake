@@ -26,6 +26,7 @@ const ASSEMBLY_MACROS = [
     'DESCR',
     'EQU',
     'FORMAT',
+    'REAL',
     'SPEC',
     'STRING',
 ];

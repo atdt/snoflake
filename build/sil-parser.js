@@ -207,7 +207,7 @@ function parseOperands( source, lineNumber ) {
 
     function primary() {
         if ( isDigit( peek() ) ) {
-            return integer();
+            return number();
         }
         if ( isUpper( peek() ) ) {
             return { type: 'symbol', name: name() };
@@ -215,10 +215,18 @@ function parseOperands( source, lineNumber ) {
         fail( `Expected operand, got "${peek() ?? 'end'}"` );
     }
 
-    function integer() {
+    function number() {
         const start = offset;
         while ( isDigit( peek() ) ) {
             offset++;
+        }
+        // A decimal point followed by a digit makes a REAL literal.
+        if ( peek() === '.' && isDigit( source[offset + 1] ) ) {
+            offset++;
+            while ( isDigit( peek() ) ) {
+                offset++;
+            }
+            return parseFloat( source.slice( start, offset ) );
         }
         return parseInt( source.slice( start, offset ), 10 );
     }

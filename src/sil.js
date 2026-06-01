@@ -943,6 +943,29 @@ sil.DESCR = function ( A, F, V ) {
     return DESCR.ptr;
 };
 
+//     REAL assembles a descriptor holding a REAL constant.  It
+// is not part of the original macro implementation. The pseudo-
+// operation comes from Phil Budne's CSNOBOL4, where it supplies
+// keyword  values  such  as  &PI.  The value rounds to the host
+// Float32 cell on store.
+//      Data Assembled by REAL:
+//               +-------+-------+-------+
+//      LOC      |   N       0       R   |
+//               +-----------------------+
+// Programming Notes:
+// 1.  N occupies the address field and is read back through the
+// real view of that cell. R is the REAL type code.
+sil.REAL = function ( value ) {
+    // assemble real constant
+    const DESCR = this.d( this.alloc( D ) );
+
+    DESCR.raddr = value || 0;
+    DESCR.flags = 0;
+    DESCR.value = this.$( 'R' );
+
+    return DESCR.ptr;
+};
+
 //     DIVIDE is used to divide one integer by  another.   Any
 // remainder  is  discarded.  That is, the result is truncated,
 // not rounded.  If I = 0,  transfer  is  to  FLOC.   Otherwise
