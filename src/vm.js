@@ -43,20 +43,21 @@ export class VM {
     constructor( options = {} ) {
         this.options = { ...options };
         this.loader = this.options.loader || defaultLoader;
-        // Host extensions merge over the defaults. Pass `null` to start
-        // empty (intended for tests that need a bare runtime). Function
-        // values are prototype-form keys ('NAME(TYPES)RESULT'). Object
-        // values are the canonical { args, result, impl } shape.
-        this.extensions = options.extensions === null
-            ? {}
-            : { ...defaultExtensions };
-        for (
-            const [ key, value ] of Object.entries( options.extensions || {} )
-        ) {
-            const [ name, entry ] = typeof value === 'function'
-                ? parsePrototype( key, value )
-                : [ key, value ];
-            this.extensions[name] = entry;
+        // Extensions are function prototypes ('NAME(TYPES)RESULT') mapped to
+        // their implementation, and host extensions merge over the defaults.
+        // Pass `null` to start empty, a bare runtime intended for tests.
+        this.extensions = {};
+        if ( options.extensions !== null ) {
+            for (
+                const registry of [ defaultExtensions, options.extensions ]
+            ) {
+                for (
+                    const [ key, impl ] of Object.entries( registry || {} )
+                ) {
+                    const [ name, entry ] = parsePrototype( key, impl );
+                    this.extensions[name] = entry;
+                }
+            }
         }
         this.reset();
     }

@@ -487,9 +487,8 @@ they were ordinary built-ins. This is how a SNOBOL program in the browser draws
 to a canvas, reads the clock, or reaches anything outside the language. The two
 default extensions, `CHAR` and `ORD`, are themselves defined this way.
 
-You register extensions through the `extensions` option. The simplest form
-encodes the function's name and types in the key and gives the implementation as
-the value:
+You register extensions through the `extensions` option. Each key encodes the
+function's name and types, and the value is the implementation:
 
     import * as SNOBOL from 'snoflake';
 
@@ -518,10 +517,9 @@ the value:
     // JavaScript
     // missing key failed as SNOBOL failure
 
-The key is the external-function prototype SNOBOL's own `LOAD` uses: the
-SNOBOL-visible name, then a parenthesized list of argument types, then the
-result type. The parentheses are required even when there are no arguments
-(`'NOW()INTEGER'`).
+The key is a function prototype: the SNOBOL-visible name, then a parenthesized
+list of argument types, then the result type. The parentheses are required even
+when there are no arguments (`'NOW()INTEGER'`).
 
 Type names are case-insensitive:
 
@@ -529,9 +527,9 @@ Type names are case-insensitive:
     Result type:     INTEGER, REAL, STRING, or omitted
 
 Snoflake coerces each argument from the SNOBOL value to the declared type before
-calling your function, and converts the return value back. Omitting the result
-type means the function returns nothing useful, so SNOBOL receives the null
-string (`'EMIT(STRING)'`).
+calling your function, and converts the return value back. Omit the result type
+for a function that returns no value, as in `'EMIT(STRING)'`. The call then
+yields the null string in SNOBOL.
 
 SNOBOL code can also define a JavaScript helper directly with `LOAD`, using the
 same prototype. The second argument is a JavaScript function expression:
@@ -550,22 +548,6 @@ When the second `LOAD` argument is omitted, Snoflake binds a function from the
 host's `extensions` registry. Any supplied second argument is evaluated as
 JavaScript in the host context, so only run this form for SNOBOL source you
 trust.
-
-There is an equivalent **object form**, useful when you would rather not pack
-everything into a string. The key is the bare name, and the value spells out the
-parts:
-
-    extensions: {
-        JSONGET: {
-            args: [ 'string', 'string' ],
-            result: 'string',
-            impl: ( text, key ) => String( JSON.parse( text )[ key ] ),
-        },
-    }
-
-Here `args` holds the lowercased type names and `result` the result type; leave
-`result` off for a function with no result. The two forms may be mixed freely in
-one registry.
 
 ## Signalling failure
 
@@ -600,7 +582,7 @@ defaults at all -- rarely needed outside tests -- pass `extensions: null`.
 ## A complete browser example
 
 Putting it together: a page where the SNOBOL program asks the host for the
-current year and prints a message. This is the whole pattern an embedder needs.
+current year and prints a message. That is all an embedding requires.
 
     <!doctype html>
     <meta charset="utf-8">

@@ -46,9 +46,9 @@ function loadExtensionSignature( vm, name ) {
 
     const kindAt = ( i ) => {
         const code = codeAt( i );
-        if ( code === vm.$( 'I' ) ) return 'integer';
-        if ( code === vm.$( 'R' ) ) return 'real';
-        if ( code === vm.$( 'S' ) ) return 'string';
+        if ( code === vm.$( 'I' ) ) return 'INTEGER';
+        if ( code === vm.$( 'R' ) ) return 'REAL';
+        if ( code === vm.$( 'S' ) ) return 'STRING';
         throw new SyntaxError(
             `Unsupported JavaScript extension type in ${name}`,
         );
@@ -1829,11 +1829,11 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     const args = ext.args.map( ( kind, i ) => {
         const arg = this.d( argsAddr + i * D );
         switch ( kind ) {
-            case 'integer':
+            case 'INTEGER':
                 return arg.addr;
-            case 'real':
+            case 'REAL':
                 return arg.raddr;
-            case 'string':
+            case 'STRING':
                 // Natural variable layout: 4-descriptor header, then chars.
                 // addr 0 is the null string.
                 if ( arg.addr === 0 ) return '';
@@ -1856,17 +1856,17 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     if ( result === FAIL ) return this.jmp( FLOC );
 
     switch ( ext.result ) {
-        case 'integer':
+        case 'INTEGER':
             this.d( $DESCR1 ).set( result, 0, this.$( 'I' ) );
             break;
-        case 'real': {
+        case 'REAL': {
             const d = this.d( $DESCR1 );
             d.raddr = result;
             d.flags = 0;
             d.value = this.$( 'R' );
             break;
         }
-        case 'string':
+        case 'STRING':
             // Type L hands LNKFNC a specifier in .addr. LNKFNC wraps the
             // bytes into a natural variable on the way out.
             this.d( $DESCR1 ).set( this.specify( result ), 0, this.$( 'L' ) );

@@ -6,19 +6,19 @@
 //
 // The SNOBOL program calls:
 //
-//   AXIOM()       -> string   starting string
-//   DEPTH()       -> int      number of rewriting generations
-//   STEP()        -> real     turtle step length (in segment units)
-//   ANGLE()       -> real     turn angle, degrees
-//   LOOKUP(c)     -> string   RHS for symbol c, or '' if terminal
-//   EMIT(str)     -> void     hand a generation's string to the host
+//   AXIOM()STRING            starting string
+//   DEPTH()INTEGER           number of rewriting generations
+//   STEP()REAL               turtle step length, in segment units
+//   ANGLE()REAL              turn angle, in degrees
+//   LOOKUP(STRING)STRING     right-hand side for a symbol, or '' if terminal
+//   EMIT(STRING)             hand a generation's string to the host
 //
-//   BEGIN()       -> void     reset turtle state
-//   MOVE(dist)    -> void     draw forward
-//   TURN(deg)     -> void     rotate heading
-//   PUSH()        -> void     save position + heading
-//   POP()         -> void     restore them
-//   RENDER()      -> void     fit segments to the canvas and stroke
+//   BEGIN()                  reset turtle state
+//   MOVE(REAL)               draw forward
+//   TURN(REAL)               rotate heading
+//   PUSH()                   save position and heading
+//   POP()                    restore them
+//   RENDER()                 fit segments to the canvas and stroke
 
 // The gallery.  Each preset's rules table maps a non-terminal symbol to
 // its right-hand side; symbols outside the table (F, +, -, [, ], or

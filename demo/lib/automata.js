@@ -5,12 +5,12 @@
 //
 // The SNOBOL program calls:
 //
-//   RULE()        -> string   8-char table, position k -> next cell
-//                             for neighborhood k (000..111)
-//   INIT()        -> string   the row 0 bits
-//   HEIGHT()      -> int      number of rows to compute
-//   EMIT(row)     -> void     hand a completed row to the host
-//   RENDER()      -> void     paint the accumulated rows on the canvas
+//   RULE()STRING             8-char table, position k gives the next cell
+//                            for neighborhood k (000..111)
+//   INIT()STRING             the row 0 bits
+//   HEIGHT()INTEGER          number of rows to compute
+//   EMIT(STRING)             hand a completed row to the host
+//   RENDER()                 paint the accumulated rows on the canvas
 
 // The gallery.  `init` is 'seed' (single 1 in the middle) or 'random'.
 export const presets = {
