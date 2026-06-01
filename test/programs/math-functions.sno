@@ -1,0 +1,35 @@
+* @title Math functions compute real results and fail outside their domain
+* @expect >>>
+* 2
+* 1
+* 0
+* 0
+* 0
+* 1
+* 0
+* 0
+* 3
+* -3
+* REAL
+* sqrt of negative fails
+* 1.414 < sqrt 2 < 1.415
+* <<<
+        OUTPUT = SQRT(4.0)
+        OUTPUT = EXP(0.0)
+        OUTPUT = LOG(1.0)
+        OUTPUT = LN(1.0)
+        OUTPUT = SIN(0.0)
+        OUTPUT = COS(0.0)
+        OUTPUT = TAN(0.0)
+        OUTPUT = ATAN(0.0)
+        OUTPUT = CHOP(3.7)
+        OUTPUT = CHOP(-3.7)
+        OUTPUT = DATATYPE(SQRT(2.0))
+        X = SQRT(-1.0)                            :S(F1)F(F2)
+F1      OUTPUT = 'sqrt of negative succeeds'      :(M1)
+F2      OUTPUT = 'sqrt of negative fails'
+M1      GT(SQRT(2.0), 1.414) GT(1.415, SQRT(2.0)) :S(OK)F(NO)
+OK      OUTPUT = '1.414 < sqrt 2 < 1.415'         :(EN)
+NO      OUTPUT = 'sqrt 2 out of range'
+EN
+END

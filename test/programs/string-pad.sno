@@ -1,0 +1,11 @@
+* @title LPAD and RPAD widen strings and leave long ones intact
+* @attribution Ported from Phil Budne's CSNOBOL4 test suite (pad.sno).
+* @expect >>>
+* hello!!!!!
+*      world
+* long
+* <<<
+	output = rpad("hello",10,"!")
+	output = lpad("world",10)
+	output = rpad("long",2)
+end

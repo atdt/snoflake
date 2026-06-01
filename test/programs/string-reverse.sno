@@ -1,0 +1,11 @@
+* @title REVERSE turns a string end for end
+* @attribution Ported from Phil Budne's CSNOBOL4 test suite (reverse.sno).
+* @expect >>>
+* hello world
+* paul is dead
+* ABCDEFGHIJKLMNOPQRSTUVWXYZ
+* <<<
+	OUTPUT = REVERSE("dlrow olleh")
+	OUTPUT = REVERSE("daed si luap")
+	OUTPUT = REVERSE(REVERSE(&UCASE))
+END

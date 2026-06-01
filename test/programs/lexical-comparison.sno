@@ -1,0 +1,99 @@
+* @title Lexical comparison predicates across strings and numbers
+* @attribution Ported from Phil Budne's CSNOBOL4 test suite (lexcmp.sno).
+* @expect >>>
+* LLE('','')
+* LEQ('','')
+* LGE('','')
+* IDENT('','')
+* LLE('a','a')
+* LEQ('a','a')
+* LGE('a','a')
+* IDENT('a','a')
+* LNE('a','')
+* LGT('a','')
+* LGE('a','')
+* DIFFER('a','')
+* LLT('','a')
+* LLE('','a')
+* LNE('','a')
+* DIFFER('','a')
+* LLT('a','z')
+* LLE('a','z')
+* LNE('a','z')
+* DIFFER('a','z')
+* LNE('z','a')
+* LGT('z','a')
+* LGE('z','a')
+* DIFFER('z','a')
+* LLE(1,'1')
+* LEQ(1,'1')
+* LGE(1,'1')
+* DIFFER(1,'1')
+* LLE('1',1)
+* LEQ('1',1)
+* LGE('1',1)
+* DIFFER('1',1)
+* LLT(1,'2')
+* LLE(1,'2')
+* LNE(1,'2')
+* DIFFER(1,'2')
+* LNE('2',1)
+* LGT('2',1)
+* LGE('2',1)
+* DIFFER('2',1)
+* LNE(2,'1')
+* LGT(2,'1')
+* LGE(2,'1')
+* DIFFER(2,'1')
+* LLT('1',2)
+* LLE('1',2)
+* LNE('1',2)
+* DIFFER('1',2)
+* <<<
+* lexical compariston tests
+
+*	return argument in quotes if it's a STRING
+	define("q(x)t")					:(eq)
+q	t = datatype(x)
+	q = leq(t,"STRING") "'" x "'"			:s(return)
+	q = x						:(return)
+eq
+
+*	try given function, disply result
+	define("try(fn,a,b)")				:(etry)
+try	output = apply(fn,a,b) fn '(' q(a) ',' q(b) ')'	:(return)
+etry
+
+*	given args, try all the functions, plus ident/differ
+	define("check(a,b)")				:(echeck)
+check	try(.llt,a,b)
+	try(.lle,a,b)
+	try(.leq,a,b)	
+	try(.lne,a,b)
+	try(.lgt,a,b)
+	try(.lge,a,b)
+	try(.ident,a,b)
+	try(.differ,a,b)				:(return)
+echeck
+
+* check this case manually -- q() depends on it!!
+	leq(datatype('x'),"STRING")			:f(end)
+
+	check('','')
+	check('a','a')
+
+	check('a','')
+	check('','a')
+
+	check('a','z')
+	check('z','a')
+
+	check(1,'1')
+	check('1',1)
+
+	check(1,'2')
+	check('2',1)
+
+	check(2,'1')
+	check('1',2)
+end

@@ -13,6 +13,19 @@
 //             Return or throw the FAIL sentinel to signal SNOBOL failure.
 export const FAIL = Symbol( 'FAIL' );
 
+// A predicate that compares two strings and returns the null string when
+// `holds`, else fails. JS string order matches byte order over SNOBOL's
+// single-byte alphabet, so these mirror the numeric LT/EQ family.
+const lexical = ( holds ) => ( {
+    args: [ 'string', 'string' ],
+    result: 'void',
+    impl: ( a, b ) => ( holds( a, b ) ? undefined : FAIL ),
+} );
+
+// A real-valued math function. SQRT-style domain errors fail by returning
+// FAIL from `impl`.
+const math = ( impl ) => ( { args: [ 'real' ], result: 'real', impl } );
+
 export const extensions = {
     // CHAR(N): the one-byte string whose code is N.
     CHAR: {
@@ -27,6 +40,62 @@ export const extensions = {
         result: 'int',
         impl: ( s ) => s.charCodeAt( 0 ),
     },
+
+    // REVERSE(S): S with its characters in reverse order.
+    REVERSE: {
+        args: [ 'string' ],
+        result: 'string',
+        impl: ( s ) => [ ...s ].reverse().join( '' ),
+    },
+
+    // SUBSTR(S, POS, LEN): the LEN-long substring of S at one-based POS.
+    // LEN zero (or omitted) takes the rest. A position or length that
+    // runs outside S fails.
+    SUBSTR: {
+        args: [ 'string', 'int', 'int' ],
+        result: 'string',
+        impl: ( s, pos, len ) => {
+            if ( pos < 1 || pos > s.length ) return FAIL;
+            const start = pos - 1;
+            const n = len === 0 ? s.length - start : len;
+            if ( n < 0 || start + n > s.length ) return FAIL;
+            return s.slice( start, start + n );
+        },
+    },
+
+    // LPAD(S, N, C): S padded on the left to width N with C (default
+    // space), or S unchanged when already that wide.
+    LPAD: {
+        args: [ 'string', 'int', 'string' ],
+        result: 'string',
+        impl: ( s, n, c ) => s.padStart( n, c ? c[0] : ' ' ),
+    },
+
+    // RPAD(S, N, C): LPAD on the right.
+    RPAD: {
+        args: [ 'string', 'int', 'string' ],
+        result: 'string',
+        impl: ( s, n, c ) => s.padEnd( n, c ? c[0] : ' ' ),
+    },
+
+    SQRT: math( ( x ) => ( x < 0 ? FAIL : Math.sqrt( x ) ) ),
+    EXP: math( Math.exp ),
+    LOG: math( Math.log ),
+    LN: math( Math.log ),
+    SIN: math( Math.sin ),
+    COS: math( Math.cos ),
+    TAN: math( Math.tan ),
+    ATAN: math( Math.atan ),
+
+    // CHOP(X): X with its fractional part dropped, toward zero.
+    CHOP: math( Math.trunc ),
+
+    LLT: lexical( ( a, b ) => a < b ),
+    LLE: lexical( ( a, b ) => a <= b ),
+    LEQ: lexical( ( a, b ) => a === b ),
+    LNE: lexical( ( a, b ) => a !== b ),
+    LGT: lexical( ( a, b ) => a > b ),
+    LGE: lexical( ( a, b ) => a >= b ),
 };
 
 // Parse a signature-form key. Grammar:  NAME :: (type, ...) => result
