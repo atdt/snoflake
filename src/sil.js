@@ -1,7 +1,7 @@
 // JS implementations of the SIL macros.
 
 import { D } from './datatypes.js';
-import { compileJavaScriptExtension, FAIL } from './extensions.js';
+import { compileExtension, FAIL } from './extensions.js';
 import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import {
     decodeString,
@@ -1964,7 +1964,7 @@ sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, FLOC, _SLOC ) {
         if ( !ext ) return this.jmp( FLOC );
     } else {
         const { args, result } = loadExtensionSignature( this, name );
-        ext = compileJavaScriptExtension( name, source, args, result );
+        ext = compileExtension( name, source, args, result );
     }
     this.d( $DESCR ).addr = this.extensionsBySlot.push( ext ) - 1;
 };

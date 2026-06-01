@@ -188,7 +188,10 @@ export function parseSignature( key, impl ) {
     return [ name, { args, result, impl } ];
 }
 
-export function compileJavaScriptExtension( name, source, args, result ) {
+// An inline LOAD library is JavaScript source for a function expression.
+// Evaluate it with FAIL in scope so the implementation can signal failure
+// with it.
+export function compileExtension( name, source, args, result ) {
     let impl;
     try {
         impl = Function(
