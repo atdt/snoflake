@@ -13,19 +13,6 @@
 //             Return or throw the FAIL sentinel to signal SNOBOL failure.
 export const FAIL = Symbol( 'FAIL' );
 
-// A predicate that compares two strings and returns the null string when
-// `holds`, else fails. JS string order matches byte order over SNOBOL's
-// single-byte alphabet, so these mirror the numeric LT/EQ family.
-const lexical = ( holds ) => ( {
-    args: [ 'string', 'string' ],
-    result: 'void',
-    impl: ( a, b ) => ( holds( a, b ) ? undefined : FAIL ),
-} );
-
-// A real-valued math function. SQRT-style domain errors fail by returning
-// FAIL from `impl`.
-const math = ( impl ) => ( { args: [ 'real' ], result: 'real', impl } );
-
 export const extensions = {
     // CHAR(N): the one-byte string whose code is N.
     CHAR: {
@@ -78,24 +65,96 @@ export const extensions = {
         impl: ( s, n, c ) => s.padEnd( n, c ? c[0] : ' ' ),
     },
 
-    SQRT: math( ( x ) => ( x < 0 ? FAIL : Math.sqrt( x ) ) ),
-    EXP: math( Math.exp ),
-    LOG: math( Math.log ),
-    LN: math( Math.log ),
-    SIN: math( Math.sin ),
-    COS: math( Math.cos ),
-    TAN: math( Math.tan ),
-    ATAN: math( Math.atan ),
+    // SQRT(X): the square root of X, failing on a negative argument.
+    SQRT: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => ( x < 0 ? FAIL : Math.sqrt( x ) ),
+    },
+
+    // EXP(X): e raised to the power X.
+    EXP: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.exp( x ),
+    },
+
+    // LOG(X), and its LN alias: the natural logarithm of X.
+    LOG: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.log( x ),
+    },
+    LN: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.log( x ),
+    },
+
+    // SIN(X), COS(X), TAN(X): the trigonometric functions of X radians.
+    SIN: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.sin( x ),
+    },
+    COS: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.cos( x ),
+    },
+    TAN: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.tan( x ),
+    },
+
+    // ATAN(X): the arc tangent of X, in radians.
+    ATAN: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.atan( x ),
+    },
 
     // CHOP(X): X with its fractional part dropped, toward zero.
-    CHOP: math( Math.trunc ),
+    CHOP: {
+        args: [ 'real' ],
+        result: 'real',
+        impl: ( x ) => Math.trunc( x ),
+    },
 
-    LLT: lexical( ( a, b ) => a < b ),
-    LLE: lexical( ( a, b ) => a <= b ),
-    LEQ: lexical( ( a, b ) => a === b ),
-    LNE: lexical( ( a, b ) => a !== b ),
-    LGT: lexical( ( a, b ) => a > b ),
-    LGE: lexical( ( a, b ) => a >= b ),
+    // The lexical comparison predicates return the null string when the
+    // relation holds and fail otherwise. JS string order matches byte
+    // order over SNOBOL's single-byte alphabet.
+    LLT: {
+        args: [ 'string', 'string' ],
+        result: 'void',
+        impl: ( a, b ) => ( a < b ? undefined : FAIL ),
+    },
+    LLE: {
+        args: [ 'string', 'string' ],
+        result: 'void',
+        impl: ( a, b ) => ( a <= b ? undefined : FAIL ),
+    },
+    LEQ: {
+        args: [ 'string', 'string' ],
+        result: 'void',
+        impl: ( a, b ) => ( a === b ? undefined : FAIL ),
+    },
+    LNE: {
+        args: [ 'string', 'string' ],
+        result: 'void',
+        impl: ( a, b ) => ( a !== b ? undefined : FAIL ),
+    },
+    LGT: {
+        args: [ 'string', 'string' ],
+        result: 'void',
+        impl: ( a, b ) => ( a > b ? undefined : FAIL ),
+    },
+    LGE: {
+        args: [ 'string', 'string' ],
+        result: 'void',
+        impl: ( a, b ) => ( a >= b ? undefined : FAIL ),
+    },
 };
 
 // Parse a signature-form key. Grammar:  NAME :: (type, ...) => result
