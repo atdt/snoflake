@@ -3,19 +3,20 @@
 // thread, deferred one frame so the status text paints first.
 
 import { runSnoflake } from '../lib/runner.js';
-import { loadSource, fillSelect } from '../lib/dom.js';
-import { presets, makeTurtleExtensions } from '../lib/turtle.js';
+import { fillSelect, loadSource } from '../lib/dom.js';
+import { createEditor } from '../lib/editor.js';
+import { makeTurtleExtensions, presets } from '../lib/turtle.js';
 
 const sourceUrl = new URL( '../programs/lsystem.sno', import.meta.url ),
-      lineLimit = 160;
+    lineLimit = 160;
 
 export function init() {
-    const source  = document.querySelector( '#lsystem-source' ),
-          canvas  = document.querySelector( '#lsystem-canvas' ),
-          strings = document.querySelector( '#lsystem-strings' ),
-          picker  = document.querySelector( '#lsystem-preset' ),
-          run     = document.querySelector( '#lsystem-run' ),
-          status  = document.querySelector( '#lsystem-status' );
+    const source = createEditor( document.querySelector( '#lsystem-source' ) ),
+        canvas = document.querySelector( '#lsystem-canvas' ),
+        strings = document.querySelector( '#lsystem-strings' ),
+        picker = document.querySelector( '#lsystem-preset' ),
+        run = document.querySelector( '#lsystem-run' ),
+        status = document.querySelector( '#lsystem-status' );
 
     function setStatus( text ) {
         status.textContent = text;
@@ -23,10 +24,10 @@ export function init() {
 
     // Add a "gen N — NN ch — <string>" row to the generations pane.
     function appendGeneration( gen, str ) {
-        const row    = document.createElement( 'div' ),
-              label  = document.createElement( 'div' ),
-              length = document.createElement( 'span' ),
-              body   = document.createElement( 'div' );
+        const row = document.createElement( 'div' ),
+            label = document.createElement( 'div' ),
+            length = document.createElement( 'span' ),
+            body = document.createElement( 'div' );
         row.className = 'strings-row';
         label.className = 'gen';
         label.textContent = 'gen ' + gen;
@@ -35,13 +36,14 @@ export function init() {
         label.append( length );
         body.className = 'body';
         body.textContent = str.length > lineLimit
-            ? str.slice( 0, lineLimit ) + '…' : str;
+            ? str.slice( 0, lineLimit ) + '…'
+            : str;
         row.append( label, body );
         strings.append( row );
     }
 
     function draw() {
-        const preset = presets[ picker.value ];
+        const preset = presets[picker.value];
         if ( !preset ) return;
 
         strings.textContent = '';
@@ -49,12 +51,16 @@ export function init() {
 
         requestAnimationFrame( function () {
             let gen = 0;
-            const extensions = makeTurtleExtensions( canvas, preset, function ( str ) {
-                appendGeneration( gen++, str );
-            } );
+            const extensions = makeTurtleExtensions(
+                canvas,
+                preset,
+                function ( str ) {
+                    appendGeneration( gen++, str );
+                },
+            );
 
             try {
-                const result = runSnoflake( source.value, { extensions } );
+                const result = runSnoflake( source.getValue(), { extensions } );
                 if ( result.stderr ) {
                     setStatus( 'Error' );
                     console.error( result.stderr );
@@ -71,7 +77,7 @@ export function init() {
     async function reload() {
         setStatus( 'Loading' );
         try {
-            source.value = await loadSource( sourceUrl );
+            source.setValue( await loadSource( sourceUrl ) );
             fillSelect( picker, presets );
             setStatus( 'Ready' );
             draw();

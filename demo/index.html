@@ -1,170 +1,333 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Snoflake Demo</title>
-    <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-    <main class="shell">
-        <header>
-            <div>
-                <h1>Snoflake Demo</h1>
-                <p><a href="https://github.com/atdt/snoflake">Snoflake</a> is a browser-hosted SNOBOL4 macro implementation. Try it out.</p>
-            </div>
-        </header>
-
-        <section id="interactive-io-example" class="example" aria-labelledby="interactive-io-title">
-            <div class="example-header">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Snoflake Demo</title>
+        <link rel="stylesheet" href="./style.css">
+    </head>
+    <body>
+        <main class="shell">
+            <header>
                 <div>
-                    <h2 id="interactive-io-title">Interactive I/O</h2>
+                    <h1>Snoflake Demo</h1>
+                    <p>
+                        <a href="https://github.com/atdt/snoflake">Snoflake</a>
+                        is a browser-hosted SNOBOL4 macro implementation. Try it
+                        out.
+                    </p>
                 </div>
-                <div class="actions">
-                    <button id="interactive-io-restart" type="button">Restart</button>
-                    <button id="interactive-io-reset" class="secondary" type="button">Reset</button>
-                    <span id="interactive-io-status" class="status">Ready</span>
-                </div>
-            </div>
+            </header>
 
-            <div class="workspace workspace-interactive" aria-label="Interactive SNOBOL demo">
-                <div class="pane">
-                    <div class="pane-header">Source</div>
-                    <textarea id="interactive-io-source" spellcheck="false" aria-label="ELIZA SNOBOL source"></textarea>
-                </div>
-                <div class="pane conversation-pane">
-                    <div class="pane-header">Interactive I/O</div>
-                    <div id="interactive-io-conversation" class="terminal" role="log" aria-label="Interactive output" aria-live="polite"></div>
-                    <form id="interactive-io-input-form" class="prompt">
-                        <span aria-hidden="true">&gt;</span>
-                        <input id="interactive-io-input-line" type="text" autocomplete="off" spellcheck="false" aria-label="Interactive input">
-                        <button id="interactive-io-send" type="submit">Send</button>
-                        <button id="interactive-io-eof" class="secondary" type="button">EOF</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <section id="lsystem-example" class="example" aria-labelledby="lsystem-title">
-            <div class="example-header">
-                <div>
-                    <h2 id="lsystem-title">L-systems on a canvas</h2>
-                    <p>L-systems are string-rewriting grammars whose generated strings are read as turtle-graphics commands. Rewriting is SNOBOL's native superpower, so the language does it all. For the drawing, the program calls a handful of JS functions the host registered as ordinary SNOBOL built-ins.</p>
-                </div>
-                <div class="actions">
-                    <label class="picker">
-                        <span>Preset</span>
-                        <select id="lsystem-preset" aria-label="L-system preset"></select>
-                    </label>
-                    <button id="lsystem-run" type="button">Draw</button>
-                    <span id="lsystem-status" class="status">Ready</span>
-                </div>
-            </div>
-
-            <div class="workspace workspace-lsystem" aria-label="L-system demo">
-                <div class="pane">
-                    <div class="pane-header">Source</div>
-                    <textarea id="lsystem-source" spellcheck="false" aria-label="L-system SNOBOL source"></textarea>
-                </div>
-                <div class="pane strings-pane">
-                    <div class="pane-header">Generations</div>
-                    <div id="lsystem-strings" class="strings" aria-live="polite"></div>
-                </div>
-                <div class="pane canvas-pane">
-                    <div class="pane-header">Canvas</div>
-                    <div class="canvas-wrap">
-                        <canvas id="lsystem-canvas" width="720" height="540" aria-label="L-system rendering"></canvas>
+            <section
+                id="interactive-io-example"
+                class="example"
+                aria-labelledby="interactive-io-title"
+            >
+                <div class="example-header">
+                    <div>
+                        <h2 id="interactive-io-title">Interactive I/O</h2>
+                    </div>
+                    <div class="actions">
+                        <button id="interactive-io-restart" type="button">
+                            Restart
+                        </button>
+                        <button
+                            id="interactive-io-reset"
+                            class="secondary"
+                            type="button"
+                        >
+                            Reset
+                        </button>
+                        <span id="interactive-io-status" class="status"
+                        >Ready</span>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <section id="cellular-automata-example" class="example" aria-labelledby="cellular-automata-title">
-            <div class="example-header">
-                <div>
-                    <h2 id="cellular-automata-title">Elementary cellular automata</h2>
-                    <p>Wolfram's 1D cellular automata are nothing but a sliding-window string rewrite. SNOBOL computes each row from the previous one as pure string manipulation; the host renders the accumulated rows as a pixel grid.</p>
-                </div>
-                <div class="actions">
-                    <label class="picker">
-                        <span>Preset</span>
-                        <select id="cellular-automata-preset" aria-label="CA preset"></select>
-                    </label>
-                    <button id="cellular-automata-run" type="button">Run</button>
-                    <span id="cellular-automata-status" class="status">Ready</span>
-                </div>
-            </div>
-
-            <div class="workspace workspace-ca" aria-label="CA demo">
-                <div class="pane">
-                    <div class="pane-header">Source</div>
-                    <textarea id="cellular-automata-source" spellcheck="false" aria-label="CA SNOBOL source"></textarea>
-                </div>
-                <div class="pane canvas-pane">
-                    <div class="pane-header">Canvas</div>
-                    <div class="canvas-wrap">
-                        <canvas id="cellular-automata-canvas" width="720" height="540" aria-label="CA rendering"></canvas>
+                <div
+                    class="workspace workspace-interactive"
+                    aria-label="Interactive SNOBOL demo"
+                >
+                    <div class="pane">
+                        <div class="pane-header">Source</div>
+                        <textarea
+                            id="interactive-io-source"
+                            spellcheck="false"
+                            aria-label="ELIZA SNOBOL source"
+                        ></textarea>
+                    </div>
+                    <div class="pane conversation-pane">
+                        <div class="pane-header">Interactive I/O</div>
+                        <div
+                            id="interactive-io-conversation"
+                            class="terminal"
+                            role="log"
+                            aria-label="Interactive output"
+                            aria-live="polite"
+                        >
+                        </div>
+                        <form id="interactive-io-input-form" class="prompt">
+                            <span aria-hidden="true">&gt;</span>
+                            <input
+                                id="interactive-io-input-line"
+                                type="text"
+                                autocomplete="off"
+                                spellcheck="false"
+                                aria-label="Interactive input"
+                            >
+                            <button id="interactive-io-send" type="submit">
+                                Send
+                            </button>
+                            <button
+                                id="interactive-io-eof"
+                                class="secondary"
+                                type="button"
+                            >
+                                EOF
+                            </button>
+                        </form>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="shape-grammar-example" class="example" aria-labelledby="shape-grammar-title">
-            <div class="example-header">
-                <div>
-                    <h2 id="shape-grammar-title">Shape Grammar</h2>
-                    <p>SNOBOL rewrites a worklist of <code>NAME(args)</code> symbols into a 3-D scene; each terminal box is handed to the renderer through an <code>EMIT</code> JavaScript extension.</p>
-                </div>
-                <div class="actions">
-                    <button id="shape-grammar-restart" type="button">Restart</button>
-                    <button id="shape-grammar-reset" class="secondary" type="button">Reset</button>
-                    <span id="shape-grammar-status" class="status">Ready</span>
-                </div>
-            </div>
-
-            <div class="workspace workspace-shape" aria-label="Shape grammar demo">
-                <div class="pane">
-                    <div class="pane-header">Source</div>
-                    <textarea id="shape-grammar-source" spellcheck="false" aria-label="Shape grammar SNOBOL source"></textarea>
-                </div>
-                <div class="pane scene-pane">
-                    <div class="pane-header">
-                        <span>Scene</span>
-                        <span class="hint">drag to rotate &middot; wheel to zoom</span>
+            <section
+                id="lsystem-example"
+                class="example"
+                aria-labelledby="lsystem-title"
+            >
+                <div class="example-header">
+                    <div>
+                        <h2 id="lsystem-title">L-systems on a canvas</h2>
+                        <p>
+                            L-systems are string-rewriting grammars whose
+                            generated strings are read as turtle-graphics
+                            commands. Rewriting is SNOBOL's native superpower,
+                            so the language does it all. For the drawing, the
+                            program calls a handful of JS functions the host
+                            registered as ordinary SNOBOL built-ins.
+                        </p>
                     </div>
-                    <canvas id="shape-grammar-canvas" aria-label="3-D rendered scene"></canvas>
+                    <div class="actions">
+                        <label class="picker">
+                            <span>Preset</span>
+                            <select
+                                id="lsystem-preset"
+                                aria-label="L-system preset"
+                            >
+                            </select>
+                        </label>
+                        <button id="lsystem-run" type="button">Draw</button>
+                        <span id="lsystem-status" class="status">Ready</span>
+                    </div>
                 </div>
-            </div>
-        </section>
 
-        <section id="batch-io-example" class="example" aria-labelledby="batch-io-title">
-            <div class="example-header">
-                <div>
-                    <h2 id="batch-io-title">Batch I/O</h2>
+                <div
+                    class="workspace workspace-lsystem"
+                    aria-label="L-system demo"
+                >
+                    <div class="pane">
+                        <div class="pane-header">Source</div>
+                        <textarea
+                            id="lsystem-source"
+                            spellcheck="false"
+                            aria-label="L-system SNOBOL source"
+                        ></textarea>
+                    </div>
+                    <div class="pane strings-pane">
+                        <div class="pane-header">Generations</div>
+                        <div
+                            id="lsystem-strings"
+                            class="strings"
+                            aria-live="polite"
+                        >
+                        </div>
+                    </div>
+                    <div class="pane canvas-pane">
+                        <div class="pane-header">Canvas</div>
+                        <div class="canvas-wrap">
+                            <canvas
+                                id="lsystem-canvas"
+                                width="720"
+                                height="540"
+                                aria-label="L-system rendering"
+                            ></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="actions">
-                    <button id="batch-io-run" type="button">Run</button>
-                    <button id="batch-io-reset" class="secondary" type="button">Reset</button>
-                    <span id="batch-io-status" class="status">Ready</span>
-                </div>
-            </div>
+            </section>
 
-            <div class="workspace workspace-batch" aria-label="Batch I/O demo">
-                <div class="pane">
-                    <div class="pane-header">Source</div>
-                    <textarea id="batch-io-source" spellcheck="false" aria-label="Batch SNOBOL source"></textarea>
+            <section
+                id="cellular-automata-example"
+                class="example"
+                aria-labelledby="cellular-automata-title"
+            >
+                <div class="example-header">
+                    <div>
+                        <h2 id="cellular-automata-title">
+                            Elementary cellular automata
+                        </h2>
+                        <p>
+                            Wolfram's 1D cellular automata are nothing but a
+                            sliding-window string rewrite. SNOBOL computes each
+                            row from the previous one as pure string
+                            manipulation; the host renders the accumulated rows
+                            as a pixel grid.
+                        </p>
+                    </div>
+                    <div class="actions">
+                        <label class="picker">
+                            <span>Preset</span>
+                            <select
+                                id="cellular-automata-preset"
+                                aria-label="CA preset"
+                            >
+                            </select>
+                        </label>
+                        <button id="cellular-automata-run" type="button">
+                            Run
+                        </button>
+                        <span id="cellular-automata-status" class="status"
+                        >Ready</span>
+                    </div>
                 </div>
-                <div class="pane input-pane">
-                    <div class="pane-header">Input</div>
-                    <textarea id="batch-io-input" spellcheck="false" aria-label="Batch input"></textarea>
+
+                <div class="workspace workspace-ca" aria-label="CA demo">
+                    <div class="pane">
+                        <div class="pane-header">Source</div>
+                        <textarea
+                            id="cellular-automata-source"
+                            spellcheck="false"
+                            aria-label="CA SNOBOL source"
+                        ></textarea>
+                    </div>
+                    <div class="pane canvas-pane">
+                        <div class="pane-header">Canvas</div>
+                        <div class="canvas-wrap">
+                            <canvas
+                                id="cellular-automata-canvas"
+                                width="720"
+                                height="540"
+                                aria-label="CA rendering"
+                            ></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="pane">
-                    <div class="pane-header">Output</div>
-                    <pre id="batch-io-output" aria-live="polite"></pre>
+            </section>
+
+            <section
+                id="shape-grammar-example"
+                class="example"
+                aria-labelledby="shape-grammar-title"
+            >
+                <div class="example-header">
+                    <div>
+                        <h2 id="shape-grammar-title">Shape Grammar</h2>
+                        <p>
+                            SNOBOL rewrites a worklist of <code
+                            >NAME(args)</code> symbols into a 3-D scene; each
+                            terminal box is handed to the renderer through an
+                            <code>EMIT</code> JavaScript extension.
+                        </p>
+                    </div>
+                    <div class="actions">
+                        <button id="shape-grammar-restart" type="button">
+                            Restart
+                        </button>
+                        <button
+                            id="shape-grammar-reset"
+                            class="secondary"
+                            type="button"
+                        >
+                            Reset
+                        </button>
+                        <span id="shape-grammar-status" class="status"
+                        >Ready</span>
+                    </div>
                 </div>
-            </div>
-        </section>
-    </main>
-    <script type="module" src="./main.js"></script>
-</body>
+
+                <div
+                    class="workspace workspace-shape"
+                    aria-label="Shape grammar demo"
+                >
+                    <div class="pane">
+                        <div class="pane-header">Source</div>
+                        <textarea
+                            id="shape-grammar-source"
+                            spellcheck="false"
+                            aria-label="Shape grammar SNOBOL source"
+                        ></textarea>
+                    </div>
+                    <div class="pane scene-pane">
+                        <div class="pane-header">
+                            <span>Scene</span>
+                            <span class="hint"
+                            >drag to rotate &middot; wheel to zoom</span>
+                        </div>
+                        <canvas
+                            id="shape-grammar-canvas"
+                            aria-label="3-D rendered scene"
+                        ></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                id="batch-io-example"
+                class="example"
+                aria-labelledby="batch-io-title"
+            >
+                <div class="example-header">
+                    <div>
+                        <h2 id="batch-io-title">Batch I/O</h2>
+                        <p>
+                            The batch counterpart to interactive I/O: consume a
+                            block of input, produce a block of output. Each line
+                            here is split into words by <code
+                            >Intl.Segmenter</code>, reached through a <code
+                            >LOAD</code>-ed JavaScript helper, so one loop
+                            segments scripts with and without spaces.
+                        </p>
+                    </div>
+                    <div class="actions">
+                        <button id="batch-io-run" type="button">Run</button>
+                        <button
+                            id="batch-io-reset"
+                            class="secondary"
+                            type="button"
+                        >
+                            Reset
+                        </button>
+                        <span id="batch-io-status" class="status">Ready</span>
+                    </div>
+                </div>
+
+                <div
+                    class="workspace workspace-batch"
+                    aria-label="Batch I/O demo"
+                >
+                    <div class="pane">
+                        <div class="pane-header">Source</div>
+                        <textarea
+                            id="batch-io-source"
+                            spellcheck="false"
+                            aria-label="Batch SNOBOL source"
+                        ></textarea>
+                    </div>
+                    <div class="pane input-pane">
+                        <div class="pane-header">Input</div>
+                        <textarea
+                            id="batch-io-input"
+                            spellcheck="false"
+                            aria-label="Batch input"
+                        ></textarea>
+                    </div>
+                    <div class="pane">
+                        <div class="pane-header">Output</div>
+                        <pre id="batch-io-output" aria-live="polite"></pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <script type="module" src="./main.js"></script>
+    </body>
 </html>

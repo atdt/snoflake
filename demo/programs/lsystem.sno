@@ -5,7 +5,7 @@
          G     = 0
          EMIT(STR)
 
-* Rewrite: DEPTH passes, expanding each non-terminal via LOOKUP.
+* Rewrite: each pass expands non-terminals via LOOKUP.
 NEXTGEN  LT(G, DEPTH())                            :F(DRAW)
          OUT = ''
          SRC = STR

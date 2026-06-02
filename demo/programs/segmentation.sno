@@ -1,0 +1,14 @@
+* Split each input line into words with Intl.Segmenter,
+* loaded as the WORDS helper. One loop fits every script.
+  LOAD('WORDS(STRING)STRING',`
+    function (s) {
+      var out = [];
+      for (var p of new Intl.Segmenter("en",
+          { granularity: "word" }).segment(s))
+        if (p.isWordLike) out.push(p.segment);
+      return out.join("|");
+    }`)
+
+NEXT  LINE = INPUT  :F(END)
+  OUTPUT = WORDS(LINE)  :(NEXT)
+END

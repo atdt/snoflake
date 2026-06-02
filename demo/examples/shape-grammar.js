@@ -3,17 +3,20 @@
 // program runs in a worker; each box streams to the canvas3d renderer.
 
 import { loadSource } from '../lib/dom.js';
+import { createEditor } from '../lib/editor.js';
 import { createScene } from '../lib/canvas3d.js';
 
 const sourceUrl = new URL( '../programs/shape-grammar.sno', import.meta.url ),
-      workerUrl = new URL( '../workers/shape-worker.js', import.meta.url );
+    workerUrl = new URL( '../workers/shape-worker.js', import.meta.url );
 
 export function init() {
-    const source  = document.querySelector( '#shape-grammar-source' ),
-          canvas  = document.querySelector( '#shape-grammar-canvas' ),
-          status  = document.querySelector( '#shape-grammar-status' ),
-          restart = document.querySelector( '#shape-grammar-restart' ),
-          reset   = document.querySelector( '#shape-grammar-reset' );
+    const source = createEditor(
+            document.querySelector( '#shape-grammar-source' ),
+        ),
+        canvas = document.querySelector( '#shape-grammar-canvas' ),
+        status = document.querySelector( '#shape-grammar-status' ),
+        restart = document.querySelector( '#shape-grammar-restart' ),
+        reset = document.querySelector( '#shape-grammar-reset' );
 
     const scene = createScene( canvas );
     let worker = null;
@@ -52,7 +55,7 @@ export function init() {
         } );
 
         setStatus( 'Running' );
-        worker.postMessage( { type: 'start', source: source.value } );
+        worker.postMessage( { type: 'start', source: source.getValue() } );
     }
 
     async function reload() {
@@ -60,7 +63,7 @@ export function init() {
         scene.clear();
         setStatus( 'Loading' );
         try {
-            source.value = await loadSource( sourceUrl );
+            source.setValue( await loadSource( sourceUrl ) );
             setStatus( 'Ready' );
             start();
         } catch ( e ) {

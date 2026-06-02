@@ -3,17 +3,18 @@
 
 import { runSnoflake } from '../lib/runner.js';
 import { loadSource } from '../lib/dom.js';
+import { createEditor } from '../lib/editor.js';
 
-const sourceUrl   = new URL( '../programs/pattern-matcher.sno', import.meta.url ),
-      sampleInput = 'THE BLUEBIRD\nGOLDFISH\n';
+const sourceUrl = new URL( '../programs/segmentation.sno', import.meta.url ),
+    sampleInput = 'Hello world!\nこんにちは世界。\nสวัสดีชาวโลก!\nПривет мир!\n';
 
 export function init() {
-    const source = document.querySelector( '#batch-io-source' ),
-          input  = document.querySelector( '#batch-io-input' ),
-          output = document.querySelector( '#batch-io-output' ),
-          status = document.querySelector( '#batch-io-status' ),
-          run    = document.querySelector( '#batch-io-run' ),
-          reset  = document.querySelector( '#batch-io-reset' );
+    const source = createEditor( document.querySelector( '#batch-io-source' ) ),
+        input = document.querySelector( '#batch-io-input' ),
+        output = document.querySelector( '#batch-io-output' ),
+        status = document.querySelector( '#batch-io-status' ),
+        run = document.querySelector( '#batch-io-run' ),
+        reset = document.querySelector( '#batch-io-reset' );
 
     function setStatus( text ) {
         status.textContent = text;
@@ -24,10 +25,14 @@ export function init() {
         setStatus( 'Running' );
 
         try {
-            const result = runSnoflake( source.value, { inputText: input.value } );
+            const result = runSnoflake( source.getValue(), {
+                inputText: input.value,
+            } );
             output.textContent = [ result.stdout, result.stderr ]
                 .filter( Boolean ).join( '\n' ) || '(no output)';
-            setStatus( result.stderr || result.exitCode ? 'Error' : 'Finished' );
+            setStatus(
+                result.stderr || result.exitCode ? 'Error' : 'Finished',
+            );
         } catch ( e ) {
             output.textContent = 'Execution error: ' + ( e && e.message || e );
             setStatus( 'Error' );
@@ -38,7 +43,7 @@ export function init() {
         output.textContent = '';
         setStatus( 'Loading' );
         try {
-            source.value = await loadSource( sourceUrl );
+            source.setValue( await loadSource( sourceUrl ) );
             input.value = sampleInput;
             setStatus( 'Ready' );
         } catch ( e ) {

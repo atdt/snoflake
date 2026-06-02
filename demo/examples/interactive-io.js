@@ -5,19 +5,22 @@
 
 import { createSession } from '../../src/snobol.js';
 import { loadSource } from '../lib/dom.js';
+import { createEditor } from '../lib/editor.js';
 
 const sourceUrl = new URL( '../programs/eliza.sno', import.meta.url );
 
 export function init() {
-    const source  = document.querySelector( '#interactive-io-source' ),
-          log     = document.querySelector( '#interactive-io-conversation' ),
-          status  = document.querySelector( '#interactive-io-status' ),
-          restart = document.querySelector( '#interactive-io-restart' ),
-          reset   = document.querySelector( '#interactive-io-reset' ),
-          form    = document.querySelector( '#interactive-io-input-form' ),
-          line    = document.querySelector( '#interactive-io-input-line' ),
-          send    = document.querySelector( '#interactive-io-send' ),
-          eof     = document.querySelector( '#interactive-io-eof' );
+    const source = createEditor(
+            document.querySelector( '#interactive-io-source' ),
+        ),
+        log = document.querySelector( '#interactive-io-conversation' ),
+        status = document.querySelector( '#interactive-io-status' ),
+        restart = document.querySelector( '#interactive-io-restart' ),
+        reset = document.querySelector( '#interactive-io-reset' ),
+        form = document.querySelector( '#interactive-io-input-form' ),
+        line = document.querySelector( '#interactive-io-input-line' ),
+        send = document.querySelector( '#interactive-io-send' ),
+        eof = document.querySelector( '#interactive-io-eof' );
 
     let session = null,
         running = false;
@@ -53,10 +56,10 @@ export function init() {
         setStatus( 'Running' );
 
         session = createSession( {
-            source:   source.value,
+            source: source.getValue(),
             onOutput: ( text ) => append( text ),
-            onError:  ( text ) => append( text, 'error' ),
-            onDone:   ( exitCode ) => {
+            onError: ( text ) => append( text, 'error' ),
+            onDone: ( exitCode ) => {
                 running = false;
                 setInputEnabled( false );
                 setStatus( exitCode ? 'Error' : 'Finished' );
@@ -73,7 +76,7 @@ export function init() {
         log.textContent = '';
         setStatus( 'Loading' );
         try {
-            source.value = await loadSource( sourceUrl );
+            source.setValue( await loadSource( sourceUrl ) );
             setStatus( 'Ready' );
             start();
         } catch ( e ) {
