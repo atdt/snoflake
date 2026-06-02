@@ -817,28 +817,28 @@ sil.CPYPAT = function (
     let V7, src, dst;
 
     do {
-        src = this.d( R2 + 3 );
-        dst = this.d( R1 + 3 );
+        src = this.d( R2 + D );
+        dst = this.d( R1 + D );
         dst.copyFrom( src );
         V7 = src.value;
 
-        src = this.d( R2 + 6 );
-        dst = this.d( R1 + 6 );
+        src = this.d( R2 + 2 * D );
+        dst = this.d( R1 + 2 * D );
         dst.set( F1( src.addr ), 0, F2( src.value ) );
 
-        src = this.d( R2 + 9 );
-        dst = this.d( R1 + 9 );
+        src = this.d( R2 + 3 * D );
+        dst = this.d( R1 + 3 * D );
         dst.set( src.addr + A3, 0, src.value + A3 );
 
         if ( V7 === 3 ) {
-            src = this.d( R2 + 12 );
-            dst = this.d( R1 + 12 );
+            src = this.d( R2 + 4 * D );
+            dst = this.d( R1 + 4 * D );
             dst.copyFrom( src );
         }
 
-        R3 -= 3 * ( V7 + 1 );
-        R1 += 3 * ( V7 + 1 );
-        R2 += 3 * ( V7 + 1 );
+        R3 -= D * ( V7 + 1 );
+        R1 += D * ( V7 + 1 );
+        R2 += D * ( V7 + 1 );
     } while ( R3 > 0 );
 
     DESCR1.addr = R1;
@@ -2199,7 +2199,7 @@ sil.LVALUE = function ( $DESCR1, $DESCR2 ) {
         node2;
 
     do {
-        node1 = this.d( start + offset + 6 );
+        node1 = this.d( start + offset + 2 * D );
         node2 = this.d( node1.ptr + D );
         offset = node1.addr;
         if ( node2.addr < least ) {
@@ -2270,11 +2270,11 @@ sil.MAKNOD = function (
         DESCR5 = this.d( $DESCR5 ),
         DESCR6 = this.d( $DESCR6 );
 
-    this.d( DESCR2.addr + 3 ).copyFrom( DESCR5 );
-    this.d( DESCR2.addr + 6 ).addr = DESCR4.addr;
-    this.d( DESCR2.addr + 9 ).addr = DESCR3.addr;
+    this.d( DESCR2.addr + D ).copyFrom( DESCR5 );
+    this.d( DESCR2.addr + 2 * D ).addr = DESCR4.addr;
+    this.d( DESCR2.addr + 3 * D ).addr = DESCR3.addr;
     if ( DESCR6 !== undefined ) {
-        this.d( DESCR2.addr + 12 ).copyFrom( DESCR6 );
+        this.d( DESCR2.addr + 4 * D ).copyFrom( DESCR6 );
     }
     DESCR1.copyFrom( DESCR2 );
 };
@@ -4130,17 +4130,6 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
 // RUNOUT occurs.  In this case  the  address  field  of  STYPE
 // should be set to 0.
 // 3.  See Section 4.2.
-//     STREAM  is  used  to  locate  a  syntactic token at the
-// beginning of the string specified by SPEC2.  If there is  an
-// I  (1 <= I <= L) such that TI is ERROR, STOP, or STOPSH, and
-// J is the least such I, then if TJ is ERROR, transfer  is  to
-// ERRROR, while if if TJ is STOPSH, transfer is to SLOC.  Oth-
-// erwise transfer is to RUNOUT.
-//      In the figures that follow, J is the least value  of  I
-// for which TI is STOP or STOPSH.  P is the last value of P (1
-// <= I <= J) that is nonzero (i.e. for which a PUT  is  speci-
-// fied  in the syntax table description for the tables given).
-// If no PUT is specified, P is zero.
 sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // stream for token
     const SPEC1 = this.s( $SPEC1 ),
