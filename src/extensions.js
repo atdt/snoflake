@@ -15,8 +15,9 @@ export const extensions = {
     // CHAR(N): the one-byte string whose code is N.
     'CHAR(INTEGER)STRING': ( n ) => String.fromCharCode( n ),
 
-    // ORD(S): the code of the first byte of S.
-    'ORD(STRING)INTEGER': ( s ) => s.charCodeAt( 0 ),
+    // ORD(S): the code of the first byte of S. The null string has no first
+    // byte, so it fails rather than yielding a non-numeric code.
+    'ORD(STRING)INTEGER': ( s ) => ( s.length ? s.charCodeAt( 0 ) : FAIL ),
 
     // REVERSE(S): S with its characters in reverse order.
     'REVERSE(STRING)STRING': ( s ) => [ ...s ].reverse().join( '' ),
