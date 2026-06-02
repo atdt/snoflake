@@ -51,16 +51,12 @@ try {
             // case. The SIL compiler folds identifiers to uppercase by
             // default to match historical SNOBOL4.
             case: { type: 'string' },
-            // --multiline-strings=false disables backtick multi-line strings.
             'multiline-strings': { type: 'string' },
-            // -b restores the SNOBOL4 startup banner / termination
-            // messages, which Snoflake suppresses by default.
+            // Snoflake suppresses the banner and termination messages by
+            // default. -b restores them.
             banner: { type: 'boolean', short: 'b' },
-            // -s emits the program statistics summary at exit.
             statistics: { type: 'boolean', short: 's' },
             list: { type: 'boolean' },
-            // -I adds a directory to the SNOLIB search path for -INCLUDE
-            // lookups. Repeatable.
             snolib: { type: 'string', short: 'I', multiple: true },
             help: { type: 'boolean', short: 'h' },
             version: { type: 'boolean', short: 'v' },

@@ -82,6 +82,8 @@ export function createHostLoader( options = {} ) {
                     if ( buf !== null ) return buf;
                 }
             }
+            // The named source is required, so a miss here throws rather than
+            // returning null the way loadInclude does for optional lookups.
             return fs.readFileSync( filePath );
         },
 

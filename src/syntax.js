@@ -137,6 +137,11 @@ export const streamActions = [ 'CONTIN', 'ERROR', 'STOP', 'STOPSH' ];
 // (they consume identifiers: labels and variable names).
 const FOLDABLE_TABLES = [ 'LBLTB', 'LBLXTB', 'VARTB', 'VARATB', 'VARBTB' ];
 
+// STREAM calls this with the terminal table, the one that hit STOP/STOPSH/
+// RUNOUT, which may differ from the table that began the scan. That is safe
+// because the foldable tables transition only among themselves (LBLTB to
+// LBLXTB, VARATB to VARBTB), so the terminal table is foldable exactly when
+// the token scanned was an identifier.
 export function normalizeToken( table, mem, start, length, caseFold ) {
     if ( caseFold && table.foldable ) {
         const end = start + length;

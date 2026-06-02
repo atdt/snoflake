@@ -54,6 +54,8 @@ export function formatRecord( template, data ) {
         return literal;
     }
 
+    // PAUSE in a FORMAT may be followed by a quoted lone apostrophe. Consume
+    // those markers, leaving any other quote in place.
     function skipPauseQuoteMarks() {
         for ( ;; ) {
             while ( i < template.length && /\s/.test( template[i] ) ) i++;
