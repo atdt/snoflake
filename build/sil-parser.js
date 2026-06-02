@@ -58,7 +58,7 @@ export function normalizeListOperands( statements ) {
                     items: operand == null ? [] : [ operand ],
                 };
             }
-            // Drop trailing nulls. They are inert -- RCALL falls through past
+            // Drop trailing nulls. They are inert. RCALL falls through past
             // the end of $LOCs, and operand iteration pushes nothing for a
             // null slot.
             const { items } = stmt.operands[idx];
@@ -107,12 +107,11 @@ function parseOperands( source, lineNumber ) {
         throw new Error( `${message} on SIL line ${lineNumber}` );
     }
 
-    function operandList() {
+    function commaSeparated() {
         const operands = [ operand() ];
         while ( peek() === ',' ) {
             offset++; // consume the comma
             const next = peek();
-            // A blank, tab, or end-of-input here begins a trailing comment.
             if ( !next || next === ' ' || next === '\t' ) break;
             operands.push( operand() );
         }
@@ -136,15 +135,7 @@ function parseOperands( source, lineNumber ) {
 
     function list() {
         offset++; // consume '('
-        const items = [];
-
-        if ( peek() !== ')' ) {
-            items.push( operand() );
-            while ( peek() === ',' ) {
-                offset++;
-                items.push( operand() );
-            }
-        }
+        const items = peek() === ')' ? [] : commaSeparated();
 
         if ( peek() !== ')' ) {
             fail( 'Expected )' );
@@ -239,5 +230,5 @@ function parseOperands( source, lineNumber ) {
         return source.slice( start, offset );
     }
 
-    return operandList();
+    return commaSeparated();
 }
