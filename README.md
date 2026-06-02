@@ -30,9 +30,6 @@ environment.
 
 - The runtime is dependency-free JavaScript and is tested under Node, Deno, and
   Bun.
-- The test suite includes the code from James F. Gimpel's _Algorithms in
-  SNOBOL4_: compilers, macro processors, list and tree utilities, sorting,
-  pattern examples, games, simulations, and more.
 - SNOBOL programs can call host JavaScript functions through an extension API.
   In the browser, that means canvas, WebGL, fetch, crypto, and other web APIs.
   On the command line, it means the Node and Deno standard libraries and the
