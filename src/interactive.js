@@ -83,7 +83,6 @@ export class Session {
             ...options,
             interactive: true,
             stdout: { write: onOutput },
-            stderr: { write: onError },
             stdinReader: () => this.channel.reader,
         } );
     }
