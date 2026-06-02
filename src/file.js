@@ -156,6 +156,7 @@ export class File {
 
     rewind() {
         this.idx = 0;
+        this.lastSegment = null;
         for ( const { reader } of this.segments ) {
             reader.rewind?.();
         }
@@ -167,5 +168,6 @@ export class File {
         }
         // Subsequent readRecord returns EOF.
         this.idx = this.segments.length;
+        this.lastSegment = null;
     }
 }
