@@ -1131,7 +1131,9 @@ sil.EXPINT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        newAddr = Math.pow( DESCR2.addr, DESCR3.addr );
+        // A negative exponent yields a fraction that truncates toward zero.
+        // Zero to a non-positive power stays Infinity and falls to FLOC.
+        newAddr = Math.trunc( Math.pow( DESCR2.addr, DESCR3.addr ) );
 
     if ( !isInt32( newAddr ) ) {
         return this.jmp( FLOC );

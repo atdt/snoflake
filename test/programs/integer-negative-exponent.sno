@@ -1,0 +1,11 @@
+* @title integer exponentiation truncates a negative exponent to zero
+* @attribution csnobol4 test/pow.sno
+* @expect >>>
+* 0
+* 0
+* 1024
+* <<<
+ OUTPUT = 9 ^ -1
+ OUTPUT = 2 ^ -3
+ OUTPUT = 2 ^ 10
+END
