@@ -4726,4 +4726,20 @@ sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
     if ( !raised ) this.jmp( FLOC );
 };
 
+//     XRAISP raises SPEC's ASCII lowercase bytes to upper case in
+// place.  CTLCRD uses it so control keywords match regardless of the
+// current &CASE folding state.
+// Programming Notes:
+// 1.  Ported from CSNOBOL4's XRAISP [PLB15][PLB33].
+sil.XRAISP = function ( $SPEC ) {
+    const spec = this.s( $SPEC ),
+        start = spec.addr + spec.offset,
+        len = spec.length,
+        mem = this.mem;
+
+    for ( let i = 0; i < len; i++ ) {
+        mem[start + i] = foldAsciiUpperByte( mem[start + i] );
+    }
+};
+
 export { sil };

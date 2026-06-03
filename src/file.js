@@ -83,10 +83,6 @@ function fitRecord( text, length, card ) {
 }
 
 // A File is one logical input unit. It may be backed by several segments.
-// Card mode is the compiler's reading discipline, not a segment property: the
-// same source segment yields fixed-width cards to the compiler and natural
-// records to INPUT after END.
-//
 // Segment shape: { reader, path?: string }.
 export class File {
     // File takes ownership of `segments`: include() mutates it via splice.

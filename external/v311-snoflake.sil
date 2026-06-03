@@ -16,6 +16,10 @@
 *                       DFLSIZ from the caller.
 *        [PLB20]      — -INCLUDE / -COPY control cards read quoted source
 *                       files during compilation.
+*        [PLB15]      — -CASE control card sets &CASE.  An integer argument
+*                       supplies the value, a bare -CASE clears folding.
+*        [PLB34]      — -EXECUTE / -NOEXECUTE control cards gate the run after
+*                       compilation.  -NOEXECUTE compiles without executing.
 *        [PLB102]     — -HIDE disables listing and suppresses statement
 *                       number assignment until the next -LIST control card.
 *        [PLB38]      — &STLIMIT defaults to -1.  Negative &STLIMIT means
@@ -450,7 +454,8 @@ XLAEND AEQLC   ESAICL,0,,XLATSC    Were there any compilation errors?
 *_
 XLATSC AEQLC   BANRCL,0,,XLATND    Suppress message if no banner [PLB12]
        OUTPUT  OUTPUT,SUCCF	   Print message of no errors
-XLATND SETAC   UNIT,0		   Reset input unit
+XLATND AEQLC   EXECCL,0,,END	   Stop here under -NOEXECUTE	[PLB34]
+       SETAC   UNIT,0		   Reset input unit
        SETAC   LPTR,0		   Reset last label pointer
        SETAC   OCLIM,0		   Reset limit on object code
        ZERBLK  COMREG,COMDCT	   Clear compiler descriptors
@@ -1526,6 +1531,7 @@ CTLCRD FSHRTN  TEXTSP,1 	   Delete control character
        AEQLC   STYPE,NBTYP,CMTCRD  Verify nonbreak
        STREAM  XSP,TEXTSP,LBLXTB,CMTCLR,CMTCLR
 *				   Break out command
+       XRAISP  XSP		   Match keyword regardless of &CASE [PLB15]
        LEXCMP  XSP,UNLSP,CTLCR1,,CTLCR1
 *				   Is it UNLIST?
 UNLIST SETAC   LISTCL,0 	   Zero listing switch
@@ -1561,11 +1567,34 @@ UNHIDE SETAC   HIDECL,0	   Unhide statements		[SNF1]
        SETAC   UHIDCL,1	   Defer listing until next card	[SNF1]
 UNHID1 BRANCH  UNLIST		   Hide this control card	[SNF1]
 *_
-CTLCRA LEXCMP  XSP,EJCTSP,CTLCR4,,CTLCR4			[PLB20]
+CTLCRA LEXCMP  XSP,EJCTSP,CTLCRB,,CTLCRB			[PLB20]
 *				   Is it EJECT?
        AEQLC   LISTCL,0,,CMTCLR    Skip eject if not listing
        OUTPUT  OUTPUT,EJECTF	   Eject page
        BRANCH  CMTCLR		   Join terminal processing
+*_
+CTLCRB LEXCMP  XSP,CASESP,CTLCRC,,CTLCRC			[PLB15]
+*				   Is it CASE?
+       STREAM  XSP,TEXTSP,FRWDTB,COMP3,CASE1			[PLB15]
+*				   Get to next nonblank character [PLB15]
+       AEQLC   STYPE,NBTYP,CMTCLR  Verify nonbreak		[PLB15]
+       STREAM  XSP,TEXTSP,ELEMTB,CMTCLR,CMTCLR			[PLB15]
+*				   Get value			[PLB15]
+       AEQLC   STYPE,ILITYP,CMTCLR Must be integer		[PLB15]
+       SPCINT  CASECL,XSP,CMTCLR,CMTCLR Set &CASE to argument	[PLB15]
+*_
+CASE1  SETAC   CASECL,0 	   Bare -CASE clears folding	[PLB15]
+       BRANCH  CMTCLR		   Join terminal processing	[PLB15]
+*_
+CTLCRC LEXCMP  XSP,EXECSP,CTLCRE,,CTLCRE			[PLB34]
+*				   Is it EXECUTE?
+       SETAC   EXECCL,1 	   Enable execution		[PLB34]
+       BRANCH  CMTCLR		   Join terminal processing	[PLB34]
+*_
+CTLCRE LEXCMP  XSP,NEXESP,CTLCR4,,CTLCR4			[PLB34]
+*				   Is it NOEXECUTE?
+       SETAC   EXECCL,0 	   Suppress execution		[PLB34]
+       BRANCH  CMTCLR		   Join terminal processing	[PLB34]
 *_
 CTLCR4 LEXCMP  XSP,INCLSP,,CTLCR5	Is it INCLUDE?		[PLB20]
        LEXCMP  XSP,COPYSP,CMTCLR,,CMTCLR			[PLB20]
@@ -5695,6 +5724,7 @@ HIDESV DESCR   0,0,0		   Saved HIDE listing switch	[SNF1]
 INICOM DESCR   0,0,0		   INITIALIZATION SWITCH	E3.10.6
 LENFCL DESCR   0,0,0		   Length failure switch
 LISTCL DESCR   1,0,0		   Compiler listing switch
+EXECCL DESCR   1,0,0		   Execute after compiling switch [PLB34]
 LLIST  DESCR   0,0,0		   Left listing switch
 NAMGCL DESCR   0,0,0		   Naming switch for SJSR
 SCERCL DESCR   0,0,0		   Error branch switch
@@ -5878,10 +5908,12 @@ EJCTSP STRING  'EJECT'
 EQLSP  STRING  '= '
 ETIMSP STRING  ',TIME = '
 EXDTSP STRING  'EXTERNAL'
+EXECSP STRING  'EXECUTE'					[PLB34]
 HIDESP STRING  'HIDE'						[PLB102]
 LEFTSP STRING  'LEFT'
 LISTSP STRING  'LIST'
 LPRNSP STRING  '('
+NEXESP STRING  'NOEXECUTE'					[PLB34]
 OFSP   STRING  ' OF '
 RPRNSP STRING  ')'
 STARSP STRING  '*** '
