@@ -773,14 +773,6 @@ describe('SNOBOL Program Execution', function () {
             file = vm.units.open( 5 );
 
         assert.equal( file.segments.length, 3 );
-        assert.deepEqual(
-            file.segments.map( ( segment ) => segment.padReads ),
-            [
-                true,
-                false,
-                false,
-            ],
-        );
     });
 
     it('reads source, then runtime input, then interactive stdin', function () {
@@ -798,27 +790,28 @@ describe('SNOBOL Program Execution', function () {
             } ),
             file = vm.units.open( constants.UNITI );
 
-        assert.deepEqual( file.readRecord( 8 ), {
+        // The compiler reads source as cards. INPUT keeps natural lengths.
+        assert.deepEqual( file.readRecord( 8, true ), {
             eof: false,
             text: 'SOURCE  ',
             padded: true,
         } );
-        assert.deepEqual( file.readRecord( 8 ), {
+        assert.deepEqual( file.readRecord( 8, false ), {
             eof: false,
             text: 'INPUT',
             padded: false,
         } );
-        assert.deepEqual( file.readRecord( 8 ), {
+        assert.deepEqual( file.readRecord( 8, false ), {
             eof: false,
             text: 'STDIN',
             padded: false,
         } );
-        assert.deepEqual( file.readRecord( 8 ), { eof: true } );
+        assert.deepEqual( file.readRecord( 8, false ), { eof: true } );
     });
 
     it('drains stdin without reading from fd 0 after close', function () {
         const reader = stdinReader(),
-            file = new File( [ { reader, padReads: false } ] );
+            file = new File( [ { reader } ] );
 
         file.close();
         assert.equal( reader.readLine(), null );

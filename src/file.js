@@ -66,14 +66,14 @@ export function bufferedReader( content ) {
 
 // Long records are cut to the caller's buffer. Card-mode records are
 // padded to it. Stream-mode records keep their natural length.
-function fitRecord( text, length, padReads ) {
+function fitRecord( text, length, card ) {
     if ( text.length > length ) {
         return {
             text: text.slice( 0, length ),
             padded: false,
         };
     }
-    if ( padReads ) {
+    if ( card ) {
         return {
             text: text.padEnd( length ),
             padded: true,
@@ -83,10 +83,11 @@ function fitRecord( text, length, padReads ) {
 }
 
 // A File is one logical input unit. It may be backed by several segments.
-// Source comes first, then runtime input, then interactive stdin. Source uses
-// fixed-width card records. Runtime input and stdin keep their real length.
+// Card mode is the compiler's reading discipline, not a segment property: the
+// same source segment yields fixed-width cards to the compiler and natural
+// records to INPUT after END.
 //
-// Segment shape: { reader, padReads: boolean, path?: string }.
+// Segment shape: { reader, path?: string }.
 export class File {
     // File takes ownership of `segments`: include() mutates it via splice.
     constructor( segments ) {
@@ -102,7 +103,6 @@ export class File {
         // the remaining lines of the current segment.
         this.segments.splice( this.idx, 0, {
             reader: bufferedReader( content ),
-            padReads: true,
             path,
         } );
     }
@@ -124,7 +124,7 @@ export class File {
         this.includedFiles.add( included.path );
     }
 
-    readRecord( length ) {
+    readRecord( length, card ) {
         while ( this.idx < this.segments.length ) {
             const segment = this.segments[this.idx],
                 line = segment.reader.readLine();
@@ -138,7 +138,7 @@ export class File {
             const text = textDecoder.decode( line );
             return {
                 eof: false,
-                ...fitRecord( text, length, segment.padReads ),
+                ...fitRecord( text, length, card ),
             };
         }
 

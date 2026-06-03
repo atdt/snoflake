@@ -81,28 +81,22 @@ export class UnitTable {
         const segments = [];
 
         if ( this.preamble ) {
-            segments.push( {
-                reader: bufferedReader( this.preamble ),
-                padReads: true,
-            } );
+            segments.push( { reader: bufferedReader( this.preamble ) } );
         }
         if ( source !== undefined ) {
             segments.push( {
                 reader: bufferedReader( source ),
-                padReads: true,
                 path: file,
             } );
         } else if ( file ) {
             segments.push( {
                 reader: bufferedReader( this.loader.load( file ) ),
-                padReads: true,
                 path: file,
             } );
         }
         if ( input ) {
             segments.push( {
                 reader: bufferedReader( this.loader.load( input ) ),
-                padReads: false,
             } );
         }
         if ( interactive ) {
@@ -111,10 +105,7 @@ export class UnitTable {
                     'interactive mode requires options.stdinReader',
                 );
             }
-            segments.push( {
-                reader: stdinReader(),
-                padReads: false,
-            } );
+            segments.push( { reader: stdinReader() } );
         }
 
         return segments;
@@ -127,7 +118,6 @@ export class UnitTable {
         entry.input?.close();
         entry.input = new File( [ {
             reader: bufferedReader( this.loader.load( path ) ),
-            padReads: false,
             path,
         } ] );
     }

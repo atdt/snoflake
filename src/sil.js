@@ -4032,7 +4032,10 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
         DESCR = this.d( $DESCR ),
         file = this.units.open( DESCR.addr );
 
-    const record = file.readRecord( SPEC.length );
+    // UNIT is the compiler's source feed and reads fixed-width cards. Every
+    // other reader keeps a record's natural length.
+    const card = $DESCR === this.symbols.UNIT;
+    const record = file.readRecord( SPEC.length, card );
     if ( record.eof ) {
         DESCR.addr = 0;
         // Avoid jumping to ourselves on EOF, which would loop forever.
@@ -4053,8 +4056,8 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
         SPEC.length = text.length;
     }
 
-    // UNIT is the compiler's source feed. Remember the line for diagnostics.
-    if ( $DESCR === this.symbols.UNIT ) {
+    // Remember the compiler's source line for diagnostics.
+    if ( card ) {
         this.diagnostics.noteSourceLine( file.currentSource(), text );
     }
 

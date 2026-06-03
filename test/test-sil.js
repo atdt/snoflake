@@ -1847,6 +1847,8 @@ describe('Input and Output Macros', function () {
         vm.options.file = file;
         unit.addr = 5;
         spec.set( ptr, 0, 0, 2, 8 );
+        // Read as the compiler's source feed, so reads are fixed-column cards.
+        vm.symbols.UNIT = unit.ptr;
 
         try {
             sil.STREAD.call( vm, spec.ptr, unit.ptr, eof, error, success );
@@ -1912,7 +1914,7 @@ describe('Input and Output Macros', function () {
             success = vm.alloc( 1, 3 ),
             ptr = vm.alloc( 8, '.'.charCodeAt( 0 ) );
 
-        fs.writeFileSync( sourceFile, 'SOURCE\n' );
+        fs.writeFileSync( sourceFile, 'SO\n' );
         fs.writeFileSync( inputFile, 'DATA\n' );
         vm.options.file = sourceFile;
         vm.options.input = inputFile;
@@ -1920,8 +1922,9 @@ describe('Input and Output Macros', function () {
         spec.set( ptr, 0, 0, 0, 6 );
 
         try {
-            // First read drains the card-padded source segment. SPEC.length
-            // stays at the requested width because card reads are fixed-column.
+            // The compiler reads source as cards, so the short line pads to the
+            // requested width and SPEC.length stays put.
+            vm.symbols.UNIT = unit.ptr;
             sil.STREAD.call( vm, spec.ptr, unit.ptr, eof, error, success );
             assert.equal( spec.length, 6 );
             assert.equal(
@@ -1930,12 +1933,13 @@ describe('Input and Output Macros', function () {
                         return String.fromCharCode( c );
                     },
                 ).join( '' ),
-                'SOURCE',
+                'SO    ',
             );
 
-            // Second read falls through to the input segment. SPEC.length is
+            // INPUT reads the post-source segment as a stream. SPEC.length is
             // updated to the actual record length so the caller sees DATA, not
             // a padded six-char field.
+            vm.symbols.UNIT = undefined;
             sil.STREAD.call( vm, spec.ptr, unit.ptr, eof, error, success );
             assert.equal( spec.length, 4 );
             assert.equal(
