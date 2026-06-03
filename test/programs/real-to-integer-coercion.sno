@@ -1,0 +1,20 @@
+* @title integer-required contexts truncate a real argument
+* @attribution csnobol4 test/intval.sno
+* @expect >>>
+* 1
+* A
+* *****
+* 1
+* A
+* *****
+* <<<
+ &TRIM = 1.0
+ OUTPUT = &TRIM
+ OUTPUT = CHAR(65.0)
+ OUTPUT = DUPL("*", 5.9999)
+
+ &TRIM = '1.0'
+ OUTPUT = &TRIM
+ OUTPUT = CHAR('65.0')
+ OUTPUT = DUPL("*", '5.9999')
+END

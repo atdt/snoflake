@@ -57,6 +57,11 @@
 *        [PLB101]     — LOAD commits the new function block only after the
 *                       external load succeeds, so a failed LOAD leaves the
 *                       name undefined rather than entered but unloadable.
+*        [PLB64]      — INTVAL accepts a REAL where an integer is required,
+*                       truncating it toward zero.  A decimal string such as
+*                       "1.0" likewise converts, so &TRIM = 1.0, CHAR(65.0),
+*                       and DUPL("*", 5.9999) work instead of raising
+*                       ILLEGAL DATA TYPE.
 *        [SNF1]       — -UNHIDE re-enables listing and statement numbering
 *                       after -HIDE without listing the control card itself.
 *        [SNF2]       — Backtick-delimited literals may span source cards.
@@ -1888,11 +1893,15 @@ INTV1  AEQLC   INSW,0,,INTV3	   Check &INPUT
        RCALL   XPTR,PUTIN,(ZPTR,XPTR),FAIL
 *				   Perform input
 INTV   LOCSP   XSP,XPTR 	   Get specifier for string
-       SPCINT  XPTR,XSP,INTR1,RTXNAM
+       SPCINT  XPTR,XSP,,RTXNAM					[PLB64]
 *				   Convert to integer
+       SPREAL  XPTR,XSP,INTR1					[PLB64]
+*				   Try conversion to REAL	[PLB64]
+INTRI  RLINT   XPTR,XPTR,INTR1,RTXNAM				[PLB64]
 *_
 INTV3  GETDC   XPTR,XPTR,DESCR	   Get value
 INTV2  VEQLC   XPTR,I,,RTXNAM	   INTEGER desired
+       VEQLC   XPTR,R,,INTRI	   REAL allowed			[PLB64]
        VEQLC   XPTR,S,INTR1,INTV   STRING must be converted
 *_
 INTVC  RCALL   XPTR,INVOKE,(XPTR),(FAIL,INTV1,INTV2)
