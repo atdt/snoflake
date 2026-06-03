@@ -3208,11 +3208,16 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // overwritten by a subsequent use of REALST.
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( $SPEC, $DESCR ) {
-    // convert real number to string
-    let text = this.d( $DESCR ).raddr.toString();
-    // CSNOBOL4 extension: give a whole real a trailing point so it reads
-    // back as a REAL.
-    if ( !text.includes( '.' ) ) text += '.';
+    const value = this.d( $DESCR ).raddr;
+    // Shortest decimal that rounds back to the stored Float32, with a forced
+    // decimal point. Nine significant digits always round-trip.
+    let shortest = value;
+    for ( let digits = 1; digits <= 9; digits++ ) {
+        shortest = Number( value.toPrecision( digits ) );
+        if ( Math.fround( shortest ) === value ) break;
+    }
+    let text = String( shortest );
+    if ( !/[.e]/i.test( text ) ) text += '.';
     return this.specify( text, $SPEC );
 };
 
