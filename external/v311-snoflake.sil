@@ -48,6 +48,11 @@
 *        [PLB105]     — &DIGITS names '0123456789', another ALPHA slice.
 *        [PLB106]     — &PI holds the REAL constant pi.
 *        [PLB108]     — &MAXINT holds the largest INTEGER value, MAXINT.
+*        [PLB80]      — FUNCTION(name) predicate succeeds when the name has
+*                       a definition and fails otherwise.
+*        [PLB101]     — LOAD commits the new function block only after the
+*                       external load succeeds, so a failed LOAD leaves the
+*                       name undefined rather than entered but unloadable.
 *        [SNF1]       — -UNHIDE re-enables listing and statement numbering
 *                       after -HIDE without listing the control card itself.
 *        [SNF2]       — Backtick-delimited literals may span source cards.
@@ -3502,10 +3507,8 @@ LOAD8  SETVA   LODCL,YCL	   Insert number of arguments
        MULTC   XCL,YCL,DESCR	   Convert to address units
        INCRA   XCL,DESCR	   Add space for entry point
        SETVC   XCL,B		   Insert BLOCK data type
-       RCALL   XPTR,BLOCK,XCL	   Allocate block for definition
-       PUTDC   ZCL,0,LODCL	   Insert procedure descriptor
-       PUTDC   ZCL,DESCR,XPTR	   Insert definition block
-       SUM     XPTR,XPTR,XCL	   Compute pointer to end of block
+       RCALL   ZPTR,BLOCK,XCL	   Allocate block for definition [PLB101]
+       SUM     XPTR,ZPTR,XCL	   Compute pointer to end of block [PLB101]
 LOAD12 DECRA   XPTR,DESCR	   Decrement pointer
        POP     YPTR		   Restore data type
        PUTDC   XPTR,DESCR,YPTR	   Insert in block
@@ -3513,6 +3516,8 @@ LOAD12 DECRA   XPTR,DESCR	   Decrement pointer
        ACOMPC  YCL,0,LOAD12	   Check for end
        LOAD    YPTR,YSP,VSP,FAIL   Load external function
        PUTDC   XPTR,0,YPTR	   Insert entry point
+       PUTDC   ZCL,0,LODCL	   Insert procedure descriptor	[PLB101]
+       PUTDC   ZCL,DESCR,ZPTR	   Insert definition block	[PLB101]
        BRANCH  RETNUL		   Return null string as value
 *_
 LOAD7  PUSH    ZEROCL		   Save 0 for unspecified type
@@ -4675,6 +4680,18 @@ IDENT  PROC    ,		   IDENT(X,Y)
        RCALL   ,XYARGS,,FAIL	   Evaluate arguments
        DEQL    XPTR,YPTR,FAIL,RETNUL
 *				   Compare arguments
+*_
+*---------------------------------------------------------------------*
+*
+*      FUNCTION(X) test if named function defined		[PLB80]
+*
+FUNCTN PROC    ,		   FUNCTION(X)
+       RCALL   XPTR,VARVUP,,FAIL   Evaluate argument		[PLB80]
+       LOCAPV  XPTR,FNCPL,XPTR,FAIL Locate function		[PLB80]
+       GETDC   XPTR,XPTR,DESCR	   Get function descriptor	[PLB80]
+       GETDC   XPTR,XPTR,0	   Get link descriptor		[PLB80]
+       AEQL    XPTR,UNDFCL,RETNUL,FAIL				[PLB80]
+*				   Fail if undefined		[PLB80]
 *_
 *---------------------------------------------------------------------*
 *
@@ -6109,6 +6126,8 @@ GTFN   DESCR   GT,0,2
        DESCR   0,0,0
 IDENFN DESCR   IDENT,0,2
        DESCR   0,0,0
+FUNTFN DESCR   FUNCTN,0,1					[PLB80]
+       DESCR   0,0,0						[PLB80]
 INTGFN DESCR   INTGER,0,1
        DESCR   0,0,0
 ITEMFN DESCR   ITEM,FNC,1
@@ -6236,6 +6255,8 @@ FNLIST DESCR   FNLIST,TTL+MARK,FNCPLE-FNLIST-DESCR
        DESCR   GTSP,0,0
        DESCR   IDENFN,FNC,0	   IDENT(V1,V2)
        DESCR   IDENSP,0,0
+       DESCR   FUNTFN,FNC,0	   FUNCTION(N)			[PLB80]
+       DESCR   FUNTSP,0,0					[PLB80]
        DESCR   READFN,FNC,0	   INPUT(V,U,L,N)		[PLB4]
        DESCR   INSP,0,0
        DESCR   INTGFN,FNC,0	   INTEGER(V)

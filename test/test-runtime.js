@@ -497,15 +497,21 @@ describe('SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '42\nfailure routed\n' );
     });
 
-    it('rejects malformed JavaScript helper source in SNOBOL LOAD', function () {
-        assert.throws(
-            () =>
-                run( {
-                    source: " LOAD('BADJS(INTEGER)INTEGER', 'n =>')\nEND\n",
-                    stdout: captureWriter(),
-                } ),
-            /Invalid JavaScript extension for BADJS/,
-        );
+    it('fails the SNOBOL LOAD on malformed JavaScript helper source', function () {
+        const stdout = captureWriter();
+
+        run( {
+            source: [
+                " LOAD('BADJS(INTEGER)INTEGER', 'n =>') :S(BAD)F(GOOD)",
+                "BAD      OUTPUT = 'unreachable' :(END)",
+                "GOOD     OUTPUT = 'load failed'",
+                'END',
+                '',
+            ].join( '\n' ),
+            stdout,
+        } );
+
+        assert.equal( joinLines( stdout.lines ), 'load failed\n' );
     });
 
     it('rejects malformed prototype keys when value is a function', function () {

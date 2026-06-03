@@ -18,19 +18,18 @@ const CPD = 3; // Characters per descriptor
 const sil = {};
 
 //     loadExtensionSignature reads the type signature SNOBOL's
-// LOAD procedure parsed into the function block before invoking
-// this macro. A no-arg prototype `(F)` is parsed as a single
-// argument slot holding 0, and an omitted result type as a result
-// code of 0, reported as a null result type.
+// LOAD procedure parsed before invoking this macro. The argument
+// count waits in LODCL and the freshly built definition block in
+// ZPTR, since [PLB101] commits them into the function block only
+// after this macro succeeds. A no-arg prototype `(F)` is parsed as
+// a single argument slot holding 0, and an omitted result type as a
+// result code of 0, reported as a null result type.
 //      Block layout:
 //               +-------+-------+-------+
-//      ZCL      |   F                   |   F = function block
+//      LODCL    |                   N   |   N = argument count
 //               +-----------------------+
 //               +-------+-------+-------+
-//      F        |                   N   |   N = argument count
-//               +-----------------------+
-//               +-------+-------+-------+
-//      F + D    |   B                   |   B = definition block
+//      ZPTR     |   B                   |   B = definition block
 //               +-----------------------+
 //               +-------+-------+-------+
 //   B + (2+i)*D |                   Ti  |   type code for arg i (i < N)
@@ -39,9 +38,8 @@ const sil = {};
 //   B + (2+N)*D |                   R   |   result type code
 //               +-----------------------+
 function loadExtensionSignature( vm, name ) {
-    const block = vm.d( 'ZCL' ).addr;
-    const argCount = vm.d( block ).value;
-    const definition = vm.d( block + D ).addr;
+    const argCount = vm.d( 'LODCL' ).value;
+    const definition = vm.d( 'ZPTR' ).addr;
     const codeAt = ( i ) => vm.d( definition + ( 2 + i ) * D ).value;
 
     const kindAt = ( i ) => {
@@ -1966,7 +1964,14 @@ sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, FLOC, _SLOC ) {
         if ( !ext ) return this.jmp( FLOC );
     } else {
         const { args, result } = loadExtensionSignature( this, name );
-        ext = compileExtension( name, source, args, result );
+        // A library that will not compile fails the LOAD, the same
+        // controlled exit a missing builtin takes above, rather than
+        // escaping the dispatch loop.
+        try {
+            ext = compileExtension( name, source, args, result );
+        } catch {
+            return this.jmp( FLOC );
+        }
     }
     this.d( $DESCR ).addr = this.extensionsBySlot.push( ext ) - 1;
 };

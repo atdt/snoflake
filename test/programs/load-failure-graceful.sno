@@ -1,0 +1,21 @@
+* @title A failed LOAD leaves the name undefined and is recoverable
+* @attribution CSNOBOL4 test/loaderr.sno
+* @nonstandard inline JS LOAD libraries are a snoflake extension
+* @expect >>>
+* QQQ1
+* QQQ2
+* <<<
+* A library that will not compile fails the LOAD. The FUNCTION predicate
+* then reports ZZZ undefined, so its OUTPUT is skipped, while a failed
+* reload of QQQ leaves the working definition in place.
+	LOAD("ZZZ()", "xyzzy")
+	OUTPUT = FUNCTION(.ZZZ) "ZZZ"
+
+	DEFINE("QQQ(X)")				:(EQQQ)
+QQQ	QQQ = X						:(RETURN)
+EQQQ
+
+	OUTPUT = FUNCTION(.QQQ) QQQ("QQQ1")
+	LOAD("QQQ()", "xyzzy")
+	OUTPUT = FUNCTION(.QQQ) QQQ("QQQ2")
+END
