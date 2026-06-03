@@ -34,6 +34,18 @@ bench:
 bench-deno:
 	@deno bench -A ./tools/snoflake.bench.js
 
+# Benchmark the working tree (uncommitted changes included) against a clean
+# checkout of HEAD. A detached worktree provides the baseline, so the working
+# tree is never disturbed. Pass FIXTURES="name ..." to narrow the set.
+bench-diff:
+	@if git diff --quiet HEAD; then \
+		echo "Working tree matches HEAD; nothing to compare."; exit 1; \
+	fi
+	@worktree="$$(mktemp -d)/head"; \
+	trap 'git worktree remove --force "$$worktree" 2>/dev/null' EXIT; \
+	git worktree add --quiet --detach "$$worktree" HEAD; \
+	deno bench -A ./tools/snoflake.bench.js -- --baseline="$$worktree" $(FIXTURES)
+
 bench-vs-csnobol4:
 	@node ./tools/bench-vs-csnobol4.js
 
@@ -63,4 +75,4 @@ release: release-check
 	git push origin master "$$tag"; \
 	gh release create "$$tag" --verify-tag --title "$$tag" --generate-notes
 
-.PHONY: test test-node test-deno test-bun test-all build run profile coverage bench bench-deno bench-vs-csnobol4 demo release-check release
+.PHONY: test test-node test-deno test-bun test-all build run profile coverage bench bench-deno bench-diff bench-vs-csnobol4 demo release-check release
