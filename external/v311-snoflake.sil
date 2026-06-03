@@ -24,7 +24,13 @@
 *                       argument.  This port preserves v311's third INPUT
 *                       argument as record length rather than importing the
 *                       later PLB51 options argument.
-*        [PLB28..30]  — Case-folded name resolution via VARVUP/VPXPTR.
+*        [PLB28..30]  — Case-folded name resolution via VARVUP/VPXPTR at
+*                       the runtime operators that read a string as a name
+*                       ($, APPLY, ARG/FIELD/LOCAL, CONVERT, TRACE, UNLOAD,
+*                       OBJECT/IMAGE).  The scanner folds identifiers, so
+*                       these cover names that arrive as runtime strings.
+*        [PLB35]      — FIELD folds a string field-name argument.
+*        [PLB89]      — DEFINE folds the entry-point label name.
 *        [PLB86]      — Copies one specifier to another, folding
 *                       lowercase ASCII to upper case along the way.
 *        [PLB86]      — Pattern-class scanning bypasses STREAM-level case
@@ -3225,7 +3231,7 @@ SUCF   PROC    SUCE		   SUCCEED failure
 DEFINE PROC    ,		   DEFINE(P,E)
        RCALL   XPTR,VARVAL,,FAIL   Get prototype
        PUSH    XPTR		   Save prototype
-       RCALL   YPTR,VARVAL,,FAIL   Get entry point
+       RCALL   YPTR,VARVUP,,FAIL   Get entry point		[PLB89]
        POP     XPTR		   Restore prototype
        LOCSP   XSP,XPTR 	   Specifier for prototype
        STREAM  YSP,XSP,VARATB,PROTER,PROTER
@@ -3529,7 +3535,7 @@ LOAD11 PUSH    ZEROCL		   Save 0 for unspecified type
 *      UNLOAD(F)
 *
 UNLOAD PROC    ,		   UNLOAD(F)
-       RCALL   XPTR,VARVAL,,FAIL   Get function name
+       RCALL   XPTR,VARVUP,,FAIL   Get function name		[PLB28]
        RCALL   ZCL,FINDEX,XPTR	   Locate function descriptor
        PUTDC   ZCL,0,UNDFCL	   Undefine function
        LOCSP   XSP,XPTR 	   Get specifier
@@ -3925,8 +3931,10 @@ FIELD  PROC    ,		   Field function procedure
        RCALL   XPTR,ARGVAL,,FAIL   Get value
        DEQL    XPTR,NULVCL,,NONAME Check for null value
        POP     YCL		   Restore function descriptor
-       VEQLC   XPTR,I,FIELD1	   Check for INTEGER
-       RCALL   XPTR,GNVARI,XPTR    Convert INTEGER to STRING
+       VEQLC   XPTR,I,,FIELD2	   Check for INTEGER		[PLB35]
+       VEQLC   XPTR,S,FIELD1	   Check if not STRING		[PLB35]
+       AEQLC   CASECL,0,,FIELD1	   Case folding enabled?	[PLB35]
+       RCALL   ,VPXPTR,,FAIL	   Yes, take care of it		[PLB35]
 FIELD1 MOVV    DT1CL,XPTR	   Set up data type
        GETDC   YPTR,YCL,DESCR	   Get definition block
        LOCAPT  ZCL,YPTR,DT1CL,INTR1
@@ -3935,6 +3943,9 @@ FIELD1 MOVV    DT1CL,XPTR	   Set up data type
        SUM     XPTR,XPTR,ZCL	   Compute field position
        SETVC   XPTR,N		   Insert NAME data type
        BRANCH  RTXNAM		   Return name
+*_
+FIELD2 RCALL   XPTR,GNVARI,XPTR,FIELD1
+*				   Create var from integer	[PLB35]
 *_
 *---------------------------------------------------------------------*
        TITLE   'Input and Output'
@@ -4110,11 +4121,11 @@ PUTI   INTSPC  IOSP,IO2PTR	   Convert INTEGER to STRING
 TRACE  PROC    ,		   TRACE(V,R,T,F)
        RCALL   XPTR,IND,,FAIL	   Get name of variable
        PUSH    XPTR		   Save name
-       RCALL   YPTR,VARVAL,,FAIL   Get trace type
+       RCALL   YPTR,VARVUP,,FAIL   Get trace type		[PLB28]
        PUSH    YPTR		   Save type
        RCALL   WPTR,ARGVAL,,FAIL   Get tag
        PUSH    WPTR		   Save tag
-       RCALL   ZPTR,VARVAL,,FAIL   Get trace function
+       RCALL   ZPTR,VARVUP,,FAIL   Get trace function		[PLB28]
        POP     (WPTR,YPTR,XPTR)    Restore saved arguments
        DEQL    YPTR,NULVCL,TRAC5   Is type defaulted??
        MOVD    YPTR,VALTRS	   Set up VALUE default
@@ -4164,7 +4175,7 @@ TRAC4  RCALL   TPTR,BLOCK,TWOCL    Allocate new pair list
 STOPTR PROC    ,		   STOPTR(T,R)
        RCALL   XPTR,IND,,FAIL	   Get name of variable
        PUSH    XPTR		   Save name
-       RCALL   YPTR,VARVAL,,FAIL   Get trace respect
+       RCALL   YPTR,VARVUP,,FAIL   Get trace respect		[PLB28]
        POP     XPTR
        DEQL    YPTR,NULVCL,STOPT2  Check for defaulted respect
        MOVD    YPTR,VALTRS	   Set up VALUE as default
@@ -4545,8 +4556,10 @@ IND    PROC    ,		   $X
        VEQLC   XPTR,I,,GENVIX	   Convert INTEGER
        VEQLC   XPTR,K,INTR1,RTXNAM KEYWORD is like NAME
 *_
-INDV   AEQLC   XPTR,0,RTXNAM,NONAME
-*				   Be sure string is not null
+INDV   AEQLC   XPTR,0,,NONAME
+*				   Be sure string is not null	[PLB29]
+       AEQLC   CASECL,0,VPXPTR,RTXNAM
+*				   Fold name unless &CASE = 0	[PLB30]
 *_
 *---------------------------------------------------------------------*
 *
@@ -4708,7 +4721,7 @@ APPLY  PROC    ,		   APPLY(F,A1,...,AN)
        DECRA   XCL,1		   Decrement to skip function name
        ACOMPC  XCL,1,,,ARGNER					E3.3.3
        PUSH    XCL		   Save argument count
-       RCALL   XPTR,VARVAL,,FAIL   Get function name
+       RCALL   XPTR,VARVUP,,FAIL   Get function name		[PLB28]
        POP     XCL		   Restore argument count
        LOCAPV  XPTR,FNCPL,XPTR,UNDF
 *				   Locate function
@@ -4739,7 +4752,7 @@ LOCAL  PROC    ARG		   LOCAL(F,N)
 FIELDS PROC    ARG		   FIELD(F,N)
        PUSH    (ZEROCL,ZEROCL,DATCL)
 *				   Save FIELD indicators
-ARG1   RCALL   XPTR,VARVAL,,FAIL   Get function name
+ARG1   RCALL   XPTR,VARVUP,,FAIL   Get function name		[PLB28]
        PUSH    XPTR		   Save function name
        RCALL   XCL,INTVAL,,FAIL    Get number
        ACOMP   ZEROCL,XCL,FAIL,FAIL
@@ -4821,7 +4834,7 @@ COPY   PROC    ,		   COPY(X)
 CNVRT  PROC    ,		   CONVERT(X,T)
        RCALL   ZPTR,ARGVAL,,FAIL   Get object to be converted
        PUSH    ZPTR		   Save object
-       RCALL   YPTR,VARVAL,,FAIL   Get data type target
+       RCALL   YPTR,VARVUP,,FAIL   Get data type target		[PLB28]
        POP     ZPTR		   Restore object
        LOCAPV  XPTR,DTATL,YPTR,INTR1
 *				   Look for data type code

@@ -1,0 +1,17 @@
+* @title case folding resolves lowercase indirect and apply names
+* @attribution Snoflake [PLB28][PLB30]
+* @expect >>>
+* APRIL
+* MAY
+* dup ran
+* <<<
+          month = 'APRIL'
+          name = 'month'
+          output = $name
+          $name = 'MAY'
+          output = month
+          define('dup()')               :(end_dup)
+dup       output = 'dup ran'            :(return)
+end_dup
+          apply('dup', null)
+END
