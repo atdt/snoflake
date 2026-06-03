@@ -1,0 +1,19 @@
+* @title Real overflow raises a recoverable arithmetic error
+* @nonstandard Snoflake REAL is single precision; CSNOBOL4 uses double precision
+* @expect >>>
+* overflow failed cleanly
+* still running
+* <<<
+* A real lives in one 32-bit cell, so it overflows near 3.4e38 where CSNOBOL4's
+* double would yield inf. The overflow is a recoverable arithmetic error: with
+* &ERRLIMIT set the multiply fails to its F goto and the run continues, and the
+* interpreter never throws.
+	&ERRLIMIT = 1000
+	BIG = 1000000.0
+	BIG = BIG * BIG
+	BIG = BIG * BIG
+	OUTPUT = BIG * BIG			:S(S)F(F)
+S	OUTPUT = 'overflow did not happen'	:(A)
+F	OUTPUT = 'overflow failed cleanly'
+A	OUTPUT = 'still running'
+END
