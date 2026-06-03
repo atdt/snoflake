@@ -153,9 +153,17 @@ export class Specifier extends Descriptor {
         this.vm.setUint( this.ptr + 5, n );
     }
 
+    // The named string occupies the half-open range [start, end).
+    get start() {
+        return this.addr + this.offset;
+    }
+
+    get end() {
+        return this.addr + this.offset + this.length;
+    }
+
     get specified() {
-        const start = this.addr + this.offset;
-        return decodeString( this.vm.mem, start, this.length );
+        return decodeString( this.vm.mem, this.start, this.length );
     }
 
     set( addr = 0, flags = 0, value = 0, offset = 0, length = 0 ) {

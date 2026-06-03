@@ -421,8 +421,8 @@ sil.APDSP = function ( $SPEC1, $SPEC2 ) {
         SPEC2 = this.s( $SPEC2 ),
         L1 = SPEC1.length,
         L2 = SPEC2.length,
-        dst = SPEC1.addr + SPEC1.offset + L1,
-        src = SPEC2.addr + SPEC2.offset;
+        dst = SPEC1.end,
+        src = SPEC2.start;
 
     // Programming note 2 guarantees enough storage after SPEC1's last char.
     // copyWithin has memmove semantics, so overlap with SPEC2 is safe.
@@ -1253,7 +1253,7 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
     // get parenthesis balanced string
     const SPEC = this.s( $SPEC ),
         DESCR = this.d( $DESCR ),
-        start = SPEC.addr + SPEC.offset + SPEC.length,
+        start = SPEC.end,
         string = decodeString( this.mem, start, DESCR.addr );
     let j,
         stack;
@@ -1664,7 +1664,7 @@ sil.INTSPC = function ( $SPEC, $DESCR ) {
         this.intspcBuf = this.alloc( 255 );
     }
     SPEC.set( this.intspcBuf, 0, 0, 0, I_str.length );
-    writeString( I_str, this.mem, SPEC.addr + SPEC.offset );
+    writeString( I_str, this.mem, SPEC.start );
 };
 
 //     ISTACK is used to initialize the system stack.
@@ -2740,8 +2740,8 @@ sil.PLUGTB = function ( TABLE, KEY, $SPEC ) {
         { actions, next } = this.syntaxTables[TABLE],
         code = Action[KEY];
 
-    for ( let i = 0; i < SPEC.length; i++ ) {
-        const slot = this.mem[SPEC.addr + SPEC.offset + i];
+    for ( let p = SPEC.start; p < SPEC.end; p++ ) {
+        const slot = this.mem[p];
         if ( slot < constants.ALPHSZ ) {
             actions[slot] = code;
             next[slot] = null;
@@ -3376,9 +3376,9 @@ sil.RPLACE = function ( $SPEC1, $SPEC2, $SPEC3 ) {
     const SPEC1 = this.s( $SPEC1 ),
         SPEC2 = this.s( $SPEC2 ),
         SPEC3 = this.s( $SPEC3 ),
-        targetStart = SPEC1.addr + SPEC1.offset,
-        sourceStart = SPEC2.addr + SPEC2.offset,
-        replacementStart = SPEC3.addr + SPEC3.offset,
+        targetStart = SPEC1.start,
+        sourceStart = SPEC2.start,
+        replacementStart = SPEC3.start,
         replacements = new Map(),
         mem = this.mem;
 
@@ -4052,7 +4052,7 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
     }
 
     const text = record.text;
-    writeString( text, this.mem, SPEC.addr + SPEC.offset );
+    writeString( text, this.mem, SPEC.start );
 
     // Stream-mode segments report the actual record length through SPEC.length.
     // Card-mode reads keep SPEC.length at the buffer width, so the caller keeps
@@ -4499,7 +4499,7 @@ sil.TRIMSP = function ( $SPEC1, $SPEC2 ) {
 
     SPEC1.copyFrom( SPEC2 );
     const mem = this.mem,
-        base = SPEC1.addr + SPEC1.offset;
+        base = SPEC1.start;
     let len = SPEC1.length;
     while ( len > 0 ) {
         const b = mem[base + len - 1];
@@ -4709,11 +4709,11 @@ sil.ZERBLK = function ( $DESCR1, $DESCR2 ) {
 // Programming Notes:
 // 1.  Ported from CSNOBOL4's RAISE2 [PLB86].
 sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
-    const src = this.s( $SPEC1 ),
-        dst = this.s( $SPEC2 ),
-        srcStart = src.addr + src.offset,
-        dstStart = dst.addr + dst.offset,
-        len = src.length,
+    const SPEC1 = this.s( $SPEC1 ),
+        SPEC2 = this.s( $SPEC2 ),
+        srcStart = SPEC1.start,
+        dstStart = SPEC2.start,
+        len = SPEC1.length,
         mem = this.mem;
 
     let raised = false;
@@ -4732,13 +4732,11 @@ sil.RAISE2 = function ( $SPEC1, $SPEC2, FLOC ) {
 // Programming Notes:
 // 1.  Ported from CSNOBOL4's XRAISP [PLB15][PLB33].
 sil.XRAISP = function ( $SPEC ) {
-    const spec = this.s( $SPEC ),
-        start = spec.addr + spec.offset,
-        len = spec.length,
+    const SPEC = this.s( $SPEC ),
         mem = this.mem;
 
-    for ( let i = 0; i < len; i++ ) {
-        mem[start + i] = foldAsciiUpperByte( mem[start + i] );
+    for ( let p = SPEC.start; p < SPEC.end; p++ ) {
+        mem[p] = foldAsciiUpperByte( mem[p] );
     }
 };
 
