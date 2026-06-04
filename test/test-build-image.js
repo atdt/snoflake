@@ -36,14 +36,13 @@ describe('SIL build pipeline', function () {
         } );
     });
 
-    it('assembles a REAL constant into a Float32 descriptor', function () {
+    it('assembles a REAL constant into a descriptor', function () {
         const image = assemble(
                 parse( 'R      EQU     7\nPIVAL  REAL    3.5\n END\n' ),
             ),
-            addr = image.symbols.PIVAL,
-            reals = new Float32Array( image.memory.buffer );
+            addr = image.symbols.PIVAL;
 
-        assert.equal( reals[addr], 3.5 );
+        assert.equal( image.memory[addr], 3.5 );
         assert.equal( image.memory[addr + 2], image.symbols.R );
     });
 

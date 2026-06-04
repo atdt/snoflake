@@ -6,16 +6,18 @@ import { decodeString } from './string.js';
 // SIL descriptors are three words.
 export const D = 3;
 
-export function isUint32( value ) {
-    return ( value >>> 0 ) === value;
+// Integers are exact only up to +/-(2^53 - 1) in a Float64 cell, so that
+// bound is the word's integer range.
+export function isUint( value ) {
+    return Number.isSafeInteger( value ) && value >= 0;
 }
 
-export function isInt32( value ) {
-    return ( value | 0 ) === value;
+export function isInt( value ) {
+    return Number.isSafeInteger( value );
 }
 
-export function isFloat32( value ) {
-    return Number.isFinite( Math.fround( value ) );
+export function isReal( value ) {
+    return Number.isFinite( value );
 }
 
 // Descriptors are the SNOBOL4 runtime's basic datatype. Every value
@@ -34,8 +36,9 @@ export function isFloat32( value ) {
 // The same three slots also carry the runtime's internal bookkeeping,
 // so what any given field holds depends on the macro that consumes it.
 //
-// In this port each field is one 32-bit cell of the VM's backing buffer,
-// readable as int, uint, or real via overlapping typed-array views.
+// In this port each field is one 64-bit cell of the VM's backing buffer,
+// a Float64 holding the field's value as a number. Reals are host
+// doubles, and integers are exact up to +/-(2^53 - 1).
 export class Descriptor {
     // A descriptor is a typed view over `width` cells at `ptr`. It does
     // not own that storage: callers allocate it (`vm.alloc`) or resolve
@@ -50,7 +53,7 @@ export class Descriptor {
     }
 
     get addr() {
-        return this.vm.getInt( this.ptr );
+        return this.vm.mem[this.ptr];
     }
 
     set addr( n ) {
@@ -58,7 +61,7 @@ export class Descriptor {
     }
 
     get raddr() {
-        return this.vm.getReal( this.ptr );
+        return this.vm.mem[this.ptr];
     }
 
     set raddr( n ) {
@@ -66,7 +69,7 @@ export class Descriptor {
     }
 
     get flags() {
-        return this.vm.getUint( this.ptr + 1 );
+        return this.vm.mem[this.ptr + 1];
     }
 
     set flags( n ) {
@@ -74,7 +77,7 @@ export class Descriptor {
     }
 
     get value() {
-        return this.vm.getUint( this.ptr + 2 );
+        return this.vm.mem[this.ptr + 2];
     }
 
     set value( n ) {
@@ -138,7 +141,7 @@ export class Specifier extends Descriptor {
     }
 
     get offset() {
-        return this.vm.getUint( this.ptr + 3 );
+        return this.vm.mem[this.ptr + 3];
     }
 
     set offset( n ) {
@@ -146,7 +149,7 @@ export class Specifier extends Descriptor {
     }
 
     get length() {
-        return this.vm.getUint( this.ptr + 5 );
+        return this.vm.mem[this.ptr + 5];
     }
 
     set length( n ) {

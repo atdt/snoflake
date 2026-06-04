@@ -4,9 +4,9 @@
 import {
     D,
     Descriptor,
-    isFloat32,
-    isInt32,
-    isUint32,
+    isInt,
+    isReal,
+    isUint,
     Specifier,
 } from './datatypes.js';
 import { Diagnostics } from './diagnostics.js';
@@ -20,7 +20,7 @@ import { sil } from './sil.js';
 import { writeString } from './string.js';
 import { bindSyntaxTables, buildSyntaxTables } from './syntax.js';
 
-const WORD_SIZE = Uint32Array.BYTES_PER_ELEMENT;
+const WORD_SIZE = Float64Array.BYTES_PER_ELEMENT;
 const INITIAL_WORDS = 512 * 1024;
 const MAX_WORDS = 256 * 1024 * 1024;
 
@@ -160,16 +160,11 @@ export class VM {
     jmp( loc ) {
         // Undefined or null branch operands are fall-through.
         if ( typeof loc === 'number' ) {
-            this.ip = loc;
+            // Branch targets read from memory arrive as Float64 cell values.
+            // Coercing keeps ip a small integer, which keeps the dispatch
+            // loop's array indexing on the engine's fast path.
+            this.ip = loc | 0;
         }
-    }
-
-    // SIL storage is word-addressed. These length-tracking views share one
-    // resizable buffer so a field can be read as unsigned, signed, or float.
-    rebindMemoryViews() {
-        this.mem = new Uint32Array( this.buffer );
-        this.i32 = new Int32Array( this.buffer );
-        this.f32 = new Float32Array( this.buffer );
     }
 
     resetMemory() {
@@ -177,7 +172,10 @@ export class VM {
         this.buffer = new ArrayBuffer( wordsToBytes( INITIAL_WORDS ), {
             maxByteLength: wordsToBytes( MAX_WORDS ),
         } );
-        this.rebindMemoryViews();
+        // SIL storage is word-addressed. Each word is a Float64 cell holding
+        // a number, so one length-tracking view serves every field read.
+        // Which values a cell may hold is enforced on store; see setInt.
+        this.mem = new Float64Array( this.buffer );
     }
 
     // Grow memory capacity without changing memPtr.
@@ -207,37 +205,25 @@ export class VM {
         return ptr;
     }
 
-    getUint( ptr ) {
-        return this.mem[ptr];
-    }
-
-    getInt( ptr ) {
-        return this.i32[ptr];
-    }
-
-    getReal( ptr ) {
-        return this.f32[ptr];
-    }
-
     setUint( ptr, value ) {
-        if ( !isUint32( value ) ) {
-            throw new RangeError( `Invalid Uint32: ${value}` );
+        if ( !isUint( value ) ) {
+            throw new RangeError( `Invalid unsigned integer: ${value}` );
         }
         this.mem[ptr] = value;
     }
 
     setInt( ptr, value ) {
-        if ( !isInt32( value ) ) {
-            throw new RangeError( `Invalid Int32: ${value}` );
+        if ( !isInt( value ) ) {
+            throw new RangeError( `Invalid integer: ${value}` );
         }
-        this.i32[ptr] = value;
+        this.mem[ptr] = value;
     }
 
     setReal( ptr, value ) {
-        if ( !isFloat32( value ) ) {
-            throw new RangeError( `Invalid Float32: ${value}` );
+        if ( !isReal( value ) ) {
+            throw new RangeError( `Invalid real: ${value}` );
         }
-        this.f32[ptr] = value;
+        this.mem[ptr] = value;
     }
 
     // Bind a symbol. A string value allocates storage, encodes the bytes,

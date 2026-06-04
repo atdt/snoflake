@@ -30,7 +30,7 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 
 describe('String Encoding', function () {
     it('writeString writes each code unit verbatim into the destination', function () {
-        const dst = new Uint32Array( 5 );
+        const dst = new Float64Array( 5 );
         writeString( 'हाय', dst, 1 );
         assert.deepEqual( Array.from( dst ), [ 0, 2361, 2366, 2351, 0 ] );
     });
@@ -72,28 +72,28 @@ describe('Typed Setters', function () {
     it('real', function () {
         const vm = new VM();
         assert.throws( function () {
-            vm.setReal( 0, 10e100 );
+            vm.setReal( 0, Infinity );
         }, 'RangeError' );
     });
 });
 
-describe('Typed Getters', function () {
+describe('Typed Setters store accepted values verbatim', function () {
     it('uint', function () {
         const vm = new VM();
         vm.setUint( 0, 123 );
-        assert.equal( vm.getUint( 0 ), 123 );
+        assert.equal( vm.mem[0], 123 );
     });
 
     it('int', function () {
         const vm = new VM();
         vm.setInt( 0, -123 );
-        assert.equal( vm.getInt( 0 ), -123 );
+        assert.equal( vm.mem[0], -123 );
     });
 
     it('real', function () {
         const vm = new VM();
         vm.setReal( 0, Math.PI );
-        assert.equal( Math.floor( vm.getReal( 0 ) ), 3 );
+        assert.equal( vm.mem[0], Math.PI );
     });
 });
 
@@ -1183,7 +1183,7 @@ describe('Program Execution', function () {
             const vm = new VM();
             vm.run( {
                 symbols: {},
-                memory: new Uint32Array( 0 ),
+                memory: new Float64Array( 0 ),
                 instructions: [
                     [ 'TEST_SELF_BRANCH', [] ],
                     [ 'END', [] ],

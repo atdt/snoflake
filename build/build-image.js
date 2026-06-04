@@ -36,7 +36,7 @@ function serializeImage( image ) {
     return [
         'export default {',
         '  "symbols": ' + JSON.stringify( image.symbols, null, 2 ) + ',',
-        '  "memory": new Uint32Array( [',
+        '  "memory": new Float64Array( [',
         serializeMemory( image.memory ),
         '  ] ),',
         '  "instructions": [',

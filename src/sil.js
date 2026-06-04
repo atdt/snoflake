@@ -10,7 +10,7 @@ import {
     writeString,
 } from './string.js';
 import { Action, clearTable, constants, normalizeToken } from './syntax.js';
-import { isFloat32, isInt32 } from './datatypes.js';
+import { isInt, isReal } from './datatypes.js';
 const { SIZLIM, STTL, TTL } = constants;
 
 const CPD = 3; // Characters per descriptor
@@ -78,9 +78,9 @@ function loadExtensionSignature( vm, name ) {
 // 2.  See also LCOMP, ACOMPC, AEQL, AEQLC, and AEQLIC.
 
 sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
-    const i32 = this.i32,
-        A1 = i32[$DESCR1 + 0],
-        A2 = i32[$DESCR2 + 0];
+    const mem = this.mem,
+        A1 = mem[$DESCR1 + 0],
+        A2 = mem[$DESCR2 + 0];
 
     this.jmp( A1 > A2 ? GTLOC : A1 < A2 ? LTLOC : EQLOC );
 };
@@ -100,7 +100,7 @@ sil.ACOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 3.  N is often 0.
 // 4.  See also ACOMP, AEQL, AEQLC, and AEQLIC.
 sil.ACOMPC = function ( $DESCR, N, GTLOC, EQLOC, LTLOC ) {
-    const A = this.i32[$DESCR + 0];
+    const A = this.mem[$DESCR + 0];
     this.jmp( A > N ? GTLOC : A < N ? LTLOC : EQLOC );
 };
 
@@ -298,7 +298,7 @@ sil.ADREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newRaddr = DESCR2.raddr + DESCR3.raddr;
 
-    if ( !isFloat32( newRaddr ) ) {
+    if ( !isReal( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -349,7 +349,7 @@ sil.AEQL = function ( $DESCR1, $DESCR2, NELOC, EQLOC ) {
 // 4.  See also LEQLC, AEQL, AEQLIC, ACOMP, and ACOMPC.
 sil.AEQLC = function ( $DESCR, N, NELOC, EQLOC ) {
     // address equal to constant test
-    const A = this.i32[$DESCR + 0];
+    const A = this.mem[$DESCR + 0];
     if ( A === N ) {
         this.jmp( EQLOC );
     } else {
@@ -531,9 +531,9 @@ sil.BRANCH = function ( LOC, _PROC ) {
 // 1.  N is always zero
 sil.BRANIC = function ( $DESCR, N ) {
     // branch indirect with offset constant
-    const i32 = this.i32,
-        A = i32[$DESCR + 0];
-    this.jmp( i32[A + N + 0] );
+    const mem = this.mem,
+        A = mem[$DESCR + 0];
+    this.jmp( mem[A + N + 0] );
 };
 
 //     BUFFER  is used to assemble a string of N blank charac-
@@ -889,7 +889,7 @@ sil.DATE = function ( $SPEC ) {
 sil.DECRA = function ( $DESCR, N ) {
     // decrement address
     const ptr = $DESCR;
-    this.i32[ptr + 0] = this.i32[ptr + 0] - N;
+    this.mem[ptr + 0] = this.mem[ptr + 0] - N;
 };
 
 //     DEQL is used to compare two descriptors.  If A1  =  A2,
@@ -946,15 +946,13 @@ sil.DESCR = function ( A, F, V ) {
 //     REAL assembles a descriptor holding a REAL constant.  It
 // is not part of the original macro implementation. The pseudo-
 // operation comes from Phil Budne's CSNOBOL4, where it supplies
-// keyword  values  such  as  &PI.  The value rounds to the host
-// Float32 cell on store.
+// keyword  values  such  as  &PI.
 //      Data Assembled by REAL:
 //               +-------+-------+-------+
 //      LOC      |   N       0       R   |
 //               +-----------------------+
 // Programming Notes:
-// 1.  N occupies the address field and is read back through the
-// real view of that cell. R is the REAL type code.
+// 1.  N occupies the address field. R is the REAL type code.
 sil.REAL = function ( value ) {
     // assemble real constant
     const DESCR = this.d( this.alloc( D ) );
@@ -1028,7 +1026,7 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newRaddr = DESCR2.raddr / DESCR3.raddr;
 
-    if ( DESCR3.raddr === 0 || !isFloat32( newRaddr ) ) {
+    if ( DESCR3.raddr === 0 || !isReal( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1135,7 +1133,7 @@ sil.EXPINT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         // Zero to a non-positive power stays Infinity and falls to FLOC.
         newAddr = Math.trunc( Math.pow( DESCR2.addr, DESCR3.addr ) );
 
-    if ( !isInt32( newAddr ) ) {
+    if ( !isInt( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1167,7 +1165,7 @@ sil.EXREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newRaddr = Math.pow( DESCR2.raddr, DESCR3.raddr );
 
-    if ( !isFloat32( newRaddr ) ) {
+    if ( !isReal( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1311,11 +1309,10 @@ sil.GETBAL = function ( $SPEC, $DESCR, FLOC, SLOC ) {
 // 1.  See also GETDC, PUTD, and PUTDC.
 sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // get descriptor
-    const i32 = this.i32,
-        mem = this.mem,
+    const mem = this.mem,
         dst = $DESCR1,
-        A2 = i32[$DESCR2 + 0],
-        src = A2 + i32[$DESCR3 + 0];
+        A2 = mem[$DESCR2 + 0],
+        src = A2 + mem[$DESCR3 + 0];
 
     mem[dst + 0] = mem[src + 0];
     mem[dst + 1] = mem[src + 1];
@@ -1339,10 +1336,9 @@ sil.GETD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 // 1.  See also GETD, PUTDC, and PUTD.
 sil.GETDC = function ( $DESCR1, $DESCR2, N ) {
     // get descriptor with offset constant
-    const i32 = this.i32,
-        mem = this.mem,
+    const mem = this.mem,
         dst = $DESCR1,
-        src = i32[$DESCR2 + 0] + N;
+        src = mem[$DESCR2 + 0] + N;
 
     mem[dst + 0] = mem[src + 0];
     mem[dst + 1] = mem[src + 1];
@@ -1470,15 +1466,15 @@ sil.GETSPC = function ( $SPEC, $DESCR, N ) {
 sil.INCRA = function ( $DESCR, N ) {
     // increment address
     const ptr = $DESCR,
-        A = this.i32[ptr + 0];
-    this.i32[ptr + 0] = A + N;
+        A = this.mem[ptr + 0];
+    this.mem[ptr + 0] = A + N;
     // ESAICL counts compile-time errors; capture each one's context now,
     // since LISTCL may keep CDIAG's listing path silent. CSTNCL is bumped
     // as CMPILE begins each statement; map it to its source card.
     if ( ptr === this.ESAICL_ADDR ) {
-        const emsgPtr = this.i32[this.symbols.EMSGCL];
+        const emsgPtr = this.mem[this.symbols.EMSGCL];
         this.diagnostics.recordCompileError(
-            this.i32[this.symbols.CSTNCL],
+            this.mem[this.symbols.CSTNCL],
             emsgPtr ? this.s( emsgPtr ).specified : '',
         );
     } else if ( ptr === this.CSTNCL_ADDR ) {
@@ -1825,7 +1821,7 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     const argsAddr = this.d( $DESCR2 ).addr;
 
     // LNKFNC has staged each coerced arg in a descriptor at argsAddr.
-    // .addr and .raddr are int and Float32 views of the same cell.
+    // .addr and .raddr are the int and real reads of the same cell.
     const args = ext.args.map( ( kind, i ) => {
         const arg = this.d( argsAddr + i * D );
         switch ( kind ) {
@@ -2022,11 +2018,10 @@ sil.LOAD = function ( $DESCR, $SPEC1, $SPEC2, FLOC, _SLOC ) {
 sil.LOCAPT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // locate attribute pair by type
     const mem = this.mem,
-        i32 = this.i32,
         ptr1 = $DESCR1,
         ptr2 = $DESCR2,
         ptr3 = $DESCR3,
-        A = i32[ptr2 + 0],
+        A = mem[ptr2 + 0],
         stop = A + mem[A + 2];
     let ptr;
 
@@ -2036,7 +2031,7 @@ sil.LOCAPT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
             mem[ptr + 1] === mem[ptr3 + 1] &&
             mem[ptr + 2] === mem[ptr3 + 2]
         ) {
-            i32[ptr1 + 0] = ptr - 3;
+            mem[ptr1 + 0] = ptr - 3;
             mem[ptr1 + 1] = mem[ptr2 + 1];
             mem[ptr1 + 2] = mem[ptr2 + 2];
             this.jmp( SLOC );
@@ -2090,11 +2085,10 @@ sil.LOCAPT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // locate attribute pair by value
     const mem = this.mem,
-        i32 = this.i32,
         ptr1 = $DESCR1,
         ptr2 = $DESCR2,
         ptr3 = $DESCR3,
-        A = i32[ptr2 + 0],
+        A = mem[ptr2 + 0],
         stop = A + mem[A + 2];
 
     for ( let ptr = A + 6;; ptr += 6 ) {
@@ -2103,7 +2097,7 @@ sil.LOCAPV = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
             mem[ptr + 1] === mem[ptr3 + 1] &&
             mem[ptr + 2] === mem[ptr3 + 2]
         ) {
-            i32[ptr1 + 0] = ptr - 6;
+            mem[ptr1 + 0] = ptr - 6;
             mem[ptr1 + 1] = mem[ptr2 + 1];
             mem[ptr1 + 2] = mem[ptr2 + 2];
             this.jmp( SLOC );
@@ -2328,7 +2322,7 @@ sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
         DESCR2 = this.d( $DESCR2 ),
         newAddr = -DESCR2.addr;
 
-    if ( !isInt32( newAddr ) ) {
+    if ( !isInt( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -2351,9 +2345,7 @@ sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
 // 1.  See also MOVD and MOVV.
 sil.MOVA = function ( $DESCR1, $DESCR2 ) {
     // move address
-    const i32 = this.i32;
-
-    i32[$DESCR1 + 0] = i32[$DESCR2 + 0];
+    this.mem[$DESCR1 + 0] = this.mem[$DESCR2 + 0];
 };
 
 //     MOVBLK is used to move (copy) a block of descriptors.
@@ -2490,7 +2482,7 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newRaddr = DESCR2.raddr * DESCR3.raddr;
 
-    if ( !isFloat32( newRaddr ) ) {
+    if ( !isReal( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -2555,7 +2547,7 @@ sil.MULT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newAddr = DESCR2.addr * DESCR3.addr;
 
-    if ( !isInt32( newAddr ) ) {
+    if ( !isInt( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -2929,11 +2921,10 @@ sil.PUTAC = function ( $DESCR1, N, $DESCR2 ) {
 // 1.  See also PUTDC, PUTAC, PUTVC, and GETD.
 sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
     // put descriptor
-    const i32 = this.i32,
-        dst = i32[$DESCR1 + 0] +
-            i32[$DESCR2 + 0];
+    const mem = this.mem,
+        dst = mem[$DESCR1 + 0] +
+            mem[$DESCR2 + 0];
 
-    const mem = this.mem;
     mem[dst + 0] = mem[$DESCR3 + 0];
     mem[dst + 1] = mem[$DESCR3 + 1];
     mem[dst + 2] = mem[$DESCR3 + 2];
@@ -2957,7 +2948,7 @@ sil.PUTD = function ( $DESCR1, $DESCR2, $DESCR3 ) {
 sil.PUTDC = function ( $DESCR1, N, $DESCR2 ) {
     // put descriptor with constant offset
     const mem = this.mem,
-        dst = this.i32[$DESCR1 + 0] + N;
+        dst = this.mem[$DESCR1 + 0] + N;
 
     mem[dst + 0] = mem[$DESCR2 + 0];
     mem[dst + 1] = mem[$DESCR2 + 1];
@@ -3216,14 +3207,9 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( $SPEC, $DESCR ) {
     const value = this.d( $DESCR ).raddr;
-    // Shortest decimal that rounds back to the stored Float32, with a forced
-    // decimal point. Nine significant digits always round-trip.
-    let shortest = value;
-    for ( let digits = 1; digits <= 9; digits++ ) {
-        shortest = Number( value.toPrecision( digits ) );
-        if ( Math.fround( shortest ) === value ) break;
-    }
-    let text = String( shortest );
+    // String() yields the shortest decimal that round-trips, with a forced
+    // decimal point.
+    let text = String( value );
     if ( !/[.e]/i.test( text ) ) text += '.';
     return this.specify( text, $SPEC );
 };
@@ -3318,7 +3304,7 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
         DESCR2 = this.d( $DESCR2 ),
         newAddr = Math.trunc( DESCR2.raddr );
 
-    if ( !isInt32( newAddr ) ) {
+    if ( !isInt( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -3508,7 +3494,7 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newRaddr = DESCR2.raddr - DESCR3.raddr;
 
-    if ( !isFloat32( newRaddr ) ) {
+    if ( !isReal( newRaddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -3558,7 +3544,7 @@ sil.SELBRA = function ( $DESCR, LOCI ) {
 // 4.  See also SETVC, SETLC, and SETAV.
 sil.SETAC = function ( $DESCR, N ) {
     // set address to constant
-    this.i32[$DESCR + 0] = N;
+    this.mem[$DESCR + 0] = N;
 };
 
 //     SETAV sets the address field of one descriptor from the
@@ -3788,7 +3774,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
         return this.jmp( FLOC );
     }
 
-    if ( !isInt32( val ) ) {
+    if ( !isInt( val ) ) {
         DESCR.set( 0, 0, I );
         DESCR.addr = 0;
         return this.jmp( FLOC );
@@ -4161,7 +4147,7 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     // Fold the lookup byte under &CASE so lowercase source (`:f`, lowercase
     // identifiers) dispatches through the same row as its uppercase form.
     // Tables exempted via foldsLookups=false (SNABTB) scan byte-literal.
-    const caseFold = this.i32[this.symbols.CASECL] !== 0;
+    const caseFold = this.mem[this.symbols.CASECL] !== 0;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
     let table = this.syntaxTables[TABLE];
@@ -4319,7 +4305,7 @@ sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newAddr = DESCR2.addr - DESCR3.addr;
 
-    if ( !isInt32( newAddr ) ) {
+    if ( !isInt( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -4353,19 +4339,18 @@ sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
 // 4.  See also SUBTRT.
 sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     // sum addresses
-    const i32 = this.i32,
-        mem = this.mem,
+    const mem = this.mem,
         ptr1 = $DESCR1,
         ptr2 = $DESCR2,
         ptr3 = $DESCR3;
 
-    const newAddr = i32[ptr2 + 0] + i32[ptr3 + 0];
-    if ( !isInt32( newAddr ) ) {
+    const newAddr = mem[ptr2 + 0] + mem[ptr3 + 0];
+    if ( !isInt( newAddr ) ) {
         this.jmp( FLOC );
         return;
     }
 
-    i32[ptr1 + 0] = newAddr;
+    mem[ptr1 + 0] = newAddr;
     mem[ptr1 + 1] = mem[ptr2 + 1];
     mem[ptr1 + 2] = mem[ptr2 + 2];
     this.jmp( SLOC );

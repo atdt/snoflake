@@ -1,6 +1,6 @@
 // Small string utilities shared across the runtime.
 
-// dst is expected to be a Uint32Array view of VM memory.
+// dst is expected to be a Float64Array view of VM memory.
 export function writeString( s, dst, offset ) {
     const len = s.length;
     for ( let i = 0; i < len; i++ ) {

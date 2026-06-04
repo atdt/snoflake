@@ -1036,7 +1036,7 @@ describe('Macros that Perform Integer Arithmetic on Address Fields', function ()
 
     it('SUM', function () {
         const vm = new VM();
-        const INT32_MAX = 0x7fffffff,
+        const INT_MAX = Number.MAX_SAFE_INTEGER,
             d1 = vm.d( vm.alloc( D ) ),
             d2 = vm.d( vm.alloc( D ) ),
             d3 = vm.d( vm.alloc( D ) ),
@@ -1056,7 +1056,7 @@ describe('Macros that Perform Integer Arithmetic on Address Fields', function ()
 
         // A+I overflow:
         d1.set( 11, 22, 33 );
-        d3.addr = INT32_MAX;
+        d3.addr = INT_MAX;
         sil.SUM.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
         assert.deepEqual( d1.cells(), [ 11, 22, 33 ] );
         assert.equal( vm.ip, 7 );
