@@ -1092,10 +1092,10 @@ describe('Descriptor Datatype', function () {
 
         d1.set( 6, 7, 8 );
         d2.set( 6, 7, 8 );
-        assert( d1.isEqualTo( d2 ) );
+        assert.deepStrictEqual( d1.cells(), d2.cells() );
 
         d2.set( 9, 10, 11 );
-        assert( !d1.isEqualTo( d2 ) );
+        assert.notDeepStrictEqual( d1.cells(), d2.cells() );
     });
 });
 
@@ -1146,10 +1146,10 @@ describe('Specifier Datatype', function () {
 
         s1.set( 6, 7, 8, 9, 10 );
         s2.set( 6, 7, 8, 9, 10 );
-        assert( s1.isEqualTo( s2 ) );
+        assert.deepStrictEqual( s1.cells(), s2.cells() );
 
         s2.set( 1, 2, 3, 4, 5 );
-        assert( !s1.isEqualTo( s2 ) );
+        assert.notDeepStrictEqual( s1.cells(), s2.cells() );
     });
 
     it('specified', function () {

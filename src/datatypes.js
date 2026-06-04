@@ -90,19 +90,6 @@ export class Descriptor {
         this.value = value;
     }
 
-    isEqualTo( other ) {
-        if ( this.width !== other.width ) {
-            return false;
-        }
-        const mem = this.vm.mem;
-        for ( let i = 0; i < this.width; i++ ) {
-            if ( mem[this.ptr + i] !== mem[other.ptr + i] ) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     copyFrom( src ) {
         this.vm.mem.copyWithin( this.ptr, src.ptr, src.ptr + this.width );
     }
