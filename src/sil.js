@@ -11,7 +11,7 @@ import {
 } from './string.js';
 import { Action, clearTable, constants, normalizeToken } from './syntax.js';
 import { isInt, isReal } from './datatypes.js';
-const { SIZLIM, STTL, TTL } = constants;
+const { STTL, TTL } = constants;
 
 const CPD = 3; // Characters per descriptor
 
@@ -2316,18 +2316,15 @@ sil.MNREAL = function ( $DESCR1, $DESCR2 ) {
 // Programming Notes:
 // 1.  I may be negative.
 // 2.  See also MNREAL.
-sil.MNSINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
+sil.MNSINT = function ( $DESCR1, $DESCR2, _FLOC, SLOC ) {
     // minus integer
     const DESCR1 = this.d( $DESCR1 ),
-        DESCR2 = this.d( $DESCR2 ),
-        newAddr = -DESCR2.addr;
+        DESCR2 = this.d( $DESCR2 );
 
-    if ( !isInt( newAddr ) ) {
-        return this.jmp( FLOC );
-    }
-
+    // The integer range is symmetric, so -I cannot exceed it and FLOC is
+    // never taken.
     DESCR1.copyFrom( DESCR2 );
-    DESCR1.addr = newAddr;
+    DESCR1.addr = -DESCR2.addr;
     this.jmp( SLOC );
 };
 
@@ -3885,14 +3882,18 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     // The empty alternative covers L=0, which spec note 3 says yields 0.0.
     // The `+ '0'` lets parseFloat accept a trailing decimal point like "12.".
     const s = SPEC.specified;
-    if ( /^([+-]?0*\d+\.\d*|)$/.test( s ) ) {
-        DESCR.raddr = parseFloat( s + '0', 10 );
-        DESCR.flags = 0;
-        DESCR.value = this.$( 'R' );
-        this.jmp( SLOC );
-    } else {
-        this.jmp( FLOC );
+    if ( !/^([+-]?0*\d+\.\d*|)$/.test( s ) ) {
+        return this.jmp( FLOC );
     }
+    const value = parseFloat( s + '0' );
+    // A string of digits can name a value beyond the real range.
+    if ( !isReal( value ) ) {
+        return this.jmp( FLOC );
+    }
+    DESCR.raddr = value;
+    DESCR.flags = 0;
+    DESCR.value = this.$( 'R' );
+    this.jmp( SLOC );
 };
 
 //     SPUSH is used to push a list  of  specifiers  onto  the
@@ -4566,7 +4567,8 @@ sil.VARID = function ( $DESCR, $SPEC ) {
         K_HASH = hashString( 'K' + text ),
         K = Math.abs( K_HASH % this.$( 'OBSIZ' ) ) * D,
         M_HASH = hashString( 'M' + text ),
-        M = Math.abs( M_HASH % ( SIZLIM + 1 ) );
+        // A 32-bit hash already sits well inside [0, SIZLIM].
+        M = Math.abs( M_HASH );
 
     DESCR.addr = K;
     DESCR.value = M;
