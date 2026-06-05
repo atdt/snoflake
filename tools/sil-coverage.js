@@ -19,12 +19,9 @@
 // src/sil.js: a macro may be thoroughly unit-tested yet only ever invoked from
 // instructions the fixtures never reach.
 //
-// Mapping back to source. image.instructions[i] is the i-th executable
-// statement of external/v311-snoflake.sil, in source order, skipping the
-// assembly-time and marker macros that occupy no instruction slot (the same
-// classification src/assemble.js applies). We re-scan the SIL to recover each
-// slot's line number, opcode, comment, and enclosing PROC so the report can
-// name the routines that never run.
+// Mapping back to source. tools/sil-source-map.js re-scans the SIL to recover
+// each slot's line number, opcode, comment, and enclosing PROC so the report
+// can name the routines that never run.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { createVM, image, VM } from '../src/snobol.js';
 import { createHostLoader } from '../src/host.js';
 import { loadCases, parseHeader } from '../test/program-fixture.js';
+import { buildSourceMap } from './sil-source-map.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
     ROOT = path.join( __dirname, '..' ),
@@ -41,104 +39,6 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
     PROGRAMS_DIR = path.join( ROOT, 'test', 'programs' ),
     GIMPEL_LIB_DIR = path.join( PROGRAMS_DIR, 'gimpel' ),
     TMP_DIR = path.join( ROOT, 'tmp', 'sil-coverage' );
-
-// Macro classification, mirrored from src/assemble.js. These never occupy a
-// runtime instruction slot, so they are skipped when numbering slots.
-const ASSEMBLY_MACROS = [
-    'ARRAY',
-    'BUFFER',
-    'DESCR',
-    'EQU',
-    'FORMAT',
-    'SPEC',
-    'STRING',
-];
-const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-
-const STATEMENT =
-    /^(?<label>[A-Z][A-Z0-9]*)?\s+(?<macro>[A-Z][A-Z0-9]*)\s+(?<operands>.*)$/;
-
-// Split a SIL operand field from its trailing comment. Operands never contain
-// an unquoted space, so the comment begins at the first whitespace found
-// outside a quoted literal.
-function extractComment( operands ) {
-    let inQuote = false;
-    for ( let i = 0; i < operands.length; i++ ) {
-        const c = operands[i];
-        if ( c === "'" ) {
-            inQuote = !inQuote;
-        } else if ( !inQuote && ( c === ' ' || c === '\t' ) ) {
-            return operands.slice( i ).trim();
-        }
-    }
-    return '';
-}
-
-// Walk the SIL once and return, for each runtime instruction slot, its source
-// line, opcode, comment, and enclosing procedure. The slot count must match
-// image.instructions.length exactly; a mismatch means the classification here
-// has drifted from src/assemble.js.
-//
-// Each slot records its enclosing region: the nearest preceding PROC, or, when
-// a TITLE section opens code that no PROC heads, the section itself. TITLE acts
-// as a region boundary so a procedure cannot absorb the non-procedure common
-// code that follows it -- without this, TRIM (the file's last PROC) would
-// swallow the entire Common Code / Termination / Error Handling tail.
-function buildSourceMap() {
-    const text = fs.readFileSync( SIL_PATH, 'utf8' ),
-        lines = text.split( /\r?\n/ ),
-        slots = [];
-    let region = null; // { kind, name, line, comment }
-
-    for ( let i = 0; i < lines.length; i++ ) {
-        const line = lines[i];
-        if ( /^\s*$/.test( line ) || line.startsWith( '*' ) ) continue;
-        if ( /^\s+END\s*$/.test( line ) ) break;
-
-        const m = STATEMENT.exec( line );
-        if ( !m ) {
-            throw new Error(
-                `Unparsable SIL statement at line ${i + 1}: ${line}`,
-            );
-        }
-
-        const { label, macro, operands } = m.groups,
-            comment = extractComment( operands );
-
-        if ( macro === 'PROC' ) {
-            region = { kind: 'proc', name: label, line: i + 1, comment };
-            continue;
-        }
-        if ( macro === 'TITLE' ) {
-            // The operand is the quoted section name; strip the quotes.
-            const name = operands.replace( /^\s*'|'.*$/g, '' ).trim();
-            region = { kind: 'section', name, line: i + 1, comment: '' };
-            continue;
-        }
-        if (
-            ASSEMBLY_MACROS.includes( macro ) || MARKER_MACROS.includes( macro )
-        ) {
-            continue;
-        }
-
-        slots.push( {
-            line: i + 1,
-            label: label ?? null,
-            macro,
-            comment,
-            region,
-        } );
-    }
-
-    if ( slots.length !== image.instructions.length ) {
-        throw new Error(
-            `Source map has ${slots.length} slots but the image has ` +
-                `${image.instructions.length} instructions; the SIL ` +
-                `classification has drifted from src/assemble.js.`,
-        );
-    }
-    return slots;
-}
 
 // Per-slot execution counts, indexed by instruction slot. The slot index is
 // stable across runs because every fixture loads the same image, so counts
@@ -282,7 +182,7 @@ function main() {
         showAll = argv.includes( '--procs' ),
         jsonArg = argv.find( ( a ) => a.startsWith( '--json' ) );
 
-    const slots = buildSourceMap();
+    const slots = buildSourceMap( fs.readFileSync( SIL_PATH, 'utf8' ), image );
     fs.mkdirSync( TMP_DIR, { recursive: true } );
 
     const fixtures = loadCases();

@@ -19,91 +19,12 @@ import { fileURLToPath } from 'node:url';
 
 import { createVM, image, VM } from '../src/snobol.js';
 import { createHostLoader } from '../src/host.js';
+import { buildSourceMap } from './sil-source-map.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
     ROOT = path.join( __dirname, '..' ),
     SIL_PATH = path.join( ROOT, 'external', 'v311-snoflake.sil' ),
     OUT_DIR = path.join( ROOT, 'tmp', 'ip-profile' );
-
-// Mirror src/assemble.js: these macros occupy no runtime instruction slot.
-const ASSEMBLY_MACROS = [
-    'ARRAY',
-    'BUFFER',
-    'DESCR',
-    'EQU',
-    'FORMAT',
-    'SPEC',
-    'STRING',
-];
-const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-
-const STATEMENT =
-    /^(?<label>[A-Z][A-Z0-9]*)?\s+(?<macro>[A-Z][A-Z0-9]*)\s+(?<operands>.*)$/;
-
-function extractComment( operands ) {
-    let inQuote = false;
-    for ( let i = 0; i < operands.length; i++ ) {
-        const c = operands[i];
-        if ( c === "'" ) {
-            inQuote = !inQuote;
-        } else if ( !inQuote && ( c === ' ' || c === '\t' ) ) {
-            return operands.slice( i ).trim();
-        }
-    }
-    return '';
-}
-
-// One entry per runtime slot, in image.instructions order: line, label,
-// opcode, comment, enclosing region. The region is the nearest preceding PROC;
-// a TITLE opens a non-procedure section and resets the region, so the last PROC
-// (TRIM) cannot absorb the Common Code / Termination tail that follows it.
-function buildSourceMap() {
-    const lines = fs.readFileSync( SIL_PATH, 'utf8' ).split( /\r?\n/ ),
-        slots = [];
-    let region = '(top)';
-
-    for ( let i = 0; i < lines.length; i++ ) {
-        const line = lines[i];
-        if ( /^\s*$/.test( line ) || line.startsWith( '*' ) ) continue;
-        if ( /^\s+END\s*$/.test( line ) ) break;
-
-        const m = STATEMENT.exec( line );
-        if ( !m ) {
-            throw new Error( `Unparsable SIL at line ${i + 1}: ${line}` );
-        }
-        const { label, macro, operands } = m.groups;
-
-        if ( macro === 'PROC' ) {
-            region = label;
-            continue;
-        }
-        if ( macro === 'TITLE' ) {
-            region = operands.replace( /^\s*'|'.*$/g, '' ).trim();
-            continue;
-        }
-        if (
-            ASSEMBLY_MACROS.includes( macro ) || MARKER_MACROS.includes( macro )
-        ) {
-            continue;
-        }
-
-        slots.push( {
-            line: i + 1,
-            label: label ?? '',
-            macro,
-            comment: extractComment( operands ),
-            proc: region,
-        } );
-    }
-
-    if ( slots.length !== image.instructions.length ) {
-        throw new Error(
-            `Source map has ${slots.length} slots but image has ` +
-                `${image.instructions.length} instructions.`,
-        );
-    }
-    return slots;
-}
 
 const counts = new Float64Array( image.instructions.length );
 
@@ -129,7 +50,14 @@ function main() {
             ? path.resolve( ROOT, progArg )
             : path.join( ROOT, 'sudoku.sno' );
 
-    const slots = buildSourceMap();
+    // The report names each slot's enclosing region. Slots before the first
+    // PROC or TITLE marker fall under a synthetic top-level bucket.
+    const slots = buildSourceMap( fs.readFileSync( SIL_PATH, 'utf8' ), image )
+        .map( ( s ) => ( {
+            ...s,
+            label: s.label ?? '',
+            proc: s.region ? s.region.name : '(top)',
+        } ) );
 
     fs.mkdirSync( OUT_DIR, { recursive: true } );
     const sink = { write() {} };

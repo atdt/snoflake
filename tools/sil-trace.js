@@ -19,8 +19,8 @@
 // with its source line number, so a stretch of trace reads like a walk through
 // the SIL. The image is assembled from the SIL on every call rather than
 // loaded from src/generated-snobol-image.js, so a work-in-progress SIL edit
-// traces faithfully without a prior `make build`. See tools/sil-coverage.js
-// for the slot-to-source mapping this reuses.
+// traces faithfully without a prior `make build`. The slot-to-source mapping
+// comes from tools/sil-source-map.js.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,65 +35,11 @@ import {
     parse as parseSil,
 } from '../build/sil-parser.js';
 import { createHostLoader, stdinReader } from '../src/host.js';
+import { buildSourceMap } from './sil-source-map.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) ),
     ROOT = path.join( __dirname, '..' ),
     SIL_PATH = path.join( ROOT, 'external', 'v311-snoflake.sil' );
-
-// Macros that occupy no runtime instruction slot, mirrored from
-// src/assemble.js. They are skipped when numbering slots, exactly as the
-// assembler skips them when laying out instructions.
-const ASSEMBLY_MACROS = [
-    'ARRAY',
-    'BUFFER',
-    'DESCR',
-    'EQU',
-    'FORMAT',
-    'SPEC',
-    'STRING',
-];
-const MARKER_MACROS = [ 'LHERE', 'PROC', 'TITLE' ];
-
-const STATEMENT =
-    /^(?<label>[A-Z][A-Z0-9]*)?\s+(?<macro>[A-Z][A-Z0-9]*)\s+(?<operands>.*)$/;
-
-// Walk the SIL once and return, for each runtime instruction slot, its source
-// line number and verbatim text. The slot count must match
-// image.instructions.length exactly; a mismatch means this classification has
-// drifted from src/assemble.js.
-function buildSourceMap( silText, image ) {
-    const lines = silText.split( /\r?\n/ ),
-        slots = [];
-
-    for ( let i = 0; i < lines.length; i++ ) {
-        const line = lines[i];
-        if ( /^\s*$/.test( line ) || line.startsWith( '*' ) ) continue;
-        if ( /^\s+END\s*$/.test( line ) ) break;
-
-        const m = STATEMENT.exec( line );
-        if ( !m ) {
-            throw new Error(
-                `Unparsable SIL statement at line ${i + 1}: ${line}`,
-            );
-        }
-        const { macro } = m.groups;
-        if (
-            ASSEMBLY_MACROS.includes( macro ) || MARKER_MACROS.includes( macro )
-        ) {
-            continue;
-        }
-        slots.push( { line: i + 1, text: line.replace( /\s+$/, '' ) } );
-    }
-
-    if ( slots.length !== image.instructions.length ) {
-        throw new Error(
-            `Source map has ${slots.length} slots but the image has ` +
-                `${image.instructions.length} instructions; the SIL ` +
-                `classification has drifted from src/assemble.js.`,
-        );
-    }
-    return slots;
-}
 
 // Render a trace slot the way the CLI prints it: padded source line number,
 // then the verbatim SIL text.
