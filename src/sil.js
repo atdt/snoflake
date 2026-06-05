@@ -4042,8 +4042,12 @@ sil.STREAD = function ( $SPEC, $DESCR, EOF, _ERROR, SLOC ) {
 
     // Stream-mode segments report the actual record length through SPEC.length.
     // Card-mode reads keep SPEC.length at the buffer width, so the caller keeps
-    // seeing fixed-column records.
-    if ( !record.padded ) {
+    // seeing fixed-column records. CSNOBOL4's PLB61 drops the blanks entirely.
+    if ( record.padded ) {
+        const BLANK = ' '.charCodeAt( 0 ),
+            start = SPEC.start;
+        this.mem.fill( BLANK, start + text.length, start + SPEC.length );
+    } else {
         SPEC.length = text.length;
     }
 

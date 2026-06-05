@@ -756,7 +756,7 @@ describe('SNOBOL Program Execution', function () {
         // The compiler reads source as cards. INPUT keeps natural lengths.
         assert.deepEqual( file.readRecord( 8, true ), {
             eof: false,
-            text: 'SOURCE  ',
+            text: 'SOURCE',
             padded: true,
         } );
         assert.deepEqual( file.readRecord( 8, false ), {

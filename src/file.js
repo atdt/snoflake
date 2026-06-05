@@ -64,8 +64,10 @@ export function bufferedReader( content ) {
     return reader;
 }
 
-// Long records are cut to the caller's buffer. Card-mode records are
-// padded to it. Stream-mode records keep their natural length.
+// Long records are cut to the caller's buffer. Stream-mode records keep
+// their natural length. A card-mode record keeps its text unpadded and
+// reports padded: true, telling the caller to blank-fill the rest of the
+// record width itself.
 function fitRecord( text, length, card ) {
     if ( text.length > length ) {
         return {
@@ -73,13 +75,7 @@ function fitRecord( text, length, card ) {
             padded: false,
         };
     }
-    if ( card ) {
-        return {
-            text: text.padEnd( length ),
-            padded: true,
-        };
-    }
-    return { text, padded: false };
+    return { text, padded: card };
 }
 
 // A File is one logical input unit. It may be backed by several segments.
