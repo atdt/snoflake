@@ -137,7 +137,7 @@ export function formatRecord( template, data ) {
                 }
                 const descr = nextDescr();
                 const fval = descr
-                    ? descr.raddr
+                    ? descr.addr
                     : ( parseFloat( strData.slice( strPos ) ) || 0 );
                 const ftxt = fd ? fval.toFixed( fd ) : String( fval );
                 out += ftxt.padStart( fw );

@@ -1074,13 +1074,13 @@ describe('Macros that Deal with Real Numbers', function () {
             d2 = vm.d( vm.alloc( D ) ),
             d3 = vm.d( vm.alloc( D ) );
 
-        d2.raddr = 7.5;
+        d2.addr = 7.5;
         d2.flags = 44;
         d2.value = 55;
-        d3.raddr = 2.5;
+        d3.addr = 2.5;
         sil.DVREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
 
-        assert.equal( d1.raddr, 3 );
+        assert.equal( d1.addr, 3 );
         assert.equal( d1.flags, 44 );
         assert.equal( d1.value, 55 );
         assert.equal( vm.ip, 9 );
@@ -1104,13 +1104,13 @@ describe('Macros that Deal with Real Numbers', function () {
             d2 = vm.d( vm.alloc( D ) ),
             d3 = vm.d( vm.alloc( D ) );
 
-        d2.raddr = 1.5;
+        d2.addr = 1.5;
         d2.flags = 44;
         d2.value = 55;
-        d3.raddr = 2;
+        d3.addr = 2;
         sil.MPREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
 
-        assert.equal( d1.raddr, 3 );
+        assert.equal( d1.addr, 3 );
         assert.equal( d1.flags, 44 );
         assert.equal( d1.value, 55 );
         assert.equal( vm.ip, 9 );
@@ -1131,14 +1131,14 @@ describe('Macros that Deal with Real Numbers', function () {
 
         vm.define( 'I', 6 );
 
-        d2.raddr = -3.2;
+        d2.addr = -3.2;
         sil.RLINT.call( vm, d1.ptr, d2.ptr, 7, 9 );
         assert.equal( d1.addr, -3 );
         assert.equal( d1.flags, 0 );
         assert.equal( d1.value, 6 );
         assert.equal( vm.ip, 9 );
 
-        d2.raddr = 3.8;
+        d2.addr = 3.8;
         sil.RLINT.call( vm, d1.ptr, d2.ptr, 7, 9 );
         assert.deepEqual( d1.cells(), [ 3, 0, 6 ] );
         assert.equal( vm.ip, 9 );
@@ -1150,13 +1150,13 @@ describe('Macros that Deal with Real Numbers', function () {
             d2 = vm.d( vm.alloc( D ) ),
             d3 = vm.d( vm.alloc( D ) );
 
-        d2.raddr = 5.5;
+        d2.addr = 5.5;
         d2.flags = 44;
         d2.value = 55;
-        d3.raddr = 2.25;
+        d3.addr = 2.25;
         sil.SBREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
 
-        assert.equal( d1.raddr, 3.25 );
+        assert.equal( d1.addr, 3.25 );
         assert.equal( d1.flags, 44 );
         assert.equal( d1.value, 55 );
         assert.equal( vm.ip, 9 );
@@ -1167,7 +1167,7 @@ describe('Macros that Deal with Real Numbers', function () {
         const d = vm.d( vm.alloc( D ) ), s = sil.STRING.call( vm, '-0.5' );
         vm.define( 'R', 9 );
         sil.SPREAL.call( vm, d.ptr, s, 1, 2 );
-        assert.equal( d.raddr, -0.5 );
+        assert.equal( d.addr, -0.5 );
         assert.equal( d.value, 9 );
     });
 });

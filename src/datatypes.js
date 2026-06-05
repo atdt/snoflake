@@ -1,24 +1,9 @@
-// Core SIL data types: descriptors and specifiers, plus predicates for the
-// value domains of descriptor fields.
+// Core SIL data types: descriptors and specifiers.
 
 import { decodeString } from './string.js';
 
 // SIL descriptors are three words.
 export const D = 3;
-
-// Integers are exact only up to +/-(2^53 - 1) in a Float64 cell, so that
-// bound is the word's integer range.
-export function isUint( value ) {
-    return Number.isSafeInteger( value ) && value >= 0;
-}
-
-export function isInt( value ) {
-    return Number.isSafeInteger( value );
-}
-
-export function isReal( value ) {
-    return Number.isFinite( value );
-}
 
 // Descriptors are the SNOBOL4 runtime's basic datatype. Every value
 // (integer, real, string, pattern, array, ...) lives in a descriptor or
@@ -57,15 +42,7 @@ export class Descriptor {
     }
 
     set addr( n ) {
-        this.vm.setInt( this.ptr, n );
-    }
-
-    get raddr() {
-        return this.vm.mem[this.ptr];
-    }
-
-    set raddr( n ) {
-        this.vm.setReal( this.ptr, n );
+        this.vm.mem[this.ptr] = n;
     }
 
     get flags() {
@@ -73,7 +50,7 @@ export class Descriptor {
     }
 
     set flags( n ) {
-        this.vm.setUint( this.ptr + 1, n );
+        this.vm.mem[this.ptr + 1] = n;
     }
 
     get value() {
@@ -81,7 +58,7 @@ export class Descriptor {
     }
 
     set value( n ) {
-        this.vm.setUint( this.ptr + 2, n );
+        this.vm.mem[this.ptr + 2] = n;
     }
 
     set( addr = 0, flags = 0, value = 0 ) {
@@ -132,7 +109,7 @@ export class Specifier extends Descriptor {
     }
 
     set offset( n ) {
-        this.vm.setUint( this.ptr + 3, n );
+        this.vm.mem[this.ptr + 3] = n;
     }
 
     get length() {
@@ -140,7 +117,7 @@ export class Specifier extends Descriptor {
     }
 
     set length( n ) {
-        this.vm.setUint( this.ptr + 5, n );
+        this.vm.mem[this.ptr + 5] = n;
     }
 
     // The named string occupies the half-open range [start, end).

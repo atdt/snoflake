@@ -10,7 +10,6 @@ import {
     writeString,
 } from './string.js';
 import { Action, clearTable, constants, normalizeToken } from './syntax.js';
-import { isInt, isReal } from './datatypes.js';
 const { STTL, TTL } = constants;
 
 const CPD = 3; // Characters per descriptor
@@ -296,13 +295,13 @@ sil.ADREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        newRaddr = DESCR2.raddr + DESCR3.raddr;
+        newAddr = DESCR2.addr + DESCR3.addr;
 
-    if ( !isReal( newRaddr ) ) {
+    if ( !Number.isFinite( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.raddr = newRaddr;
+    DESCR1.addr = newAddr;
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -957,7 +956,7 @@ sil.REAL = function ( value ) {
     // assemble real constant
     const DESCR = this.d( this.alloc( D ) );
 
-    DESCR.raddr = value || 0;
+    DESCR.addr = value || 0;
     DESCR.flags = 0;
     DESCR.value = this.$( 'R' );
 
@@ -1024,13 +1023,13 @@ sil.DVREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        newRaddr = DESCR2.raddr / DESCR3.raddr;
+        newAddr = DESCR2.addr / DESCR3.addr;
 
-    if ( DESCR3.raddr === 0 || !isReal( newRaddr ) ) {
+    if ( DESCR3.addr === 0 || !Number.isFinite( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.raddr = newRaddr;
+    DESCR1.addr = newAddr;
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -1133,7 +1132,7 @@ sil.EXPINT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         // Zero to a non-positive power stays Infinity and falls to FLOC.
         newAddr = Math.trunc( Math.pow( DESCR2.addr, DESCR3.addr ) );
 
-    if ( !isInt( newAddr ) ) {
+    if ( !Number.isSafeInteger( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -1163,13 +1162,13 @@ sil.EXREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        newRaddr = Math.pow( DESCR2.raddr, DESCR3.raddr );
+        newAddr = Math.pow( DESCR2.addr, DESCR3.addr );
 
-    if ( !isReal( newRaddr ) ) {
+    if ( !Number.isFinite( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.raddr = newRaddr;
+    DESCR1.addr = newAddr;
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -1626,7 +1625,7 @@ sil.INTRL = function ( $DESCR1, $DESCR2 ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 );
 
-    DESCR1.raddr = DESCR2.addr;
+    DESCR1.addr = DESCR2.addr;
     DESCR1.flags = 0;
     DESCR1.value = this.$( 'R' );
 };
@@ -1821,14 +1820,12 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
     const argsAddr = this.d( $DESCR2 ).addr;
 
     // LNKFNC has staged each coerced arg in a descriptor at argsAddr.
-    // .addr and .raddr are the int and real reads of the same cell.
     const args = ext.args.map( ( kind, i ) => {
         const arg = this.d( argsAddr + i * D );
         switch ( kind ) {
             case 'INTEGER':
-                return arg.addr;
             case 'REAL':
-                return arg.raddr;
+                return arg.addr;
             case 'STRING':
                 // Natural variable layout: 4-descriptor header, then chars.
                 // addr 0 is the null string.
@@ -1857,7 +1854,7 @@ sil.LINK = function ( $DESCR1, $DESCR2, _$DESCR3, $DESCR4, FLOC, _SLOC ) {
             break;
         case 'REAL': {
             const d = this.d( $DESCR1 );
-            d.raddr = result;
+            d.addr = result;
             d.flags = 0;
             d.value = this.$( 'R' );
             break;
@@ -2299,7 +2296,7 @@ sil.MNREAL = function ( $DESCR1, $DESCR2 ) {
         DESCR2 = this.d( $DESCR2 );
 
     DESCR1.copyFrom( DESCR2 );
-    DESCR1.raddr *= -1;
+    DESCR1.addr *= -1;
 };
 
 //     MNSINT is used to change the sign of an integer.  If -I
@@ -2477,13 +2474,13 @@ sil.MPREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        newRaddr = DESCR2.raddr * DESCR3.raddr;
+        newAddr = DESCR2.addr * DESCR3.addr;
 
-    if ( !isReal( newRaddr ) ) {
+    if ( !Number.isFinite( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.raddr = newRaddr;
+    DESCR1.addr = newAddr;
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -2544,7 +2541,7 @@ sil.MULT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newAddr = DESCR2.addr * DESCR3.addr;
 
-    if ( !isInt( newAddr ) ) {
+    if ( !Number.isSafeInteger( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -3164,9 +3161,9 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
         DESCR2 = this.d( $DESCR2 );
 
     // real comparison
-    if ( DESCR1.raddr > DESCR2.raddr ) {
+    if ( DESCR1.addr > DESCR2.addr ) {
         this.jmp( GTLOC );
-    } else if ( DESCR1.raddr < DESCR2.raddr ) {
+    } else if ( DESCR1.addr < DESCR2.addr ) {
         this.jmp( LTLOC );
     } else {
         this.jmp( EQLOC );
@@ -3203,7 +3200,7 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // overwritten by a subsequent use of REALST.
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( $SPEC, $DESCR ) {
-    const value = this.d( $DESCR ).raddr;
+    const value = this.d( $DESCR ).addr;
     // String() yields the shortest decimal that round-trips, with a forced
     // decimal point.
     let text = String( value );
@@ -3299,9 +3296,9 @@ sil.RLINT = function ( $DESCR1, $DESCR2, FLOC, SLOC ) {
     // convert real number to integer
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
-        newAddr = Math.trunc( DESCR2.raddr );
+        newAddr = Math.trunc( DESCR2.addr );
 
-    if ( !isInt( newAddr ) ) {
+    if ( !Number.isSafeInteger( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -3489,13 +3486,13 @@ sil.SBREAL = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
     const DESCR1 = this.d( $DESCR1 ),
         DESCR2 = this.d( $DESCR2 ),
         DESCR3 = this.d( $DESCR3 ),
-        newRaddr = DESCR2.raddr - DESCR3.raddr;
+        newAddr = DESCR2.addr - DESCR3.addr;
 
-    if ( !isReal( newRaddr ) ) {
+    if ( !Number.isFinite( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
-    DESCR1.raddr = newRaddr;
+    DESCR1.addr = newAddr;
     DESCR1.flags = DESCR2.flags;
     DESCR1.value = DESCR2.value;
     this.jmp( SLOC );
@@ -3771,7 +3768,7 @@ sil.SPCINT = function ( $DESCR, $SPEC, FLOC, SLOC ) {
         return this.jmp( FLOC );
     }
 
-    if ( !isInt( val ) ) {
+    if ( !Number.isSafeInteger( val ) ) {
         DESCR.set( 0, 0, I );
         DESCR.addr = 0;
         return this.jmp( FLOC );
@@ -3887,10 +3884,10 @@ sil.SPREAL = function ( $DESCR, $SPEC, FLOC, SLOC ) {
     }
     const value = parseFloat( s + '0' );
     // A string of digits can name a value beyond the real range.
-    if ( !isReal( value ) ) {
+    if ( !Number.isFinite( value ) ) {
         return this.jmp( FLOC );
     }
-    DESCR.raddr = value;
+    DESCR.addr = value;
     DESCR.flags = 0;
     DESCR.value = this.$( 'R' );
     this.jmp( SLOC );
@@ -4306,7 +4303,7 @@ sil.SUBTRT = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         DESCR3 = this.d( $DESCR3 ),
         newAddr = DESCR2.addr - DESCR3.addr;
 
-    if ( !isInt( newAddr ) ) {
+    if ( !Number.isSafeInteger( newAddr ) ) {
         return this.jmp( FLOC );
     }
 
@@ -4346,7 +4343,7 @@ sil.SUM = function ( $DESCR1, $DESCR2, $DESCR3, FLOC, SLOC ) {
         ptr3 = $DESCR3;
 
     const newAddr = mem[ptr2 + 0] + mem[ptr3 + 0];
-    if ( !isInt( newAddr ) ) {
+    if ( !Number.isSafeInteger( newAddr ) ) {
         this.jmp( FLOC );
         return;
     }

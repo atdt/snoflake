@@ -54,49 +54,6 @@ describe('String Encoding', function () {
     });
 });
 
-describe('Typed Setters', function () {
-    it('uint', function () {
-        const vm = new VM();
-        assert.throws( function () {
-            vm.setUint( 0, -4 );
-        }, 'RangeError' );
-    });
-
-    it('int', function () {
-        const vm = new VM();
-        assert.throws( function () {
-            vm.setUint( 0, 4.2 );
-        }, 'RangeError' );
-    });
-
-    it('real', function () {
-        const vm = new VM();
-        assert.throws( function () {
-            vm.setReal( 0, Infinity );
-        }, 'RangeError' );
-    });
-});
-
-describe('Typed Setters store accepted values verbatim', function () {
-    it('uint', function () {
-        const vm = new VM();
-        vm.setUint( 0, 123 );
-        assert.equal( vm.mem[0], 123 );
-    });
-
-    it('int', function () {
-        const vm = new VM();
-        vm.setInt( 0, -123 );
-        assert.equal( vm.mem[0], -123 );
-    });
-
-    it('real', function () {
-        const vm = new VM();
-        vm.setReal( 0, Math.PI );
-        assert.equal( vm.mem[0], Math.PI );
-    });
-});
-
 describe('Symbol Binding', function () {
     it('simple', function () {
         const vm = new VM();

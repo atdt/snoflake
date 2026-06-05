@@ -1,14 +1,7 @@
 // The virtual machine: word-addressed memory, descriptor and specifier
 // accessors, and the dispatch loop that executes the assembled SIL macros.
 
-import {
-    D,
-    Descriptor,
-    isInt,
-    isReal,
-    isUint,
-    Specifier,
-} from './datatypes.js';
+import { D, Descriptor, Specifier } from './datatypes.js';
 import { Diagnostics } from './diagnostics.js';
 import {
     extensions as defaultExtensions,
@@ -174,7 +167,6 @@ export class VM {
         } );
         // SIL storage is word-addressed. Each word is a Float64 cell holding
         // a number, so one length-tracking view serves every field read.
-        // Which values a cell may hold is enforced on store; see setInt.
         this.mem = new Float64Array( this.buffer );
     }
 
@@ -203,27 +195,6 @@ export class VM {
         }
         this.memPtr += size;
         return ptr;
-    }
-
-    setUint( ptr, value ) {
-        if ( !isUint( value ) ) {
-            throw new RangeError( `Invalid unsigned integer: ${value}` );
-        }
-        this.mem[ptr] = value;
-    }
-
-    setInt( ptr, value ) {
-        if ( !isInt( value ) ) {
-            throw new RangeError( `Invalid integer: ${value}` );
-        }
-        this.mem[ptr] = value;
-    }
-
-    setReal( ptr, value ) {
-        if ( !isReal( value ) ) {
-            throw new RangeError( `Invalid real: ${value}` );
-        }
-        this.mem[ptr] = value;
     }
 
     // Bind a symbol. A string value allocates storage, encodes the bytes,
