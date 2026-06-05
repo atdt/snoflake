@@ -1,0 +1,12 @@
+* @title SUCCEED rematches the null string until its neighbor succeeds
+* @expect >>>
+* MATCHED AFTER 3 TRIES
+* <<<
+        DEFINE('BUMP()')                        :(MAIN)
+BUMP    N = N + 1
+        BUMP = N                                :(RETURN)
+MAIN    N = 0
+        'ABC' SUCCEED *EQ(BUMP(), 3)            :F(NO)
+        OUTPUT = 'MATCHED AFTER ' N ' TRIES'    :(END)
+NO      OUTPUT = 'FAILED'
+END

@@ -1,0 +1,15 @@
+* @title Indirect reference through an integer and a keyword name
+* @expect >>>
+* STORED VIA INTEGER
+* NAME
+* 1
+* <<<
+        N = 3
+        $N = 'STORED VIA INTEGER'
+        OUTPUT = $'3'
+        K = .&ANCHOR
+        OUTPUT = DATATYPE(K)
+        $K = 1
+        OUTPUT = &ANCHOR
+        &ANCHOR = 0
+END

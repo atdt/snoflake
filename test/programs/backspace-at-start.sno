@@ -1,0 +1,12 @@
+* @title BACKSPACE at the start of a file leaves the position unchanged
+* @nonstandard CSNOBOL4 does not define BACKSPACE
+* @expect >>>
+* FIRST: ALPHA
+* <<<
+        OUTPUT(.W, 8, , 'tmp/backspace-probe.dat')
+        W = 'ALPHA'
+        ENDFILE(8)
+        INPUT(.R, 9, , 'tmp/backspace-probe.dat')
+        BACKSPACE(9)
+        OUTPUT = 'FIRST: ' R
+END

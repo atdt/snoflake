@@ -1,0 +1,24 @@
+* @title Pattern assignment to deferred names and keyword targets
+* @expect >>>
+* P= V=3
+* CUR2=4
+* 123
+* 54
+* <<<
+*
+* A deferred cursor target @*V evaluates V by name at match time, so the
+* cursor lands in V itself, not in the variable V names. A computed
+* target @*$('CUR' N) resolves to CUR2. Keyword targets of $ and . take
+* the value through integer conversion.
+        V = .P
+        'ABCDE' ('BC' @*V)              :S(YES)F(NO)
+YES     OUTPUT = 'P=' P ' V=' V         :(T)
+NO      OUTPUT = 'NOMATCH'
+T       N = 2
+        'ABCDE' 'CD' @*$('CUR' N)
+        OUTPUT = 'CUR2=' CUR2
+        '12345' LEN(3) $ &STLIMIT
+        OUTPUT = &STLIMIT
+        '54321' LEN(2) . &STLIMIT
+        OUTPUT = &STLIMIT
+END

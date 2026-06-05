@@ -1,0 +1,18 @@
+* @title VALUE trace fires for $, @, and . assignments during matching
+* @expect >>>
+* TRACE  HE
+* TRACE  4
+* TRACE  SNO
+* X=HE C=4 D=SNO
+* <<<
+        DEFINE('TFN(NAM,TYP)')          :(MAIN)
+TFN     OUTPUT = 'TRACE ' TYP ' ' $NAM          :(RETURN)
+MAIN    &TRACE = 10
+        TRACE('X', 'VALUE', , 'TFN')
+        TRACE('C', 'VALUE', , 'TFN')
+        TRACE('D', 'VALUE', , 'TFN')
+        'HELLO' LEN(2) $ X
+        'WORLD' 'RL' @C
+        'SNOBOL' LEN(3) . D
+        OUTPUT = 'X=' X ' C=' C ' D=' D
+END

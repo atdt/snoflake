@@ -1,0 +1,5 @@
+* @title Indirect reference through a real is an illegal data type
+* @match error
+* @expect ILLEGAL DATA TYPE
+        OUTPUT = $2.5
+END

@@ -1,0 +1,17 @@
+* @title ENDFILE closes a written file so it can be read back
+* @expect >>>
+* FIRST: ALPHA
+* SECOND: BETA
+* REWOUND: ALPHA
+* <<<
+        OUTPUT(.W, 8, , 'tmp/endfile-cycle.dat')
+        W = 'ALPHA'
+        W = 'BETA'
+        W = 'GAMMA'
+        ENDFILE(8)
+        INPUT(.R, 9, , 'tmp/endfile-cycle.dat')
+        OUTPUT = 'FIRST: ' R
+        OUTPUT = 'SECOND: ' R
+        REWIND(9)
+        OUTPUT = 'REWOUND: ' R
+END
