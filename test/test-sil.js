@@ -1120,8 +1120,24 @@ describe('Macros that Deal with Real Numbers', function () {
         assert( sil.RCOMP );
     });
 
-    it('REALST', function () { // stub
-        assert( sil.REALST );
+    it('REALST writes plain decimal strings, never exponent form', function () {
+        const vm = new VM(),
+            d = vm.d( vm.alloc( D ) ),
+            spec = vm.alloc( 2 * D );
+
+        const cases = [
+            [ 1.5, '1.5' ],
+            [ -3, '-3.' ],
+            [ 1e-7, '0.0000001' ],
+            [ -2.5e-10, '-0.00000000025' ],
+            [ 1e24, '1000000000000000000000000.' ],
+            [ 1.2246467991473532e-16, '0.00000000000000012246467991473532' ],
+        ];
+        for ( const [ value, text ] of cases ) {
+            d.addr = value;
+            sil.REALST.call( vm, spec, d.ptr );
+            assert.equal( vm.s( spec ).specified, text );
+        }
     });
 
     it('RLINT discards the fractional part', function () {
@@ -1169,6 +1185,31 @@ describe('Macros that Deal with Real Numbers', function () {
         sil.SPREAL.call( vm, d.ptr, s, 1, 2 );
         assert.equal( d.addr, -0.5 );
         assert.equal( d.value, 9 );
+    });
+
+    it('SPREAL reads back every string REALST writes', function () {
+        const vm = new VM(),
+            d = vm.d( vm.alloc( D ) ),
+            out = vm.d( vm.alloc( D ) ),
+            spec = vm.alloc( 2 * D );
+        vm.define( 'R', 9 );
+
+        const values = [
+            1.5,
+            -3,
+            1e-7,
+            -2.5e-10,
+            1e24,
+            5e-324,
+            1.2246467991473532e-16,
+        ];
+        for ( const value of values ) {
+            d.addr = value;
+            sil.REALST.call( vm, spec, d.ptr );
+            sil.SPREAL.call( vm, out.ptr, spec, 1, 2 );
+            assert.equal( vm.ip, 2, `SPREAL rejected REALST's ${value}` );
+            assert.equal( out.addr, value );
+        }
     });
 });
 

@@ -60,6 +60,33 @@ function loadExtensionSignature( vm, name ) {
     return { args, result };
 }
 
+// A real number as a plain decimal string for REALST: '1.5', '-3.',
+// '0.0000001'. String() gives the shortest digits that round-trip, but
+// switches to exponent notation below 1e-6 and above 1e21. SNOBOL real
+// literals and SPREAL have no exponent form, so instead the decimal
+// point is placed by hand where the exponent says it belongs.
+function realToString( value ) {
+    let text = String( value );
+    if ( !text.includes( 'e' ) ) {
+        return text.includes( '.' ) ? text : text + '.';
+    }
+
+    const sign = text.startsWith( '-' ) ? '-' : '';
+    const [ mantissa, exponent ] = text.slice( sign.length ).split( 'e' );
+    const digits = mantissa.replace( '.', '' );
+
+    // Count how many digits belong left of the decimal point. Zero or
+    // fewer means none do, and -point zeros pad the gap after it.
+    let point = mantissa.indexOf( '.' );
+    if ( point < 0 ) point = mantissa.length;
+    point += Number( exponent );
+
+    if ( point <= 0 ) {
+        return sign + '0.' + '0'.repeat( -point ) + digits;
+    }
+    return sign + digits + '0'.repeat( point - digits.length ) + '.';
+}
+
 //     ACOMP is used to compare  the  address  fields  of  two
 // descriptors.   The  comparison  is arithmetic with A1 and A2
 // being considered as signed integers.  If A1 >  A2,  transfer
@@ -3200,12 +3227,7 @@ sil.RCOMP = function ( $DESCR1, $DESCR2, GTLOC, EQLOC, LTLOC ) {
 // overwritten by a subsequent use of REALST.
 // 4.  See also INTSPC and SPREAL.
 sil.REALST = function ( $SPEC, $DESCR ) {
-    const value = this.d( $DESCR ).addr;
-    // String() yields the shortest decimal that round-trips, with a forced
-    // decimal point.
-    let text = String( value );
-    if ( !/[.e]/i.test( text ) ) text += '.';
-    return this.specify( text, $SPEC );
+    return this.specify( realToString( this.d( $DESCR ).addr ), $SPEC );
 };
 
 //     REMSP is used to obtain a remainder specifier resulting
