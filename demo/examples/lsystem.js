@@ -1,6 +1,6 @@
-// L-systems: SNOBOL rewrites the grammar string; the turtle module turns
-// each generation into canvas strokes. Runs synchronously on the main
-// thread, deferred one frame so the status text paints first.
+// L-systems: SNOBOL rewrites the grammar string and walks the result as
+// a turtle, drawing through the canvas bindings. Runs synchronously on
+// the main thread, deferred one frame so the status text paints first.
 
 import { runSnoflake } from '../lib/runner.js';
 import { fillSelect, loadSource } from '../lib/dom.js';

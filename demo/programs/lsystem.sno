@@ -1,4 +1,6 @@
-* L-system: SNOBOL rewrites the grammar, JS draws the result.
+* L-system: SNOBOL rewrites the grammar, then walks the result as a
+* turtle and draws it. The host supplies the preset and a narrow
+* canvas binding; the drawing decisions all live here.
 
          &TRIM = 1
          STR   = AXIOM()
@@ -6,7 +8,7 @@
          EMIT(STR)
 
 * Rewrite: each pass expands non-terminals via LOOKUP.
-NEXTGEN  LT(G, DEPTH())                            :F(DRAW)
+NEXTGEN  LT(G, DEPTH())                            :F(TURTLE)
          OUT = ''
          SRC = STR
 SCAN     SRC LEN(1) . C =                          :F(BUMP)
@@ -18,18 +20,71 @@ BUMP     STR = OUT
          G   = G + 1
          EMIT(STR)                                 :(NEXTGEN)
 
-* Draw: each terminal dispatches one turtle command.
-DRAW     BEGIN()
-DSCAN    STR LEN(1) . C =                          :F(SHOW)
-         IDENT(C, 'F')                             :F(T1)
-         MOVE(STEP())                              :(DSCAN)
-T1       IDENT(C, '+')                             :F(T2)
-         TURN(ANGLE())                             :(DSCAN)
-T2       IDENT(C, '-')                             :F(T3)
-         TURN(-ANGLE())                            :(DSCAN)
-T3       IDENT(C, '[')                             :F(T4)
-         PUSH()                                    :(DSCAN)
-T4       IDENT(C, ']')                             :F(DSCAN)
-         POP()                                     :(DSCAN)
-SHOW     RENDER()
+* The turtle: F steps one unit along the heading, + and - turn, [ and ]
+* save and restore the pose. WALK() only measures the bounding box;
+* WALK(1) draws. Measuring first lets the drawing pass scale the curve
+* to fit the canvas with a margin.
+TURTLE   DEFINE('WALK(DRAW)C')
+         A     = ANGLE() * &PI / 180.0
+         START = STARTANGLE() * &PI / 180.0
+         STKX  = ARRAY(64)
+         STKY  = ARRAY(64)
+         STKH  = ARRAY(64)
+         MINX = 0.0
+         MAXX = 0.0
+         MINY = 0.0
+         MAXY = 0.0
+         WALK()
+         W = WIDTH() - 48
+         H = HEIGHT() - 48
+         SPANX = MAXX - MINX
+         SPANX = LT(SPANX, 0.001) 0.001
+         SPANY = MAXY - MINY
+         SPANY = LT(SPANY, 0.001) 0.001
+         SCALE = W / SPANX
+         SCALE = GT(SCALE, H / SPANY) H / SPANY
+         OFFX = 24 + (W - SPANX * SCALE) / 2.0 - MINX * SCALE
+         OFFY = 24 + (H - SPANY * SCALE) / 2.0 - MINY * SCALE
+         COLOR('#0a0e11')
+         CLEAR()
+         COLOR('#9fd3c7')
+         WALK(1)
+         STROKE()                               :(END)
+
+* One pass over STR. X,Y and HD are the pose; the STK arrays save it.
+WALK     SRC = STR
+         X  = 0.0
+         Y  = 0.0
+         HD = START
+         SP = 0
+         IDENT(DRAW, '')                           :S(WSCAN)
+         MOVETO(OFFX + X * SCALE, OFFY + Y * SCALE)
+WSCAN    SRC LEN(1) . C =                          :F(RETURN)
+         IDENT(C, 'F')                             :S(WMOVE)
+         IDENT(C, '+')                             :S(WLEFT)
+         IDENT(C, '-')                             :S(WRIGHT)
+         IDENT(C, '[')                             :S(WPUSH)
+         IDENT(C, ']')                             :S(WPOP)
+         :(WSCAN)
+WMOVE    X = X + COS(HD)
+         Y = Y + SIN(HD)
+         IDENT(DRAW, '')                           :F(WDRAW)
+         MINX = GT(MINX, X) X
+         MAXX = LT(MAXX, X) X
+         MINY = GT(MINY, Y) Y
+         MAXY = LT(MAXY, Y) Y                      :(WSCAN)
+WDRAW    LINETO(OFFX + X * SCALE, OFFY + Y * SCALE)   :(WSCAN)
+WLEFT    HD = HD + A                               :(WSCAN)
+WRIGHT   HD = HD - A                               :(WSCAN)
+WPUSH    SP = SP + 1
+         STKX<SP> = X
+         STKY<SP> = Y
+         STKH<SP> = HD                             :(WSCAN)
+WPOP     GT(SP, 0)                                 :F(WSCAN)
+         X  = STKX<SP>
+         Y  = STKY<SP>
+         HD = STKH<SP>
+         SP = SP - 1
+         IDENT(DRAW, '')                           :S(WSCAN)
+         MOVETO(OFFX + X * SCALE, OFFY + Y * SCALE)   :(WSCAN)
 END

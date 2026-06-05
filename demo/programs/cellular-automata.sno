@@ -1,25 +1,53 @@
-* Elementary 1D cellular automaton: each row is a string of bits;
-* SNOBOL slides a 3-cell window and looks up the next cell in RULE.
+* Elementary 1D cellular automaton, end to end in SNOBOL: decode the
+* Wolfram rule number into its lookup table, build row 0, slide a
+* 3-cell window to step each row, and paint the cells.
 
          &TRIM = 1
-         RULE  = RULE()
-         ROW   = INIT()
-         R     = 0
-         EMIT(ROW)
 
-* For HEIGHT()-1 more rows, walk the padded row left-to-right,
-* convert each 3-bit window to an index 0..7, and pick that cell of
-* the rule string as the new center.
-NEXTROW  LT(R, HEIGHT() - 1)                        :F(DONE)
+* RULE position K holds the next cell for 3-bit neighborhood K.
+         N = RULE()
+         K = 0
+DECODE   RULE = LT(K, 8) RULE REMDR(N, 2)          :F(SIZES)
+         N = N / 2
+         K = K + 1                                 :(DECODE)
+
+* WIDTH = 2 * ROWS + 1, so a centred seed never reaches the edge.
+SIZES    HGT = ROWS()
+         WID = 2 * HGT + 1
+
+* Row 0: a single centre cell, or random bits.
+         IDENT(INITKIND(), 'seed')                 :F(RANDROW)
+         ROW = DUPL('0', HGT) '1' DUPL('0', HGT)   :(GEOM)
+RANDROW  ROW = LT(SIZE(ROW), WID) ROW RANDBIT()    :S(RANDROW)
+
+* Cells are square, sized to fit the grid in the canvas, centred.
+GEOM     CELL = WIDTH() / WID
+         CELL = GT(CELL, HEIGHT() / HGT) HEIGHT() / HGT
+         CELL = LT(CELL, 1) 1
+         OFFX = (WIDTH() - WID * CELL) / 2
+         OFFY = (HEIGHT() - HGT * CELL) / 2
+         COLOR('#0a0e11')
+         CLEAR()
+         COLOR('#9fd3c7')
+
+* Paint each row, then derive the next: pad with dead edge cells,
+* convert each 3-cell window to an index 0..7, and pick that cell
+* of RULE as the new centre.
+         R = 0
+NEXTROW  C = 0
+         REST = ROW
+PAINT    REST LEN(1) . B =                         :F(STEP)
+         IDENT(B, '1')                             :F(BUMPC)
+         FILLRECT(OFFX + C * CELL, OFFY + R * CELL, CELL, CELL)
+BUMPC    C = C + 1                                 :(PAINT)
+STEP     R = R + 1
+         LT(R, HGT)                                :F(END)
          PAD = '0' ROW '0'
          OUT = ''
-SCAN     PAD LEN(1) . B2 LEN(1) . B1 LEN(1) . B0    :F(BUMP)
+SCAN     PAD LEN(1) . B2 LEN(1) . B1 LEN(1) . B0   :F(DONE)
          IDX = 4 * B2 + 2 * B1 + B0
          RULE POS(IDX) LEN(1) . NEW
          OUT = OUT NEW
-         PAD LEN(1) =                               :(SCAN)
-BUMP     ROW = OUT
-         R   = R + 1
-         EMIT(ROW)                                  :(NEXTROW)
-DONE     RENDER()
+         PAD LEN(1) =                              :(SCAN)
+DONE     ROW = OUT                                 :(NEXTROW)
 END
