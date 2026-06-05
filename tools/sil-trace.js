@@ -116,19 +116,23 @@ export function runWithTrace( options = {} ) {
         image = assemble( normalizeListOperands( parseSil( silText ) ) ),
         slots = buildSourceMap( silText, image );
 
-    // Instrument the dispatch path. compileInstructions returns one bound call
-    // per slot; wrapping each to emit its source line first turns the run into
-    // a stream of the SIL it executes. The patch is restored afterward so
-    // importing this module does not leave the VM instrumented.
+    // Instrument the dispatch path. compileInstructions returns one call
+    // frame per slot; wrapping each frame's implementation to emit its source
+    // line first turns the run into a stream of the SIL it executes. The
+    // patch is restored afterward so importing this module does not leave the
+    // VM instrumented.
     const originalCompile = VM.prototype.compileInstructions;
     VM.prototype.compileInstructions = function ( instructions ) {
-        return originalCompile.call( this, instructions ).map( ( fn, idx ) => {
-            const slot = slots[idx];
-            return () => {
+        const compiled = originalCompile.call( this, instructions );
+        for ( const [ idx, frame ] of compiled.entries() ) {
+            const impl = frame[0],
+                slot = slots[idx];
+            frame[0] = function ( ...args ) {
                 emit( slot );
-                return fn();
+                return impl.apply( this, args );
             };
-        } );
+        }
+        return compiled;
     };
 
     try {

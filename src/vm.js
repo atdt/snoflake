@@ -131,7 +131,8 @@ export class VM {
         }
     }
 
-    // Compile each [macro, args] image entry into a bound call.
+    // Compile each [macro, args] image entry into a call frame: the macro's
+    // implementation followed by six argument slots, the widest macro arity.
     compileInstructions( instructions ) {
         return instructions.map( ( [ macro, args ], idx ) => {
             const impl = sil[macro];
@@ -140,13 +141,23 @@ export class VM {
                     `Unknown SIL macro "${macro}" at instruction ${idx}`,
                 );
             }
-            return impl.bind( this, ...args );
+            const [ a, b, c, d, e, f ] = args;
+            return [ impl, a, b, c, d, e, f ];
         } );
     }
 
     interpret( instructions ) {
         while ( this.ip >= 0 && this.ip < instructions.length ) {
-            instructions[this.ip++]();
+            const frame = instructions[this.ip++];
+            frame[0].call(
+                this,
+                frame[1],
+                frame[2],
+                frame[3],
+                frame[4],
+                frame[5],
+                frame[6],
+            );
         }
     }
 

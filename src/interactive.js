@@ -118,7 +118,16 @@ export class Session {
                 const loc = vm.ip;
                 vm.ip = loc + 1;
                 try {
-                    instructions[loc]();
+                    const frame = instructions[loc];
+                    frame[0].call(
+                        vm,
+                        frame[1],
+                        frame[2],
+                        frame[3],
+                        frame[4],
+                        frame[5],
+                        frame[6],
+                    );
                 } catch ( e ) {
                     if ( e === NEED_INPUT ) {
                         vm.ip = loc;

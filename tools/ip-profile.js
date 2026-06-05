@@ -110,10 +110,14 @@ const counts = new Float64Array( image.instructions.length );
 const originalCompile = VM.prototype.compileInstructions;
 VM.prototype.compileInstructions = function ( instructions ) {
     const compiled = originalCompile.call( this, instructions );
-    return compiled.map( ( fn, idx ) => () => {
-        counts[idx]++;
-        return fn();
-    } );
+    for ( const [ idx, frame ] of compiled.entries() ) {
+        const impl = frame[0];
+        frame[0] = function ( ...args ) {
+            counts[idx]++;
+            return impl.apply( this, args );
+        };
+    }
+    return compiled;
 };
 
 function main() {

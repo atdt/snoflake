@@ -145,17 +145,21 @@ function buildSourceMap() {
 // accumulate cleanly over the whole corpus.
 const hits = new Float64Array( image.instructions.length );
 
-// Instrument the dispatch path. compileInstructions returns one bound call per
-// slot; wrapping each to bump its counter captures coverage for both the batch
-// interpreter (VM.interpret) and the resumable Session loop, which share this
-// compiled array.
+// Instrument the dispatch path. compileInstructions returns one call frame
+// per slot; wrapping each frame's implementation to bump its counter captures
+// coverage for both the batch interpreter (VM.interpret) and the resumable
+// Session loop, which share this compiled array.
 const originalCompile = VM.prototype.compileInstructions;
 VM.prototype.compileInstructions = function ( instructions ) {
     const compiled = originalCompile.call( this, instructions );
-    return compiled.map( ( fn, idx ) => () => {
-        hits[idx]++;
-        return fn();
-    } );
+    for ( const [ idx, frame ] of compiled.entries() ) {
+        const impl = frame[0];
+        frame[0] = function ( ...args ) {
+            hits[idx]++;
+            return impl.apply( this, args );
+        };
+    }
+    return compiled;
 };
 
 const gimpelLoader = createHostLoader( { snolib: [ GIMPEL_LIB_DIR ] } );
