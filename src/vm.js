@@ -44,10 +44,21 @@ export class VM {
             for (
                 const registry of [ defaultExtensions, options.extensions ]
             ) {
+                // Within one registry, two prototypes naming the same
+                // function shadow each other silently, so reject them.
+                // An options entry overriding a default stays intended.
+                const seen = new Map();
                 for (
                     const [ key, impl ] of Object.entries( registry || {} )
                 ) {
                     const [ name, entry ] = parsePrototype( key, impl );
+                    if ( seen.has( name ) ) {
+                        throw new SyntaxError(
+                            `Extensions "${seen.get( name )}" and "${key}"` +
+                                ` both define ${name}`,
+                        );
+                    }
+                    seen.set( name, key );
                     this.extensions[name] = entry;
                 }
             }

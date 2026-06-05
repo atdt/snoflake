@@ -489,6 +489,29 @@ describe('SNOBOL Program Execution', function () {
         }
     });
 
+    it('rejects two extensions that define the same function', function () {
+        assert.throws(
+            () =>
+                new VM( {
+                    extensions: {
+                        'SIZE(STRING)INTEGER': ( s ) => s.length,
+                        'SIZE(REAL)INTEGER': () => 0,
+                    },
+                } ),
+            /both define SIZE/,
+        );
+    });
+
+    it('lets an extension override a default by name', function () {
+        const vm = new VM( {
+            extensions: { 'CHAR(INTEGER,INTEGER)STRING': () => '!' },
+        } );
+        assert.deepEqual(
+            vm.extensions.CHAR.args,
+            [ 'INTEGER', 'INTEGER' ],
+        );
+    });
+
     it('creates a VM that loads a file through an explicit host loader', function () {
         const root = path.join( __dirname, '..' ),
             programFile = path.join( root, 'tmp', 'test-create-vm-file.sno' ),
