@@ -1,8 +1,23 @@
 // Small string utilities shared across the runtime.
 
+const encoder = new TextEncoder();
+let scratch = new Uint8Array( 256 );
+
 // dst is expected to be a Float64Array view of VM memory.
+//
+// For an ASCII string the UTF-8 bytes are the char codes, so two native
+// calls do all the work: encode into a byte buffer, then copy in with
+// set(). Other strings take the per-character loop.
 export function writeString( s, dst, offset ) {
     const len = s.length;
+    if ( scratch.length < len ) {
+        scratch = new Uint8Array( len );
+    }
+    const { read, written } = encoder.encodeInto( s, scratch );
+    if ( read === len && written === len ) {
+        dst.set( scratch.subarray( 0, len ), offset );
+        return;
+    }
     for ( let i = 0; i < len; i++ ) {
         dst[offset + i] = s.charCodeAt( i );
     }
