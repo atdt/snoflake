@@ -52,12 +52,11 @@ function main() {
 
     // The report names each slot's enclosing region. Slots before the first
     // PROC or TITLE marker fall under a synthetic top-level bucket.
-    const slots = buildSourceMap( fs.readFileSync( SIL_PATH, 'utf8' ), image )
-        .map( ( s ) => ( {
-            ...s,
-            label: s.label ?? '',
-            proc: s.region ? s.region.name : '(top)',
-        } ) );
+    const slots = buildSourceMap( fs.readFileSync( SIL_PATH, 'utf8' ), image );
+    for ( const s of slots ) {
+        s.label ??= '';
+        s.proc = s.region ? s.region.name : '(top)';
+    }
 
     fs.mkdirSync( OUT_DIR, { recursive: true } );
     const sink = { write() {} };

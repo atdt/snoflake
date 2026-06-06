@@ -15,9 +15,9 @@
 const COLORS = {
     PRK: [ 122, 168, 116 ],
     FND: [ 180, 173, 158 ],
-    BRC: [ 173,  95,  70 ],
+    BRC: [ 173, 95, 70 ],
     GLS: [ 134, 195, 220 ],
-    RUF: [  82,  88,  96 ],
+    RUF: [ 82, 88, 96 ],
 };
 
 // Per-face shade: imagine the sun in the upper-front-right quadrant.
@@ -55,9 +55,9 @@ function norm( v ) {
 
 function shadeColor( rgb, brightness ) {
     return 'rgb(' +
-        Math.round( rgb[ 0 ] * brightness ) + ',' +
-        Math.round( rgb[ 1 ] * brightness ) + ',' +
-        Math.round( rgb[ 2 ] * brightness ) + ')';
+        Math.round( rgb[0] * brightness ) + ',' +
+        Math.round( rgb[1] * brightness ) + ',' +
+        Math.round( rgb[2] * brightness ) + ')';
 }
 
 export function createScene( canvas ) {
@@ -70,58 +70,74 @@ export function createScene( canvas ) {
     let auto = true;
 
     function resize() {
-        const dpr  = globalThis.devicePixelRatio || 1,
-              rect = canvas.getBoundingClientRect();
-        width  = Math.max( rect.width,  1 );
+        const dpr = globalThis.devicePixelRatio || 1,
+            rect = canvas.getBoundingClientRect();
+        width = Math.max( rect.width, 1 );
         height = Math.max( rect.height, 1 );
-        canvas.width  = Math.round( width  * dpr );
+        canvas.width = Math.round( width * dpr );
         canvas.height = Math.round( height * dpr );
         ctx.setTransform( dpr, 0, 0, dpr, 0, 0 );
         dirty = true;
     }
 
     function project( p, cam, right, up, forward, focal, hx, hy ) {
-        const d  = sub( p, cam ),
-              x  = dot( d, right ),
-              y  = dot( d, up ),
-              z  = dot( d, forward );
+        const d = sub( p, cam ),
+            x = dot( d, right ),
+            y = dot( d, up ),
+            z = dot( d, forward );
         if ( z < 0.5 ) return null;
         return { sx: focal * x / z + hx, sy: -focal * y / z + hy, cz: z };
     }
 
     function emitFace(
-        faces, verts, cam, right, up, forward, focal, hx, hy, color
+        faces,
+        verts,
+        cam,
+        right,
+        up,
+        forward,
+        focal,
+        hx,
+        hy,
+        color,
     ) {
-        const pts = new Array( 4 );
+        const pts = [];
         let depth = 0;
         for ( let i = 0; i < 4; i++ ) {
             const p = project(
-                verts[ i ], cam, right, up, forward, focal, hx, hy
+                verts[i],
+                cam,
+                right,
+                up,
+                forward,
+                focal,
+                hx,
+                hy,
             );
             if ( !p ) return;
-            pts[ i ] = p;
+            pts.push( p );
             depth += p.cz;
         }
         faces.push( { pts, color, depth } );
     }
 
     function render() {
-        const cp  = Math.cos( pitch ),
-              sp  = Math.sin( pitch ),
-              cyw = Math.cos( yaw ),
-              syw = Math.sin( yaw ),
-              cam = {
-                  x: distance * cp * syw,
-                  y: distance * sp,
-                  z: distance * cp * cyw,
-              };
+        const cp = Math.cos( pitch ),
+            sp = Math.sin( pitch ),
+            cyw = Math.cos( yaw ),
+            syw = Math.sin( yaw ),
+            cam = {
+                x: distance * cp * syw,
+                y: distance * sp,
+                z: distance * cp * cyw,
+            };
         const forward = norm( { x: -cam.x, y: -cam.y, z: -cam.z } ),
-              right   = norm( cross( forward, WORLD_UP ) ),
-              up      = cross( right, forward );
+            right = norm( cross( forward, WORLD_UP ) ),
+            up = cross( right, forward );
 
         const focal = Math.max( width, height ) * 1.05,
-              hx    = width  / 2,
-              hy    = height / 2;
+            hx = width / 2,
+            hy = height / 2;
 
         // Soft sky gradient.
         const sky = ctx.createLinearGradient( 0, 0, 0, height );
@@ -133,57 +149,133 @@ export function createScene( canvas ) {
         const faces = [];
 
         for ( const b of boxes ) {
-            const x0 = b.x,        y0 = b.y,        z0 = b.z,
-                  x1 = b.x + b.w,  y1 = b.y + b.h,  z1 = b.z + b.d,
-                  rgb = COLORS[ b.color ] || [ 200, 200, 200 ];
+            const x0 = b.x,
+                y0 = b.y,
+                z0 = b.z,
+                x1 = b.x + b.w,
+                y1 = b.y + b.h,
+                z1 = b.z + b.d,
+                rgb = COLORS[b.color] || [ 200, 200, 200 ];
 
-            if ( cam.x > x1 ) emitFace( faces, [
-                { x: x1, y: y0, z: z0 },
-                { x: x1, y: y0, z: z1 },
-                { x: x1, y: y1, z: z1 },
-                { x: x1, y: y1, z: z0 },
-            ], cam, right, up, forward, focal, hx, hy,
-               shadeColor( rgb, SHADE.PX ) );
+            if ( cam.x > x1 ) {
+                emitFace(
+                    faces,
+                    [
+                        { x: x1, y: y0, z: z0 },
+                        { x: x1, y: y0, z: z1 },
+                        { x: x1, y: y1, z: z1 },
+                        { x: x1, y: y1, z: z0 },
+                    ],
+                    cam,
+                    right,
+                    up,
+                    forward,
+                    focal,
+                    hx,
+                    hy,
+                    shadeColor( rgb, SHADE.PX ),
+                );
+            }
 
-            if ( cam.x < x0 ) emitFace( faces, [
-                { x: x0, y: y0, z: z1 },
-                { x: x0, y: y0, z: z0 },
-                { x: x0, y: y1, z: z0 },
-                { x: x0, y: y1, z: z1 },
-            ], cam, right, up, forward, focal, hx, hy,
-               shadeColor( rgb, SHADE.MX ) );
+            if ( cam.x < x0 ) {
+                emitFace(
+                    faces,
+                    [
+                        { x: x0, y: y0, z: z1 },
+                        { x: x0, y: y0, z: z0 },
+                        { x: x0, y: y1, z: z0 },
+                        { x: x0, y: y1, z: z1 },
+                    ],
+                    cam,
+                    right,
+                    up,
+                    forward,
+                    focal,
+                    hx,
+                    hy,
+                    shadeColor( rgb, SHADE.MX ),
+                );
+            }
 
-            if ( cam.y > y1 ) emitFace( faces, [
-                { x: x0, y: y1, z: z0 },
-                { x: x1, y: y1, z: z0 },
-                { x: x1, y: y1, z: z1 },
-                { x: x0, y: y1, z: z1 },
-            ], cam, right, up, forward, focal, hx, hy,
-               shadeColor( rgb, SHADE.PY ) );
+            if ( cam.y > y1 ) {
+                emitFace(
+                    faces,
+                    [
+                        { x: x0, y: y1, z: z0 },
+                        { x: x1, y: y1, z: z0 },
+                        { x: x1, y: y1, z: z1 },
+                        { x: x0, y: y1, z: z1 },
+                    ],
+                    cam,
+                    right,
+                    up,
+                    forward,
+                    focal,
+                    hx,
+                    hy,
+                    shadeColor( rgb, SHADE.PY ),
+                );
+            }
 
-            if ( cam.y < y0 ) emitFace( faces, [
-                { x: x0, y: y0, z: z1 },
-                { x: x1, y: y0, z: z1 },
-                { x: x1, y: y0, z: z0 },
-                { x: x0, y: y0, z: z0 },
-            ], cam, right, up, forward, focal, hx, hy,
-               shadeColor( rgb, SHADE.MY ) );
+            if ( cam.y < y0 ) {
+                emitFace(
+                    faces,
+                    [
+                        { x: x0, y: y0, z: z1 },
+                        { x: x1, y: y0, z: z1 },
+                        { x: x1, y: y0, z: z0 },
+                        { x: x0, y: y0, z: z0 },
+                    ],
+                    cam,
+                    right,
+                    up,
+                    forward,
+                    focal,
+                    hx,
+                    hy,
+                    shadeColor( rgb, SHADE.MY ),
+                );
+            }
 
-            if ( cam.z > z1 ) emitFace( faces, [
-                { x: x1, y: y0, z: z1 },
-                { x: x0, y: y0, z: z1 },
-                { x: x0, y: y1, z: z1 },
-                { x: x1, y: y1, z: z1 },
-            ], cam, right, up, forward, focal, hx, hy,
-               shadeColor( rgb, SHADE.PZ ) );
+            if ( cam.z > z1 ) {
+                emitFace(
+                    faces,
+                    [
+                        { x: x1, y: y0, z: z1 },
+                        { x: x0, y: y0, z: z1 },
+                        { x: x0, y: y1, z: z1 },
+                        { x: x1, y: y1, z: z1 },
+                    ],
+                    cam,
+                    right,
+                    up,
+                    forward,
+                    focal,
+                    hx,
+                    hy,
+                    shadeColor( rgb, SHADE.PZ ),
+                );
+            }
 
-            if ( cam.z < z0 ) emitFace( faces, [
-                { x: x0, y: y0, z: z0 },
-                { x: x1, y: y0, z: z0 },
-                { x: x1, y: y1, z: z0 },
-                { x: x0, y: y1, z: z0 },
-            ], cam, right, up, forward, focal, hx, hy,
-               shadeColor( rgb, SHADE.MZ ) );
+            if ( cam.z < z0 ) {
+                emitFace(
+                    faces,
+                    [
+                        { x: x0, y: y0, z: z0 },
+                        { x: x1, y: y0, z: z0 },
+                        { x: x1, y: y1, z: z0 },
+                        { x: x0, y: y1, z: z0 },
+                    ],
+                    cam,
+                    right,
+                    up,
+                    forward,
+                    focal,
+                    hx,
+                    hy,
+                    shadeColor( rgb, SHADE.MZ ),
+                );
+            }
         }
 
         faces.sort( ( a, b ) => b.depth - a.depth );
@@ -195,10 +287,10 @@ export function createScene( canvas ) {
             ctx.strokeStyle = f.color;
             ctx.lineWidth = 0.6;
             ctx.beginPath();
-            ctx.moveTo( f.pts[ 0 ].sx, f.pts[ 0 ].sy );
-            ctx.lineTo( f.pts[ 1 ].sx, f.pts[ 1 ].sy );
-            ctx.lineTo( f.pts[ 2 ].sx, f.pts[ 2 ].sy );
-            ctx.lineTo( f.pts[ 3 ].sx, f.pts[ 3 ].sy );
+            ctx.moveTo( f.pts[0].sx, f.pts[0].sy );
+            ctx.lineTo( f.pts[1].sx, f.pts[1].sy );
+            ctx.lineTo( f.pts[2].sx, f.pts[2].sy );
+            ctx.lineTo( f.pts[3].sx, f.pts[3].sy );
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
@@ -219,7 +311,9 @@ export function createScene( canvas ) {
 
     // Interaction: drag rotates, wheel zooms.
     let drag = null;
-    const stopAuto = () => { auto = false; };
+    const stopAuto = () => {
+        auto = false;
+    };
 
     canvas.addEventListener( 'pointerdown', ( e ) => {
         canvas.setPointerCapture( e.pointerId );
@@ -229,22 +323,28 @@ export function createScene( canvas ) {
     canvas.addEventListener( 'pointermove', ( e ) => {
         if ( !drag ) return;
         const dx = e.clientX - drag.x,
-              dy = e.clientY - drag.y;
+            dy = e.clientY - drag.y;
         drag.x = e.clientX;
         drag.y = e.clientY;
-        yaw   -= dx * 0.008;
-        pitch  = Math.max( 0.05, Math.min( Math.PI / 2 - 0.05,
-                            pitch + dy * 0.008 ) );
+        yaw -= dx * 0.008;
+        pitch = Math.max(
+            0.05,
+            Math.min( Math.PI / 2 - 0.05, pitch + dy * 0.008 ),
+        );
         dirty = true;
     } );
-    const endDrag = () => { drag = null; };
-    canvas.addEventListener( 'pointerup',     endDrag );
+    const endDrag = () => {
+        drag = null;
+    };
+    canvas.addEventListener( 'pointerup', endDrag );
     canvas.addEventListener( 'pointercancel', endDrag );
 
     canvas.addEventListener( 'wheel', ( e ) => {
         e.preventDefault();
-        distance = Math.max( 60, Math.min( 360,
-                       distance * ( 1 + e.deltaY * 0.001 ) ) );
+        distance = Math.max(
+            60,
+            Math.min( 360, distance * ( 1 + e.deltaY * 0.001 ) ),
+        );
         dirty = true;
         stopAuto();
     }, { passive: false } );
@@ -263,7 +363,9 @@ export function createScene( canvas ) {
             boxes.length = 0;
             dirty = true;
         },
-        count() { return boxes.length; },
+        count() {
+            return boxes.length;
+        },
         resetCamera() {
             yaw = -0.6;
             pitch = 0.55;
