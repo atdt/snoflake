@@ -3,82 +3,378 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Snoflake</title>
 <style>
+    :root {
+        color-scheme: light dark;
+        --bg: light-dark(#fdfdfc, #16191d);
+        --panel: light-dark(#f2f4f3, #1f242a);
+        --border: light-dark(#dde1e0, #343b42);
+        --fg: light-dark(#1f252b, #dce3e0);
+        --muted: light-dark(#68726f, #8d989c);
+        --accent: light-dark(#116466, #4fc3c3);
+        --error: light-dark(#b3372a, #ff7a6e);
+        --literal: light-dark(#8a5114, #d2a86c);
+        --builtin: light-dark(#0f5c8c, #7fb5dd);
+        --selection: light-dark(#cde4e4, #1e4040);
+        --active-line: light-dark(
+            rgba(0, 0, 0, 0.04),
+            rgba(255, 255, 255, 0.05)
+        );
+    }
+
+    :root[data-theme='light'] {
+        color-scheme: light;
+    }
+    :root[data-theme='dark'] {
+        color-scheme: dark;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        /* 62.5% of the browser default 16px, so 1rem = 10px. */
+        font-size: 62.5%;
+    }
+
     body {
-        margin: 24px;
-        color: #1f252b;
-        font: 16px/1.45 system-ui, sans-serif;
+        height: 100dvh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--fg);
+        font: 1.2rem/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    h1 a {
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    h1 a:hover {
+        text-decoration: underline;
+    }
+
+    #status {
+        flex: 1;
+        color: var(--muted);
+        font-size: 1.2rem;
+    }
+
+    #status.error {
+        color: var(--error);
+    }
+
+    select {
+        padding: 3px 6px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--fg);
+        font: inherit;
+        font-size: 1.2rem;
+    }
+
+    select:hover {
+        border-color: var(--accent);
+    }
+
+    main {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1.1fr 0.55fr 0.8fr;
+    }
+
+    section {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    section + section {
+        border-left: 1px solid var(--border);
+    }
+
+    h2 {
+        margin: 0;
+        padding: 4px 12px;
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
     }
 
     #editor {
-        border: 1px solid #ccd3d1;
+        flex: 1;
+        min-height: 0;
     }
-
     .cm-editor {
-        height: 16rem;
+        height: 100%;
+    }
+    .cm-editor.cm-focused {
+        outline: none;
     }
 
-    button {
-        margin: 12px 0;
-        padding: 8px 14px;
-        border: 1px solid #116466;
-        border-radius: 6px;
-        background: #116466;
-        color: white;
-        font: inherit;
-        font-weight: 650;
-        cursor: pointer;
-    }
-
-    pre {
-        min-height: 7rem;
+    #input,
+    #out {
+        flex: 1;
         margin: 0;
-        padding: 12px;
+        padding: 10px 12px;
         overflow: auto;
-        background: #11161a;
-        color: #d7e3dd;
+        font: inherit;
+    }
+
+    #input {
+        border: none;
+        background: var(--bg);
+        color: var(--fg);
+        resize: none;
+    }
+
+    #input:focus {
+        outline: none;
+    }
+
+    @media (max-width: 720px) {
+        main {
+            grid-template-columns: 1fr;
+            grid-template-rows: 2fr 1fr 2fr;
+        }
+
+        section + section {
+            border-left: none;
+            border-top: 1px solid var(--border);
+        }
     }
 </style>
 
-<div id="editor"></div>
-<button id="run" type="button">Run</button>
-<pre id="out"></pre>
+<header>
+    <h1><a href="https://github.com/atdt/snoflake">Snoflake</a></h1>
+    <select id="example" aria-label="Load example"></select>
+    <span id="status">Ready</span>
+    <select id="theme" aria-label="Color theme">
+        <option value="auto">auto</option>
+        <option value="light">light</option>
+        <option value="dark">dark</option>
+    </select>
+</header>
+<main>
+    <section>
+        <h2>Program</h2>
+        <div id="editor"></div>
+    </section>
+    <section>
+        <h2>Input</h2>
+        <textarea
+            id="input"
+            spellcheck="false"
+            aria-label="Program input"
+        ></textarea>
+    </section>
+    <section>
+        <h2>Output</h2>
+        <pre id="out"></pre>
+    </section>
+</main>
 
 <script type="module">
     import { basicSetup, EditorView } from 'https://esm.sh/codemirror';
+    import {
+        HighlightStyle,
+        syntaxHighlighting,
+    } from 'https://esm.sh/@codemirror/language';
+    import { tags } from 'https://esm.sh/@lezer/highlight';
     import { snobol } from 'https://esm.sh/codemirror-lang-snobol';
     import * as SNOBOL from 'https://esm.sh/snoflake';
 
-    const editor = new EditorView( {
-            doc: `
-        WORD = 'SNOBOL'
+    const EXAMPLES = {
+        'Pattern matching': {
+            source: `READ    LINE = INPUT :F(END)
+        LINE ('GOLD' | 'BLUE') . SHADE ('FISH' | 'BIRD') . KIND :F(READ)
+        OUTPUT = SHADE ' ' KIND :(READ)
+END
+`,
+            input: 'GOLDFISH\nBLUEBIRD\nSNOWBIRD\nGOLDFINCH\nBLUEFISH\n',
+        },
+        'Swap': {
+            source: `        WORD = 'SNOBOL'
         WORD LEN(3) . HEAD REM . TAIL
         OUTPUT = TAIL HEAD
 END
 `,
-            extensions: [ basicSetup, snobol() ],
-            parent: document.querySelector( '#editor' ),
-        } ),
+            input: '',
+        },
+        'Fibonacci': {
+            source: `        A = 0
+        B = 1
+LOOP    OUTPUT = B
+        T = A + B
+        A = B
+        B = LT(B, 100) T :S(LOOP)
+END
+`,
+            input: '',
+        },
+        'Word tally': {
+            source: `        COUNT = TABLE()
+LINE    TEXT = INPUT :F(DONE)
+NEXT    TEXT BREAK(' ') . WORD SPAN(' ') = :F(LAST)
+        COUNT<WORD> = COUNT<WORD> + 1 :(NEXT)
+LAST    COUNT<TEXT> = DIFFER(TEXT) COUNT<TEXT> + 1 :(LINE)
+DONE    RESULT = CONVERT(COUNT, 'ARRAY')
+        I = 0
+PRINT   I = I + 1
+        OUTPUT = RESULT<I,1> ': ' RESULT<I,2> :S(PRINT)
+END
+`,
+            input: 'TO BE OR NOT TO BE\nTHAT IS THE QUESTION\n\nTO BE\n',
+        },
+    };
+
+    const DEFAULT_EXAMPLE = 'Pattern matching';
+
+    const statusEl = document.querySelector( '#status' ),
+        input = document.querySelector( '#input' ),
         out = document.querySelector( '#out' ),
-        run = document.querySelector( '#run' );
+        exampleSel = document.querySelector( '#example' ),
+        themeSel = document.querySelector( '#theme' );
+
+    function setStatus( message, error = false ) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle( 'error', error );
+    }
+
+    // Theme tokens are CSS variables resolved with light-dark(), so switching
+    // themes is just a color-scheme change; the editor needs no reconfiguring.
+    const THEME_KEY = 'snoflake-theme';
+
+    function applyTheme( theme ) {
+        if ( theme === 'auto' ) {
+            delete document.documentElement.dataset.theme;
+        } else {
+            document.documentElement.dataset.theme = theme;
+        }
+        themeSel.value = theme;
+        localStorage.setItem( THEME_KEY, theme );
+    }
+
+    themeSel.addEventListener( 'change', () => applyTheme( themeSel.value ) );
+    applyTheme( localStorage.getItem( THEME_KEY ) || 'auto' );
+
+    const editorTheme = EditorView.theme( {
+        '&': { backgroundColor: 'var(--bg)', color: 'var(--fg)' },
+        '.cm-gutters': {
+            backgroundColor: 'var(--panel)',
+            color: 'var(--muted)',
+            border: 'none',
+        },
+        '.cm-activeLine': { backgroundColor: 'var(--active-line)' },
+        '.cm-activeLineGutter': { backgroundColor: 'var(--active-line)' },
+        '.cm-content': { caretColor: 'var(--accent)' },
+        '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--accent)' },
+        '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
+            { backgroundColor: 'var(--selection)' },
+    } );
+
+    const highlight = HighlightStyle.define( [
+        { tag: tags.lineComment, color: 'var(--muted)', fontStyle: 'italic' },
+        { tag: tags.meta, color: 'var(--muted)' },
+        { tag: tags.labelName, color: 'var(--accent)', fontWeight: '600' },
+        { tag: tags.controlKeyword, color: 'var(--accent)' },
+        { tag: tags.keyword, color: 'var(--accent)' },
+        { tag: tags.standard( tags.variableName ), color: 'var(--builtin)' },
+        { tag: tags.string, color: 'var(--literal)' },
+        { tag: tags.special( tags.string ), color: 'var(--literal)' },
+        { tag: tags.number, color: 'var(--literal)' },
+    ] );
 
     function write( line ) {
         out.textContent += line + '\n';
     }
 
-    function runSource() {
+    // The input pane is served as the program's input file, so INPUT
+    // reads it line by line.
+    function run() {
         out.textContent = '';
+        const started = performance.now();
 
         try {
             SNOBOL.run( {
                 source: editor.state.doc.toString(),
+                input: 'input.txt',
+                loader: { load: () => input.value },
                 stdout: { write },
                 stderr: { write },
             } );
+            setStatus(
+                `Ran in ${Math.round( performance.now() - started )} ms`,
+            );
         } catch ( e ) {
-            write( 'Execution error: ' + ( e?.message || e ) );
+            setStatus( `Error: ${e?.message || e}`, true );
         }
     }
 
-    run.addEventListener( 'click', runSource );
-    runSource();
+    let debounceTimer;
+
+    function scheduleRun() {
+        clearTimeout( debounceTimer );
+        debounceTimer = setTimeout( run, 300 );
+    }
+
+    const editor = new EditorView( {
+        doc: EXAMPLES[DEFAULT_EXAMPLE].source,
+        extensions: [
+            basicSetup,
+            snobol(),
+            editorTheme,
+            syntaxHighlighting( highlight ),
+            EditorView.updateListener.of( ( update ) => {
+                update.docChanged && scheduleRun();
+            } ),
+        ],
+        parent: document.querySelector( '#editor' ),
+    } );
+
+    input.addEventListener( 'input', scheduleRun );
+
+    for ( const name of Object.keys( EXAMPLES ) ) {
+        exampleSel.add( new Option( name ) );
+    }
+
+    exampleSel.addEventListener( 'change', () => {
+        const example = EXAMPLES[exampleSel.value];
+        input.value = example.input;
+        editor.dispatch( {
+            changes: {
+                from: 0,
+                to: editor.state.doc.length,
+                insert: example.source,
+            },
+        } );
+    } );
+
+    input.value = EXAMPLES[DEFAULT_EXAMPLE].input;
+    run();
 </script>
