@@ -119,22 +119,17 @@ text is an optional reason.
 
 Match modes:
 
-- **`exact`** (default): the `@expect` block must equal the _data section_ of
-  `snoflake`'s stdout. The data section runs from the line after the
-  `No errors detected in source program` banner up to the line before the
-  `Normal termination at level` epilogue. The runner anchors on the _last_
-  `Normal termination at level` occurrence after the success banner so a program
-  that prints the phrase itself does not truncate the data section. Interior
-  blank lines are preserved; only the final trailing newline of the captured
-  section is normalized before comparison.
+- **`exact`** (default): the `@expect` block must equal `snoflake`'s output. The
+  runner leaves the banner and termination epilogue suppressed (their default),
+  so the output is exactly what the program writes. Interior blank lines are
+  preserved; only the final trailing newline is normalized before comparison.
 
   In this mode the runner also asserts that none of the recognized error markers
   appear anywhere in stdout.
 
 - **`substring`**: the `@expect` block must appear as a contiguous substring
-  anywhere in `snoflake`'s full stdout. Useful when banner extraction is brittle
-  or the test is intentionally loose. The same error-marker check applies as in
-  `exact`.
+  anywhere in `snoflake`'s output. Useful when the test is intentionally loose.
+  The same error-marker check applies as in `exact`.
 
 - **`error`**: assert the run _did_ produce one of the recognized error markers.
   If `@expect` is present, it is matched as a substring against the captured

@@ -157,7 +157,7 @@ function assertProgram( filePath, header, output ) {
         fail(
             filePath,
             output,
-            'data section did not match @expect\n--- expected ---\n' + expect +
+            'output did not match @expect\n--- expected ---\n' + expect +
                 '\n--- actual ---\n' + actual,
         );
     }

@@ -20,9 +20,9 @@
 // - @options runtime flags are translated to CSNOBOL4 invocation flags
 //   when an equivalent exists (see csnobol4FlagsForOptions). A warning
 //   is printed for options CSNOBOL4 cannot honor.
-// - The data-section banner extraction used by the Node test runner does not
-//   apply: CSNOBOL4 with -b prints program output verbatim (no banner, no
-//   "Normal termination" epilogue).
+// - CSNOBOL4 runs with -b, which prints program output verbatim (no
+//   banner, no "Normal termination" epilogue), matching the bannerless
+//   output the Node test runner compares against.
 
 import childProcess from 'node:child_process';
 import fs from 'node:fs';
@@ -247,7 +247,7 @@ function checkAgainstExpect( header, run ) {
         return { ok: true, message: null };
     }
 
-    // exact: CSNOBOL4 -b output IS the data section, no banner extraction.
+    // exact: CSNOBOL4 -b output is the program's output, nothing to strip.
     const actual = trimTrailingNewlines( run.stdout );
     const expect = trimTrailingNewlines( header.expect );
     if ( fold( actual, header ) !== fold( expect, header ) ) {
