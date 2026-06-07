@@ -9,10 +9,10 @@
     --accent-strong: #0b3f40;
     --source: #fbfcfb;
     --input-panel: #f3f8f6;
-    --terminal: #11161a;
-    --terminal-line: #d7e3dd;
-    --terminal-input: #9fd3c7;
-    --terminal-error: #ffb4a8;
+    --terminal: #0c120e;
+    --terminal-line: #52df6e;
+    --terminal-input: #b9f2c2;
+    --terminal-error: #ffb454;
 }
 
 /* Reset and base */
@@ -403,14 +403,21 @@ pre {
 }
 
 .conversation-pane .status {
-    color: #9fd3c7;
+    color: var(--terminal-input);
 }
 
+/* Phosphor terminal: green on near-black, faint scanlines, and a glow
+   that takes each line's own color. */
 .terminal {
     flex: 1;
     overflow: auto;
     padding: 18px;
+    background-image: repeating-linear-gradient(
+        transparent 0 2px,
+        rgba(0, 0, 0, 0.25) 2px 3px
+    );
     color: var(--terminal-line);
+    text-shadow: 0 0 6px;
     font:
         1.4rem/1.55 ui-monospace,
         SFMono-Regular,
@@ -454,11 +461,11 @@ pre {
 .prompt input {
     min-width: 0;
     height: 36px;
-    border: 1px solid #425258;
+    border: 1px solid #2e4a36;
     border-radius: 6px;
     padding: 0 10px;
     color: var(--terminal-line);
-    background: #182126;
+    background: #10180f;
     font: inherit;
     outline: none;
 }

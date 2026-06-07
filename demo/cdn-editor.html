@@ -15,6 +15,8 @@
         --literal: light-dark(#8a5114, #d2a86c);
         --builtin: light-dark(#0f5c8c, #7fb5dd);
         --selection: light-dark(#cde4e4, #1e4040);
+        --terminal-bg: #0c120e;
+        --terminal-fg: #52df6e;
         --active-line: light-dark(
             rgba(0, 0, 0, 0.04),
             rgba(255, 255, 255, 0.05)
@@ -64,6 +66,10 @@
         text-transform: uppercase;
     }
 
+    h1::before {
+        content: '\2744\FE0E  ';
+    }
+
     h1 a {
         color: var(--accent);
         text-decoration: none;
@@ -77,6 +83,7 @@
         flex: 1;
         color: var(--muted);
         font-size: 1.2rem;
+        text-transform: uppercase;
     }
 
     #status.error {
@@ -157,6 +164,22 @@
         outline: none;
     }
 
+    /* The output pane is a phosphor terminal: green on near-black, a
+       soft glow, and faint scanlines. */
+    #out {
+        background-color: var(--terminal-bg);
+        background-image: repeating-linear-gradient(
+            transparent 0 2px,
+            rgba(0, 0, 0, 0.25) 2px 3px
+        );
+        color: var(--terminal-fg);
+        text-shadow: 0 0 6px rgba(82, 223, 110, 0.4);
+    }
+
+    #out::selection {
+        background: rgba(82, 223, 110, 0.3);
+    }
+
     @media (max-width: 720px) {
         main {
             grid-template-columns: 1fr;
@@ -171,7 +194,9 @@
 </style>
 
 <header>
-    <h1><a href="https://github.com/atdt/snoflake">Snoflake</a></h1>
+    <h1>
+        <a href="https://github.com/atdt/snoflake">Snoflake</a>
+    </h1>
     <select id="example" aria-label="Load example"></select>
     <span id="status">Ready</span>
     <select id="theme" aria-label="Color theme">
@@ -207,23 +232,20 @@
     } from 'https://esm.sh/@codemirror/language';
     import { tags } from 'https://esm.sh/@lezer/highlight';
     import { snobol } from 'https://esm.sh/codemirror-lang-snobol';
-    import * as SNOBOL from 'https://esm.sh/snoflake';
 
     const EXAMPLES = {
         'Pattern matching': {
             source: `READ    LINE = INPUT :F(END)
         LINE ('GOLD' | 'BLUE') . SHADE ('FISH' | 'BIRD') . KIND :F(READ)
         OUTPUT = SHADE ' ' KIND :(READ)
-END
-`,
+END`,
             input: 'GOLDFISH\nBLUEBIRD\nSNOWBIRD\nGOLDFINCH\nBLUEFISH\n',
         },
         'Swap': {
             source: `        WORD = 'SNOBOL'
         WORD LEN(3) . HEAD REM . TAIL
         OUTPUT = TAIL HEAD
-END
-`,
+END`,
             input: '',
         },
         'Fibonacci': {
@@ -233,8 +255,7 @@ LOOP    OUTPUT = B
         T = A + B
         A = B
         B = LT(B, 100) T :S(LOOP)
-END
-`,
+END`,
             input: '',
         },
         'Word tally': {
@@ -247,8 +268,7 @@ DONE    RESULT = CONVERT(COUNT, 'ARRAY')
         I = 0
 PRINT   I = I + 1
         OUTPUT = RESULT<I,1> ': ' RESULT<I,2> :S(PRINT)
-END
-`,
+END`,
             input: 'TO BE OR NOT TO BE\nTHAT IS THE QUESTION\n\nTO BE\n',
         },
     };
@@ -261,7 +281,10 @@ END
         exampleSel = document.querySelector( '#example' ),
         themeSel = document.querySelector( '#theme' );
 
+    let runningTimer;
+
     function setStatus( message, error = false ) {
+        clearTimeout( runningTimer );
         statusEl.textContent = message;
         statusEl.classList.toggle( 'error', error );
     }
@@ -310,30 +333,72 @@ END
         { tag: tags.number, color: 'var(--literal)' },
     ] );
 
+    // The interpreter runs in a worker so the page stays responsive; each
+    // run terminates any in-flight worker and spawns a fresh one. The page
+    // is a single file, so the worker module is inlined via a blob URL.
+    // The input pane is served as the program's input file, so INPUT
+    // reads it line by line.
+    const WORKER_SOURCE = `
+        import * as SNOBOL from 'https://esm.sh/snoflake';
+
+        self.onmessage = ( event ) => {
+            const { source, input } = event.data,
+                write = ( line ) => self.postMessage( { type: 'line', line } );
+
+            try {
+                SNOBOL.run( {
+                    source,
+                    input: 'input.txt',
+                    loader: { load: () => input },
+                    stdout: { write },
+                    stderr: { write },
+                } );
+                self.postMessage( { type: 'done' } );
+            } catch ( e ) {
+                self.postMessage( {
+                    type: 'error',
+                    message: String( e?.message || e ),
+                } );
+            }
+        };
+    `;
+
+    const workerUrl = URL.createObjectURL(
+        new Blob( [ WORKER_SOURCE ], { type: 'text/javascript' } ),
+    );
+
+    let worker;
+
     function write( line ) {
         out.textContent += line + '\n';
     }
 
-    // The input pane is served as the program's input file, so INPUT
-    // reads it line by line.
     function run() {
+        worker?.terminate();
         out.textContent = '';
-        const started = performance.now();
 
-        try {
-            SNOBOL.run( {
-                source: editor.state.doc.toString(),
-                input: 'input.txt',
-                loader: { load: () => input.value },
-                stdout: { write },
-                stderr: { write },
-            } );
-            setStatus(
-                `Ran in ${Math.round( performance.now() - started )} ms`,
-            );
-        } catch ( e ) {
-            setStatus( `Error: ${e?.message || e}`, true );
-        }
+        // Most runs finish in a few ms; showing 'Running…' for them
+        // just makes the status flicker.
+        clearTimeout( runningTimer );
+        runningTimer = setTimeout( () => setStatus( 'Running…' ), 100 );
+
+        worker = new Worker( workerUrl, { type: 'module' } );
+        worker.onmessage = ( event ) => {
+            const message = event.data;
+            if ( message.type === 'line' ) {
+                write( message.line );
+            } else if ( message.type === 'done' ) {
+                setStatus( 'Ready' );
+            } else {
+                setStatus( `Error: ${message.message}`, true );
+            }
+        };
+        worker.onerror = ( event ) =>
+            setStatus( `Error: ${event.message}`, true );
+        worker.postMessage( {
+            source: editor.state.doc.toString(),
+            input: input.value,
+        } );
     }
 
     let debounceTimer;
