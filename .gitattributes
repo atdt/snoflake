@@ -1,1 +1,4 @@
 src/generated-snobol-image.json -diff
+
+# Built demo bundle: generated output, kept out of diffs and language stats.
+demo/dist/** -diff linguist-generated
