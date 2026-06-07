@@ -159,13 +159,15 @@ const emptyEntry = {
     action: Action.RUNOUT,
     next: null,
 };
-Object.freeze( emptyEntry );
+
+const emptyActions = new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT );
+const emptyNext = Array.from( { length: BYTE_VALUES } ).fill( null );
 
 function emptyTable( foldable, foldsLookups ) {
     return {
         puts: new Int32Array( BYTE_VALUES ),
-        actions: new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT ),
-        next: Array.from( { length: BYTE_VALUES }, () => null ),
+        actions: new Uint8Array( emptyActions ),
+        next: emptyNext.slice(),
         fallback: emptyEntry,
         foldable,
         foldsLookups,
