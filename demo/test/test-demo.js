@@ -1,15 +1,23 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
-import { runSnoflake } from '../demo/lib/runner.js';
+import { runSnoflake } from '../lib/runner.js';
 import {
     makeAutomatonExtensions,
     presets as automataPresets,
-} from '../demo/lib/automata.js';
+} from '../lib/automata.js';
 import {
     makeTurtleExtensions,
     presets as lsystemPresets,
-} from '../demo/lib/turtle.js';
+} from '../lib/turtle.js';
+
+// Demo programs resolved relative to this file, so the suite runs from any cwd.
+const program = ( name ) =>
+    fs.readFileSync(
+        fileURLToPath( new URL( '../programs/' + name, import.meta.url ) ),
+        'utf8',
+    );
 
 describe('browser demo runner', function () {
     it('runs the preloaded style of program from an in-memory source', function () {
@@ -48,7 +56,7 @@ describe('browser demo runner', function () {
 
     it('keeps the original pattern-matcher demo runnable', function () {
         const result = runSnoflake(
-            fs.readFileSync( 'demo/programs/pattern-matcher.sno', 'utf8' ),
+            program( 'pattern-matcher.sno' ),
             { inputText: 'THE BLUEBIRD\nGOLDFISH\n' },
         );
 
@@ -61,7 +69,7 @@ describe('browser demo runner', function () {
 
     it('runs ELIZA as a batch companion demo with scripted input', function () {
         const result = runSnoflake(
-            fs.readFileSync( 'demo/programs/eliza.sno', 'utf8' ),
+            program( 'eliza.sno' ),
             { inputText: 'I feel nervous about computers\nbye\n' },
         );
 
@@ -93,7 +101,7 @@ describe('browser demo runner', function () {
         const { canvas, ops } = stubCanvas( 480, 360 );
         const generations = [];
         const result = runSnoflake(
-            fs.readFileSync( 'demo/programs/lsystem.sno', 'utf8' ),
+            program( 'lsystem.sno' ),
             {
                 extensions: makeTurtleExtensions(
                     canvas,
@@ -117,7 +125,7 @@ describe('browser demo runner', function () {
     it('paints rule 90 as a Sierpinski triangle of cells', function () {
         const { canvas, ops } = stubCanvas( 480, 360 );
         const result = runSnoflake(
-            fs.readFileSync( 'demo/programs/cellular-automata.sno', 'utf8' ),
+            program( 'cellular-automata.sno' ),
             {
                 extensions: makeAutomatonExtensions(
                     canvas,

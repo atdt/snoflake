@@ -21,7 +21,10 @@ test-csnobol4:
 		echo "snobol4 not found; skipping CSNOBOL4 fixture check"; \
 	fi
 
-test-all: test-node test-deno test-bun test-csnobol4
+test-demo:
+	@npm test --prefix demo
+
+test-all: test-node test-deno test-bun test-demo test-csnobol4
 
 build:
 	@node ./build/build-image.js >| ./src/generated-snobol-image.json
@@ -82,4 +85,4 @@ release: release-check
 	git push origin master "$$tag"; \
 	gh release create "$$tag" --verify-tag --title "$$tag" --generate-notes
 
-.PHONY: test test-node test-deno test-bun test-csnobol4 test-all build run profile coverage bench bench-deno bench-diff bench-vs-csnobol4 demo release-check release
+.PHONY: test test-node test-deno test-bun test-csnobol4 test-demo test-all build run profile coverage bench bench-deno bench-diff bench-vs-csnobol4 demo release-check release

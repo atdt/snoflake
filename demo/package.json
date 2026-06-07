@@ -6,7 +6,8 @@
     "scripts": {
         "build": "node build.js",
         "dev": "node build.js --serve",
-        "serve": "node server.js"
+        "serve": "node server.js",
+        "test": "node --test --test-timeout=15000 test/test-*.js"
     },
     "devDependencies": {
         "@codemirror/language": "^6.12.3",
