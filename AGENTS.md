@@ -42,5 +42,29 @@ a finishing step.
     JavaScript.
 - `test/`: Focused macro/runtime tests (`test-*.js`) and end-to-end `*.sno`
   fixtures (`test/programs/`).
-- `demo/`: Browser demo. `docs/manual.md`: user-facing manual.
+- `demo/`: Browser demo.
+- `docs/`: `manual.md` (user-facing manual), `architecture.md` (how the image,
+  memory model, and dispatch fit together), `sil-guide.md` (working on the SIL).
 - `tmp/`: Scratch programs, probes, and logs (do not commit).
+
+## Before you start
+
+- Changing SNOBOL-visible behavior means changing the SIL or a macro's JS
+  implementation. Read `docs/sil-guide.md` first. The non-negotiables: edit
+  `v311-snoflake.sil` only, tag every change, `make build` after.
+- Adding a test fixture: read `test/programs/README.md` first.
+- The runtime is dependency-free and portable across Node, Deno, and Bun. Keep
+  it that way.
+- `make test` is enough for almost every change. A green run does not prove a
+  SIL edit was reached, but `make coverage` does. `make bench-diff` judges a
+  performance change against HEAD.
+- `make run` is interactive; do not use it from automation. For everything else,
+  read @Makefile.
+
+## Code style
+
+- `deno fmt` formats and `deno lint` checks. Formatting runs on a post-edit
+  hook, so match the surrounding style rather than hand-formatting.
+- Comments are calm and quiet. Say only what the code, its location, and common
+  knowledge do not already supply, then stop. Avoid em dashes and semicolons,
+  and prefer two short sentences to one clause-spliced line.
