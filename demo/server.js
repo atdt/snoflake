@@ -4,11 +4,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
+const portArg = process.argv.indexOf( '--port' );
+
 const root = path.resolve(
         path.dirname( fileURLToPath( import.meta.url ) ),
         '..',
     ),
-    port = Number( process.env.PORT || 4173 ),
+    port = Number(
+        portArg !== -1 ? process.argv[portArg + 1] : process.env.PORT || 4173,
+    ),
     host = process.env.HOST || '127.0.0.1',
     contentTypes = {
         '.css': 'text/css; charset=utf-8',
