@@ -1,0 +1,19 @@
+* @title ORDVST alphabetizes the &DUMP post-mortem listing
+* @match substring
+* @expect >>>
+* TANGO = 1
+* UNIFORM = 2
+* VICTOR = 3
+* ZULU = 4
+* <<<
+* Setting &DUMP triggers a post-mortem dump of every natural variable at
+* termination. Unlike the DUMP() builtin (which lists storage order), the
+* termination dump runs ORDVST first, so the listing is alphabetical. The four
+* variables below are assigned out of order yet appear sorted, and they sort
+* after every built-in pattern name so the run is contiguous.
+        &DUMP = 1
+        ZULU = 4
+        TANGO = 1
+        VICTOR = 3
+        UNIFORM = 2
+END

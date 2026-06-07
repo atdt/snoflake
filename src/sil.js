@@ -2636,6 +2636,39 @@ sil.MULTC = function ( $DESCR1, $DESCR2, N ) {
 // descriptor are undefined.
 sil.ORDVST = function () {
     // order variable storage
+    // Each bin in the OBSTRT array heads a chain of variables linked at +LNKFLD.
+    // Merge them into one sorted chain off the first bin and zero the rest, so
+    // DUMP, which walks every bin, prints each variable once (note 2).
+    // Null-valued variables ride along, since DUMP filters them itself.
+    const mem = this.mem,
+        LNKFLD = this.$( 'LNKFLD' ),
+        OBSTRT = this.$( 'OBSTRT' ),
+        OBSIZ = this.$( 'OBSIZ' );
+
+    // A variable's name is the string at A+4*CPD, length in A's value field.
+    const vars = [];
+    for ( let bin = 0; bin < OBSIZ; bin++ ) {
+        const head = OBSTRT + ( bin * D );
+        for ( let cur = mem[head]; cur !== 0; cur = mem[cur + LNKFLD] ) {
+            vars.push( {
+                addr: cur,
+                name: decodeString( mem, cur + ( 4 * CPD ), mem[cur + 2] ),
+            } );
+        }
+    }
+
+    // Sort by name in LEXCMP's character order, which is plain < / >.
+    vars.sort( ( a, b ) => ( a.name < b.name ? -1 : a.name > b.name ? 1 : 0 ) );
+
+    for ( let bin = 1; bin < OBSIZ; bin++ ) {
+        mem[OBSTRT + ( bin * D )] = 0;
+    }
+    let link = OBSTRT;
+    for ( const { addr } of vars ) {
+        mem[link] = addr;
+        link = addr + LNKFLD;
+    }
+    mem[link] = 0;
 };
 
 //     OUTPUT  is  used to output a list of items according to
