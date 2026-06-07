@@ -8,10 +8,10 @@
 -INCLUDE "LPAD.INC"
 -INCLUDE "RPAD.INC"
 	DEFINE('PUT(L)')
-	PUT_INC  =  1
-						:(PUT_END)
-PUT	PUT_N  =  PUT_N + PUT_INC
-	OUTPUT  =   RPAD(L,72)  PUT_LABEL
+	PUT_INC = 1
+	                                :(PUT_END)
+PUT	PUT_N = PUT_N + PUT_INC
+	OUTPUT = RPAD(L,72) PUT_LABEL
 +	LPAD(PUT_N, 8 - SIZE(PUT_LABEL))
-	PUNCH  =  OUTPUT			:(RETURN)
+	PUNCH = OUTPUT                  :(RETURN)
 PUT_END

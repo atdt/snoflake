@@ -17,12 +17,12 @@
 -INCLUDE "READL.INC"
 -INCLUDE "READRL.INC"
 	L = READL(POS(0) 'STOP')
-RL1	IDENT(L)				:S(RL2)
+RL1	IDENT(L)                        :S(RL2)
 	OUTPUT = VALUE(L)
-	L = NEXT(L)				:(RL1)
+	L = NEXT(L)                     :(RL1)
 RL2	L = READRL(POS(0) 'END')
-RL3	IDENT(L)				:S(DONE)
+RL3	IDENT(L)                        :S(DONE)
 	OUTPUT = VALUE(L)
-	L = NEXT(L)				:(RL3)
+	L = NEXT(L)                     :(RL3)
 DONE
 END

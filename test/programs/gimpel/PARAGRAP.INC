@@ -6,12 +6,12 @@
 *
 -INCLUDE "READ.INC"
 	DEFINE('PARAGRAPH(FIRST_LINE)T,P')
-	PARA_CONTINUE  =  POS(0)  NOTANY(' ')
-						:(PARAGRAPH_END)
-PARAGRAPH   P  =  TRIM(READ(FIRST_LINE))	:F(FRETURN)
-PARAGRAPH_1 T  =  ' '
-	    P    POS(0)  RTAB(1)  '.'		:F(PARAGRAPH_2)
-	    T  =  '  '
-PARAGRAPH_2 P  =  P T TRIM(READ(PARA_CONTINUE))	:S(PARAGRAPH_1)
-	    PARAGRAPH  =  P			:(RETURN)
+	PARA_CONTINUE = POS(0) NOTANY(' ')
+	                                            :(PARAGRAPH_END)
+PARAGRAPH	P = TRIM(READ(FIRST_LINE))          :F(FRETURN)
+PARAGRAPH_1	T = ' '
+	P POS(0) RTAB(1) '.'                        :F(PARAGRAPH_2)
+	T = '  '
+PARAGRAPH_2	P = P T TRIM(READ(PARA_CONTINUE))   :S(PARAGRAPH_1)
+	PARAGRAPH = P                               :(RETURN)
 PARAGRAPH_END

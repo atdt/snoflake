@@ -38,117 +38,117 @@
 	DEFINE('ABCDR(L)THETA,PHI,TAU,TTR')
 	DEFINE('ALPHA(L)T')
 	DEFINE('BETA(L)T')
-						:(ABCDR_END)
-ALPHA	T  =  1 + 2 * L
+	                                                    :(ABCDR_END)
+ALPHA	T = 1 + 2 * L
 	ALPHA = -(T + 1) + SQRT(T ** 2 + 6 * T + 1)
-	ALPHA  =  ALPHA / (2 * T)		:(RETURN)
-BETA	T  =  1 + 2 * L
-	BETA  =  -(T ** 2) + 2 * T + 1 + (T - 1) *
+	ALPHA = ALPHA / (2 * T)                             :(RETURN)
+BETA	T = 1 + 2 * L
+	BETA = -(T ** 2) + 2 * T + 1 + (T - 1) *
 +	SQRT(T ** 2 + 6 * T + 1)
-	BETA  =  BETA  /  (2 * T ** 2)		:(RETURN)
-ABCDR	ALPHA  =  ALPHA(L)
-	BETA   =  BETA(L)
-	PHI    =  L / (1 + 2 * L)
-	THETA  =  1 - PHI
-	TAU    =  1 + 2 * L
-	R      =  L / (1 + L)
-	TTR    =  TAU * THETA / R
+	BETA = BETA / (2 * T ** 2)                          :(RETURN)
+ABCDR	ALPHA = ALPHA(L)
+	BETA = BETA(L)
+	PHI = L / (1 + 2 * L)
+	THETA = 1 - PHI
+	TAU = 1 + 2 * L
+	R = L / (1 + L)
+	TTR = TAU * THETA / R
 	A = -1 + 2 * PHI + ALPHA + TTR * (4 * PHI + 2 * ALPHA)
 	A = A / (TAU * THETA + ALPHA + TTR * (2 * ALPHA + 1))
 	B = 4 * PHI + 2 * ALPHA - (2 * ALPHA + 1) * A
 	C = 2 * PHI + ALPHA - A * ALPHA
 	D = R * (1 + ALPHA) - R * ALPHA
-						:(RETURN)
+	                                                    :(RETURN)
 ABCDR_END
-	DEFINE('BET()')				:(BET_END)
-BET	BET  =  CONVERT(POT * L, 'INTEGER')
-	BET  =  GT(BET,HIM)  HIM
-	GT(BET,0)				:S(RETURN)F(FRETURN)
+	DEFINE('BET()')                                     :(BET_END)
+BET	BET = CONVERT(POT * L, 'INTEGER')
+	BET = GT(BET,HIM) HIM
+	GT(BET,0)                                           :S(RETURN)F(FRETURN)
 BET_END
-	OUTPUT  =  'Welcome to Cold-hand Poker'
+	OUTPUT = 'Welcome to Cold-hand Poker'
 	QUEST('Would you like to know the rules? /'
-+	'(NO)INIT|(N)INIT|(n)INIT') :S($LABEL)
++	'(NO)INIT|(N)INIT|(n)INIT')                         :S($LABEL)
 INIT
 	QUEST('What is your lucky number today?/RAN_VAR(1...1000)')
-	HIM  =  RANDOM(100) + 20
-	OUTPUT  =  "We'll start you off with " HIM " chips"
+	HIM = RANDOM(100) + 20
+	OUTPUT = "We'll start you off with " HIM " chips"
 NEWP	QUEST('Bet limit (% of pot) = /L(10...1000)')
-	L  =  L / 100.
+	L = L / 100.
 	ABCDR(L)
 ANTE	QUEST("What's the ante? /ANTE(1...HIM)")
-START	GT(ANTE,HIM)				:S(ANTE)
-	POT  =  2 * ANTE
-	HIM  =  HIM - ANTE
+START	GT(ANTE,HIM)                                        :S(ANTE)
+	POT = 2 * ANTE
+	HIM = HIM - ANTE
 	OUTPUT = 'With a ' ANTE ' chip ante the pot has '
 +	POT ' chips'
-	HX  =  RHAND(5,1)
-	X   =  POKEV(HX)
-	HY  =  RHAND(5)
-	Y   =  POKEV(HY)
-	OUTPUT  =  'You are dealt ' DISPLAY(HX)
+	HX = RHAND(5,1)
+	X = POKEV(HX)
+	HY = RHAND(5)
+	Y = POKEV(HY)
+	OUTPUT = 'You are dealt ' DISPLAY(HX)
 
-	RAISE  =  (1 - A) * ALPHA
-	CALL   =  1 - D
+	RAISE = (1 - A) * ALPHA
+	CALL = 1 - D
 	QUEST('Would you like to bet(B) or check(-)? /'
-+	'(b)HE_BETS|(B)HE_BETS|(-)HE_CHECKS')	:S($LABEL)
++	'(b)HE_BETS|(B)HE_BETS|(-)HE_CHECKS')               :S($LABEL)
 
-HE_CHECKS	OUTPUT  =  LETMESEE()
-	(LE((1 - C) * R,Y)  LT(Y,C))		:S(I_CHECK)
+HE_CHECKS	OUTPUT = LETMESEE()
+	(LE((1 - C) * R,Y) LT(Y,C))                         :S(I_CHECK)
 
-I_BET	BET  =  BET()				:F(CANT_BET)
-	POT  =  POT + BET
-	OUTPUT  =  "I guess I'll bet " BET " chips."
+I_BET	BET = BET()                                         :F(CANT_BET)
+	POT = POT + BET
+	OUTPUT = "I guess I'll bet " BET " chips."
 	QUEST('How about you, call(C) or fold(F)? /'
-+	'(C)|(c)|(F)I_WIN|(f)I_WIN')		:S($LABEL)
++	'(C)|(c)|(F)I_WIN|(f)I_WIN')                        :S($LABEL)
 
-HE_CALLS	POT  =  POT + BET
-	HIM  =  HIM - BET			:(COMPARE)
+HE_CALLS	POT = POT + BET
+	HIM = HIM - BET                                     :(COMPARE)
 
-I_CHECK	OUTPUT = "I'll check too"		:(COMPARE)
+I_CHECK	OUTPUT = "I'll check too"                           :(COMPARE)
 
-HE_BETS	BET  =  BET()				:F(CANT_BET)
-	POT  =  POT + BET
-	HIM  =  HIM - BET
-	OUTPUT  =  'You bet ' BET ' chips.'
-	OUTPUT  =  LETMESEE()
-	GT(Y,1 - RAISE)				:S(I_RAISE)
-	GT(Y,1 - CALL)				:S(I_CALL)
-	LT(Y,R * RAISE)				:S(I_RAISE)F(I_FOLD)
+HE_BETS	BET = BET()                                         :F(CANT_BET)
+	POT = POT + BET
+	HIM = HIM - BET
+	OUTPUT = 'You bet ' BET ' chips.'
+	OUTPUT = LETMESEE()
+	GT(Y,1 - RAISE)                                     :S(I_RAISE)
+	GT(Y,1 - CALL)                                      :S(I_CALL)
+	LT(Y,R * RAISE)                                     :S(I_RAISE)F(I_FOLD)
 
 I_RAISE	OUTPUT = "I'll see your " BET " chips"
-	POT  =  POT + BET
-	BET  =  BET()				:F(CANT_BET)
-	OUTPUT  =  " and raise you " BET
-	POT  =  POT + BET
+	POT = POT + BET
+	BET = BET()                                         :F(CANT_BET)
+	OUTPUT = " and raise you " BET
+	POT = POT + BET
 	QUEST('You must now raise(R), call(C) or fold(F) /'
 +	'(R)|(r)|(C)HE_CALLS|(c)HE_CALLS|(F)I_WIN|(f)I_WIN')
-+						:S($LABEL)
++                                                           :S($LABEL)
 
-HE_RAISES	OUTPUT  =  'You call my ' BET ' chips and'
-	HIM  =  HIM - BET
-	POT  =  POT + BET
-	CALL  =  RAISE * BETA
-	RAISE  =  RAISE * ALPHA * ALPHA		:(HE_BETS)
+HE_RAISES	OUTPUT = 'You call my ' BET ' chips and'
+	HIM = HIM - BET
+	POT = POT + BET
+	CALL = RAISE * BETA
+	RAISE = RAISE * ALPHA * ALPHA                       :(HE_BETS)
 
 I_CALL	OUTPUT = 'OK, I call'
-	POT  =  POT + BET			:(COMPARE)
+	POT = POT + BET                                     :(COMPARE)
 
 CANT_BET	OUTPUT = 'Since you have no money left we '
 +	'have to stop here'
 
 COMPARE	OUTPUT = "Let's see, I have " DISPLAY(HY)
-	GT(X,Y)					:S(HE_WINS)
+	GT(X,Y)                                             :S(HE_WINS)
 
 I_WIN	OUTPUT = 'I guess I take all ' POT ' chips in the pot'
-	OUTPUT = INSULT()			:(SUMMARY)
+	OUTPUT = INSULT()                                   :(SUMMARY)
 
-I_FOLD	OUTPUT  =  'I fold'
-HE_WINS	HIM  =  HIM + POT
-	OUTPUT  =  'You win the ' POT ' chips in the pot'
-	OUTPUT = PRAISE()			:(SUMMARY)
+I_FOLD	OUTPUT = 'I fold'
+HE_WINS	HIM = HIM + POT
+	OUTPUT = 'You win the ' POT ' chips in the pot'
+	OUTPUT = PRAISE()                                   :(SUMMARY)
 
 SUMMARY	OUTPUT = 'You now have ' HIM ' chips'
-	OUTPUT = EQ(HIM,0)  'So Long'		:S(END)
+	OUTPUT = EQ(HIM,0) 'So Long'                        :S(END)
 	QUEST('Same game (S) or new parameters (N), or quit(Q)? /'
-+	'(S)START|(s)START|(N)NEWP|(n)NEWP|(Q)END|(q)END') :($LABEL)
++	'(S)START|(s)START|(N)NEWP|(n)NEWP|(Q)END|(q)END')  :($LABEL)
 END

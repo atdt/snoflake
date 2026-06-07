@@ -14,20 +14,20 @@
 -INCLUDE "QUOTE.INC"
 -INCLUDE "RANDOM.INC"
 	DEFINE('RSELECT(S)WT,WTS,ALT,CODE,I,CODE,SSAVED,BC')
-	RSEL_TBL  =  TABLE()			:(RSELECT_END)
+	RSEL_TBL = TABLE()              :(RSELECT_END)
 RSELECT	CODE = RSEL_TBL<S>
-	DIFFER(CODE,NULL)			:S<CODE>
-	SSAVED  =  S
-	S   LEN(1) . BC  =			:F(RETURN)
+	DIFFER(CODE,NULL)               :S<CODE>
+	SSAVED = S
+	S LEN(1) . BC =                 :F(RETURN)
 RSELECT_1
-	WT  =  1
-	S   POS(0) '#' BREAK('#') . WT '#'  =
-	S   (BREAK(BC) | REM) . ALT  =
-	WTS  =  WTS + WT
-	CODE  =  CODE ' ;  RSELECT = LE(I,' WTS ') '
-+	QUOTE(ALT)  '				:S(RETURN)'
-	S   BC  =				:S(RSELECT_1)
-	CODE  =  '  I = RANDOM(' WTS ') '  CODE
-	S  =  SSAVED
-	RSEL_TBL<S>  =  CODE(CODE)		:S(RSELECT)F(ERROR)
+	WT = 1
+	S POS(0) '#' BREAK('#') . WT '#' =
+	S (BREAK(BC) | REM) . ALT =
+	WTS = WTS + WT
+	CODE = CODE ' ;  RSELECT = LE(I,' WTS ') '
++	QUOTE(ALT) '				:S(RETURN)'
+	S BC =                          :S(RSELECT_1)
+	CODE = '  I = RANDOM(' WTS ') ' CODE
+	S = SSAVED
+	RSEL_TBL<S> = CODE(CODE)        :S(RSELECT)F(ERROR)
 RSELECT_END

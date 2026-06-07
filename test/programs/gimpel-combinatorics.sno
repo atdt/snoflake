@@ -32,5 +32,5 @@
 	OS = ORDER('BANA')
 	S = OS
 RLOOP	OUTPUT = S
-	S = REORDER(S,OS)	:S(RLOOP)
+	S = REORDER(S,OS)               :S(RLOOP)
 END

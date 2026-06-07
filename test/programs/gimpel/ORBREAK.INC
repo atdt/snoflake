@@ -21,11 +21,11 @@
 *	   tree.  Using *LIST_P makes this concatenation very efficient,
 *	   because it only is done to the top-level "*" node.
 * 
-	DEFINE('ORBREAK(LIST)BC,ANCSEIZE,TLIST,WORD,C') :(ORBREAK_END)
-ORBREAK	LIST    LEN(1) . BC			:F(FRETURN)
-	ANCSEIZE  =  POS(0) BC (BREAK(BC) | REM) . WORD
+	DEFINE('ORBREAK(LIST)BC,ANCSEIZE,TLIST,WORD,C')         :(ORBREAK_END)
+ORBREAK	LIST LEN(1) . BC                                        :F(FRETURN)
+	ANCSEIZE = POS(0) BC (BREAK(BC) | REM) . WORD
 	TLIST = LIST
-ORB_0	TLIST     ANCSEIZE =			:F(RETURN)
-	WORD      POS(0) (NOTANY('(') . C) | ('(' BREAK(')') . C) :F(ORB_0)
-	ORBREAK = ORBREAK C			:(ORB_0)
+ORB_0	TLIST ANCSEIZE =                                        :F(RETURN)
+	WORD POS(0) (NOTANY('(') . C) | ('(' BREAK(')') . C)    :F(ORB_0)
+	ORBREAK = ORBREAK C                                     :(ORB_0)
 ORBREAK_END

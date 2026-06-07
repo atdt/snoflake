@@ -52,22 +52,22 @@
 * global variable LIST, the substrings beginning with the
 * same first character (or parenthesized expression).
 *
-        DEFINE('OR_EXTRACT()COMMON,IC,P,SUBLIST,T,TLIST,C1,C2')
-						:(OR_END)
+	DEFINE('OR_EXTRACT()COMMON,IC,P,SUBLIST,T,TLIST,C1,C2')
+	                                                    :(OR_END)
 *
 * Entry point for OR.  Determine the break character and
 * define a pattern to be used throughout to SEIZE all up to
 * the next break character.  Define ANC as a pattern to
 * anchor the scan and match the Break Character.
 *
-OR	LIST    LEN(1) . BC			:F(FRETURN)
-	SEIZE  =  BREAK(BC) | REM
-	ANC  =  POS(0)  BC
+OR	LIST LEN(1) . BC                                    :F(FRETURN)
+	SEIZE = BREAK(BC) | REM
+	ANC = POS(0) BC
 *
 * Or together all extractions.
 *
-	OR  =  OR_EXTRACT()
-OR_LOOP	OR  =  OR | OR_EXTRACT()		:S(OR_LOOP)F(RETURN)
+	OR = OR_EXTRACT()
+OR_LOOP	OR = OR | OR_EXTRACT()                              :S(OR_LOOP)F(RETURN)
 *
 * Entry point for OR_EXTRACT():  Set TLIST to be a copy of
 * LIST.  Extract initial character (IC) and set COMMON equal
@@ -79,37 +79,37 @@ OR_LOOP	OR  =  OR | OR_EXTRACT()		:S(OR_LOOP)F(RETURN)
 * breaks the recursion of OR_EXTRACT().
 *
 OR_EXTRACT
-	TLIST  =  LIST
-	LIST    ANC  (BAL . IC  SEIZE) . COMMON	:S(ORX_0)
-	IDENT(LIST, NULL)			:S(FRETURN)
-	LIST  =  NULL				:(RETURN)
+	TLIST = LIST
+	LIST ANC (BAL . IC SEIZE) . COMMON                  :S(ORX_0)
+	IDENT(LIST, NULL)                                   :S(FRETURN)
+	LIST = NULL                                         :(RETURN)
 *
 * Find the largest COMMON prefix contained in all strings
 * beginning with IC.
 * ORX_0 statement added by MBE to detect ",,XX" case.
 *
-ORX_0	LIST     ANC (BC REM) . LIST		:S(RETURN)
-ORX_1	TLIST    ANC  IC			:F(ORX_3)
-ORX_2	TLIST    ANC  COMMON  SEIZE  =		:S(ORX_1)
+ORX_0	LIST ANC (BC REM) . LIST                            :S(RETURN)
+ORX_1	TLIST ANC IC                                        :F(ORX_3)
+ORX_2	TLIST ANC COMMON SEIZE =                            :S(ORX_1)
 *
 * COMMON was not there.  Reduce  COMMON by one character and
 * try again.  This means extract the last balanced string of
 * COMMON.
 *
-	BALREV(COMMON)      BAL  REM . COMMON	:F(ERROR)
-	COMMON  =  BALREV(COMMON)		:(ORX_2)
+	BALREV(COMMON) BAL REM . COMMON                     :F(ERROR)
+	COMMON = BALREV(COMMON)                             :(ORX_2)
 *
 * Now remove the COMMON characters from each string as we
 * prepare a SUBLIST to be OR'ed.
 *
-ORX_3	LIST    ANC  COMMON  SEIZE . T  =	:F(ORX_4)
-	SUBLIST  =  SUBLIST  BC  T		:(ORX_3)
+ORX_3	LIST ANC COMMON SEIZE . T =                         :F(ORX_4)
+	SUBLIST = SUBLIST BC T                              :(ORX_3)
 *
 * Convert any parenthesized expression in COMMON to an ANY.
 * Build up the pattern in a temporary P.  Then join this with
 * the results of a recursive call to OR.
 *
-ORX_4	COMMON  BREAK('(') . C1 '('  BREAK(')') . C2 ')' =  :F(ORX_5)
-	P  =  P  C1  ANY(C2)			:(ORX_4)
-ORX_5	OR_EXTRACT  =  P  COMMON  OR(SUBLIST)	:(RETURN)
+ORX_4	COMMON BREAK('(') . C1 '(' BREAK(')') . C2 ')' =    :F(ORX_5)
+	P = P C1 ANY(C2)                                    :(ORX_4)
+ORX_5	OR_EXTRACT = P COMMON OR(SUBLIST)                   :(RETURN)
 OR_END

@@ -3,7 +3,7 @@
 *	    If P aborts, NOT(P) will also abort.
 *
 -INCLUDE "PUSH.INC"
-	DEFINE('NOT(P)')			:(NOT_END)
-NOT	NOT  =  *PUSH() P *(POP() PUSH(1)) FAIL  |
-+	*IDENT(POP())				:(RETURN)
+	DEFINE('NOT(P)')                :(NOT_END)
+NOT	NOT = *PUSH() P *(POP() PUSH(1)) FAIL |
++	*IDENT(POP())                   :(RETURN)
 NOT_END

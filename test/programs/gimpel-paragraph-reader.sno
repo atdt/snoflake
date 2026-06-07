@@ -17,9 +17,9 @@
 * skip: Final.
 * <<<
 -INCLUDE "PARAGRAP.INC"
-LOOP	P = PARAGRAPH(POS(0) ANY('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))	:F(NEXT)
-	OUTPUT = '<' P '>'			:(LOOP)
-NEXT	LINE = READ()				:F(DONE)
-	OUTPUT = 'skip: ' LINE			:(NEXT)
+LOOP	P = PARAGRAPH(POS(0) ANY('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))     :F(NEXT)
+	OUTPUT = '<' P '>'                                          :(LOOP)
+NEXT	LINE = READ()                                               :F(DONE)
+	OUTPUT = 'skip: ' LINE                                      :(NEXT)
 DONE
 END

@@ -8,13 +8,13 @@
 *	    permit the redefition of built-in operators.
 *
 	DEFINE('REDEFINE(OP,DEF,LBL)NAME,N,FLAG')
-						:(REDEFINE_END)
-REDEFINE	DEF  BREAK('(') . NAME '(' BREAK('),') LEN(1) . FLAG
-	N  =  1
-	N  =  IDENT(FLAG, ',')  2
-	N   =  IDENT(OP)
-	OP  =  IDENT(OP)  NAME
+	                                :(REDEFINE_END)
+REDEFINE	DEF BREAK('(') . NAME '(' BREAK('),') LEN(1) . FLAG
+	N = 1
+	N = IDENT(FLAG, ',') 2
+	N = IDENT(OP)
+	OP = IDENT(OP) NAME
 	OPSYN(NAME '.', OP, N)
 	DEFINE(DEF, LBL)
-	OPSYN(OP, NAME, N)			:(RETURN)
+	OPSYN(OP, NAME, N)              :(RETURN)
 REDEFINE_END

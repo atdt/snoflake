@@ -27,13 +27,13 @@
 	OUTPUT = REVERSE('SAMPLE')
 	OUTPUT = BALREV('F(X)')
 	OUTPUT = SUBSTR('SNOBOL', 4, 3)
-	AGT('banana', 'Apple')			:S(AGT_OK)F(AGT_BAD)
-AGT_OK	OUTPUT = 'AGT true'			:(LEX_TEST)
-AGT_BAD	OUTPUT = 'AGT false'			:(LEX_TEST)
-LEX_TEST LEXGT('b', 'A')			:S(LEX_OK)F(LEX_BAD)
-LEX_OK	OUTPUT = 'LEXGT true'			:(SWAP_TEST)
-LEX_BAD	OUTPUT = 'LEXGT false'			:(SWAP_TEST)
-SWAP_TEST A = 'LEFT'
+	AGT('banana', 'Apple')          :S(AGT_OK)F(AGT_BAD)
+AGT_OK	OUTPUT = 'AGT true'             :(LEX_TEST)
+AGT_BAD	OUTPUT = 'AGT false'            :(LEX_TEST)
+LEX_TEST	LEXGT('b', 'A')         :S(LEX_OK)F(LEX_BAD)
+LEX_OK	OUTPUT = 'LEXGT true'           :(SWAP_TEST)
+LEX_BAD	OUTPUT = 'LEXGT false'          :(SWAP_TEST)
+SWAP_TEST	A = 'LEFT'
 	B = 'RIGHT'
 	SWAP(.A, .B)
 	OUTPUT = A ' ' B

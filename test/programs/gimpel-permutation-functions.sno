@@ -31,13 +31,13 @@
 	A<1> = 'A'; A<2> = 'B'; A<3> = 'C'
 	PERM(A)
 PLOOP	OUTPUT = STRINGOUT(A, '')
-	PERM(A)					:S(PLOOP)
+	PERM(A)                         :S(PLOOP)
 	S = PERMS('ABC')
 SLOOP	OUTPUT = S
-	S = PERMS(S)				:S(SLOOP)
+	S = PERMS(S)                    :S(SLOOP)
 	L = 'ABC'
 LLOOP	OUTPUT = L
-	L = LPERM(L)				:S(LLOOP)
+	L = LPERM(L)                    :S(LLOOP)
 	P = ARRAY(3)
 	P<1> = 2; P<2> = 3; P<3> = 1
 	IP(P)

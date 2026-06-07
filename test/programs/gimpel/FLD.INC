@@ -10,7 +10,7 @@
 *		$Y yields "bbb"
 *	    and	$Y = "ccc" changes B(X) to "ccc"
 *
-	DEFINE('FLD(ST,I)')			:(FLD_END)
-FLD	FLD  =  .APPLY(FIELD(DATATYPE(ST), I), ST)
-+						:S(NRETURN)F(FRETURN)
+	DEFINE('FLD(ST,I)')             :(FLD_END)
+FLD	FLD = .APPLY(FIELD(DATATYPE(ST), I), ST)
++                                       :S(NRETURN)F(FRETURN)
 FLD_END

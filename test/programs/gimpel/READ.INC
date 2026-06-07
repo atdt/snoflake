@@ -4,13 +4,13 @@
 *	     will fail.
 *
 	DEFINE('READ(P)')
-						:(READ_END)
-READ	LT(NF_INPUT, 0)				:S(FRETURN)
-	IDENT(INPUT_BUF, NULL)			:F(READ_1)
-	INPUT_BUF  =  INPUT			:F(READ_2)
+	                                :(READ_END)
+READ	LT(NF_INPUT, 0)                 :S(FRETURN)
+	IDENT(INPUT_BUF, NULL)          :F(READ_1)
+	INPUT_BUF = INPUT               :F(READ_2)
 READ_1
-	INPUT_BUF    P				:F(FRETURN)
-	READ  =  INPUT_BUF
-	INPUT_BUF  =  NULL			:(RETURN)
-READ_2	NF_INPUT  =  NF_INPUT - 1		:(READ)
+	INPUT_BUF P                     :F(FRETURN)
+	READ = INPUT_BUF
+	INPUT_BUF = NULL                :(RETURN)
+READ_2	NF_INPUT = NF_INPUT - 1         :(READ)
 READ_END

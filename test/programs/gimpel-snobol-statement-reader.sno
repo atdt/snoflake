@@ -17,7 +17,7 @@
 * <END;>
 * <<<
 -INCLUDE "SNOREAD.INC"
-LOOP	S = SNOREAD()				:F(DONE)
-	OUTPUT = '<' S '>'			:(LOOP)
+LOOP	S = SNOREAD()                   :F(DONE)
+	OUTPUT = '<' S '>'              :(LOOP)
 DONE
 END

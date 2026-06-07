@@ -5,7 +5,7 @@
 *	   like a simple reversal.
 *
 -INCLUDE "REVERSE.INC"
-	DEFINE('BALREV(S)')			:(BALREV_END)
-BALREV	BALREV  =  REPLACE(REVERSE(S), ')(', '()')
-						:(RETURN)
+	DEFINE('BALREV(S)')             :(BALREV_END)
+BALREV	BALREV = REPLACE(REVERSE(S), ')(', '()')
+	                                :(RETURN)
 BALREV_END

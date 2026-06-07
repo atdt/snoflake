@@ -35,58 +35,58 @@
 -INCLUDE "QUEST.INC"
 	INPUT(.INPUT, 5)
 	DEFINE('SDA(NSTONES,PARITY,MAX)A,I,OPAR,P,J')
-						:(SDA_END)
-SDA	SDA  =  ARRAY('0:' NSTONES ',0:1' , 'L')
-	SDA<0,PARITY>  =  'W'
-SDA_1	I  =  I + 1  LT(I,NSTONES)		:F(RETURN)
-	P  =  -1
-SDA_2	P  =  P + 1  LT(P,1)			:F(SDA_1)
-	OPAR  =  REMDR(NSTONES - I - P, 2)
-	J  =  0
-SDA_3	J  =  J + 1  LT(J,MAX)			:F(SDA_2)
-	IDENT(SDA<I - J, OPAR>, 'L')		:F(SDA_3)
-	SDA<I,P>  =  J				:(SDA_2)
+	                                                :(SDA_END)
+SDA	SDA = ARRAY('0:' NSTONES ',0:1' , 'L')
+	SDA<0,PARITY> = 'W'
+SDA_1	I = I + 1 LT(I,NSTONES)                         :F(RETURN)
+	P = -1
+SDA_2	P = P + 1 LT(P,1)                               :F(SDA_1)
+	OPAR = REMDR(NSTONES - I - P, 2)
+	J = 0
+SDA_3	J = J + 1 LT(J,MAX)                             :F(SDA_2)
+	IDENT(SDA<I - J, OPAR>, 'L')                    :F(SDA_3)
+	SDA<I,P> = J                                    :(SDA_2)
 SDA_END
-	QUEST('Do you want the rules?/(NO)NEWG|(YES)') :S($LABEL)
+	QUEST('Do you want the rules?/(NO)NEWG|(YES)')  :S($LABEL)
 STONE_1	OUTPUT = 'There are N stones in a pile (where N is odd) and let each'
 	OUTPUT = 'player take, on each move, either 1, 2, ..., or K stones'
 	OUTPUT = 'from the pile.  When the pile is exhausted, the player'
 	OUTPUT = 'with an odd number of stones wins.'
 	OUTPUT =
 NEWG	QUEST('No. of stones (odd) = /NSTONES(1...1000)')
-	EQ(REMDR(NSTONES,2),0)			:S(NEWG)
+	EQ(REMDR(NSTONES,2),0)                          :S(NEWG)
 	QUEST("Winner's Parity (0...1) = /P(0...1)")
 	QUEST("Maximum Take = /MAX(2...1000)")
-OLDG	NS  =  NSTONES
-	MAXA  =  MAX
-	A  =  SDA(NS,P,MAX)
+OLDG	NS = NSTONES
+	MAXA = MAX
+	A = SDA(NS,P,MAX)
 	HIM = 0
-	ME  =  0
+	ME = 0
 HIS_TURN
-	OUTPUT  =  'There are ' NS ' stones in the pile.'
-	MAXA  =  GT(MAXA,NS)  NS
+	OUTPUT = 'There are ' NS ' stones in the pile.'
+	MAXA = GT(MAXA,NS) NS
 	QUEST('How many do you want? /K(1...MAXA)')
-	NS  =  NS - K  ;  HIM  =  HIM + K
-	EQ(NS,0)				:S(TOTALIZE)
+	NS = NS - K ; HIM = HIM + K
+	EQ(NS,0)                                        :S(TOTALIZE)
 MY_TURN
-	K  =  A<NS,REMDR(ME,2)>
-	K  =  IDENT(K,'L')  1
-	NS  =  NS - K
-	ME  =  ME + K
-	OUTPUT  =  LETMESEE()
-	S  =  K ' stones.'
-	S  =  EQ(K,1)  'just one.'
-	OUTPUT  =  "I think I'll take " S
-	EQ(NS,0)				:F(HIS_TURN)
+	K = A<NS,REMDR(ME,2)>
+	K = IDENT(K,'L') 1
+	NS = NS - K
+	ME = ME + K
+	OUTPUT = LETMESEE()
+	S = K ' stones.'
+	S = EQ(K,1) 'just one.'
+	OUTPUT = "I think I'll take " S
+	EQ(NS,0)                                        :F(HIS_TURN)
 TOTALIZE
 	OUTPUT = 'You have ' HIM ' stones and I have ' ME ' stones'
-	EQ(REMDR(HIM,2),P)			:S(HE_WINS)
-	OUTPUT  =  'That means I win'
-	OUTPUT  =  INSULT()			:(CHANGE)
+	EQ(REMDR(HIM,2),P)                              :S(HE_WINS)
+	OUTPUT = 'That means I win'
+	OUTPUT = INSULT()                               :(CHANGE)
 HE_WINS
-	OUTPUT  =  'That means you win'
-	OUTPUT  =  PRAISE()
+	OUTPUT = 'That means you win'
+	OUTPUT = PRAISE()
 CHANGE
 	QUEST('Would you like to change the game, or quit(Q)? /'
-+	'(YES)NEWG|(NO)OLDG|(Q)END') :($LABEL)
++	'(YES)NEWG|(NO)OLDG|(Q)END')                    :($LABEL)
 END

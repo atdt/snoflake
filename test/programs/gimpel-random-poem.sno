@@ -50,7 +50,7 @@
 -INCLUDE "RSENTENC.INC"
 
 RPOEM	RPOEM = RSENTENCE('<RPOEM>')
-RPOEM_1	RPOEM BREAK('/') . OUTPUT '/' =	:S(RPOEM_1)
+RPOEM_1	RPOEM BREAK('/') . OUTPUT '/' =     :S(RPOEM_1)
 	OUTPUT =
-	N = LT(N,3) N + 1			:S(RPOEM)
+	N = LT(N,3) N + 1                   :S(RPOEM)
 END

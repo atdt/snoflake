@@ -15,16 +15,16 @@
 -INCLUDE "COPYL.INC"
 	L = LINK(LINK(LINK(, 'C'), 'B'), 'A')
 	L = REVL(L)
-RLOOP	IDENT(L)				:S(LAST_TEST)
+RLOOP	IDENT(L)                        :S(LAST_TEST)
 	OUTPUT = VALUE(L)
-	L = NEXT(L)				:(RLOOP)
-LAST_TEST L = LINK(LINK(, 'tail'), 'head')
+	L = NEXT(L)                     :(RLOOP)
+LAST_TEST	L = LINK(LINK(, 'tail'), 'head')
 	LAST(L) = LINK(, 'end')
 	WALK = L
-LLOOP	IDENT(WALK)				:S(COPY_TEST)
+LLOOP	IDENT(WALK)                     :S(COPY_TEST)
 	OUTPUT = VALUE(WALK)
-	WALK = NEXT(WALK)			:(LLOOP)
-COPY_TEST C = COPYL(L)
+	WALK = NEXT(WALK)               :(LLOOP)
+COPY_TEST	C = COPYL(L)
 	VALUE(NEXT(C)) = 'changed'
 	OUTPUT = VALUE(NEXT(L))
 	OUTPUT = VALUE(NEXT(C))

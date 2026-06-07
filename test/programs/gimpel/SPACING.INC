@@ -10,14 +10,14 @@
 *  programs (Ch. 10) likewise assume a global typesetter setup. Pin
 *  them here so SPACING.INC loads in any include order. BSPACE is
 *  the ASCII BS character (codepoint 8); USCORE is '_'.
-	IDENT(BSPACE)				:F(SPACING_INIT_DONE)
+	IDENT(BSPACE)                   :F(SPACING_INIT_DONE)
 	&ALPHABET TAB(8) LEN(1) . BSPACE
 	USCORE = '_'
 SPACING_INIT_DONE
-	IF_OVERSTRIKE  =  BREAK(BSPACE  USCORE)
-						:(SPACING_END)
-SPACING	SPACING  =  SIZE(S)
-	S   IF_OVERSTRIKE			:F(RETURN)
-	SPACING  =  SPACING - 2 * COUNT(S,BSPACE)
-+	-   COUNT(S,USCORE)			:(RETURN)
+	IF_OVERSTRIKE = BREAK(BSPACE USCORE)
+	                                :(SPACING_END)
+SPACING	SPACING = SIZE(S)
+	S IF_OVERSTRIKE                 :F(RETURN)
+	SPACING = SPACING - 2 * COUNT(S,BSPACE)
++	- COUNT(S,USCORE)               :(RETURN)
 SPACING_END

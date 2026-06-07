@@ -4,7 +4,7 @@
 * CODE
 * CODE OK
 * <<<
-  OUTPUT = CODE(" X = 1 ") :S(OK)F(ERR)
-OK OUTPUT = "CODE OK" :(END)
-ERR OUTPUT = "CODE FAIL" :(END)
+	OUTPUT = CODE(" X = 1 ")        :S(OK)F(ERR)
+OK	OUTPUT = "CODE OK"              :(END)
+ERR	OUTPUT = "CODE FAIL"            :(END)
 END

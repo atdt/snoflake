@@ -3,8 +3,8 @@
 *	     characters are ignored.
 *
 	DEFINE('UPLO(S)')
-	UP_LO  =  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-	LO_UP  =  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-						:(UPLO_END)
-UPLO	UPLO   =  REPLACE(S, UP_LO, LO_UP)	:(RETURN)
+	UP_LO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+	LO_UP = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+	                                    :(UPLO_END)
+UPLO	UPLO = REPLACE(S, UP_LO, LO_UP)     :(RETURN)
 UPLO_END

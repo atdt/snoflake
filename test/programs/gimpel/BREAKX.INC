@@ -4,8 +4,8 @@
 *	       
 *  Built-in function in SNOBOL4+ and SPITBOL.
 *
-	DEFINE('BREAKX(S)')			:(BREAKX_END)
-BREAKX	BREAKX  =  BREAK(S)  ARBNO(LEN(1) BREAK(S))
-						:(RETURN)
+	DEFINE('BREAKX(S)')             :(BREAKX_END)
+BREAKX	BREAKX = BREAK(S) ARBNO(LEN(1) BREAK(S))
+	                                :(RETURN)
 BREAKX_END
 

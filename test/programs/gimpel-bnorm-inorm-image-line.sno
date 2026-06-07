@@ -40,38 +40,38 @@
 -INCLUDE "INORM.INC"
 -INCLUDE "IMAGE.INC"
 -INCLUDE "HYPHENAT.INC"
-        BS = BSPACE
+	BS = BSPACE
 
 * BNORM (Program 10.1, p. 191). 'ABCD' followed by four BSPACEs and
 * then '1234' overprints each letter of 'ABCD' with the digit. After
 * B-normalization the string has each print position grouped together
 * ('A+1B+2C+3D+4', with + standing in for BSPACE for visibility).
-        OUTPUT = "BNORM('ABCD<BS><BS><BS><BS>1234'): "
-+               REPLACE(BNORM('ABCD' BS BS BS BS '1234'), BS, '+')
+	OUTPUT = "BNORM('ABCD<BS><BS><BS><BS>1234'): "
++	REPLACE(BNORM('ABCD' BS BS BS BS '1234'), BS, '+')
 
 * INORM (Program 10.2, p. 199). Overstruck characters that produce the
 * same image are sorted into a canonical (alphabetic) order so that
 * 'B<BS>A' and 'A<BS>B' both normalise to 'A<BS>B'.
-        OUTPUT = "INORM('B<BS>A'): " REPLACE(INORM('B' BS 'A'), BS, '+')
+	OUTPUT = "INORM('B<BS>A'): " REPLACE(INORM('B' BS 'A'), BS, '+')
 
 * IMAGE (Program 10.4, p. 198). Given a B-normalized string, return
 * the I-th print pass. 'AB' followed by two backspaces and 'CD'
 * overprints 'AB' with 'CD'; B-normalization arranges the characters
 * as 'A<BS>C B<BS>D' so pass 1 is 'AB' and pass 2 is 'CD'.
-        S = BNORM('AB' BS BS 'CD')
-        OUTPUT = "IMAGE pass 1: '" IMAGE(S, 1) "'"
-        OUTPUT = "IMAGE pass 2: '" IMAGE(S, 2) "'"
+	S = BNORM('AB' BS BS 'CD')
+	OUTPUT = "IMAGE pass 1: '" IMAGE(S, 1) "'"
+	OUTPUT = "IMAGE pass 2: '" IMAGE(S, 2) "'"
 
 * LINE (Program 10.3, p. 202). The book's worked example: fill the
 * sentence into 10-character lines with justification and hyphenation
 * off. HYPHENATE/JUSTIFY are LINE.INC globals, set to 1 by the module
 * init; the test overrides them to match the book's first listing.
-        LINE_INIT('A QUICK BROWN FOX JUMPED OVER THE LAZY DOG.')
-        JUSTIFY = 0
-        HYPH_FLAG = HYPHENATE
-        HYPHENATE = 0
-        OUTPUT = "LINE CW=10:"
-L1      OUTPUT = "  '" LINE(10) "'"        :S(L1)
+	LINE_INIT('A QUICK BROWN FOX JUMPED OVER THE LAZY DOG.')
+	JUSTIFY = 0
+	HYPH_FLAG = HYPHENATE
+	HYPHENATE = 0
+	OUTPUT = "LINE CW=10:"
+L1	OUTPUT = "  '" LINE(10) "'"     :S(L1)
 
 * HYPHENATE (Program 10.7, p. 205). The book's worked example
 * states "HYPHENATE('niatbo', 3) will just succeed and return a
@@ -80,14 +80,14 @@ L1      OUTPUT = "  '" LINE(10) "'"        :S(L1)
 * (care-lessness), 'winning' (win-ning), and 'harnesses'
 * (har-nesses) per the suffix-stripping discussion on pp. 206-207.
 * HYPHENATE was shadowed by a JUSTIFY flag above; restore it.
-        HYPHENATE = HYPH_FLAG
-        K = HYPHENATE('niatbo', 3)
-        OUTPUT = "HYPHENATE('niatbo',3) = " K ' HYPHEN=[' HYPHEN ']'
-        K = HYPHENATE('ssensselerac', 6)
-        OUTPUT = "HYPHENATE('ssensselerac',6) = " K ' HYPHEN=[' HYPHEN ']'
-        K = HYPHENATE('gninniw', 3)
-        OUTPUT = "HYPHENATE('gninniw',3) = " K ' HYPHEN=[' HYPHEN ']'
-        K = HYPHENATE('sessenrah', 3)
-        OUTPUT = "HYPHENATE('sessenrah',3) = " K ' HYPHEN=[' HYPHEN ']'
+	HYPHENATE = HYPH_FLAG
+	K = HYPHENATE('niatbo', 3)
+	OUTPUT = "HYPHENATE('niatbo',3) = " K ' HYPHEN=[' HYPHEN ']'
+	K = HYPHENATE('ssensselerac', 6)
+	OUTPUT = "HYPHENATE('ssensselerac',6) = " K ' HYPHEN=[' HYPHEN ']'
+	K = HYPHENATE('gninniw', 3)
+	OUTPUT = "HYPHENATE('gninniw',3) = " K ' HYPHEN=[' HYPHEN ']'
+	K = HYPHENATE('sessenrah', 3)
+	OUTPUT = "HYPHENATE('sessenrah',3) = " K ' HYPHEN=[' HYPHEN ']'
 
 END

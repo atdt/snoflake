@@ -6,10 +6,10 @@
 *	     (as opposed to ABORT) which permits other alter-
 *	     nates to be taken.
 *
-	DEFINE('ONCE(ID)NAME')			:(ONCE_END)
-ONCE	ONCE  =  IDENT(ID,NULL)
-+	CONVERT('ONCE(' &STCOUNT ')' , 'EXPRESSION')  :S(RETURN)
-	NAME   =  'ONCE..'  ID
-	ONCE   =  $NAME
-	$NAME  =  FAIL				:(RETURN)
+	DEFINE('ONCE(ID)NAME')                          :(ONCE_END)
+ONCE	ONCE = IDENT(ID,NULL)
++	CONVERT('ONCE(' &STCOUNT ')' , 'EXPRESSION')    :S(RETURN)
+	NAME = 'ONCE..' ID
+	ONCE = $NAME
+	$NAME = FAIL                                    :(RETURN)
 ONCE_END

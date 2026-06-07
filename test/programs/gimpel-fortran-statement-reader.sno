@@ -15,7 +15,7 @@
 * [      Z = Y]
 * <<<
 -INCLUDE "FORTREAD.INC"
-LOOP	S = FORTREAD()				:F(DONE)
-	OUTPUT = '[' S ']'			:(LOOP)
+LOOP	S = FORTREAD()                  :F(DONE)
+	OUTPUT = '[' S ']'              :(LOOP)
 DONE
 END

@@ -11,7 +11,7 @@
 	OUTPUT = FLIP()
 	OUTPUT = FLIP()
 	OUTPUT = FLIP()
-	OUTPUT = FLIP()			:(END)
-FLIP_A	FLIP = 'A'			:(RET('FLIP_B'))
-FLIP_B	FLIP = 'B'			:(RET('FLIP_A'))
+	OUTPUT = FLIP()                 :(END)
+FLIP_A	FLIP = 'A'                      :(RET('FLIP_B'))
+FLIP_B	FLIP = 'B'                      :(RET('FLIP_A'))
 END

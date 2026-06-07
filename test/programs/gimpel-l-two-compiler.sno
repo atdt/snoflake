@@ -33,11 +33,11 @@
 -INCLUDE "TUPLE.INC"
 -INCLUDE "BREAKX.INC"
 
-READ	S  =  TRIM(INPUT)			:F(END)
+READ	S = TRIM(INPUT)                         :F(END)
 *
 * Convert input to Polish form.
 *
-	S STMT				:F(ERR)
+	S STMT                                  :F(ERR)
 	POLISH = POP() ","
 *
 * Convert Polish to 4-tuples
@@ -46,13 +46,13 @@ READ	S  =  TRIM(INPUT)			:F(END)
 *
 * Convert 4-tuples to machine code
 *
-GENLOOP	T POS(0) (BREAKX('/') '//') . TUP =	:F(READ)
+GENLOOP	T POS(0) (BREAKX('/') '//') . TUP =     :F(READ)
 	TUP BREAK(',') . OP ','
 +	((BREAK(',') . ARG1 ',' BREAK(',') . ARG2 ','
-+	  BREAKX('/') . ARG3) |
++	BREAKX('/') . ARG3) |
 +	(BREAK('/') . ARG1 "" . ARG2 "" . ARG3)) '//'
-+						 :F(ERR2)
-	TUPLE(OP,ARG1,ARG2,ARG3)		:(GENLOOP)
-ERR	OUTPUT  =  '***  ERROR IN '   S		:(READ)
-ERR2	OUTPUT	=  '***  ERROR IN '   TUP	:(READ)
++                                               :F(ERR2)
+	TUPLE(OP,ARG1,ARG2,ARG3)                :(GENLOOP)
+ERR	OUTPUT = '***  ERROR IN ' S             :(READ)
+ERR2	OUTPUT = '***  ERROR IN ' TUP           :(READ)
 END

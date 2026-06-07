@@ -10,5 +10,5 @@
 * <<<
 * BCD_EBCD - one-line program to convert BCD input to EBCDIC.
 *
-L	OUTPUT = REPLACE(INPUT, "#@%<&", "='()+")	:S(L)
+L	OUTPUT = REPLACE(INPUT, "#@%<&", "='()+")   :S(L)
 END

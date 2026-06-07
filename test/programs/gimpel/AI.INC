@@ -5,9 +5,9 @@
 *	If I is a scalar, the result is A<I>.
 *
 -INCLUDE "SEQ.INC"
-	DEFINE('AI(A,I)J')			:(AI_END)
-AI	IDENT(DATATYPE(I), 'ARRAY')		:F(AI_1)
-	AI  =  ARRAY(PROTOTYPE(I))
-	SEQ(' AI<J>  =  A<I<J>> ', .J)		:(RETURN)
-AI_1	AI  =  A<I>				:(RETURN)
+	DEFINE('AI(A,I)J')              :(AI_END)
+AI	IDENT(DATATYPE(I), 'ARRAY')     :F(AI_1)
+	AI = ARRAY(PROTOTYPE(I))
+	SEQ(' AI<J>  =  A<I<J>> ', .J)  :(RETURN)
+AI_1	AI = A<I>                       :(RETURN)
 AI_END
