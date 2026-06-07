@@ -10,7 +10,7 @@
 //   node tools/sil-coverage.js --json=PATH  also write machine-readable output
 //
 // What "coverage" means here. The assembled image's instruction list (see
-// src/generated-snobol-image.js) is the SNOBOL4 system itself -- its compiler
+// src/generated-snobol-image.json) is the SNOBOL4 system itself -- its compiler
 // and runtime, expressed as SIL macro calls. A user's SNOBOL program is
 // compiled into data the system interprets; it never adds instructions to that
 // list. So the instruction array is fixed, and "covered" means a given SIL

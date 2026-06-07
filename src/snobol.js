@@ -2,7 +2,7 @@
 
 import { VM } from './vm.js';
 import { Session } from './interactive.js';
-import snobolImage from './generated-snobol-image.js';
+import snobolImage from './generated-snobol-image.json' with { type: 'json' };
 
 export * from './io.js';
 export * from './datatypes.js';
@@ -14,6 +14,8 @@ export * from './assemble.js';
 export * from './vm.js';
 export * from './extensions.js';
 export * from './interactive.js';
+// The image stores its memory snapshot as a plain JSON array.
+snobolImage.memory = new Float64Array( snobolImage.memory );
 export { snobolImage as image };
 
 const DEFAULT_SOURCE_PATH = 'source.sno';

@@ -18,7 +18,7 @@
 // Each trace line is the verbatim text of external/v311-snoflake.sil, prefixed
 // with its source line number, so a stretch of trace reads like a walk through
 // the SIL. The image is assembled from the SIL on every call rather than
-// loaded from src/generated-snobol-image.js, so a work-in-progress SIL edit
+// loaded from src/generated-snobol-image.json, so a work-in-progress SIL edit
 // traces faithfully without a prior `make build`. The slot-to-source mapping
 // comes from tools/sil-source-map.js.
 

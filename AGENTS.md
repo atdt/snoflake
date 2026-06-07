@@ -3,13 +3,13 @@ implementation is the SNOBOL4 system written in SIL, a macro assembly language,
 and a port implements the SIL macros for a new machine. Snoflake's machine is
 JavaScript: a build step (`make build`) assembles the SIL source
 (`external/v311-snoflake.sil`) into a memory image
-(`src/generated-snobol-image.js`), which a dispatch loop (`src/vm.js`) executes
-through SIL operations implemented in JavaScript (`src/sil.js`). The SNOBOL4
-compiler and interpreter live in that image, and the JavaScript is an engine
-that only knows how to execute SIL. SNOBOL-visible behavior therefore changes in
-the SIL source or in a macro's JS implementation, and SIL edits take effect only
-after rebuilding the image. A user's `.sno` program is never parsed by
-JavaScript: the VM feeds it as input to the running SNOBOL4 system.
+(`src/generated-snobol-image.json`), which a dispatch loop (`src/vm.js`)
+executes through SIL operations implemented in JavaScript (`src/sil.js`). The
+SNOBOL4 compiler and interpreter live in that image, and the JavaScript is an
+engine that only knows how to execute SIL. SNOBOL-visible behavior therefore
+changes in the SIL source or in a macro's JS implementation, and SIL edits take
+effect only after rebuilding the image. A user's `.sno` program is never parsed
+by JavaScript: the VM feeds it as input to the running SNOBOL4 system.
 
 ## Project intent
 
@@ -23,7 +23,7 @@ a finishing step.
 
 - `bin/snoflake.js`: CLI entry point for running a SNOBOL source file.
 - `build/`: handwritten SIL parser (`sil-parser.js`) and build script
-  (`build-image.js`) that together emit `src/generated-snobol-image.js`.
+  (`build-image.js`) that together emit `src/generated-snobol-image.json`.
 - `external/`: Upstream SIL and syntax-table sources.
   - `v311.sil`: Untouched historical baseline (the 1985 macro implementation).
   - `v311-csnobol4.sil`: Phil Budne's CSNOBOL4 SIL, the source that ported
@@ -35,7 +35,7 @@ a finishing step.
 - `src/`: Runtime.
   - `snobol.js`: Runtime assembly and entry point.
   - `sil.js`: JS implementations of the SIL macros (authoritative spec).
-  - `generated-snobol-image.js`: Generated translation; do not hand-edit,
+  - `generated-snobol-image.json`: Generated translation; do not hand-edit,
     regenerate via `make build`.
   - `{vm,datatypes,string,file,syntax}.js`: Core VM components.
   - `{extensions,host}.js`: Extension API for SNOBOL programs calling host

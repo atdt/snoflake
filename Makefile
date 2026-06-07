@@ -24,7 +24,7 @@ test-csnobol4:
 test-all: test-node test-deno test-bun test-csnobol4
 
 build:
-	@node ./build/build-image.js >| ./src/generated-snobol-image.js
+	@node ./build/build-image.js >| ./src/generated-snobol-image.json
 
 run:
 	@node ./bin/snoflake.js --debug
