@@ -66,6 +66,11 @@
 *                       after -HIDE without listing the control card itself.
 *        [SNF2]       — Backtick-delimited literals may span source cards.
 *                       Controlled by the MULTILN host option.
+*        [SNF3]       — Formats are plain sentence-case message text
+*                       with %d and %f numeric fields instead of
+*                       FORTRAN IV format specifications.  STPRNT
+*                       writes records raw, so format associations
+*                       from the source program have no effect.
 *
        TITLE   'Table of Contents'
 *
@@ -6592,8 +6597,8 @@ UCNMSP STRING  'UCASE'						[PLB18]
 UNLDSP STRING  'UNLOAD'
 VALSP  STRING  'VALUE'
 *
-CRDFSP STRING  '(80A1)' 	   Default output format
-OUTPSP STRING  '(1X,132A1)'	   Standard print format
+CRDFSP STRING  ''		   Default output format (unused)	[SNF3]
+OUTPSP STRING  ''		   Standard print format (unused)	[SNF3]
 *
 *      Pointers to Other Initialization
 *
@@ -6860,33 +6865,37 @@ OPNLIT STRING  'UNCLOSED LITERAL'
 *
 *      Formats
 *
-ALOCFL FORMAT  '(40H0INSUFFICIENT STORAGE FOR INITIALIZATION)'	E3.10.6
-ARTHNO FORMAT  '(1H0,I15,32H ARITHMETIC OPERATIONS PERFORMED)'
-CMTIME FORMAT  '(1H0,I15,21H MS. COMPILATION TIME)'
-EJECTF FORMAT  '(1H1)'
-ERRCF  FORMAT  '(34H0ERRORS DETECTED IN SOURCE PROGRAM/1H1)'
-EXNO   FORMAT  '(1H0,I15,21H STATEMENTS EXECUTED,,I8,7H FAILED)'
-FTLCF  FORMAT  '(6H1ERROR,I3,13H IN STATEMENT,I5,9H AT LEVEL,I3)'
+*      A format is plain message text.  %d inserts the next	[SNF3]
+*      argument as an integer and %f as a number with two	[SNF3]
+*      decimal places.  \n separates output lines.		[SNF3]
+*
+ALOCFL FORMAT  'Insufficient storage for initialization'	E3.10.6	[SNF3]
+ARTHNO FORMAT  '%d arithmetic operations performed'		[SNF3]
+CMTIME FORMAT  '%d ms. compilation time'			[SNF3]
+EJECTF FORMAT  ''						[SNF3]
+ERRCF  FORMAT  'ERRORS DETECTED IN SOURCE PROGRAM\n'		[SNF3]
+EXNO   FORMAT  '%d statements executed, %d failed'		[SNF3]
+FTLCF  FORMAT  'Error %d in statement %d at level %d'		[SNF3]
 *								E3.4.1
-INCGCF FORMAT  '(33H1INCOMPLETE STORAGE REGENERATION.)'
-INTIME FORMAT  '(1H0,I15,19H MS. EXECUTION TIME)'
-LASTSF FORMAT  '(28H LAST STATEMENT EXECUTED WAS,I5)'
-NODMPF FORMAT  '(28H1TERMINAL DUMP NOT POSSIBLE.)'
-NRMEND FORMAT  '(28H1NORMAL TERMINATION AT LEVEL,I3)'
-NVARF  FORMAT  '(18H0NATURAL VARIABLES,/1H )'
-PKEYF  FORMAT  '(21H0UNPROTECTED KEYWORDS/1H )'
-PRTOVF FORMAT  '(29H ***PRINT REQUEST TOO LONG***)'
-READNO FORMAT  '(1H0,I15,16H READS PERFORMED)'
-SCANNO FORMAT  '(1H0,I15,26H PATTERN MATCHES PERFORMED)'
-SOURCF FORMAT  '(42H0BELL TELEPHONE LABORATORIES, INCORPORATED,/1H1)'
-STATHD FORMAT  '(28H1SNOBOL4 STATISTICS SUMMARY-)'
-STDMP  FORMAT  '(33H1DUMP OF VARIABLES AT TERMINATION/1H )'
-STGENO FORMAT  '(1H0,I15,33H REGENERATIONS OF DYNAMIC STORAGE)'
-SUCCF  FORMAT  '(37H0NO ERRORS DETECTED IN SOURCE PROGRAM/1H1)'
-SYSCMT FORMAT  '(27H0CUT BY SYSTEM IN STATEMENT,I5,9H AT LEVEL,I3)'
+INCGCF FORMAT  'INCOMPLETE STORAGE REGENERATION.'		[SNF3]
+INTIME FORMAT  '%d ms. execution time'				[SNF3]
+LASTSF FORMAT  'Last statement executed was %d'			[SNF3]
+NODMPF FORMAT  'TERMINAL DUMP NOT POSSIBLE.'			[SNF3]
+NRMEND FORMAT  'Normal termination at level %d'			[SNF3]
+NVARF  FORMAT  'Natural variables\n'				[SNF3]
+PKEYF  FORMAT  'Unprotected keywords\n'				[SNF3]
+PRTOVF FORMAT  '***PRINT REQUEST TOO LONG***'			[SNF3]
+READNO FORMAT  '%d reads performed'				[SNF3]
+SCANNO FORMAT  '%d pattern matches performed'			[SNF3]
+SOURCF FORMAT  'Bell Telephone Laboratories, Incorporated\n'	[SNF3]
+STATHD FORMAT  'SNOBOL4 statistics summary-'			[SNF3]
+STDMP  FORMAT  'Dump of variables at termination\n'		[SNF3]
+STGENO FORMAT  '%d regenerations of dynamic storage'		[SNF3]
+SUCCF  FORMAT  'No errors detected in source program\n'		[SNF3]
+SYSCMT FORMAT  'Cut by system in statement %d at level %d'	[SNF3]
 *								E3.4.1
-TIMEPS FORMAT  '(1H0,F15.2,35H MS. AVERAGE PER STATEMENT EXECUTED/1H1)'
-TITLEF FORMAT  '(37H1SNOBOL4 (VERSION 3.11, MAY 19, 1975)/8H+_______)'
+TIMEPS FORMAT  '%f ms. average per statement executed\n'	[SNF3]
+TITLEF FORMAT  'SNOBOL4 (Version 3.11, May 19, 1975)\n_______'	[SNF3]
 *								V3.11
-WRITNO FORMAT  '(1H0,I15,17H WRITES PERFORMED)'
+WRITNO FORMAT  '%d writes performed'				[SNF3]
        END

@@ -32,6 +32,19 @@ export function decodeString( encoded, start, length ) {
     return decoded;
 }
 
+// A minimal printf. Each placeholder consumes the next value: %d inserts
+// a number and %f a number with two decimal places. The result is split
+// into lines at literal \n.
+export function formatLines( template, values ) {
+    let next = 0;
+    return template
+        .replace( /%([df])/g, ( _, conv ) => {
+            const value = values[next++];
+            return conv === 'f' ? value.toFixed( 2 ) : String( value );
+        } )
+        .split( '\\n' );
+}
+
 // ASCII lowercase (a-z) folded to uppercase (A-Z); other bytes unchanged.
 export function foldAsciiUpperByte( c ) {
     return ( c >= 97 && c <= 122 ) ? c - 32 : c;

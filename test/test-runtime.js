@@ -813,7 +813,7 @@ describe('Error Diagnostics', function () {
             stdout,
         } );
         const output = joinLines( stdout.lines );
-        assert.match( output, /ERROR\s+1 IN STATEMENT\s+2/ );
+        assert.match( output, /Error 1 in statement 2/ );
         assert.match( output, /ILLEGAL DATA TYPE/ );
         assert.match( output, /at prog\.sno:2/ );
         assert.match( output, /Y = X \+ 'A'/ );
@@ -870,7 +870,7 @@ describe('Error Diagnostics', function () {
             stdout,
         } );
         const output = joinLines( stdout.lines );
-        assert.match( output, /STATEMENT\s+0/ );
+        assert.match( output, /statement 0/ );
         assert.match( output, /READING ERROR/ );
         assert.match( output, /at prog\.sno:2/ );
         assert.match( output, /-INCLUDE 'does-not-exist\.inc'/ );
@@ -970,8 +970,8 @@ describe('Multi-line strings', function () {
         } );
         const output = joinLines( stdout.lines );
         assert.match( output, /UNCLOSED LITERAL/ );
-        assert.match( output, /ERROR 28 IN STATEMENT\s+1/ );
-        assert.doesNotMatch( output, /ERROR 17 IN STATEMENT\s+0/ );
+        assert.match( output, /Error 28 in statement 1/ );
+        assert.doesNotMatch( output, /Error 17 in statement 0/ );
         assert.doesNotMatch( output, /ERROR IN SNOBOL4 SYSTEM/ );
     });
 

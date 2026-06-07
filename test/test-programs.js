@@ -21,10 +21,9 @@ const gimpelLoader = createHostLoader( { snolib: [ GIMPEL_LIB_DIR ] } );
 // marker is a deliberate runner change, not something tests can introduce
 // ad hoc. See test/programs/README.md.
 //
-// Markers are matched case-insensitively so the same list catches errors
-// from snoflake (IBM-spec uppercase) and CSNOBOL4 (mixed case). The
-// ' at level ' marker catches the runtime-error preamble "ERROR NN IN
-// STATEMENT NN AT LEVEL NN" emitted by both implementations.
+// Markers are matched case-insensitively. The ' at level ' marker
+// catches the runtime-error preamble "Error NN in statement NN at
+// level NN" emitted by both snoflake and CSNOBOL4.
 const ERROR_MARKERS = [
     'ERROR IN SNOBOL4 SYSTEM',
     'Compilation error',
@@ -113,9 +112,9 @@ function assertProgram( filePath, header, output ) {
             fail( filePath, output, 'expected an error marker, none found' );
         }
         if ( header.expect !== null ) {
-            // Case-insensitive: error-message text is implementation-formatted
-            // (snoflake uppercase vs. CSNOBOL4 mixed case), and the fixture
-            // describes the semantic content, not the formatting.
+            // Case-insensitive: error-message text is implementation-formatted,
+            // and the fixture describes the semantic content, not the
+            // formatting.
             const needle = trimTrailingNewlines( header.expect ).toLowerCase();
             if ( output.toLowerCase().indexOf( needle ) === -1 ) {
                 fail(

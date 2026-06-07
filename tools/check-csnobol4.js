@@ -22,7 +22,7 @@
 //   is printed for options CSNOBOL4 cannot honor.
 // - The data-section banner extraction used by the Node test runner does not
 //   apply: CSNOBOL4 with -b prints program output verbatim (no banner, no
-//   "NORMAL TERMINATION" epilogue).
+//   "Normal termination" epilogue).
 
 import childProcess from 'node:child_process';
 import fs from 'node:fs';

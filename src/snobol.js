@@ -9,7 +9,6 @@ export * from './datatypes.js';
 export * from './file.js';
 export * from './syntax.js';
 export * from './string.js';
-export * from './format.js';
 export * from './sil.js';
 export * from './assemble.js';
 export * from './vm.js';

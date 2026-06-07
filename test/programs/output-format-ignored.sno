@@ -1,7 +1,9 @@
-* @title Custom output association with FORTRAN format
+* @title Output association format argument is accepted and ignored
 * @attribution Griswold 1971, Chapter 9
-* @match substring
-* @expect 375
+* @match exact
+* @expect >>>
+* 375
+* <<<
          OUTPUT('SUM', 6, "(' THE RESULT IS: ', I10)")
          X = 125
          Y = 250

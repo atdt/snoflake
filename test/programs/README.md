@@ -121,9 +121,9 @@ Match modes:
 
 - **`exact`** (default): the `@expect` block must equal the _data section_ of
   `snoflake`'s stdout. The data section runs from the line after the
-  `NO ERRORS DETECTED IN SOURCE PROGRAM` banner up to the line before the
-  `NORMAL TERMINATION AT LEVEL` epilogue. The runner anchors on the _last_
-  `NORMAL TERMINATION AT LEVEL` occurrence after the success banner so a program
+  `No errors detected in source program` banner up to the line before the
+  `Normal termination at level` epilogue. The runner anchors on the _last_
+  `Normal termination at level` occurrence after the success banner so a program
   that prints the phrase itself does not truncate the data section. Interior
   blank lines are preserved; only the final trailing newline of the captured
   section is normalized before comparison.
@@ -147,14 +147,13 @@ already ignores case, so `/i` is rejected there).
 #### Recognized error markers
 
 The same fixed list is used for both the negative check in `exact`/`substring`
-and the positive check in `error`. Matches are case-insensitive so the same list
-catches snoflake (IBM-spec uppercase) and CSNOBOL4 (mixed case) error text:
+and the positive check in `error`. Matches are case-insensitive:
 
 - `ERROR IN SNOBOL4 SYSTEM`
 - `Compilation error`
 - `Execution error`
-- `at level` — catches the IBM-spec runtime-error preamble
-  `ERROR NN IN STATEMENT NN AT LEVEL NN` emitted by both implementations
+- `at level` — catches the runtime-error preamble
+  `Error NN in statement NN at level NN` emitted by both implementations
 
 Adding a new marker is a deliberate change to the runner, not something tests
 can introduce ad hoc.

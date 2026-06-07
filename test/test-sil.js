@@ -1744,13 +1744,18 @@ describe('Input and Output Macros', function () {
         assert.equal( vm.s( ptr ).specified, 'test' );
     });
 
-    it('OUTPUT handles line-printer carriage control', function () {
+    it('OUTPUT renders %d fields', function () {
         const vm = createVM();
         const unit = vm.d( vm.alloc( D ) ),
             format = sil.FORMAT.call(
                 vm,
-                '(37H1SNOBOL4 (VERSION 3.11, MAY 19, 1975)/8H+_______)',
+                'Error %d in statement %d at level %d',
             ),
+            args = [ 8, 12345, 2 ].map( ( n ) => {
+                const descr = vm.d( vm.alloc( D ) );
+                descr.addr = n;
+                return descr.ptr;
+            } ),
             logs = [],
             oldStdout = vm.units.stdout;
 
@@ -1760,14 +1765,40 @@ describe('Input and Output Macros', function () {
             },
         };
         try {
-            sil.OUTPUT.call( vm, unit.ptr, format, [] );
+            sil.OUTPUT.call( vm, unit.ptr, format, args );
+        } finally {
+            vm.units.stdout = oldStdout;
+        }
+
+        assert.deepEqual( logs, [ 'Error 8 in statement 12345 at level 2' ] );
+    });
+
+    it('OUTPUT renders %f fields and splits lines on \\n', function () {
+        const vm = createVM();
+        const unit = vm.d( vm.alloc( D ) ),
+            format = sil.FORMAT.call(
+                vm,
+                '%f ms. average per statement executed\\n',
+            ),
+            descr = vm.d( vm.alloc( D ) ),
+            logs = [],
+            oldStdout = vm.units.stdout;
+
+        descr.addr = 1234.5678;
+        vm.units.stdout = {
+            write: function ( line ) {
+                logs.push( line );
+            },
+        };
+        try {
+            sil.OUTPUT.call( vm, unit.ptr, format, [ descr.ptr ] );
         } finally {
             vm.units.stdout = oldStdout;
         }
 
         assert.deepEqual( logs, [
-            'SNOBOL4 (VERSION 3.11, MAY 19, 1975)',
-            '_______',
+            '1234.57 ms. average per statement executed',
+            '',
         ] );
     });
 
@@ -1775,87 +1806,16 @@ describe('Input and Output Macros', function () {
         assert( sil.REWIND );
     });
 
-    it('STPRNT handles line-printer carriage control', function () {
+    it('STPRNT writes the record raw, dropping NULs', function () {
         const vm = createVM();
         const key = vm.d( vm.alloc( D ) ),
             block = vm.d( vm.alloc( D ) ),
-            formatBase = vm.alloc( 20 ),
-            item = sil.STRING.call( vm, 'HELLO' ),
+            item = sil.STRING.call( vm, '0 DATA\0\0' ),
             logs = [],
-            oldStdout = vm.units.stdout,
-            format = '(1H0,A)';
+            oldStdout = vm.units.stdout;
 
         block.addr = vm.alloc( 9 );
         vm.d( block.addr + D ).addr = 6;
-        vm.d( block.addr + ( 2 * D ) ).addr = formatBase;
-        vm.d( formatBase ).value = format.length;
-        for ( let i = 0; i < format.length; i++ ) {
-            vm.mem[formatBase + ( 4 * D ) + i] = format.charCodeAt( i );
-        }
-
-        vm.units.stdout = {
-            write: function ( line ) {
-                logs.push( line );
-            },
-        };
-        try {
-            sil.STPRNT.call( vm, key.ptr, block.ptr, item );
-        } finally {
-            vm.units.stdout = oldStdout;
-        }
-
-        assert.deepEqual( logs, [ 'HELLO' ] );
-    });
-
-    it('STPRNT does not treat letters in format control words as A-conversions', function () {
-        const vm = createVM();
-        const key = vm.d( vm.alloc( D ) ),
-            block = vm.d( vm.alloc( D ) ),
-            formatBase = vm.alloc( 40 ),
-            item = sil.STRING.call( vm, 'HELLO' ),
-            logs = [],
-            oldStdout = vm.units.stdout,
-            format = '(" " PAUSE,100A1)';
-
-        block.addr = vm.alloc( 9 );
-        vm.d( block.addr + D ).addr = 6;
-        vm.d( block.addr + ( 2 * D ) ).addr = formatBase;
-        vm.d( formatBase ).value = format.length;
-        for ( let i = 0; i < format.length; i++ ) {
-            vm.mem[formatBase + ( 4 * D ) + i] = format.charCodeAt( i );
-        }
-
-        vm.units.stdout = {
-            write: function ( line ) {
-                logs.push( line );
-            },
-        };
-        try {
-            sil.STPRNT.call( vm, key.ptr, block.ptr, item );
-        } finally {
-            vm.units.stdout = oldStdout;
-        }
-
-        assert.deepEqual( logs, [ 'HELLO' ] );
-    });
-
-    it('STPRNT preserves leading data characters when the format starts with A', function () {
-        const vm = createVM();
-        const key = vm.d( vm.alloc( D ) ),
-            block = vm.d( vm.alloc( D ) ),
-            formatBase = vm.alloc( 20 ),
-            item = sil.STRING.call( vm, '0 DATA' ),
-            logs = [],
-            oldStdout = vm.units.stdout,
-            format = '(121A1)';
-
-        block.addr = vm.alloc( 9 );
-        vm.d( block.addr + D ).addr = 6;
-        vm.d( block.addr + ( 2 * D ) ).addr = formatBase;
-        vm.d( formatBase ).value = format.length;
-        for ( let i = 0; i < format.length; i++ ) {
-            vm.mem[formatBase + ( 4 * D ) + i] = format.charCodeAt( i );
-        }
 
         vm.units.stdout = {
             write: function ( line ) {

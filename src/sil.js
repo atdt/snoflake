@@ -2,10 +2,10 @@
 
 import { D } from './datatypes.js';
 import { compileExtension, FAIL } from './extensions.js';
-import { formatHasLeadingCarriageControl, printerLines } from './format.js';
 import {
     decodeString,
     foldAsciiUpperByte,
+    formatLines,
     hashString,
     writeString,
 } from './string.js';
@@ -2661,12 +2661,16 @@ sil.ORDVST = function () {
 //               +-----------------------+
 // Programming Notes:
 // 1.  See also STPRNT.
+//
+// Snoflake notes:
+// The format is %-style message text. Each % field consumes the
+// address field of the next descriptor, and \n separates lines.
 sil.OUTPUT = function ( $DESCR, FORMAT, ARGs ) {
     // output record
     const fmt = this.s( FORMAT ).specified,
         descrs = ARGs.map( this.d, this ),
-        lines = printerLines( fmt, descrs, { stripCarriageControl: true } ),
-        unit = this.d( $DESCR ).addr;
+        unit = this.d( $DESCR ).addr,
+        lines = formatLines( fmt, descrs.map( ( descr ) => descr.addr ) );
 
     for ( const line of lines ) this.units.write( unit, line );
 
@@ -3997,18 +4001,16 @@ sil.STPRNT = function ( $DESCR1, $DESCR2, $SPEC ) {
     // string print
     const DESCR2 = this.d( $DESCR2 ),
         A = DESCR2.addr,
-        A2 = this.d( A + ( 2 * D ) ).addr,
-        M = this.d( A2 ).value,
-        fmt = decodeString( this.mem, A2 + ( 4 * D ), M ),
         SPEC = this.s( $SPEC ),
-        item = decodeString( this.mem, SPEC.addr + SPEC.offset, SPEC.length ),
-        lines = printerLines( fmt, item, {
-            stripCarriageControl: formatHasLeadingCarriageControl( fmt ),
-        } );
+        item = decodeString( this.mem, SPEC.addr + SPEC.offset, SPEC.length );
 
-    // Unit number sits one descriptor past the head, at A+D.
+    // The output block's format (at A+2D) is not interpreted: the record
+    // is written as-is. NULs from zero-filled buffer cells beyond a
+    // string's logical length are dropped.
     const unit = this.d( A + D ).addr;
-    for ( const line of lines ) this.units.write( unit, line );
+    for ( const line of item.replaceAll( '\0', '' ).split( '\n' ) ) {
+        this.units.write( unit, line );
+    }
     this.d( $DESCR1 ).addr = 1;
 };
 
@@ -4264,6 +4266,11 @@ sil.STRING = function ( STR ) {
 // Programming Notes:
 // 1.  The characters assembled by FORMAT  are  treated  as  an
 // `undigested' format by FORTRAN IV routines.
+//
+// Snoflake notes:
+// The SIL source carries %-style message text instead of FORTRAN
+// formats. The text is assembled as an ordinary string here and
+// rendered at output time by formatLines in string.js.
 sil.FORMAT = sil.STRING;
 
 //     SUBSP is used to specify  an  initial  substring  of  a
