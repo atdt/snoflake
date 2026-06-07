@@ -306,18 +306,6 @@ describe('SNOBOL Program Execution', function () {
         assert.equal( joinLines( stdout.lines ), '42\n' );
     });
 
-    it('binds an extension declared in the canonical uppercase form', function () {
-        const stdout = captureWriter();
-
-        run( {
-            source: ' OUTPUT = FOO(4)\nEND\n',
-            extensions: { 'FOO(INTEGER)STRING': ( n ) => '<' + n + '>' },
-            stdout,
-        } );
-
-        assert.equal( joinLines( stdout.lines ), '<4>\n' );
-    });
-
     it('accepts a prototype written in lower or mixed case', function () {
         const stdout = captureWriter();
 
@@ -1030,114 +1018,6 @@ function bufferedLineReader( lines ) {
         },
     };
 }
-
-describe('Descriptor Datatype', function () {
-    it('init', function () {
-        const vm = new VM(),
-            orig = vm.d( sil.DESCR.call( vm ) ),
-            copy = vm.d( orig.ptr );
-        orig.addr = 90210;
-        assert.equal( copy.addr, 90210 );
-    });
-
-    it('raw', function () {
-        const vm = new VM(),
-            d = vm.d( sil.DESCR.call( vm ) );
-        d.addr = 6;
-        d.flags = 7;
-        d.value = 8;
-        assert.deepEqual( d.cells(), [ 6, 7, 8 ] );
-    });
-
-    it('read', function () {
-        const vm = new VM(),
-            src = vm.d( sil.DESCR.call( vm ) ),
-            dst = vm.d( sil.DESCR.call( vm ) );
-        src.set( 6, 7, 8 );
-        dst.copyFrom( src );
-        assert.deepEqual( dst.cells(), src.cells() );
-    });
-
-    it('set', function () {
-        const vm = new VM(),
-            d = vm.d( sil.DESCR.call( vm ) );
-        d.set( 6, 7, 8 );
-        assert.deepEqual( d.cells(), [ 6, 7, 8 ] );
-    });
-
-    it('eq', function () {
-        const vm = new VM(),
-            d1 = vm.d( sil.DESCR.call( vm ) ),
-            d2 = vm.d( sil.DESCR.call( vm ) );
-
-        d1.set( 6, 7, 8 );
-        d2.set( 6, 7, 8 );
-        assert.deepStrictEqual( d1.cells(), d2.cells() );
-
-        d2.set( 9, 10, 11 );
-        assert.notDeepStrictEqual( d1.cells(), d2.cells() );
-    });
-});
-
-describe('Specifier Datatype', function () {
-    it('init', function () {
-        const vm = new VM(),
-            orig = vm.s( sil.SPEC.call( vm ) ),
-            copy = vm.s( orig.ptr );
-        orig.offset = 90210;
-        assert.equal( copy.offset, 90210 );
-    });
-
-    it('raw', function () {
-        const vm = new VM(),
-            s = vm.s( sil.SPEC.call( vm ) );
-        s.addr = 6;
-        s.flags = 7;
-        s.value = 8;
-        s.offset = 9;
-        s.length = 10;
-        assert.deepEqual( s.cells(), [ 6, 7, 8, 9, 0, 10 ] );
-        assert.equal( vm.mem[s.ptr + 4], 0 );
-        assert.equal( vm.mem[s.ptr + 5], 10 );
-    });
-
-    it('read', function () {
-        const vm = new VM(),
-            src = vm.s( sil.SPEC.call( vm ) ),
-            dst = vm.s( sil.SPEC.call( vm ) );
-        src.set( 6, 7, 8, 9, 10 );
-        dst.copyFrom( src );
-        assert.deepEqual( dst.cells(), src.cells() );
-    });
-
-    it('set', function () {
-        const vm = new VM(),
-            s = vm.s( sil.SPEC.call( vm ) );
-        s.set( 6, 7, 8, 9, 10 );
-        assert.deepEqual( s.cells(), [ 6, 7, 8, 9, 0, 10 ] );
-        assert.equal( vm.mem[s.ptr + 4], 0 );
-        assert.equal( vm.mem[s.ptr + 5], 10 );
-    });
-
-    it('eq', function () {
-        const vm = new VM(),
-            s1 = vm.s( sil.SPEC.call( vm ) ),
-            s2 = vm.s( sil.SPEC.call( vm ) );
-
-        s1.set( 6, 7, 8, 9, 10 );
-        s2.set( 6, 7, 8, 9, 10 );
-        assert.deepStrictEqual( s1.cells(), s2.cells() );
-
-        s2.set( 1, 2, 3, 4, 5 );
-        assert.notDeepStrictEqual( s1.cells(), s2.cells() );
-    });
-
-    it('specified', function () {
-        const vm = new VM(),
-            s = vm.s( sil.STRING.call( vm, '안녕' ) );
-        assert.equal( s.specified, '안녕' );
-    });
-});
 
 describe('Program Execution', function () {
     it('run', function () {

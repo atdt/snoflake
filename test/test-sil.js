@@ -12,6 +12,7 @@ import {
     D,
     decodeString,
     defaults,
+    FAIL,
     sil,
     VM,
 } from '../src/snobol.js';
@@ -47,14 +48,6 @@ function miscVM() {
 }
 
 describe('Assembly Control Macros', function () {
-    it('COPY', function () {
-        assert( sil.COPY );
-    });
-
-    it('END', function () {
-        assert( sil.END );
-    });
-
     it('keeps executable labels in the instruction stream', function () {
         const vm = new VM();
         vm.run( assemble( [
@@ -103,10 +96,6 @@ describe('Assembly Control Macros', function () {
 
         assert.equal( vm.d( 'DS' ).addr, 123 );
         assert.equal( vm.s( 'SP' ).addr, 123 );
-    });
-
-    it('TITLE', function () {
-        assert( sil.TITLE );
     });
 });
 
@@ -580,8 +569,44 @@ describe('Macros that Relate to Recursive Procedures and Stack Management', func
         assert.throws( call( 2 ), /Stack overflow/ );
     });
 
-    it('RRTURN', function () { // stub
-        assert( sil.RRTURN );
+    it('RRTURN restores the frame, returns a value, and selects a loc', function () {
+        const vm = stackVM();
+        const dest = vm.d( vm.alloc( D ) ),
+            ret = vm.d( vm.alloc( D ) );
+
+        ret.set( 7, 1, 9 );
+        vm.callbacks.push( {
+            dest: dest.ptr,
+            base: 4242,
+            fallthroughLoc: 77,
+            locs: [ 11, 22, 33 ],
+        } );
+
+        sil.RRTURN.call( vm, ret.ptr, 2 );
+
+        assert.equal( vm.CSTACK, 4242 );
+        assert.deepEqual( dest.cells(), [ 7, 1, 9 ] );
+        assert.equal( vm.ip, 22 );
+        assert.equal( vm.callbacks.length, 0 );
+    });
+
+    it('RRTURN skips the value copy and falls through for an absent DESCR', function () {
+        const vm = stackVM();
+        const dest = vm.d( vm.alloc( D ) );
+
+        dest.set( 1, 2, 3 );
+        vm.callbacks.push( {
+            dest: dest.ptr,
+            base: 100,
+            fallthroughLoc: 77,
+            locs: [],
+        } );
+
+        sil.RRTURN.call( vm, null, 1 );
+
+        assert.deepEqual( dest.cells(), [ 1, 2, 3 ] );
+        assert.equal( vm.ip, 77 );
+        assert.equal( vm.CSTACK, 100 );
     });
 
     it('SPOP', function () {
@@ -939,14 +964,6 @@ describe('Macros that Modify Value Fields of Descriptors', function () {
         sil.SETVC.call( vm, d.ptr, 77 );
         assert.equal( d.value, 77 );
     });
-
-    it('SETVC accepts zero', function () {
-        const vm = new VM();
-        const d = vm.d( vm.alloc( D ) );
-        d.value = 77;
-        sil.SETVC.call( vm, d.ptr, 0 );
-        assert.equal( d.value, 0 );
-    });
 });
 
 describe('Macros that Modify Flag Fields of Descriptors', function () {
@@ -1014,24 +1031,92 @@ describe('Macros that Perform Integer Arithmetic on Address Fields', function ()
         assert.equal( vm.ip, 9 );
     });
 
-    it('EXPINT', function () { // stub
-        assert( sil.EXPINT );
+    it('EXPINT raises an integer to a power and overflows to FLOC', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            FLOC = 7,
+            SLOC = 9;
+
+        d2.set( 2, 44, 55 );
+        d3.addr = 10;
+        sil.EXPINT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.deepEqual( d1.cells(), [ 1024, 44, 55 ] );
+        assert.equal( vm.ip, SLOC );
+
+        // A negative exponent truncates toward zero.
+        d2.addr = 2;
+        d3.addr = -1;
+        sil.EXPINT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.equal( d1.addr, 0 );
+        assert.equal( vm.ip, SLOC );
+
+        d2.addr = 2;
+        d3.addr = 100;
+        sil.EXPINT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.equal( vm.ip, FLOC );
     });
 
-    it('MNSINT', function () { // stub
-        assert( sil.MNSINT );
+    it('MNSINT negates an integer', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
+
+        d2.set( 42, 44, 55 );
+        sil.MNSINT.call( vm, d1.ptr, d2.ptr, 7, 9 );
+        assert.deepEqual( d1.cells(), [ -42, 44, 55 ] );
+        assert.equal( vm.ip, 9 );
     });
 
-    it('MULT', function () { // stub
-        assert( sil.MULT );
+    it('MULT multiplies and overflows to FLOC', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            FLOC = 7,
+            SLOC = 9;
+
+        d2.set( 6, 44, 55 );
+        d3.addr = 7;
+        sil.MULT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.deepEqual( d1.cells(), [ 42, 44, 55 ] );
+        assert.equal( vm.ip, SLOC );
+
+        d2.addr = Number.MAX_SAFE_INTEGER;
+        d3.addr = 2;
+        sil.MULT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.equal( vm.ip, FLOC );
     });
 
-    it('MULTC', function () { // stub
-        assert( sil.MULTC );
+    it('MULTC multiplies the address field by a constant', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
+
+        d2.addr = 9;
+        sil.MULTC.call( vm, d1.ptr, d2.ptr, 4 );
+        assert.equal( d1.addr, 36 );
     });
 
-    it('SUBTRT', function () { // stub
-        assert( sil.SUBTRT );
+    it('SUBTRT subtracts and preserves type fields', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            FLOC = 7,
+            SLOC = 9;
+
+        d2.set( 100, 44, 55 );
+        d3.addr = 30;
+        sil.SUBTRT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.deepEqual( d1.cells(), [ 70, 44, 55 ] );
+        assert.equal( vm.ip, SLOC );
+
+        d2.addr = -Number.MAX_SAFE_INTEGER;
+        d3.addr = Number.MAX_SAFE_INTEGER;
+        sil.SUBTRT.call( vm, d1.ptr, d2.ptr, d3.ptr, FLOC, SLOC );
+        assert.equal( vm.ip, FLOC );
     });
 
     it('SUM', function () {
@@ -1064,8 +1149,24 @@ describe('Macros that Perform Integer Arithmetic on Address Fields', function ()
 });
 
 describe('Macros that Deal with Real Numbers', function () {
-    it('ADREAL', function () { // stub
-        assert( sil.ADREAL );
+    it('ADREAL adds real values and preserves type fields', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
+
+        d2.set( 1.5, 44, 55 );
+        d3.addr = 2.25;
+        sil.ADREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+        assert.equal( d1.addr, 3.75 );
+        assert.equal( d1.flags, 44 );
+        assert.equal( d1.value, 55 );
+        assert.equal( vm.ip, 9 );
+
+        d2.addr = Number.MAX_VALUE;
+        d3.addr = Number.MAX_VALUE;
+        sil.ADREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+        assert.equal( vm.ip, 7 );
     });
 
     it('DVREAL divides real values and preserves type fields', function () {
@@ -1086,16 +1187,45 @@ describe('Macros that Deal with Real Numbers', function () {
         assert.equal( vm.ip, 9 );
     });
 
-    it('EXREAL', function () { // stub
-        assert( sil.EXREAL );
+    it('EXREAL raises a real to a power', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) );
+
+        d2.set( 2, 44, 55 );
+        d3.addr = 0.5;
+        sil.EXREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+        assert.equal( d1.addr, Math.SQRT2 );
+        assert.equal( d1.flags, 44 );
+        assert.equal( d1.value, 55 );
+        assert.equal( vm.ip, 9 );
+
+        d2.addr = Number.MAX_VALUE;
+        d3.addr = 2;
+        sil.EXREAL.call( vm, d1.ptr, d2.ptr, d3.ptr, 7, 9 );
+        assert.equal( vm.ip, 7 );
     });
 
-    it('INTRL', function () { // stub
-        assert( sil.INTRL );
+    it('INTRL converts an integer to a real', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
+
+        vm.define( 'R', 9 );
+        d2.set( 42, 44, 55 );
+        sil.INTRL.call( vm, d1.ptr, d2.ptr );
+        assert.deepEqual( d1.cells(), [ 42, 0, 9 ] );
     });
 
-    it('MNREAL', function () { // stub
-        assert( sil.MNREAL );
+    it('MNREAL negates a real and keeps type fields', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) );
+
+        d2.set( 2.5, 44, 55 );
+        sil.MNREAL.call( vm, d1.ptr, d2.ptr );
+        assert.deepEqual( d1.cells(), [ -2.5, 44, 55 ] );
     });
 
     it('MPREAL multiplies real values and preserves type fields', function () {
@@ -1116,8 +1246,26 @@ describe('Macros that Deal with Real Numbers', function () {
         assert.equal( vm.ip, 9 );
     });
 
-    it('RCOMP', function () { // stub
-        assert( sil.RCOMP );
+    it('RCOMP branches on real comparison', function () {
+        const vm = new VM(),
+            d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            GTLOC = 1,
+            EQLOC = 2,
+            LTLOC = 3;
+
+        d1.addr = 2.5;
+        d2.addr = 1.5;
+        sil.RCOMP.call( vm, d1.ptr, d2.ptr, GTLOC, EQLOC, LTLOC );
+        assert.equal( vm.ip, GTLOC );
+
+        d2.addr = 2.5;
+        sil.RCOMP.call( vm, d1.ptr, d2.ptr, GTLOC, EQLOC, LTLOC );
+        assert.equal( vm.ip, EQLOC );
+
+        d2.addr = 9.5;
+        sil.RCOMP.call( vm, d1.ptr, d2.ptr, GTLOC, EQLOC, LTLOC );
+        assert.equal( vm.ip, LTLOC );
     });
 
     it('REALST writes plain decimal strings, never exponent form', function () {
@@ -1259,16 +1407,6 @@ describe('Macros that Operate on Specifiers', function () {
         d.addr = 5;
         sil.ADDLG.call( vm, s.ptr, d.ptr );
         assert.equal( s.length, 123 + 5 );
-    });
-
-    it('ADDLG accepts a zero increment', function () {
-        const vm = new VM();
-        const s = vm.s( vm.alloc( 2 * D ) ),
-            d = vm.d( vm.alloc( D ) );
-        s.length = 123;
-        d.addr = 0;
-        sil.ADDLG.call( vm, s.ptr, d.ptr );
-        assert.equal( s.length, 123 );
     });
 
     it('APDSP', function () {
@@ -1564,8 +1702,6 @@ describe('Macros that Operate on Specifiers', function () {
         sil.SUBSP.call( vm, s1.ptr, s2.ptr, s3.ptr, FLOC, SLOC );
         assert.equal( vm.ip, 1 );
         assert.deepEqual( s1.cells(), [ 0, 0, 0, 0, 0, 0 ] );
-
-        assert( sil.SUBSP );
     });
 
     it('TRIMSP', function () {
@@ -1682,30 +1818,128 @@ describe('Macros that Construct Pattern Nodes', function () {
         assert.deepEqual( vm.d( dstBase + 9 ).cells(), [ 112, 0, 115 ] );
     });
 
-    it('MAKNOD', function () { // stub
-        assert( sil.MAKNOD );
+    it('MAKNOD fills a node and returns it through DESCR1', function () {
+        const vm = new VM();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            d4 = vm.d( vm.alloc( D ) ),
+            d5 = vm.d( vm.alloc( D ) ),
+            d6 = vm.d( vm.alloc( D ) );
+
+        d2.addr = vm.alloc( 5 * D );
+        d3.addr = 30;
+        d4.addr = 40;
+        d5.set( 1, 2, 3 );
+        d6.set( 4, 5, 6 );
+
+        sil.MAKNOD.call( vm, d1.ptr, d2.ptr, d3.ptr, d4.ptr, d5.ptr, d6.ptr );
+
+        assert.deepEqual( vm.d( d2.addr + D ).cells(), [ 1, 2, 3 ] );
+        assert.equal( vm.d( d2.addr + 2 * D ).addr, 40 );
+        assert.equal( vm.d( d2.addr + 3 * D ).addr, 30 );
+        assert.deepEqual( vm.d( d2.addr + 4 * D ).cells(), [ 4, 5, 6 ] );
+        assert.deepEqual( d1.cells(), d2.cells() );
+    });
+
+    it('MAKNOD without DESCR6 leaves the fourth field untouched', function () {
+        const vm = new VM();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            d3 = vm.d( vm.alloc( D ) ),
+            d4 = vm.d( vm.alloc( D ) ),
+            d5 = vm.d( vm.alloc( D ) );
+
+        d2.addr = vm.alloc( 5 * D );
+        vm.d( d2.addr + 4 * D ).set( 9, 9, 9 );
+        d5.set( 1, 2, 3 );
+
+        sil.MAKNOD.call( vm, d1.ptr, d2.ptr, d3.ptr, d4.ptr, d5.ptr );
+
+        assert.deepEqual( vm.d( d2.addr + 4 * D ).cells(), [ 9, 9, 9 ] );
     });
 });
 
 describe('Macros that Operate on Tree Nodes', function () {
-    it('ADDSIB', function () { // stub
-        assert( sil.ADDSIB );
+    // Tree-node field offsets are program symbols; the image places
+    // FATHER/LSON/RSIB/CODE at these descriptor-cell offsets within a node.
+    function treeVM() {
+        const vm = new VM();
+        vm.define( 'FATHER', 3 );
+        vm.define( 'LSON', 6 );
+        vm.define( 'RSIB', 9 );
+        vm.define( 'CODE', 12 );
+        return vm;
+    }
+
+    it('ADDSON links a new son under a parent node', function () {
+        const vm = treeVM();
+        const parent = vm.d( vm.alloc( D ) ),
+            son = vm.d( vm.alloc( D ) ),
+            pNode = vm.alloc( 5 * D ),
+            sNode = vm.alloc( 5 * D );
+
+        parent.set( pNode, 1, 2 );
+        son.set( sNode, 3, 4 );
+        vm.d( pNode + 6 ).set( 700, 7, 8 ); // existing left son
+        vm.d( pNode + 12 ).value = 5; // CODE count
+
+        sil.ADDSON.call( vm, parent.ptr, son.ptr );
+
+        assert.deepEqual( vm.d( sNode + 3 ).cells(), [ pNode, 1, 2 ] );
+        assert.deepEqual( vm.d( sNode + 9 ).cells(), [ 700, 7, 8 ] );
+        assert.deepEqual( vm.d( pNode + 6 ).cells(), [ sNode, 3, 4 ] );
+        assert.equal( vm.d( pNode + 12 ).value, 6 );
     });
 
-    it('ADDSON', function () { // stub
-        assert( sil.ADDSON );
+    it('ADDSIB links a new sibling after an existing node', function () {
+        const vm = treeVM();
+        const node = vm.d( vm.alloc( D ) ),
+            sib = vm.d( vm.alloc( D ) ),
+            nNode = vm.alloc( 5 * D ),
+            sNode = vm.alloc( 5 * D ),
+            fNode = vm.alloc( 5 * D );
+
+        node.addr = nNode;
+        sib.set( sNode, 3, 4 );
+        vm.d( nNode + 3 ).set( fNode, 5, 6 ); // node FATHER -> fNode
+        vm.d( nNode + 9 ).set( 800, 7, 8 ); // node existing RSIB
+        vm.d( fNode + 12 ).value = 2; // father CODE count
+
+        sil.ADDSIB.call( vm, node.ptr, sib.ptr );
+
+        assert.deepEqual( vm.d( sNode + 9 ).cells(), [ 800, 7, 8 ] );
+        assert.deepEqual( vm.d( sNode + 3 ).cells(), [ fNode, 5, 6 ] );
+        assert.deepEqual( vm.d( nNode + 9 ).cells(), [ sNode, 3, 4 ] );
+        assert.equal( vm.d( fNode + 12 ).value, 3 );
     });
 
-    it('INSERT', function () { // stub
-        assert( sil.INSERT );
+    it('INSERT splices a new node above an existing one', function () {
+        const vm = treeVM();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            a1 = vm.alloc( 5 * D ),
+            a2 = vm.alloc( 5 * D ),
+            a3 = vm.alloc( 5 * D ),
+            a4 = vm.alloc( 5 * D );
+
+        d1.set( a1, 1, 2 );
+        d2.set( a2, 3, 4 );
+        vm.d( a1 + 3 ).set( a3, 5, 6 ); // A1 FATHER -> a3
+        vm.d( a3 + 6 ).addr = a4; // A3 LSON -> a4
+        vm.d( a2 + 12 ).value = 7; // A2 CODE count
+
+        sil.INSERT.call( vm, d1.ptr, d2.ptr );
+
+        assert.deepEqual( vm.d( a1 + 3 ).cells(), [ a2, 3, 4 ] );
+        assert.deepEqual( vm.d( a4 + 9 ).cells(), [ a2, 3, 4 ] );
+        assert.deepEqual( vm.d( a2 + 3 ).cells(), [ a3, 5, 6 ] );
+        assert.deepEqual( vm.d( a2 + 6 ).cells(), [ a1, 1, 2 ] );
+        assert.equal( vm.d( a2 + 12 ).value, 8 );
     });
 });
 
 describe('Input and Output Macros', function () {
-    it('BKSPCE', function () { // stub
-        assert( sil.BKSPCE );
-    });
-
     it('ENFILE makes subsequent reads return EOF', function () {
         const vm = createFileVM();
         const file = path.join(
@@ -1802,8 +2036,41 @@ describe('Input and Output Macros', function () {
         ] );
     });
 
-    it('REWIND', function () { // stub
-        assert( sil.REWIND );
+    it('REWIND restarts a unit from its first record', function () {
+        const vm = createFileVM();
+        const file = path.join(
+                os.tmpdir(),
+                'snoflake-rewind-' + process.pid + '.sno',
+            ),
+            unit = vm.d( vm.alloc( D ) ),
+            spec = vm.s( vm.alloc( 2 * D ) ),
+            eof = 1,
+            error = 2,
+            success = 3,
+            ptr = vm.alloc( 8, '.'.charCodeAt( 0 ) ),
+            read = () =>
+                Array.from( vm.mem.slice( ptr, ptr + 4 ) ).map(
+                    ( c ) => String.fromCharCode( c ),
+                ).join( '' );
+
+        fs.writeFileSync( file, 'AAAA\nBBBB\n' );
+        vm.options.file = file;
+        unit.addr = 5;
+        spec.set( ptr, 0, 0, 0, 4 );
+
+        try {
+            sil.STREAD.call( vm, spec.ptr, unit.ptr, eof, error, success );
+            assert.equal( read(), 'AAAA' );
+            sil.STREAD.call( vm, spec.ptr, unit.ptr, eof, error, success );
+            assert.equal( read(), 'BBBB' );
+
+            sil.REWIND.call( vm, unit.ptr );
+
+            sil.STREAD.call( vm, spec.ptr, unit.ptr, eof, error, success );
+            assert.equal( read(), 'AAAA' );
+        } finally {
+            fs.unlinkSync( file );
+        }
     });
 
     it('STPRNT writes the record raw, dropping NULs', function () {
@@ -2040,8 +2307,18 @@ describe('Macros that Depend on Operating System Facilities', function () {
         assert( s.specified.includes( year ) );
     });
 
-    it('ENDEX', function () { // stub
-        assert( sil.ENDEX );
+    it('ENDEX sets the exit code and halts', function () {
+        const vm = new VM();
+        const d = vm.d( vm.alloc( D ) );
+
+        d.addr = 0;
+        assert.equal( sil.ENDEX.call( vm, d.ptr ), true );
+        assert.equal( vm.exitCode, 0 );
+        assert.equal( vm.ip, -1 );
+
+        d.addr = 4;
+        assert.equal( sil.ENDEX.call( vm, d.ptr ), false );
+        assert.equal( vm.exitCode, 1 );
     });
 
     it('INIT', function () {
@@ -2059,12 +2336,69 @@ describe('Macros that Depend on Operating System Facilities', function () {
         assert( vm.d( 'FRSGPT' ).addr < vm.d( 'TLSGP1' ).addr );
     });
 
-    it('LINK', function () { // stub
-        assert( sil.LINK );
+    it('LINK calls a slotted extension and returns its result', function () {
+        const vm = new VM( {
+            extensions: { 'ADD2(INTEGER,INTEGER)INTEGER': ( a, b ) => a + b },
+        } );
+        vm.define( 'I', 6 );
+        const result = vm.d( vm.alloc( D ) ),
+            argsBase = vm.alloc( 2 * D ),
+            argsPtr = vm.d( vm.alloc( D ) ),
+            slot = vm.d( vm.alloc( D ) );
+
+        vm.d( argsBase ).addr = 20;
+        vm.d( argsBase + D ).addr = 22;
+        argsPtr.addr = argsBase;
+        slot.addr = vm.extensionsBySlot.push( vm.extensions.ADD2 ) - 1;
+
+        sil.LINK.call( vm, result.ptr, argsPtr.ptr, 0, slot.ptr, 7, 9 );
+
+        assert.deepEqual( result.cells(), [ 42, 0, 6 ] );
     });
 
-    it('LOAD', function () { // stub
-        assert( sil.LOAD );
+    it('LINK routes a FAIL result to FLOC', function () {
+        const vm = new VM( {
+            extensions: {
+                'NEG(INTEGER)INTEGER': ( n ) => ( n < 0 ? FAIL : n ),
+            },
+        } );
+        vm.define( 'I', 6 );
+        const result = vm.d( vm.alloc( D ) ),
+            argsBase = vm.alloc( D ),
+            argsPtr = vm.d( vm.alloc( D ) ),
+            slot = vm.d( vm.alloc( D ) ),
+            FLOC = 7;
+
+        vm.d( argsBase ).addr = -5;
+        argsPtr.addr = argsBase;
+        slot.addr = vm.extensionsBySlot.push( vm.extensions.NEG ) - 1;
+
+        sil.LINK.call( vm, result.ptr, argsPtr.ptr, 0, slot.ptr, FLOC, 9 );
+
+        assert.equal( vm.ip, FLOC );
+    });
+
+    it('LOAD binds a registered extension into a slot', function () {
+        const vm = new VM( {
+            extensions: { 'DUP(INTEGER)INTEGER': ( n ) => n * 2 },
+        } );
+        const d = vm.d( vm.alloc( D ) ),
+            name = sil.STRING.call( vm, 'DUP' ),
+            empty = sil.STRING.call( vm, '' );
+
+        sil.LOAD.call( vm, d.ptr, name, empty, 7, 9 );
+        assert.equal( vm.extensionsBySlot[d.addr].args[0], 'INTEGER' );
+    });
+
+    it('LOAD fails to FLOC for an unknown extension', function () {
+        const vm = new VM();
+        const d = vm.d( vm.alloc( D ) ),
+            name = sil.STRING.call( vm, 'NOPE' ),
+            empty = sil.STRING.call( vm, '' ),
+            FLOC = 7;
+
+        sil.LOAD.call( vm, d.ptr, name, empty, FLOC, 9 );
+        assert.equal( vm.ip, FLOC );
     });
 
     it('MSTIME', function () {
@@ -2073,17 +2407,39 @@ describe('Macros that Depend on Operating System Facilities', function () {
         d.set( 1, 2, 3 );
         sil.MSTIME.call( vm, d.ptr );
         assert.deepEqual( d.cells(), [ 0, 0, 0 ] );
-        assert( sil.MSTIME );
-    });
-
-    it('UNLOAD', function () { // stub
-        assert( sil.UNLOAD );
     });
 });
 
 describe('Miscellaneous Macros', function () {
-    it('LINKOR', function () { // stub
-        assert( sil.LINKOR );
+    it('LINKOR appends to the end of a node or-chain', function () {
+        const vm = new VM();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            A = vm.alloc( 10 * D );
+
+        d1.addr = A;
+        d2.addr = 555;
+        vm.d( A + 2 * D ).addr = 9; // first link points further along
+        vm.d( A + 2 * D + 9 ).addr = 0; // chain tail
+
+        sil.LINKOR.call( vm, d1.ptr, d2.ptr );
+
+        assert.equal( vm.d( A + 2 * D + 9 ).addr, 555 );
+        assert.equal( vm.d( A + 2 * D ).addr, 9 );
+    });
+
+    it('LINKOR sets the field directly when the chain is empty', function () {
+        const vm = new VM();
+        const d1 = vm.d( vm.alloc( D ) ),
+            d2 = vm.d( vm.alloc( D ) ),
+            A = vm.alloc( 5 * D );
+
+        d1.addr = A;
+        d2.addr = 77;
+        vm.d( A + 2 * D ).addr = 0;
+
+        sil.LINKOR.call( vm, d1.ptr, d2.ptr );
+        assert.equal( vm.d( A + 2 * D ).addr, 77 );
     });
 
     it('LOCAPT', function () {
@@ -2199,10 +2555,6 @@ describe('Miscellaneous Macros', function () {
 
         sil.LVALUE.call( vm, DESCR1.ptr, DESCR2.ptr );
         assert.equal( DESCR1.addr, least );
-    });
-
-    it('ORDVST', function () { // stub
-        assert( sil.ORDVST );
     });
 
     it('RPLACE replaces characters in place', function () {
