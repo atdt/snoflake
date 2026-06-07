@@ -75,16 +75,9 @@ export function init() {
     }
 
     function reload() {
-        setStatus( 'Loading' );
-        try {
-            source.setValue( program );
-            fillSelect( picker, presets );
-            setStatus( 'Ready' );
-            draw();
-        } catch ( e ) {
-            setStatus( 'Error' );
-            console.error( e );
-        }
+        source.setValue( program );
+        fillSelect( picker, presets );
+        draw();
     }
 
     run.addEventListener( 'click', draw );

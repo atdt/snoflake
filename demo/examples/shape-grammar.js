@@ -6,8 +6,7 @@ import { createEditor } from '../lib/editor.js';
 import { createScene } from '../lib/canvas3d.js';
 import program from '../programs/shape-grammar.sno';
 
-// The worker is a separate bundle emitted beside this one (see build.js), so it
-// is resolved relative to the built output rather than to this source file.
+// Emitted next to this bundle by build.js, so the path is output-relative.
 const workerUrl = new URL( './shape-worker.js', import.meta.url );
 
 export function init() {
@@ -60,16 +59,8 @@ export function init() {
     }
 
     function reload() {
-        stop();
-        scene.clear();
-        setStatus( 'Loading' );
-        try {
-            source.setValue( program );
-            setStatus( 'Ready' );
-            start();
-        } catch ( e ) {
-            setStatus( e.message );
-        }
+        source.setValue( program );
+        start();
     }
 
     restart.addEventListener( 'click', start );

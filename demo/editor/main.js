@@ -72,8 +72,7 @@ const highlight = HighlightStyle.define( [
     { tag: tags.number, color: 'var(--literal)' },
 ] );
 
-// The worker is a separate bundle emitted beside this one (see build.js), so it
-// is resolved relative to the built output rather than to this source file.
+// Emitted next to this bundle by build.js, so the path is output-relative.
 const workerUrl = new URL( './editor-worker.js', import.meta.url );
 
 function write( line ) {

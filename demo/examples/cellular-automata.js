@@ -44,16 +44,9 @@ export function init() {
     }
 
     function reload() {
-        setStatus( 'Loading' );
-        try {
-            source.setValue( program );
-            fillSelect( picker, presets );
-            setStatus( 'Ready' );
-            execute();
-        } catch ( e ) {
-            setStatus( 'Error' );
-            console.error( e );
-        }
+        source.setValue( program );
+        fillSelect( picker, presets );
+        execute();
     }
 
     run.addEventListener( 'click', execute );

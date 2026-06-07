@@ -15,15 +15,14 @@ const serve = process.argv.includes( '--serve' ),
     here = ( p ) => fileURLToPath( new URL( p, import.meta.url ) ),
     outdir = here( './dist' );
 
-// Static pages are copied verbatim. Each references its bundle by a stable
+// Static pages are copied verbatim; each references its bundle by a stable
 // name (./main.js, ./editor.js, ./style.css), so no rewriting is needed.
 const STATIC = [ 'index.html', 'editor.html' ];
 
-// The editor's examples live as real files on disk: one directory per example
-// holding main.sno, an optional input.txt, and any -INCLUDE files, ordered by
-// manifest.json. This plugin assembles them into the { label: { source, input,
-// files } } map the editor expects, so `import EXAMPLES from 'examples:all'`
-// resolves to the bundled data with no runtime fetch.
+// The editor's examples live on disk: one directory per example with a
+// main.sno, an optional input.txt, and any -INCLUDE files, ordered by
+// manifest.json. This assembles them into the map the editor imports as
+// 'examples:all', baked into the bundle with no runtime fetch.
 const examplesPlugin = {
     name: 'examples',
     setup( build ) {
@@ -34,56 +33,48 @@ const examplesPlugin = {
             namespace: 'examples',
         } ) );
 
-        build.onLoad(
-            { filter: /.*/, namespace: 'examples' },
-            async () => {
-                const manifest = JSON.parse(
-                        await readFile( `${root}/manifest.json`, 'utf8' ),
-                    ),
-                    watchFiles = [ `${root}/manifest.json` ],
-                    examples = {};
+        build.onLoad( { filter: /.*/, namespace: 'examples' }, async () => {
+            const manifest = JSON.parse(
+                    await readFile( `${root}/manifest.json`, 'utf8' ),
+                ),
+                watchFiles = [ `${root}/manifest.json` ],
+                examples = {};
 
-                for ( const { name, dir } of manifest ) {
-                    const base = `${root}/${dir}`,
-                        files = {};
-                    let input = '';
+            for ( const { name, dir } of manifest ) {
+                const base = `${root}/${dir}`,
+                    source = await readFile( `${base}/main.sno`, 'utf8' ),
+                    files = {};
+                let input = '';
 
-                    for ( const entry of ( await readdir( base ) ).sort() ) {
-                        const path = `${base}/${entry}`;
-                        watchFiles.push( path );
-                        if ( entry === 'main.sno' ) continue;
-                        if ( entry === 'input.txt' ) {
-                            input = await readFile( path, 'utf8' );
-                            continue;
-                        }
+                for ( const entry of ( await readdir( base ) ).sort() ) {
+                    const path = `${base}/${entry}`;
+                    watchFiles.push( path );
+                    if ( entry === 'main.sno' ) continue;
+                    if ( entry === 'input.txt' ) {
+                        input = await readFile( path, 'utf8' );
+                    } else {
                         files[entry] = await readFile( path, 'utf8' );
                     }
-
-                    const source = await readFile(
-                        `${base}/main.sno`,
-                        'utf8',
-                    );
-                    examples[name] = Object.keys( files ).length
-                        ? { source, input, files }
-                        : { source, input };
                 }
 
-                return {
-                    contents: `export default ${JSON.stringify( examples )}`,
-                    loader: 'js',
-                    watchFiles,
-                };
-            },
-        );
+                examples[name] = Object.keys( files ).length
+                    ? { source, input, files }
+                    : { source, input };
+            }
+
+            return {
+                contents: JSON.stringify( examples ),
+                loader: 'json',
+                watchFiles,
+            };
+        } );
     },
 };
 
 const options = {
-    // The two workers are their own entry points so each becomes a
-    // self-contained module worker. They emit as siblings of the page bundles
-    // (shape-worker.js, editor-worker.js), which is where the new Worker(...)
-    // calls look for them. Shared code (the runtime image) is split into a
-    // common chunk rather than copied into every entry.
+    // Each worker is its own entry point, emitted as a sibling of the page
+    // bundles (shape-worker.js, editor-worker.js) where its new Worker(...)
+    // call looks for it. Splitting keeps the shared runtime image in one chunk.
     entryPoints: {
         main: here( './main.js' ),
         editor: here( './editor/main.js' ),
@@ -99,8 +90,6 @@ const options = {
     outdir,
     entryNames: '[name]',
     chunkNames: 'chunks/[name]-[hash]',
-    assetNames: 'assets/[name]-[hash]',
-    // SNOBOL example programs are inlined as strings into the bundle.
     loader: { '.sno': 'text' },
     target: [ 'es2022' ],
     plugins: [ examplesPlugin ],
@@ -113,7 +102,7 @@ if ( serve ) {
     const ctx = await esbuild.context( options );
     await ctx.watch();
     await copyStatic();
-    startServer( { root: outdir } );
+    startServer( outdir );
 } else {
     await esbuild.build( options );
     await copyStatic();

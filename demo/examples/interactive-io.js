@@ -70,17 +70,8 @@ export function init() {
     }
 
     function reload() {
-        stop();
-        log.textContent = '';
-        setStatus( 'Loading' );
-        try {
-            source.setValue( program );
-            setStatus( 'Ready' );
-            start();
-        } catch ( e ) {
-            append( e.message, 'error' );
-            setStatus( 'Error' );
-        }
+        source.setValue( program );
+        start();
     }
 
     form.addEventListener( 'submit', function ( event ) {

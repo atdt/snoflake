@@ -41,15 +41,9 @@ export function init() {
 
     function reload() {
         output.textContent = '';
-        setStatus( 'Loading' );
-        try {
-            source.setValue( program );
-            input.value = sampleInput;
-            setStatus( 'Ready' );
-        } catch ( e ) {
-            output.textContent = e.message;
-            setStatus( 'Error' );
-        }
+        source.setValue( program );
+        input.value = sampleInput;
+        setStatus( 'Ready' );
     }
 
     run.addEventListener( 'click', execute );

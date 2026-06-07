@@ -27,18 +27,15 @@ function responseHeaders( file ) {
     };
 }
 
-export function startServer( { root, port, host } = {} ) {
+export function startServer( root ) {
     root = path.resolve(
         root || fileURLToPath( new URL( './dist', import.meta.url ) ),
     );
     const portArg = process.argv.indexOf( '--port' );
-    port = Number(
-        port ??
-            ( portArg !== -1
-                ? process.argv[portArg + 1]
-                : process.env.PORT || 4173 ),
+    const port = Number(
+        portArg !== -1 ? process.argv[portArg + 1] : process.env.PORT || 4173,
     );
-    host = host || process.env.HOST || '127.0.0.1';
+    const host = process.env.HOST || '127.0.0.1';
 
     const server = http.createServer( function ( req, res ) {
         const url = new URL( req.url, 'http://' + host ),
