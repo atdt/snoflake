@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Pattern matching",
+        "dir": "pattern-matching"
+    },
+    {
+        "name": "Swap",
+        "dir": "swap"
+    },
+    {
+        "name": "Fibonacci",
+        "dir": "fibonacci"
+    },
+    {
+        "name": "Word tally",
+        "dir": "word-tally"
+    },
+    {
+        "name": "Random story",
+        "dir": "random-story"
+    },
+    {
+        "name": "Random poem",
+        "dir": "random-poem"
+    },
+    {
+        "name": "Conversions",
+        "dir": "conversions"
+    },
+    {
+        "name": "Bignum arithmetic",
+        "dir": "bignum-arithmetic"
+    },
+    {
+        "name": "Day of week",
+        "dir": "day-of-week"
+    },
+    {
+        "name": "Sorting",
+        "dir": "sorting"
+    }
+]

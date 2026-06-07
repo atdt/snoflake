@@ -3,14 +3,10 @@
 // and paints the accumulated rows as a pixel grid.
 
 import { runSnoflake } from '../lib/runner.js';
-import { fillSelect, loadSource } from '../lib/dom.js';
+import { fillSelect } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
 import { makeAutomatonExtensions, presets } from '../lib/automata.js';
-
-const sourceUrl = new URL(
-    '../programs/cellular-automata.sno',
-    import.meta.url,
-);
+import program from '../programs/cellular-automata.sno';
 
 export function init() {
     const source = createEditor(
@@ -47,10 +43,10 @@ export function init() {
         } );
     }
 
-    async function reload() {
+    function reload() {
         setStatus( 'Loading' );
         try {
-            source.setValue( await loadSource( sourceUrl ) );
+            source.setValue( program );
             fillSelect( picker, presets );
             setStatus( 'Ready' );
             execute();

@@ -4,10 +4,8 @@
 // lines. Eliza's work between reads is light, so no Web Worker is needed.
 
 import { createSession } from '../../src/snobol.js';
-import { loadSource } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
-
-const sourceUrl = new URL( '../programs/eliza.sno', import.meta.url );
+import program from '../programs/eliza.sno';
 
 export function init() {
     const source = createEditor(
@@ -71,12 +69,12 @@ export function init() {
         session.start();
     }
 
-    async function reload() {
+    function reload() {
         stop();
         log.textContent = '';
         setStatus( 'Loading' );
         try {
-            source.setValue( await loadSource( sourceUrl ) );
+            source.setValue( program );
             setStatus( 'Ready' );
             start();
         } catch ( e ) {

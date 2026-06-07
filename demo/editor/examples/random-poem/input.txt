@@ -1,0 +1,23 @@
+<PROP>::=action|duration|hunger|feeling|activity|movement|
+motion|notion|endurance|tenderness|age|taste|bounty|goodness
+<GEN>::=time|nature|age|wisdom|war|peace|power|energy|earth|
+love|beauty|charity|faith|hope|thought|strength|night|
+piety|heart|land|evil
+<SPEC>::=flower|tree|dove|star|cloud|twig|pond|dog|goat|
+muffin|petal|wagon wheel|gate|trap|lark|raven|drop|dish|spoon|
+spark|bone|brain|tooth|face|rake|shovel|book|cover|whistle
+<PREP>::=on|up|over|under|within|beside|of|in
+<TVERB>::=revere|worship|understand|beseech|control|provoke|
+heal|pursue|strengthen|become|kill|arouse|becalm|ensnare
+<IVERB>::=sing|talk|run|aspire|twiddle|think|gurgle|ponder|
+wiggle|bend|simmer|bask|break|tumble|dance|whistle|squawk
+<ADJ>::=gentle|frail|happy|sorrowful|mournful|gay|rusty|
+frolicking|wanton|lustful|timid|pensive|timorous|moody
+<AUX>::=may|can|shall|should|must|doth
+<NOUN>::=a <ADJ> <SPEC>|a <SPEC> of <GEN>|the <PROP> of a
+ <SPEC>|the <SPEC> <PREP> <NOUN>|<GEN> <PREP> <GEN>|<GEN>'s
+ <PROP>|<ADJ> <GEN>|the <PROP> of <GEN>
+<RPOEM>::=A =ADJ= =SPEC= <AUX> <IVERB> <PREP> =NOUN=/And <AUX>
+ <TVERB> <NOUN>./But <NOUN> <TVERB>s <NOUN>/While (NOUN)
+ <TVERB>s the (ADJ) (SPEC)./
+END

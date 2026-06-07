@@ -1,0 +1,9 @@
+* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), §2.8 (weekday from a date).
+-INCLUDE "DAY.INC"
+	OUTPUT = DAY('3/24/71')
+	OUTPUT = D
+	OUTPUT = DAY('3/24/1825')
+	OUTPUT = DAY('2/29/2000')
+	OUTPUT = DAY('1/1/1904')
+	OUTPUT = DAY('12/25/2023')
+END

@@ -1,26 +1,21 @@
+// Static file server for the built demo. It serves ./dist, the committed
+// bundle, so `npm run demo` works from a clone with no install or build step.
+// Run build.js with --serve instead to rebuild on change while developing.
+
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
-const portArg = process.argv.indexOf( '--port' );
-
-const root = path.resolve(
-        path.dirname( fileURLToPath( import.meta.url ) ),
-        '..',
-    ),
-    port = Number(
-        portArg !== -1 ? process.argv[portArg + 1] : process.env.PORT || 4173,
-    ),
-    host = process.env.HOST || '127.0.0.1',
-    contentTypes = {
-        '.css': 'text/css; charset=utf-8',
-        '.html': 'text/html; charset=utf-8',
-        '.js': 'text/javascript; charset=utf-8',
-        '.json': 'application/json; charset=utf-8',
-        '.sno': 'text/plain; charset=utf-8',
-    };
+const contentTypes = {
+    '.css': 'text/css; charset=utf-8',
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.map': 'application/json; charset=utf-8',
+    '.sno': 'text/plain; charset=utf-8',
+};
 
 function responseHeaders( file ) {
     return {
@@ -32,33 +27,53 @@ function responseHeaders( file ) {
     };
 }
 
-const server = http.createServer( function ( req, res ) {
-    const url = new URL( req.url, 'http://' + host ),
-        pathname = decodeURIComponent(
-            url.pathname.endsWith( '/' )
-                ? url.pathname + 'index.html'
-                : url.pathname,
-        ),
-        file = path.normalize( path.join( root, pathname ) );
+export function startServer( { root, port, host } = {} ) {
+    root = path.resolve(
+        root || fileURLToPath( new URL( './dist', import.meta.url ) ),
+    );
+    const portArg = process.argv.indexOf( '--port' );
+    port = Number(
+        port ??
+            ( portArg !== -1
+                ? process.argv[portArg + 1]
+                : process.env.PORT || 4173 ),
+    );
+    host = host || process.env.HOST || '127.0.0.1';
 
-    if ( !file.startsWith( root ) ) {
-        res.writeHead( 403 );
-        res.end( 'Forbidden' );
-        return;
-    }
+    const server = http.createServer( function ( req, res ) {
+        const url = new URL( req.url, 'http://' + host ),
+            pathname = decodeURIComponent(
+                url.pathname.endsWith( '/' )
+                    ? url.pathname + 'index.html'
+                    : url.pathname,
+            ),
+            file = path.normalize( path.join( root, pathname ) );
 
-    fs.readFile( file, function ( err, data ) {
-        if ( err ) {
-            res.writeHead( 404 );
-            res.end( 'Not found' );
+        if ( file !== root && !file.startsWith( root + path.sep ) ) {
+            res.writeHead( 403 );
+            res.end( 'Forbidden' );
             return;
         }
 
-        res.writeHead( 200, responseHeaders( file ) );
-        res.end( data );
-    } );
-} );
+        fs.readFile( file, function ( err, data ) {
+            if ( err ) {
+                res.writeHead( 404 );
+                res.end( 'Not found' );
+                return;
+            }
 
-server.listen( port, host, function () {
-    console.log( 'Snoflake demo: http://' + host + ':' + port + '/demo/' );
-} );
+            res.writeHead( 200, responseHeaders( file ) );
+            res.end( data );
+        } );
+    } );
+
+    server.listen( port, host, function () {
+        console.log( 'Snoflake demo: http://' + host + ':' + port + '/' );
+    } );
+
+    return server;
+}
+
+if ( import.meta.url === `file://${process.argv[1]}` ) {
+    startServer();
+}

@@ -1,0 +1,4 @@
+READ    LINE = INPUT :F(END)
+        LINE ('GOLD' | 'BLUE') . SHADE ('FISH' | 'BIRD') . KIND :F(READ)
+        OUTPUT = SHADE ' ' KIND :(READ)
+END

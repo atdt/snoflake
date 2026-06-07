@@ -1,0 +1,19 @@
+{
+    "name": "snoflake-demo",
+    "description": "Browser demo and editor for Snoflake. Bundled here so the core stays dependency-free.",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node build.js",
+        "dev": "node build.js --serve",
+        "serve": "node server.js"
+    },
+    "devDependencies": {
+        "@codemirror/language": "^6.12.3",
+        "@codemirror/state": "^6.6.0",
+        "@lezer/highlight": "^1.2.3",
+        "codemirror": "6.0.2",
+        "codemirror-lang-snobol": "0.2.0",
+        "esbuild": "^0.28.0"
+    }
+}

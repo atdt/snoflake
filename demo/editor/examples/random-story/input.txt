@@ -1,0 +1,54 @@
+<OPENING>::=<TIME> there was a =CHAR= who went to <PLACE> and
+ bought a =PET=.  On the way home they came upon a =BARRIER=
+ which the (PET) was afraid to cross.  The (CHAR) said "(PET),
+ (PET), jump over the (BARRIER) or I won't get home tonight."
+<TIME>::=Once upon a time|Once|Long ago in a small village|
+In days gone by in a little town by the river
+<PLACE>::=market|a pet store|a super market|town|the city
+<BARRIER>::=fence|ditch|fallen tree|large rock|stream|brook
+<PET>::=dog|cat|parrot|pony
+<REFUSAL>::= But the (LAST) would not.  The (CHAR)
+ <EXCURSION> and she met a (SUBJ).  She said, "(SUBJ), (SUBJ),
+ (VERB) (LAST), (LIST) and I shan't get home tonight."
+<EXCURSION>::=went down the path|went over a hill|went by
+ <OBJECT> and then <EXCURSION>|went toward <OBJECT>|
+went over hill and dale|went near <OBJECT>|went on the road to
+ <OBJECT>|went for (RANDOM(20) + 1) miles
+<OBJECT>::=the <COLOR> <THING>
+<COLOR>::=white|blue|red|yellow|grey|black|dark|green|orange
+<THING>::=mill|tavern|church|school|house|meadow|rock|barn
+<PERSUADED>::= The (SUBJ) knew the (CHAR) and, in fact,
+ had been saved by her from a wild <WILD_AN>.  So the (LIST)
+ and the (CHAR) got home that night.
+<CHAR>::=little old woman|little old lady|kind grandmother|
+kind old aunt|little girl dressed in red|retired seamstress|
+nice old lady|little girl green
+<DOM_AN>::=cow|pig|horse|sheep|chicken
+<WILD_AN>::=lion|giraffe|tiger|camel|ostrich|rhinoceros
+<ANIMAL>::=<DOM_AN>|<WILD_AN>|<PET>
+<HUMAN>::=farmer|girl|policeman|hunter|man|boy
+<A>::=<HUMAN>|<ANIMAL>
+<CUT>::=cut|slice|snip|slash
+<CUTTER>::=knife|scissor|sword|dagger
+<BEE>::=bee|wasp|horse-fly
+<HURT>::=bite|frighten|scare|kick|eat
+END
+<ANIMAL> <HURT> <HUMAN>
+<CUTTER> <CUT> <A>
+<A> break <CUTTER>
+water drown <A>
+<A> drink water
+fire burn <A>
+smoke suffocate <A>
+<BEE> sting <A>
+<A> swat <BEE>
+wind blow-out fire
+wind disperse smoke
+smoke pollute wind
+smoke smother fire
+<HUMAN> disperse smoke
+<A> spill liquor
+liquor intoxicate <A>
+<HUMAN> slay <WILD_AN>
+<WILD_AN> eat <HUMAN>
+END

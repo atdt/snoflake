@@ -1,0 +1,19 @@
+* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), §15.3 (INFINIP: infinite-precision integers).
+-INCLUDE "INFINIP.INC"
+	BIG = '111111111111111111111'
+	MED1 = '2222222222'
+	MED2 = '3333333333'
+	OUTPUT = 'BIG + BIG    = ' BIG + BIG
+	OUTPUT = 'BIG - BIG    = ' BIG - BIG
+	OUTPUT = 'BIG * 4      = ' BIG * 4
+	OUTPUT = 'BIG / 4      = ' BIG / 4
+	OUTPUT = 'REMDR(BIG,7) = ' REMDR(BIG, 7)
+	OUTPUT = 'MED1 * MED2  = ' MED1 * MED2
+	OUTPUT = 'MED1 + MED2  = ' MED1 + MED2
+	FACT = 1
+	N = 1
+FACT_LOOP	FACT = FACT * N
+	N = N + 1
+	LE(N, 20)                       :S(FACT_LOOP)
+	OUTPUT = '20!          = ' FACT
+END

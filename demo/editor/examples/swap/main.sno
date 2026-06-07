@@ -1,0 +1,4 @@
+        WORD = 'SNOBOL'
+        WORD LEN(3) . HEAD REM . TAIL
+        OUTPUT = TAIL HEAD
+END

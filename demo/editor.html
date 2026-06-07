@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snoflake</title>
+<style>
+    :root {
+        color-scheme: light dark;
+        --bg: light-dark(#fdfdfc, #16191d);
+        --panel: light-dark(#f2f4f3, #1f242a);
+        --border: light-dark(#dde1e0, #343b42);
+        --fg: light-dark(#1f252b, #dce3e0);
+        --muted: light-dark(#68726f, #8d989c);
+        --accent: light-dark(#116466, #4fc3c3);
+        --error: light-dark(#b3372a, #ff7a6e);
+        --literal: light-dark(#8a5114, #d2a86c);
+        --builtin: light-dark(#0f5c8c, #7fb5dd);
+        --selection: light-dark(#cde4e4, #1e4040);
+        --terminal-bg: #0c120e;
+        --terminal-fg: #52df6e;
+        --active-line: light-dark(
+            rgba(0, 0, 0, 0.04),
+            rgba(255, 255, 255, 0.05)
+        );
+    }
+
+    :root[data-theme='light'] {
+        color-scheme: light;
+    }
+    :root[data-theme='dark'] {
+        color-scheme: dark;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        /* 62.5% of the browser default 16px, so 1rem = 10px. */
+        font-size: 62.5%;
+    }
+
+    body {
+        height: 100dvh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--fg);
+        font: 1.2rem/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    h1::before {
+        content: '\2744\FE0E  ';
+    }
+
+    h1 a {
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    h1 a:hover {
+        text-decoration: underline;
+    }
+
+    #status {
+        flex: 1;
+        color: var(--muted);
+        font-size: 1.2rem;
+        text-transform: uppercase;
+    }
+
+    #status.error {
+        color: var(--error);
+    }
+
+    select {
+        padding: 3px 6px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--fg);
+        font: inherit;
+        font-size: 1.2rem;
+    }
+
+    select:hover {
+        border-color: var(--accent);
+    }
+
+    #run {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 12px;
+        border: 1px solid var(--accent);
+        border-radius: 4px;
+        background: var(--accent);
+        color: var(--bg);
+        font: inherit;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+    }
+
+    #run::before {
+        /* A small play triangle. */
+        content: '\25B6';
+        font-size: 0.9em;
+    }
+
+    #run:hover {
+        filter: brightness(1.1);
+    }
+
+    #run:active {
+        filter: brightness(0.9);
+    }
+
+    .toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    main {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1.1fr 0.55fr 0.8fr;
+    }
+
+    main.input-hidden {
+        grid-template-columns: 1.1fr 0.8fr;
+    }
+
+    main.input-hidden #input-section {
+        display: none;
+    }
+
+    section {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    section + section {
+        border-left: 1px solid var(--border);
+    }
+
+    h2 {
+        margin: 0;
+        padding: 4px 12px;
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 1.1rem;
+        font-weight: 400;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    /* The left column is a single tabbed pane: one tab per source file
+       (the program plus any -INCLUDE files), with one editor shown at a
+       time. */
+    .tabbar {
+        display: flex;
+        align-items: stretch;
+        background: var(--panel);
+        font-size: 1.1rem;
+        letter-spacing: 0.06em;
+    }
+
+    .tabs {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        /* Shrink to share the bar; an overflowing label is ellipsized.
+           Tabs stop shrinking at min-width, then the row scrolls. */
+        flex: 0 1 auto;
+        min-width: 5ch;
+        padding: 4px 10px;
+        border-right: 1px solid var(--border);
+        color: var(--muted);
+        cursor: pointer;
+    }
+
+    .tab.active {
+        background: var(--bg);
+        color: var(--fg);
+    }
+
+    .tab .name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .tab .close {
+        flex: none;
+        padding: 0;
+        border: none;
+        background: none;
+        color: var(--muted);
+        font: inherit;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .tab .close:hover {
+        color: var(--error);
+    }
+
+    .tab input {
+        width: 10ch;
+        padding: 0;
+        border: none;
+        background: none;
+        color: inherit;
+        font: inherit;
+        outline: none;
+    }
+
+    /* The add button sits outside the scrolling tab row, so it stays
+       visible no matter how many tabs there are. */
+    #add-file {
+        flex: none;
+        padding: 4px 12px;
+        border: none;
+        border-right: 1px solid var(--border);
+        background: none;
+        color: var(--muted);
+        font: inherit;
+        cursor: pointer;
+    }
+
+    #add-file:hover {
+        color: var(--accent);
+    }
+
+    /* One editor serves every file; switching tabs swaps its state. */
+    #editor-stack {
+        flex: 1;
+        min-height: 0;
+    }
+
+    #editor-stack > .cm-editor {
+        height: 100%;
+    }
+
+    .cm-editor.cm-focused {
+        outline: none;
+    }
+
+    #input,
+    #out {
+        flex: 1;
+        margin: 0;
+        padding: 10px 12px;
+        overflow: auto;
+        font: inherit;
+    }
+
+    #input {
+        border: none;
+        background: var(--bg);
+        color: var(--fg);
+        resize: none;
+    }
+
+    #input:focus {
+        outline: none;
+    }
+
+    /* The output pane is a phosphor terminal: green on near-black, a
+       soft glow, and faint scanlines. */
+    #out {
+        background-color: var(--terminal-bg);
+        background-image: repeating-linear-gradient(
+            transparent 0 2px,
+            rgba(0, 0, 0, 0.25) 2px 3px
+        );
+        color: var(--terminal-fg);
+        text-shadow: 0 0 6px rgba(82, 223, 110, 0.4);
+    }
+
+    #out::selection {
+        background: rgba(82, 223, 110, 0.3);
+    }
+
+    @media (max-width: 720px) {
+        main {
+            grid-template-columns: 1fr;
+            grid-template-rows: 2fr 1fr 2fr;
+        }
+
+        main.input-hidden {
+            grid-template-columns: 1fr;
+            grid-template-rows: 2fr 2fr;
+        }
+
+        section + section {
+            border-left: none;
+            border-top: 1px solid var(--border);
+        }
+    }
+</style>
+
+<header>
+    <h1>
+        <a href="https://github.com/atdt/snoflake">Snoflake</a>
+    </h1>
+    <select id="example" aria-label="Load example"></select>
+    <button id="run" type="button" title="Run (Ctrl/Cmd+Enter)">Run</button>
+    <span id="status">Ready</span>
+    <label class="toggle">
+        <input type="checkbox" id="show-input" checked>
+        Input
+    </label>
+    <select id="theme" aria-label="Color theme">
+        <option value="auto">auto</option>
+        <option value="light">light</option>
+        <option value="dark">dark</option>
+    </select>
+</header>
+<main>
+    <section id="sources">
+        <div class="tabbar">
+            <div class="tabs" id="file-tabs"></div>
+            <button id="add-file" type="button" title="Add a source file">
+                +
+            </button>
+        </div>
+        <div id="editor-stack"></div>
+    </section>
+    <section id="input-section">
+        <h2>Input</h2>
+        <textarea
+            id="input"
+            spellcheck="false"
+            aria-label="Program input"
+        ></textarea>
+    </section>
+    <section>
+        <h2>Output</h2>
+        <pre id="out"></pre>
+    </section>
+</main>
+
+<script type="module" src="./editor.js"></script>

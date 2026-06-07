@@ -1,0 +1,8 @@
+	DEFINE('RANDOM(N)')
+	RAN_VAR = 1                     :(RANDOM_END)
+RANDOM
+	RAN_VAR = REMDR(RAN_VAR * 4676, 414971)
+	RANDOM = RAN_VAR / 414971.
+	RANDOM = NE(N,0) CONVERT(RANDOM * N,'INTEGER') + 1
+	                                :(RETURN)
+RANDOM_END

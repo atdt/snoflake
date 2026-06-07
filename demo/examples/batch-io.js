@@ -2,11 +2,11 @@
 // text and show whatever it writes to stdout/stderr.
 
 import { runSnoflake } from '../lib/runner.js';
-import { loadSource } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
+import program from '../programs/segmentation.sno';
 
-const sourceUrl = new URL( '../programs/segmentation.sno', import.meta.url ),
-    sampleInput = 'Hello world!\nこんにちは世界。\nสวัสดีชาวโลก!\nПривет мир!\n';
+const sampleInput =
+    'Hello world!\nこんにちは世界。\nสวัสดีชาวโลก!\nПривет мир!\n';
 
 export function init() {
     const source = createEditor( document.querySelector( '#batch-io-source' ) ),
@@ -39,11 +39,11 @@ export function init() {
         }
     }
 
-    async function reload() {
+    function reload() {
         output.textContent = '';
         setStatus( 'Loading' );
         try {
-            source.setValue( await loadSource( sourceUrl ) );
+            source.setValue( program );
             input.value = sampleInput;
             setStatus( 'Ready' );
         } catch ( e ) {

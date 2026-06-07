@@ -6,7 +6,7 @@
     },
     "lint": {
         "include": ["src/", "tools/", "test/", "build/", "demo/"],
-        "exclude": ["**/generated-*"],
+        "exclude": ["**/generated-*", "demo/dist/", "demo/node_modules/"],
         "rules": {
             "exclude": ["no-control-regex"]
         }
@@ -21,6 +21,6 @@
         "useBraces": "whenNotSingleLine",
         "useTabs": false,
         "include": ["src/", "tools/", "test/", "build/", "docs/", "demo/", "*.md"],
-        "exclude": ["**/generated-*"]
+        "exclude": ["**/generated-*", "demo/dist/", "demo/node_modules/"]
     }
 }

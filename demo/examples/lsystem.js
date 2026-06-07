@@ -3,12 +3,12 @@
 // the main thread, deferred one frame so the status text paints first.
 
 import { runSnoflake } from '../lib/runner.js';
-import { fillSelect, loadSource } from '../lib/dom.js';
+import { fillSelect } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
 import { makeTurtleExtensions, presets } from '../lib/turtle.js';
+import program from '../programs/lsystem.sno';
 
-const sourceUrl = new URL( '../programs/lsystem.sno', import.meta.url ),
-    lineLimit = 160;
+const lineLimit = 160;
 
 export function init() {
     const source = createEditor( document.querySelector( '#lsystem-source' ) ),
@@ -74,10 +74,10 @@ export function init() {
         } );
     }
 
-    async function reload() {
+    function reload() {
         setStatus( 'Loading' );
         try {
-            source.setValue( await loadSource( sourceUrl ) );
+            source.setValue( program );
             fillSelect( picker, presets );
             setStatus( 'Ready' );
             draw();

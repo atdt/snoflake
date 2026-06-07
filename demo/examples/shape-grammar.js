@@ -2,12 +2,13 @@
 // 3-D scene, emitting one box at a time through an EMIT extension. The
 // program runs in a worker; each box streams to the canvas3d renderer.
 
-import { loadSource } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
 import { createScene } from '../lib/canvas3d.js';
+import program from '../programs/shape-grammar.sno';
 
-const sourceUrl = new URL( '../programs/shape-grammar.sno', import.meta.url ),
-    workerUrl = new URL( '../workers/shape-worker.js', import.meta.url );
+// The worker is a separate bundle emitted beside this one (see build.js), so it
+// is resolved relative to the built output rather than to this source file.
+const workerUrl = new URL( './shape-worker.js', import.meta.url );
 
 export function init() {
     const source = createEditor(
@@ -58,12 +59,12 @@ export function init() {
         worker.postMessage( { type: 'start', source: source.getValue() } );
     }
 
-    async function reload() {
+    function reload() {
         stop();
         scene.clear();
         setStatus( 'Loading' );
         try {
-            source.setValue( await loadSource( sourceUrl ) );
+            source.setValue( program );
             setStatus( 'Ready' );
             start();
         } catch ( e ) {

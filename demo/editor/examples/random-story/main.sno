@@ -1,0 +1,39 @@
+* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 13.5
+* (Catspaw SNOBOL4+ program diskette).
+-INCLUDE "RSENTENC.INC"
+	RAN_VAR = TIMESTAMP()
+	ACTIONS = TABLE()
+	BB = BREAK(' ')
+	SB = SPAN(' ')
+READ_PHRASE
+	X = TRIM(INPUT)                     :F(BEGIN_STORY)
+	IDENT(X,'END')                      :S(BEGIN_STORY)
+	X (BB SB BB) . SUBJ_VERB SB REM . OBJS
+	OBJS = OBJS '|'
+READ_PH1
+	OBJS POS(0) '<' ARB . VAR '>' = RSENT_TBL<VAR>
+	OBJS POS(0) '|' =                   :S(READ_PH1)
+	OBJS BREAK('|') . OBJ '|' =         :F(READ_PHRASE)
+	ACTIONS<OBJ> = ACTIONS<OBJ> '|' SUBJ_VERB
+	                                    :(READ_PH1)
+BEGIN_STORY	RSTORY = RSENTENCE('<OPENING>')
+	LIST = PET " won't jump over the " BARRIER
+	LAST = PET
+	&MAXLNGTH = 30000
+NEW_AGENT
+	TRY = 0
+RETRY	TRY = TRY + 1 LT(TRY,10)            :F(REQUEST)
+	ALTS = ACTIONS<LAST>
+	RSENTENCE(RSELECT(ALTS)) BB . SUBJ SB REM . VERB
+	RSTORY ' ' SUBJ ' '                 :S(RETRY)
+	RSTORY ' ' VERB ' '                 :S(RETRY)
+REQUEST	RSTORY = RSTORY RSENTENCE('<REFUSAL>')
+	LIST = SUBJ " won't " VERB ' the ' LAST ", " LIST
+	LAST = SUBJ
+	LT(SIZE(LIST), 175)                 :S(NEW_AGENT)
+FIN1	LIST "won't" = "began to"           :S(FIN1)
+FIN2	LIST ',' = "; the"                  :S(FIN2)
+	RSTORY = RSTORY RSENTENCE('<PERSUADED>')
+OUT	RSTORY (LEN(50) BB) . OUTPUT SB =   :S(OUT)
+	OUTPUT = RSTORY
+END

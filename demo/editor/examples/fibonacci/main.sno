@@ -1,0 +1,7 @@
+        A = 0
+        B = 1
+LOOP    OUTPUT = B
+        T = A + B
+        A = B
+        B = LT(B, 100) T :S(LOOP)
+END
