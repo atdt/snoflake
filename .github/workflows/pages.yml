@@ -1,0 +1,47 @@
+name: Deploy demo to Pages
+
+# Publishes the committed demo bundle to GitHub Pages at /<repo>/demo/. The
+# bundle is the checked-in artifact, so this only republishes it; rebuild with
+# `cd demo && npm run build` and commit before pushing. Requires the repository
+# Pages source to be set to "GitHub Actions".
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - demo/dist/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/demo
+          cp -r demo/dist/. _site/demo/
+          printf '<!DOCTYPE html><meta http-equiv="refresh" content="0; url=./demo/">\n' > _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
