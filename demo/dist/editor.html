@@ -244,6 +244,19 @@
         color: var(--fg);
     }
 
+    /* A just-added tab pulses once from the accent color, pointing the eye at
+       its editable name. */
+    .tab.flash {
+        animation: tab-flash 1s ease-out;
+    }
+
+    @keyframes tab-flash {
+        from {
+            background: var(--accent);
+            color: var(--bg);
+        }
+    }
+
     .tab .name {
         overflow: hidden;
         text-overflow: ellipsis;

@@ -13,10 +13,11 @@ const here = ( p ) => fileURLToPath( new URL( p, import.meta.url ) ),
 // stable names (main.js, editor.js, style.css), so nothing needs rewriting.
 const STATIC = [ 'index.html', 'editor.html' ];
 
-// The editor's examples live on disk: one directory per example with a
-// main.sno, an optional input.txt, and any -INCLUDE files, ordered by
-// manifest.json. This assembles them into the map the editor imports as
-// 'examples:all', baked into the bundle with no runtime fetch.
+// The editor's examples live on disk: one directory per example holding a
+// single .sno program (its name doubles as the editor tab and menu label),
+// an optional input.txt, and any -INCLUDE files, ordered by manifest.json.
+// This assembles them into the list the editor imports as 'examples:all',
+// baked into the bundle with no runtime fetch.
 const examplesPlugin = {
     name: 'examples',
     setup( build ) {
@@ -31,16 +32,19 @@ const examplesPlugin = {
             const manifest = JSON.parse(
                     readFileSync( `${root}/manifest.json`, 'utf8' ),
                 ),
-                examples = {};
+                examples = [];
 
             for ( const { name, dir } of manifest ) {
                 const base = `${root}/${dir}`,
-                    source = readFileSync( `${base}/main.sno`, 'utf8' ),
+                    entries = readdirSync( base ).sort(),
+                    file = entries.find(
+                        ( e ) => e.toLowerCase().endsWith( '.sno' ),
+                    ),
                     files = {};
                 let input = '';
 
-                for ( const entry of readdirSync( base ).sort() ) {
-                    if ( entry === 'main.sno' ) continue;
+                for ( const entry of entries ) {
+                    if ( entry === file ) continue;
                     if ( entry === 'input.txt' ) {
                         input = readFileSync( `${base}/${entry}`, 'utf8' );
                     } else {
@@ -51,7 +55,13 @@ const examplesPlugin = {
                     }
                 }
 
-                examples[name] = { source, input, files };
+                examples.push( {
+                    name,
+                    file,
+                    source: readFileSync( `${base}/${file}`, 'utf8' ),
+                    input,
+                    files,
+                } );
             }
 
             return {

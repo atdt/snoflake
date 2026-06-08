@@ -6,7 +6,10 @@ import { snobol } from 'codemirror-lang-snobol';
 
 import EXAMPLES from 'examples:all';
 
-const DEFAULT_EXAMPLE = 'Random poem';
+const DEFAULT_FILE = 'POEM.SNO';
+
+// Sentinel for the dropdown's blank-program entry; not a real filename.
+const NEW = '\x00new';
 
 const statusEl = document.querySelector( '#status' ),
     mainEl = document.querySelector( 'main' ),
@@ -124,16 +127,18 @@ function run() {
     clearTimeout( runningTimer );
     runningTimer = setTimeout( () => setStatus( 'Running…' ), 200 );
 
-    // files[0] is the program; the rest are named -INCLUDE/INPUT files. The
-    // active file's edits live in the view, so fold them back first.
+    // The active tab is the program; every other tab is a named -INCLUDE/INPUT
+    // file. The active file's edits live in the view, so fold them back first.
     syncActive();
     const fileMap = {};
-    for ( const file of files.slice( 1 ) ) {
-        fileMap[file.name] = file.state.doc.toString();
-    }
+    files.forEach( ( file, i ) => {
+        if ( i !== activeFile ) {
+            fileMap[file.name] = file.state.doc.toString();
+        }
+    } );
 
     worker.postMessage( {
-        source: files[0].state.doc.toString(),
+        source: files[activeFile].state.doc.toString(),
         input: input.value,
         files: fileMap,
     } );
@@ -150,9 +155,9 @@ const extensions = [
 
 // One editor backs every file. Each file keeps its own EditorState (so its
 // text, cursor, and undo history survive tab switches); switching saves the
-// live state back to the outgoing file and loads the next. files[0] is the
-// program (fixed: not renamable or removable); the rest are the named files
-// served to the loader.
+// live state back to the outgoing file and loads the next. Every tab is an
+// equal, named file: Run executes the active one and serves the rest to the
+// loader by name. The last remaining tab can't be closed.
 const view = new EditorView( { parent: editorStack } );
 
 let files = [],
@@ -179,15 +184,17 @@ function renderTabs() {
         name.title = file.name;
         tab.append( name );
 
+        // Clicking the active tab renames it; clicking another selects it.
         tab.addEventListener( 'click', () => {
             if ( i !== activeFile ) {
                 selectFile( i );
-            } else if ( !file.fixed ) {
+            } else {
                 renameFile( name, file );
             }
         } );
 
-        if ( !file.fixed ) {
+        // The last remaining tab stays put: a run needs a program to execute.
+        if ( files.length > 1 ) {
             const close = document.createElement( 'button' );
             close.className = 'close';
             close.type = 'button';
@@ -244,6 +251,29 @@ function addFile( name, content = '' ) {
     selectFile( files.length - 1 );
 }
 
+// The next free name in a NAME, NAME2, NAME3… series, so a new tab never
+// collides with an open one.
+function freshName( stem, ext ) {
+    let name = `${stem}${ext}`;
+    for ( let n = 2; files.some( ( f ) => f.name === name ); n++ ) {
+        name = `${stem}${n}${ext}`;
+    }
+    return name;
+}
+
+// Not empty: every SNOBOL program needs an END, so a blank buffer fails to run.
+const SKELETON = '*  Edit this program, or write your own.\n' +
+    "        OUTPUT = 'Hello, world.'\n" +
+    'END\n';
+
+// Replace the workspace with one blank file and focus it; the tab pulses once
+// (see .tab.flash) to flag its editable name.
+function newProgram() {
+    setWorkspace( [ { name: 'MAIN.SNO', state: fileState( SKELETON ) } ], '' );
+    fileTabs.querySelector( '.tab' ).classList.add( 'flash' );
+    view.focus();
+}
+
 function removeFile( i ) {
     syncActive();
     files.splice( i, 1 );
@@ -254,15 +284,10 @@ function removeFile( i ) {
     renderTabs();
 }
 
-addFileBtn.addEventListener( 'click', () => {
-    let n = files.length;
-    let name;
-    do {
-        name = `FILE${n}.INC`;
-        n++;
-    } while ( files.some( ( f ) => f.name === name ) );
-    addFile( name );
-} );
+addFileBtn.addEventListener(
+    'click',
+    () => addFile( freshName( 'FILE', '.INC' ) ),
+);
 
 runBtn.addEventListener( 'click', run );
 
@@ -394,39 +419,53 @@ for ( const gutter of gutters ) {
 narrow.addEventListener( 'change', layoutPanes );
 layoutPanes();
 
-function loadExample( example ) {
-    files = [
-        {
-            name: 'Program',
-            state: fileState( example.source ),
-            fixed: true,
-        },
-        ...Object.entries( example.files ).map(
-            ( [ name, content ] ) => ( {
-                name,
-                state: fileState( content ),
-            } ),
-        ),
-    ];
+// Loading an example and starting fresh both replace the whole workspace: the
+// open files and the input pane, with the first file active.
+function setWorkspace( fileList, inputText ) {
+    files = fileList;
     activeFile = 0;
     view.setState( files[0].state );
     renderTabs();
-    input.value = example.input;
+    input.value = inputText;
 }
 
-for ( const name of Object.keys( EXAMPLES ) ) {
-    exampleSel.add( new Option( name ) );
+function loadExample( example ) {
+    setWorkspace( [
+        { name: example.file, state: fileState( example.source ) },
+        ...Object.entries( example.files ).map(
+            ( [ name, content ] ) => ( { name, state: fileState( content ) } ),
+        ),
+    ], example.input );
 }
 
-// Selecting a whole program is a deliberate action, so show its output at
-// once; edits afterward wait for the Run button.
+// A disabled placeholder, kept selected so the closed menu reads as a label,
+// not a loaded file. Then NEW, then the examples by filename (friendly name on
+// hover).
+const placeholder = new Option( 'LOAD…', '', true, true );
+placeholder.disabled = true;
+exampleSel.add( placeholder );
+exampleSel.add( new Option( 'NEW', NEW ) );
+for ( const example of EXAMPLES ) {
+    const option = new Option( example.file, example.file );
+    option.title = example.name;
+    exampleSel.add( option );
+}
+
+// Picking is deliberate, so show output at once; later edits wait for Run. It's
+// an action menu, not a state readout: snap back to the placeholder so picking
+// the same item again, or NEW again, still fires a change.
 exampleSel.addEventListener( 'change', () => {
-    loadExample( EXAMPLES[exampleSel.value] );
+    const value = exampleSel.value;
+    exampleSel.selectedIndex = 0;
+    if ( value === NEW ) {
+        newProgram();
+    } else {
+        loadExample( EXAMPLES.find( ( e ) => e.file === value ) );
+    }
     run();
 } );
 
-exampleSel.value = DEFAULT_EXAMPLE;
-loadExample( EXAMPLES[DEFAULT_EXAMPLE] );
+loadExample( EXAMPLES.find( ( e ) => e.file === DEFAULT_FILE ) );
 // Hold the first run until the worker has loaded the runtime, so the status
 // doesn't flash 'Running…' during startup.
 onWarm = run;

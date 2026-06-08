@@ -1,4 +1,4 @@
-import{a as h,b as B,c as R,d as M,e as g,f as F,g as p}from"./chunks/chunk-I2WGIKSS.js";var l={"Pattern matching":{source:`READ    LINE = INPUT :F(END)
+import{a as M,b as U,c as T,d as g,e as F,f as p,g as f}from"./chunks/chunk-I2WGIKSS.js";var D=[{name:"Pattern matching",file:"PATTERN.SNO",source:`READ    LINE = INPUT :F(END)
         LINE ('GOLD' | 'BLUE') . SHADE ('FISH' | 'BIRD') . KIND :F(READ)
         OUTPUT = SHADE ' ' KIND :(READ)
 END`,input:`GOLDFISH
@@ -6,16 +6,16 @@ BLUEBIRD
 SNOWBIRD
 GOLDFINCH
 BLUEFISH
-`,files:{}},Swap:{source:`        WORD = 'SNOBOL'
+`,files:{}},{name:"Swap",file:"SWAP.SNO",source:`        WORD = 'SNOBOL'
         WORD LEN(3) . HEAD REM . TAIL
         OUTPUT = TAIL HEAD
-END`,input:"",files:{}},Fibonacci:{source:`        A = 0
+END`,input:"",files:{}},{name:"Fibonacci",file:"FIB.SNO",source:`        A = 0
         B = 1
 LOOP    OUTPUT = B
         T = A + B
         A = B
         B = LT(B, 100) T :S(LOOP)
-END`,input:"",files:{}},"Word tally":{source:`        COUNT = TABLE()
+END`,input:"",files:{}},{name:"Word tally",file:"TALLY.SNO",source:`        COUNT = TABLE()
 LINE    TEXT = INPUT :F(DONE)
 NEXT    TEXT BREAK(' ') . WORD SPAN(' ') = :F(LAST)
         COUNT<WORD> = COUNT<WORD> + 1 :(NEXT)
@@ -28,7 +28,7 @@ END`,input:`TO BE OR NOT TO BE
 THAT IS THE QUESTION
 
 TO BE
-`,files:{}},"Random story":{source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 13.5
+`,files:{}},{name:"Random story",file:"STORY.SNO",source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 13.5
 * (Catspaw SNOBOL4+ program diskette).
 -INCLUDE "RSENTENC.INC"
 	RAN_VAR = TIMESTAMP()
@@ -234,7 +234,7 @@ RSENT_1	STACK ASGN.VAR =                            :F(RSENT_2)
 RSENT_2	STACK LITERAL.TEXT =                        :F(RSENT_3)
 	S = S TEXT                                  :(RSENTENCE)
 RSENT_3	RSENTENCE = S STACK                         :(RETURN)
-RSENTENCE_END`}},"Random poem":{source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), \xA716.9 (RPOEM).
+RSENTENCE_END`}},{name:"Random poem",file:"POEM.SNO",source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), \xA716.9 (RPOEM).
 -INCLUDE "RSENTENC.INC"
 	RAN_VAR = TIMESTAMP()
 
@@ -377,7 +377,7 @@ RSENT_1	STACK ASGN.VAR =                            :F(RSENT_2)
 RSENT_2	STACK LITERAL.TEXT =                        :F(RSENT_3)
 	S = S TEXT                                  :(RSENTENCE)
 RSENT_3	RSENTENCE = S STACK                         :(RETURN)
-RSENTENCE_END`}},Conversions:{source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 2 (UPLO, ROMAN, BASE, SPELL, MDY).
+RSENTENCE_END`}},{name:"Conversions",file:"CONVERT.SNO",source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 2 (UPLO, ROMAN, BASE, SPELL, MDY).
 -INCLUDE "UPLO.INC"
 -INCLUDE "ROMAN.INC"
 -INCLUDE "BASEB.INC"
@@ -480,7 +480,7 @@ SPELL_END`,"UPLO.INC":`* UPLO.inc - UPLO(S) will return its argument with upper 
 	LO_UP = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 	                                    :(UPLO_END)
 UPLO	UPLO = REPLACE(S, UP_LO, LO_UP)     :(RETURN)
-UPLO_END`}},"Bignum arithmetic":{source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), \xA715.3 (INFINIP: infinite-precision integers).
+UPLO_END`}},{name:"Bignum arithmetic",file:"BIGNUM.SNO",source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), \xA715.3 (INFINIP: infinite-precision integers).
 -INCLUDE "INFINIP.INC"
 	BIG = '111111111111111111111'
 	MED1 = '2222222222'
@@ -626,7 +626,7 @@ SWAP	SWAP = $SWAP_ARG1
 	$SWAP_ARG1 = $SWAP_ARG2
 	$SWAP_ARG2 = SWAP
 	SWAP =                                  :(RETURN)
-SWAP_END`}},"Day of week":{source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), \xA72.8 (weekday from a date).
+SWAP_END`}},{name:"Day of week",file:"WEEKDAY.SNO",source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), \xA72.8 (weekday from a date).
 -INCLUDE "DAY.INC"
 	OUTPUT = DAY('3/24/71')
 	OUTPUT = D
@@ -659,7 +659,7 @@ DAY_2	DAY = (Y / 400) * CENT_4 + (REMDR(Y,400) / 100) * CENT_
 	'0SUN1MON2TUES3WEDNES4THURS5FRI6SATUR7'
 +	D BREAK('01234567') . DAY
 	DAY = DAY 'DAY'                 :(RETURN)
-DAY_END`}},Sorting:{source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 13 (bubble, heap, and shell sort).
+DAY_END`}},{name:"Sorting",file:"SORT.SNO",source:`* From James F. Gimpel, "Algorithms in SNOBOL4" (1976), Ch. 13 (bubble, heap, and shell sort).
 -INCLUDE "SWAP.INC"
 -INCLUDE "BSORT.INC"
 -INCLUDE "HSORT.INC"
@@ -743,5 +743,8 @@ SWAP	SWAP = $SWAP_ARG1
 	$SWAP_ARG1 = $SWAP_ARG2
 	$SWAP_ARG2 = SWAP
 	SWAP =                                  :(RETURN)
-SWAP_END`}}};var K="Random poem",Y=document.querySelector("#status"),A=document.querySelector("main"),v=document.querySelector("#input"),m=document.querySelector("#out"),O=document.querySelector("#example"),U=document.querySelector("#theme"),f=document.querySelector("#show-input"),tn=document.querySelector("#run"),G=document.querySelector("#file-tabs"),En=document.querySelector("#editor-stack"),en=document.querySelector("#add-file"),C;function D(n,t=!1){clearTimeout(C),Y.textContent=n,Y.classList.toggle("error",t)}var V="snoflake-theme";function W(n){n==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=n,U.value=n,localStorage.setItem(V,n)}U.addEventListener("change",()=>W(U.value));W(localStorage.getItem(V)||"auto");var Sn=B.theme({"&":{backgroundColor:"var(--bg)",color:"var(--fg)"},".cm-gutters":{backgroundColor:"var(--panel)",color:"var(--muted)",border:"none"},".cm-activeLine":{backgroundColor:"var(--active-line)"},".cm-activeLineGutter":{backgroundColor:"var(--active-line)"},".cm-content":{caretColor:"var(--accent)"},".cm-cursor, .cm-dropCursor":{borderLeftColor:"var(--accent)"},"&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":{backgroundColor:"var(--selection)"}}),Nn=M.define([{tag:R.lineComment,color:"var(--muted)",fontStyle:"italic"},{tag:R.meta,color:"var(--muted)"},{tag:R.labelName,color:"var(--accent)",fontWeight:"600"},{tag:R.controlKeyword,color:"var(--accent)"},{tag:R.keyword,color:"var(--accent)"},{tag:R.standard(R.variableName),color:"var(--builtin)"},{tag:R.string,color:"var(--literal)"},{tag:R.special(R.string),color:"var(--literal)"},{tag:R.number,color:"var(--literal)"}]),Rn=new URL("./editor-worker.js",import.meta.url);function Tn(n){m.textContent+=n+`
-`}var o,L=!1,d=null;function Q(){o=new Worker(Rn,{type:"module"}),o.onmessage=n=>{let t=n.data;t.type==="ready"?(d?.(),d=null):t.type==="line"?Tn(t.line):t.type==="done"?(L=!1,D("Ready")):(L=!1,D(`Error: ${t.message}`,!0))},o.onerror=n=>{L=!1,D(`Error: ${n.message}`,!0)}}function c(){L&&(o.terminate(),Q()),L=!0,m.textContent="",clearTimeout(C),C=setTimeout(()=>D("Running\u2026"),200),_();let n={};for(let t of S.slice(1))n[t.name]=t.state.doc.toString();o.postMessage({source:S[0].state.doc.toString(),input:v.value,files:n})}Q();var rn=[F,p(),Sn,g(Nn)],s=new B({parent:En}),S=[],T=0,u=n=>h.create({doc:n,extensions:rn});function _(){S[T]&&(S[T].state=s.state)}function P(){G.replaceChildren(),S.forEach((n,t)=>{let E=t===T,e=document.createElement("span"),a=document.createElement("span");if(e.className=E?"tab active":"tab",a.className="name",a.textContent=n.name,a.title=n.name,e.append(a),e.addEventListener("click",()=>{t!==T?k(t):n.fixed||an(a,n)}),!n.fixed){let i=document.createElement("button");i.className="close",i.type="button",i.title="Remove file",i.textContent="\xD7",i.addEventListener("click",z=>{z.stopPropagation(),on(t)}),e.append(i)}G.append(e)})}function k(n){_(),T=n,s.setState(S[n].state),P(),s.focus()}function an(n,t){let E=document.createElement("input");E.value=t.name,E.setAttribute("aria-label","File name"),n.replaceChildren(E),E.focus(),E.select(),E.addEventListener("click",e=>e.stopPropagation()),E.addEventListener("blur",()=>{let e=E.value.trim();e&&e!==t.name&&!S.some(a=>a.name===e)&&(t.name=e),P()}),E.addEventListener("keydown",e=>{e.key==="Escape"&&(E.value=t.name),(e.key==="Enter"||e.key==="Escape")&&E.blur()})}function An(n,t=""){S.push({name:n,state:u(t)}),k(S.length-1)}function on(n){_(),S.splice(n,1),T=T>n?T-1:Math.min(T,S.length-1),s.setState(S[T].state),P()}en.addEventListener("click",()=>{let n=S.length,t;do t=`FILE${n}.INC`,n++;while(S.some(E=>E.name===t));An(t)});tn.addEventListener("click",c);addEventListener("keydown",n=>{(n.metaKey||n.ctrlKey)&&n.key==="Enter"&&(n.preventDefault(),c())});f.addEventListener("change",()=>{A.classList.toggle("input-hidden",!f.checked),I()});var H=document.querySelector("#sources"),J=document.querySelector("#input-section"),x=m.closest("section"),q=[...A.querySelectorAll(".gutter")],$=matchMedia("(max-width: 720px)"),X=6,w=120,Z=new Map([[H,1.1],[J,.55],[x,.8]]),r=new Map(Z);function I(){if($.matches){A.style.gridTemplateColumns="";return}let n=!A.classList.contains("input-hidden");q[1].style.display=n?"":"none";let t=[r.get(H)+"fr",X+"px"];n&&t.push(r.get(J)+"fr",X+"px"),t.push(r.get(x)+"fr"),A.style.gridTemplateColumns=t.join(" ")}function y(n,t){let E=n[t];for(;E&&!(E.matches("section")&&getComputedStyle(E).display!=="none");)E=E[t];return E}var N=null;function Ln(n,t){let E=y(t,"previousElementSibling"),e=y(t,"nextElementSibling");!E||!e||(t.setPointerCapture(n.pointerId),t.classList.add("dragging"),A.classList.add("resizing"),N={gutter:t,left:E,right:e,startX:n.clientX,leftPx:E.getBoundingClientRect().width,spanPx:E.getBoundingClientRect().width+e.getBoundingClientRect().width,spanFr:r.get(E)+r.get(e)})}function sn(n){if(!N)return;let t=Math.max(w,Math.min(N.spanPx-w,N.leftPx+(n.clientX-N.startX))),E=N.spanFr*t/N.spanPx;r.set(N.left,E),r.set(N.right,N.spanFr-E),I()}function b(){N&&(N.gutter.classList.remove("dragging"),A.classList.remove("resizing"),N=null)}function In(){for(let[n,t]of Z)r.set(n,t);I()}for(let n of q)n.addEventListener("pointerdown",t=>Ln(t,n)),n.addEventListener("pointermove",sn),n.addEventListener("pointerup",b),n.addEventListener("lostpointercapture",b),n.addEventListener("dblclick",In);$.addEventListener("change",I);I();function j(n){S=[{name:"Program",state:u(n.source),fixed:!0},...Object.entries(n.files).map(([t,E])=>({name:t,state:u(E)}))],T=0,s.setState(S[0].state),P(),v.value=n.input}for(let n of Object.keys(l))O.add(new Option(n));O.addEventListener("change",()=>{j(l[O.value]),c()});O.value=K;j(l[K]);d=c;
+SWAP_END`}}];var En="POEM.SNO",K="\0new",Y=document.querySelector("#status"),i=document.querySelector("main"),v=document.querySelector("#input"),_=document.querySelector("#out"),o=document.querySelector("#example"),C=document.querySelector("#theme"),G=document.querySelector("#show-input"),Sn=document.querySelector("#run"),d=document.querySelector("#file-tabs"),Nn=document.querySelector("#editor-stack"),Rn=document.querySelector("#add-file"),u;function O(n,t=!1){clearTimeout(u),Y.textContent=n,Y.classList.toggle("error",t)}var W="snoflake-theme";function V(n){n==="auto"?delete document.documentElement.dataset.theme:document.documentElement.dataset.theme=n,C.value=n,localStorage.setItem(W,n)}C.addEventListener("change",()=>V(C.value));V(localStorage.getItem(W)||"auto");var Tn=U.theme({"&":{backgroundColor:"var(--bg)",color:"var(--fg)"},".cm-gutters":{backgroundColor:"var(--panel)",color:"var(--muted)",border:"none"},".cm-activeLine":{backgroundColor:"var(--active-line)"},".cm-activeLineGutter":{backgroundColor:"var(--active-line)"},".cm-content":{caretColor:"var(--accent)"},".cm-cursor, .cm-dropCursor":{borderLeftColor:"var(--accent)"},"&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":{backgroundColor:"var(--selection)"}}),an=g.define([{tag:T.lineComment,color:"var(--muted)",fontStyle:"italic"},{tag:T.meta,color:"var(--muted)"},{tag:T.labelName,color:"var(--accent)",fontWeight:"600"},{tag:T.controlKeyword,color:"var(--accent)"},{tag:T.keyword,color:"var(--accent)"},{tag:T.standard(T.variableName),color:"var(--builtin)"},{tag:T.string,color:"var(--literal)"},{tag:T.special(T.string),color:"var(--literal)"},{tag:T.number,color:"var(--literal)"}]),rn=new URL("./editor-worker.js",import.meta.url);function An(n){_.textContent+=n+`
+`}var s,I=!1,m=null;function Q(){s=new Worker(rn,{type:"module"}),s.onmessage=n=>{let t=n.data;t.type==="ready"?(m?.(),m=null):t.type==="line"?An(t.line):t.type==="done"?(I=!1,O("Ready")):(I=!1,O(`Error: ${t.message}`,!0))},s.onerror=n=>{I=!1,O(`Error: ${n.message}`,!0)}}function P(){I&&(s.terminate(),Q()),I=!0,_.textContent="",clearTimeout(u),u=setTimeout(()=>O("Running\u2026"),200),h();let n={};S.forEach((t,e)=>{e!==R&&(n[t.name]=t.state.doc.toString())}),s.postMessage({source:S[R].state.doc.toString(),input:v.value,files:n})}Q();var on=[p,f(),Tn,F(an)],L=new U({parent:Nn}),S=[],R=0,c=n=>M.create({doc:n,extensions:on});function h(){S[R]&&(S[R].state=L.state)}function B(){d.replaceChildren(),S.forEach((n,t)=>{let e=t===R,E=document.createElement("span"),a=document.createElement("span");if(E.className=e?"tab active":"tab",a.className="name",a.textContent=n.name,a.title=n.name,E.append(a),E.addEventListener("click",()=>{t!==R?H(t):Ln(a,n)}),S.length>1){let A=document.createElement("button");A.className="close",A.type="button",A.title="Remove file",A.textContent="\xD7",A.addEventListener("click",tn=>{tn.stopPropagation(),On(t)}),E.append(A)}d.append(E)})}function H(n){h(),R=n,L.setState(S[n].state),B(),L.focus()}function Ln(n,t){let e=document.createElement("input");e.value=t.name,e.setAttribute("aria-label","File name"),n.replaceChildren(e),e.focus(),e.select(),e.addEventListener("click",E=>E.stopPropagation()),e.addEventListener("blur",()=>{let E=e.value.trim();E&&E!==t.name&&!S.some(a=>a.name===E)&&(t.name=E),B()}),e.addEventListener("keydown",E=>{E.key==="Escape"&&(e.value=t.name),(E.key==="Enter"||E.key==="Escape")&&e.blur()})}function sn(n,t=""){S.push({name:n,state:c(t)}),H(S.length-1)}function In(n,t){let e=`${n}${t}`;for(let E=2;S.some(a=>a.name===e);E++)e=`${n}${E}${t}`;return e}var ln=`*  Edit this program, or write your own.
+        OUTPUT = 'Hello, world.'
+END
+`;function Dn(){j([{name:"MAIN.SNO",state:c(ln)}],""),d.querySelector(".tab").classList.add("flash"),L.focus()}function On(n){h(),S.splice(n,1),R=R>n?R-1:Math.min(R,S.length-1),L.setState(S[R].state),B()}Rn.addEventListener("click",()=>sn(In("FILE",".INC")));Sn.addEventListener("click",P);addEventListener("keydown",n=>{(n.metaKey||n.ctrlKey)&&n.key==="Enter"&&(n.preventDefault(),P())});G.addEventListener("change",()=>{i.classList.toggle("input-hidden",!G.checked),l()});var k=document.querySelector("#sources"),J=document.querySelector("#input-section"),x=_.closest("section"),$=[...i.querySelectorAll(".gutter")],q=matchMedia("(max-width: 720px)"),w=6,X=120,Z=new Map([[k,1.1],[J,.55],[x,.8]]),r=new Map(Z);function l(){if(q.matches){i.style.gridTemplateColumns="";return}let n=!i.classList.contains("input-hidden");$[1].style.display=n?"":"none";let t=[r.get(k)+"fr",w+"px"];n&&t.push(r.get(J)+"fr",w+"px"),t.push(r.get(x)+"fr"),i.style.gridTemplateColumns=t.join(" ")}function y(n,t){let e=n[t];for(;e&&!(e.matches("section")&&getComputedStyle(e).display!=="none");)e=e[t];return e}var N=null;function cn(n,t){let e=y(t,"previousElementSibling"),E=y(t,"nextElementSibling");!e||!E||(t.setPointerCapture(n.pointerId),t.classList.add("dragging"),i.classList.add("resizing"),N={gutter:t,left:e,right:E,startX:n.clientX,leftPx:e.getBoundingClientRect().width,spanPx:e.getBoundingClientRect().width+E.getBoundingClientRect().width,spanFr:r.get(e)+r.get(E)})}function Pn(n){if(!N)return;let t=Math.max(X,Math.min(N.spanPx-X,N.leftPx+(n.clientX-N.startX))),e=N.spanFr*t/N.spanPx;r.set(N.left,e),r.set(N.right,N.spanFr-e),l()}function b(){N&&(N.gutter.classList.remove("dragging"),i.classList.remove("resizing"),N=null)}function Bn(){for(let[n,t]of Z)r.set(n,t);l()}for(let n of $)n.addEventListener("pointerdown",t=>cn(t,n)),n.addEventListener("pointermove",Pn),n.addEventListener("pointerup",b),n.addEventListener("lostpointercapture",b),n.addEventListener("dblclick",Bn);q.addEventListener("change",l);l();function j(n,t){S=n,R=0,L.setState(S[0].state),B(),v.value=t}function z(n){j([{name:n.file,state:c(n.source)},...Object.entries(n.files).map(([t,e])=>({name:t,state:c(e)}))],n.input)}var nn=new Option("LOAD\u2026","",!0,!0);nn.disabled=!0;o.add(nn);o.add(new Option("NEW",K));for(let n of D){let t=new Option(n.file,n.file);t.title=n.name,o.add(t)}o.addEventListener("change",()=>{let n=o.value;o.selectedIndex=0,n===K?Dn():z(D.find(t=>t.file===n)),P()});z(D.find(n=>n.file===En));m=P;
