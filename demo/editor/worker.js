@@ -4,7 +4,7 @@
 // it line by line. The extra file panes are served by pane name, so -INCLUDE
 // and INPUT()/OUTPUT() redirects reach them.
 
-import * as SNOBOL from '../../src/snobol.js';
+import { run } from '../../src/snobol.js';
 
 self.postMessage( { type: 'ready' } );
 
@@ -13,7 +13,7 @@ self.onmessage = ( event ) => {
         write = ( line ) => self.postMessage( { type: 'line', line } );
 
     try {
-        SNOBOL.run( {
+        run( {
             source,
             input: 'input.txt',
             loader: {
