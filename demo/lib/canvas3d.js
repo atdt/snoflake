@@ -292,9 +292,6 @@ export function createScene( canvas ) {
             boxes.length = 0;
             dirty = true;
         },
-        count() {
-            return boxes.length;
-        },
         resetCamera() {
             yaw = -0.6;
             pitch = 0.55;
