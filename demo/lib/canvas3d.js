@@ -30,6 +30,49 @@ const SHADE = {
     MZ: 0.88,
 };
 
+// The six box faces. A face is visible when the camera lies past it along
+// `axis`: at the box's high bound when `high`, else its low bound. `corners`
+// are the four [x, y, z] picks from the low/high bounds, wound around the
+// face, and `shade` keys into SHADE.
+const FACES = [
+    {
+        axis: 'x',
+        high: true,
+        shade: 'PX',
+        corners: [ [ 1, 0, 0 ], [ 1, 0, 1 ], [ 1, 1, 1 ], [ 1, 1, 0 ] ],
+    },
+    {
+        axis: 'x',
+        high: false,
+        shade: 'MX',
+        corners: [ [ 0, 0, 1 ], [ 0, 0, 0 ], [ 0, 1, 0 ], [ 0, 1, 1 ] ],
+    },
+    {
+        axis: 'y',
+        high: true,
+        shade: 'PY',
+        corners: [ [ 0, 1, 0 ], [ 1, 1, 0 ], [ 1, 1, 1 ], [ 0, 1, 1 ] ],
+    },
+    {
+        axis: 'y',
+        high: false,
+        shade: 'MY',
+        corners: [ [ 0, 0, 1 ], [ 1, 0, 1 ], [ 1, 0, 0 ], [ 0, 0, 0 ] ],
+    },
+    {
+        axis: 'z',
+        high: true,
+        shade: 'PZ',
+        corners: [ [ 1, 0, 1 ], [ 0, 0, 1 ], [ 0, 1, 1 ], [ 1, 1, 1 ] ],
+    },
+    {
+        axis: 'z',
+        high: false,
+        shade: 'MZ',
+        corners: [ [ 0, 0, 0 ], [ 1, 0, 0 ], [ 1, 1, 0 ], [ 0, 1, 0 ] ],
+    },
+];
+
 const WORLD_UP = { x: 0, y: 1, z: 0 };
 
 function sub( a, b ) {
@@ -80,45 +123,32 @@ export function createScene( canvas ) {
         dirty = true;
     }
 
-    function project( p, cam, right, up, forward, focal, hx, hy ) {
-        const d = sub( p, cam ),
-            x = dot( d, right ),
-            y = dot( d, up ),
-            z = dot( d, forward );
+    // Project a world point through the camera, or null if behind the lens.
+    function project( p, view ) {
+        const d = sub( p, view.cam ),
+            x = dot( d, view.right ),
+            y = dot( d, view.up ),
+            z = dot( d, view.forward );
         if ( z < 0.5 ) return null;
-        return { sx: focal * x / z + hx, sy: -focal * y / z + hy, cz: z };
+        return {
+            sx: view.focal * x / z + view.hx,
+            sy: -view.focal * y / z + view.hy,
+            cz: z,
+        };
     }
 
-    function emitFace(
-        faces,
-        verts,
-        cam,
-        right,
-        up,
-        forward,
-        focal,
-        hx,
-        hy,
-        color,
-    ) {
+    // Project a quad's four corners and add it to the draw list, dropping it
+    // if any corner falls behind the camera.
+    function emitFace( quads, verts, view, color ) {
         const pts = [];
         let depth = 0;
-        for ( let i = 0; i < 4; i++ ) {
-            const p = project(
-                verts[i],
-                cam,
-                right,
-                up,
-                forward,
-                focal,
-                hx,
-                hy,
-            );
+        for ( const v of verts ) {
+            const p = project( v, view );
             if ( !p ) return;
             pts.push( p );
             depth += p.cz;
         }
-        faces.push( { pts, color, depth } );
+        quads.push( { pts, color, depth } );
     }
 
     function render() {
@@ -133,11 +163,15 @@ export function createScene( canvas ) {
             };
         const forward = norm( { x: -cam.x, y: -cam.y, z: -cam.z } ),
             right = norm( cross( forward, WORLD_UP ) ),
-            up = cross( right, forward );
-
-        const focal = Math.max( width, height ) * 1.05,
-            hx = width / 2,
-            hy = height / 2;
+            view = {
+                cam,
+                forward,
+                right,
+                up: cross( right, forward ),
+                focal: Math.max( width, height ) * 1.05,
+                hx: width / 2,
+                hy: height / 2,
+            };
 
         // Soft sky gradient.
         const sky = ctx.createLinearGradient( 0, 0, 0, height );
@@ -146,151 +180,46 @@ export function createScene( canvas ) {
         ctx.fillStyle = sky;
         ctx.fillRect( 0, 0, width, height );
 
-        const faces = [];
+        const quads = [];
 
         for ( const b of boxes ) {
-            const x0 = b.x,
-                y0 = b.y,
-                z0 = b.z,
-                x1 = b.x + b.w,
-                y1 = b.y + b.h,
-                z1 = b.z + b.d,
+            const lo = { x: b.x, y: b.y, z: b.z },
+                hi = { x: b.x + b.w, y: b.y + b.h, z: b.z + b.d },
                 rgb = COLORS[b.color] || [ 200, 200, 200 ];
 
-            if ( cam.x > x1 ) {
-                emitFace(
-                    faces,
-                    [
-                        { x: x1, y: y0, z: z0 },
-                        { x: x1, y: y0, z: z1 },
-                        { x: x1, y: y1, z: z1 },
-                        { x: x1, y: y1, z: z0 },
-                    ],
-                    cam,
-                    right,
-                    up,
-                    forward,
-                    focal,
-                    hx,
-                    hy,
-                    shadeColor( rgb, SHADE.PX ),
-                );
-            }
+            for ( const face of FACES ) {
+                const visible = face.high
+                    ? cam[face.axis] > hi[face.axis]
+                    : cam[face.axis] < lo[face.axis];
+                if ( !visible ) continue;
 
-            if ( cam.x < x0 ) {
+                const verts = face.corners.map( ( [ ix, iy, iz ] ) => ( {
+                    x: ix ? hi.x : lo.x,
+                    y: iy ? hi.y : lo.y,
+                    z: iz ? hi.z : lo.z,
+                } ) );
                 emitFace(
-                    faces,
-                    [
-                        { x: x0, y: y0, z: z1 },
-                        { x: x0, y: y0, z: z0 },
-                        { x: x0, y: y1, z: z0 },
-                        { x: x0, y: y1, z: z1 },
-                    ],
-                    cam,
-                    right,
-                    up,
-                    forward,
-                    focal,
-                    hx,
-                    hy,
-                    shadeColor( rgb, SHADE.MX ),
-                );
-            }
-
-            if ( cam.y > y1 ) {
-                emitFace(
-                    faces,
-                    [
-                        { x: x0, y: y1, z: z0 },
-                        { x: x1, y: y1, z: z0 },
-                        { x: x1, y: y1, z: z1 },
-                        { x: x0, y: y1, z: z1 },
-                    ],
-                    cam,
-                    right,
-                    up,
-                    forward,
-                    focal,
-                    hx,
-                    hy,
-                    shadeColor( rgb, SHADE.PY ),
-                );
-            }
-
-            if ( cam.y < y0 ) {
-                emitFace(
-                    faces,
-                    [
-                        { x: x0, y: y0, z: z1 },
-                        { x: x1, y: y0, z: z1 },
-                        { x: x1, y: y0, z: z0 },
-                        { x: x0, y: y0, z: z0 },
-                    ],
-                    cam,
-                    right,
-                    up,
-                    forward,
-                    focal,
-                    hx,
-                    hy,
-                    shadeColor( rgb, SHADE.MY ),
-                );
-            }
-
-            if ( cam.z > z1 ) {
-                emitFace(
-                    faces,
-                    [
-                        { x: x1, y: y0, z: z1 },
-                        { x: x0, y: y0, z: z1 },
-                        { x: x0, y: y1, z: z1 },
-                        { x: x1, y: y1, z: z1 },
-                    ],
-                    cam,
-                    right,
-                    up,
-                    forward,
-                    focal,
-                    hx,
-                    hy,
-                    shadeColor( rgb, SHADE.PZ ),
-                );
-            }
-
-            if ( cam.z < z0 ) {
-                emitFace(
-                    faces,
-                    [
-                        { x: x0, y: y0, z: z0 },
-                        { x: x1, y: y0, z: z0 },
-                        { x: x1, y: y1, z: z0 },
-                        { x: x0, y: y1, z: z0 },
-                    ],
-                    cam,
-                    right,
-                    up,
-                    forward,
-                    focal,
-                    hx,
-                    hy,
-                    shadeColor( rgb, SHADE.MZ ),
+                    quads,
+                    verts,
+                    view,
+                    shadeColor( rgb, SHADE[face.shade] ),
                 );
             }
         }
 
-        faces.sort( ( a, b ) => b.depth - a.depth );
+        quads.sort( ( a, b ) => b.depth - a.depth );
 
-        for ( const f of faces ) {
-            ctx.fillStyle = f.color;
+        for ( const q of quads ) {
+            ctx.fillStyle = q.color;
             // Stroke with the same colour to hide hairline seams between
             // adjacent quads that share an edge.
-            ctx.strokeStyle = f.color;
+            ctx.strokeStyle = q.color;
             ctx.lineWidth = 0.6;
             ctx.beginPath();
-            ctx.moveTo( f.pts[0].sx, f.pts[0].sy );
-            ctx.lineTo( f.pts[1].sx, f.pts[1].sy );
-            ctx.lineTo( f.pts[2].sx, f.pts[2].sy );
-            ctx.lineTo( f.pts[3].sx, f.pts[3].sy );
+            ctx.moveTo( q.pts[0].sx, q.pts[0].sy );
+            ctx.lineTo( q.pts[1].sx, q.pts[1].sy );
+            ctx.lineTo( q.pts[2].sx, q.pts[2].sy );
+            ctx.lineTo( q.pts[3].sx, q.pts[3].sy );
             ctx.closePath();
             ctx.fill();
             ctx.stroke();

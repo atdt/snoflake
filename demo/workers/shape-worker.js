@@ -4,32 +4,19 @@
 // terminal box. We register EMIT as a host extension and stream each
 // call to the main thread, where the canvas3d scene appends it.
 
-import { image, VM } from '../../src/snobol.js';
-
-const sourcePath = 'shape-grammar.sno';
+import { run } from '../../src/snobol.js';
 
 self.addEventListener( 'message', function ( event ) {
     if ( event.data.type !== 'start' ) return;
 
-    const source = event.data.source,
-        stdout = {
-            write: ( line ) => self.postMessage( { type: 'stdout', line } ),
-        },
-        stderr = {
-            write: ( line ) => self.postMessage( { type: 'stderr', line } ),
-        },
-        vm = new VM( {
-            file: sourcePath,
-            stdout,
-            stderr,
-            loader: {
-                load( path ) {
-                    if ( path !== sourcePath ) {
-                        throw new Error( 'No demo file named ' + path );
-                    }
-                    return source;
-                },
-            },
+    const post = ( type, line ) => self.postMessage( { type, line } );
+
+    try {
+        const { exitCode } = run( {
+            source: event.data.source,
+            sourcePath: 'shape-grammar.sno',
+            stdout: { write: ( line ) => post( 'stdout', line ) },
+            stderr: { write: ( line ) => post( 'stderr', line ) },
             extensions: {
                 // The renderer's only entry point.
                 'EMIT(INTEGER,INTEGER,INTEGER,INTEGER,INTEGER,INTEGER,STRING)':
@@ -41,15 +28,9 @@ self.addEventListener( 'message', function ( event ) {
                     },
             },
         } );
-
-    try {
-        vm.run( image );
-        self.postMessage( { type: 'done', exitCode: vm.exitCode } );
+        self.postMessage( { type: 'done', exitCode } );
     } catch ( e ) {
-        self.postMessage( {
-            type: 'stderr',
-            line: 'Execution error: ' + ( e && e.message || e ),
-        } );
+        post( 'stderr', 'Execution error: ' + ( e?.message || e ) );
         self.postMessage( { type: 'done', exitCode: 1 } );
     }
 } );

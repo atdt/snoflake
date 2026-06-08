@@ -4,6 +4,7 @@
 
 import { createEditor } from '../lib/editor.js';
 import { createScene } from '../lib/canvas3d.js';
+import { textSetter } from '../lib/dom.js';
 import program from '../programs/shape-grammar.sno';
 
 // Emitted next to this bundle by build.js, so the path is output-relative.
@@ -14,16 +15,14 @@ export function init() {
             document.querySelector( '#shape-grammar-source' ),
         ),
         canvas = document.querySelector( '#shape-grammar-canvas' ),
-        status = document.querySelector( '#shape-grammar-status' ),
+        setStatus = textSetter(
+            document.querySelector( '#shape-grammar-status' ),
+        ),
         restart = document.querySelector( '#shape-grammar-restart' ),
         reset = document.querySelector( '#shape-grammar-reset' );
 
     const scene = createScene( canvas );
     let worker = null;
-
-    function setStatus( text ) {
-        status.textContent = text;
-    }
 
     function stop() {
         if ( worker ) {

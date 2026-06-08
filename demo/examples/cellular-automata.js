@@ -3,7 +3,7 @@
 // and paints the accumulated rows as a pixel grid.
 
 import { runSnoflake } from '../lib/runner.js';
-import { fillSelect } from '../lib/dom.js';
+import { fillSelect, textSetter } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
 import { makeAutomatonExtensions, presets } from '../lib/automata.js';
 import program from '../programs/cellular-automata.sno';
@@ -15,11 +15,9 @@ export function init() {
         canvas = document.querySelector( '#cellular-automata-canvas' ),
         picker = document.querySelector( '#cellular-automata-preset' ),
         run = document.querySelector( '#cellular-automata-run' ),
-        status = document.querySelector( '#cellular-automata-status' );
-
-    function setStatus( text ) {
-        status.textContent = text;
-    }
+        setStatus = textSetter(
+            document.querySelector( '#cellular-automata-status' ),
+        );
 
     function execute() {
         const preset = presets[picker.value];
@@ -28,17 +26,12 @@ export function init() {
         setStatus( 'Running' );
         requestAnimationFrame( function () {
             const extensions = makeAutomatonExtensions( canvas, preset );
-            try {
-                const result = runSnoflake( source.getValue(), { extensions } );
-                if ( result.stderr ) {
-                    setStatus( 'Error' );
-                    console.error( result.stderr );
-                } else {
-                    setStatus( 'Done' );
-                }
-            } catch ( e ) {
+            const result = runSnoflake( source.getValue(), { extensions } );
+            if ( result.stderr ) {
                 setStatus( 'Error' );
-                console.error( e );
+                console.error( result.stderr );
+            } else {
+                setStatus( 'Done' );
             }
         } );
     }

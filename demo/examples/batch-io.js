@@ -3,6 +3,7 @@
 
 import { runSnoflake } from '../lib/runner.js';
 import { createEditor } from '../lib/editor.js';
+import { textSetter } from '../lib/dom.js';
 import program from '../programs/segmentation.sno';
 
 const sampleInput =
@@ -12,31 +13,20 @@ export function init() {
     const source = createEditor( document.querySelector( '#batch-io-source' ) ),
         input = document.querySelector( '#batch-io-input' ),
         output = document.querySelector( '#batch-io-output' ),
-        status = document.querySelector( '#batch-io-status' ),
+        setStatus = textSetter( document.querySelector( '#batch-io-status' ) ),
         run = document.querySelector( '#batch-io-run' ),
         reset = document.querySelector( '#batch-io-reset' );
-
-    function setStatus( text ) {
-        status.textContent = text;
-    }
 
     function execute() {
         output.textContent = '';
         setStatus( 'Running' );
 
-        try {
-            const result = runSnoflake( source.getValue(), {
-                inputText: input.value,
-            } );
-            output.textContent = [ result.stdout, result.stderr ]
-                .filter( Boolean ).join( '\n' ) || '(no output)';
-            setStatus(
-                result.stderr || result.exitCode ? 'Error' : 'Finished',
-            );
-        } catch ( e ) {
-            output.textContent = 'Execution error: ' + ( e && e.message || e );
-            setStatus( 'Error' );
-        }
+        const result = runSnoflake( source.getValue(), {
+            inputText: input.value,
+        } );
+        output.textContent = [ result.stdout, result.stderr ]
+            .filter( Boolean ).join( '\n' ) || '(no output)';
+        setStatus( result.stderr || result.exitCode ? 'Error' : 'Finished' );
     }
 
     function reload() {

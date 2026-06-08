@@ -5,6 +5,7 @@
 
 import { createSession } from '../../src/snobol.js';
 import { createEditor } from '../lib/editor.js';
+import { textSetter } from '../lib/dom.js';
 import program from '../programs/eliza.sno';
 
 export function init() {
@@ -12,7 +13,9 @@ export function init() {
             document.querySelector( '#interactive-io-source' ),
         ),
         log = document.querySelector( '#interactive-io-conversation' ),
-        status = document.querySelector( '#interactive-io-status' ),
+        setStatus = textSetter(
+            document.querySelector( '#interactive-io-status' ),
+        ),
         restart = document.querySelector( '#interactive-io-restart' ),
         reset = document.querySelector( '#interactive-io-reset' ),
         form = document.querySelector( '#interactive-io-input-form' ),
@@ -22,10 +25,6 @@ export function init() {
 
     let session = null,
         running = false;
-
-    function setStatus( text ) {
-        status.textContent = text;
-    }
 
     function setInputEnabled( enabled ) {
         line.disabled = send.disabled = eof.disabled = !enabled;

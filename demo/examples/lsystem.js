@@ -3,7 +3,7 @@
 // the main thread, deferred one frame so the status text paints first.
 
 import { runSnoflake } from '../lib/runner.js';
-import { fillSelect } from '../lib/dom.js';
+import { fillSelect, textSetter } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
 import { makeTurtleExtensions, presets } from '../lib/turtle.js';
 import program from '../programs/lsystem.sno';
@@ -16,11 +16,7 @@ export function init() {
         strings = document.querySelector( '#lsystem-strings' ),
         picker = document.querySelector( '#lsystem-preset' ),
         run = document.querySelector( '#lsystem-run' ),
-        status = document.querySelector( '#lsystem-status' );
-
-    function setStatus( text ) {
-        status.textContent = text;
-    }
+        setStatus = textSetter( document.querySelector( '#lsystem-status' ) );
 
     // Add a "gen N — NN ch — <string>" row to the generations pane.
     function appendGeneration( gen, str ) {
@@ -59,17 +55,12 @@ export function init() {
                 },
             );
 
-            try {
-                const result = runSnoflake( source.getValue(), { extensions } );
-                if ( result.stderr ) {
-                    setStatus( 'Error' );
-                    console.error( result.stderr );
-                } else {
-                    setStatus( 'Drawn' );
-                }
-            } catch ( e ) {
+            const result = runSnoflake( source.getValue(), { extensions } );
+            if ( result.stderr ) {
                 setStatus( 'Error' );
-                console.error( e );
+                console.error( result.stderr );
+            } else {
+                setStatus( 'Drawn' );
             }
         } );
     }
