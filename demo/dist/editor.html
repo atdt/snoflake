@@ -144,15 +144,20 @@
         flex: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: 1.1fr 0.55fr 0.8fr;
+        grid-template-columns: 1.1fr 6px 0.55fr 6px 0.8fr;
     }
 
     main.input-hidden {
-        grid-template-columns: 1.1fr 0.8fr;
+        grid-template-columns: 1.1fr 6px 0.8fr;
     }
 
     main.input-hidden #input-section {
         display: none;
+    }
+
+    main.resizing {
+        cursor: col-resize;
+        user-select: none;
     }
 
     section {
@@ -162,8 +167,28 @@
         flex-direction: column;
     }
 
-    section + section {
-        border-left: 1px solid var(--border);
+    /* Draggable column divider. The element is a wide grab target; the
+       visible hairline is a centered pseudo-element that thickens and
+       takes the accent color on hover or while dragging. */
+    .gutter {
+        position: relative;
+        cursor: col-resize;
+        touch-action: none;
+    }
+
+    .gutter::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 1px;
+        margin: 0 auto;
+        background: var(--border);
+    }
+
+    .gutter:hover::before,
+    .gutter.dragging::before {
+        width: 3px;
+        background: var(--accent);
     }
 
     h2 {
@@ -324,12 +349,14 @@
         }
 
         main.input-hidden {
-            grid-template-columns: 1fr;
             grid-template-rows: 2fr 2fr;
         }
 
-        section + section {
-            border-left: none;
+        .gutter {
+            display: none;
+        }
+
+        main > section:not(:first-child) {
             border-top: 1px solid var(--border);
         }
     }
@@ -362,6 +389,7 @@
         </div>
         <div id="editor-stack"></div>
     </section>
+    <div class="gutter" role="separator" aria-orientation="vertical"></div>
     <section id="input-section">
         <h2>Input</h2>
         <textarea
@@ -370,6 +398,7 @@
             aria-label="Program input"
         ></textarea>
     </section>
+    <div class="gutter" role="separator" aria-orientation="vertical"></div>
     <section>
         <h2>Output</h2>
         <pre id="out"></pre>

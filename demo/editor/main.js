@@ -276,7 +276,113 @@ addEventListener( 'keydown', ( event ) => {
 
 showInputEl.addEventListener( 'change', () => {
     mainEl.classList.toggle( 'input-hidden', !showInputEl.checked );
+    layoutPanes();
 } );
+
+// Resizable columns: dragging a gutter repartitions the two panes it sits
+// between. Widths are held as grid fr units so a split keeps its proportion
+// when the window resizes. The narrow-screen layout stacks the panes into
+// rows, so there the inline template is dropped and the gutters hide.
+const sourcesPane = document.querySelector( '#sources' ),
+    inputPane = document.querySelector( '#input-section' ),
+    outputPane = out.closest( 'section' ),
+    gutters = [ ...mainEl.querySelectorAll( '.gutter' ) ],
+    narrow = matchMedia( '(max-width: 720px)' );
+
+const GUTTER_PX = 6,
+    MIN_PANE_PX = 120,
+    paneFr = new Map( [
+        [ sourcesPane, 1.1 ],
+        [ inputPane, 0.55 ],
+        [ outputPane, 0.8 ],
+    ] );
+
+function layoutPanes() {
+    if ( narrow.matches ) {
+        mainEl.style.gridTemplateColumns = '';
+        return;
+    }
+    const showInput = !mainEl.classList.contains( 'input-hidden' );
+    gutters[1].style.display = showInput ? '' : 'none';
+    const cols = [ paneFr.get( sourcesPane ) + 'fr', GUTTER_PX + 'px' ];
+    if ( showInput ) {
+        cols.push( paneFr.get( inputPane ) + 'fr', GUTTER_PX + 'px' );
+    }
+    cols.push( paneFr.get( outputPane ) + 'fr' );
+    mainEl.style.gridTemplateColumns = cols.join( ' ' );
+}
+
+// The nearest visible <section> on one side of a gutter; with the input pane
+// hidden, the first gutter resizes the source pane against the output pane.
+function paneBeside( gutter, step ) {
+    let el = gutter[step];
+    while (
+        el && !( el.matches( 'section' ) &&
+            getComputedStyle( el ).display !== 'none' )
+    ) {
+        el = el[step];
+    }
+    return el;
+}
+
+let drag = null;
+
+function startDrag( event, gutter ) {
+    const left = paneBeside( gutter, 'previousElementSibling' ),
+        right = paneBeside( gutter, 'nextElementSibling' );
+    if ( !left || !right ) {
+        return;
+    }
+    gutter.setPointerCapture( event.pointerId );
+    gutter.classList.add( 'dragging' );
+    mainEl.classList.add( 'resizing' );
+    drag = {
+        gutter,
+        left,
+        right,
+        startX: event.clientX,
+        leftPx: left.getBoundingClientRect().width,
+        spanPx: left.getBoundingClientRect().width +
+            right.getBoundingClientRect().width,
+        spanFr: paneFr.get( left ) + paneFr.get( right ),
+    };
+}
+
+function moveDrag( event ) {
+    if ( !drag ) {
+        return;
+    }
+    const leftPx = Math.max(
+            MIN_PANE_PX,
+            Math.min(
+                drag.spanPx - MIN_PANE_PX,
+                drag.leftPx + ( event.clientX - drag.startX ),
+            ),
+        ),
+        leftFr = drag.spanFr * leftPx / drag.spanPx;
+    paneFr.set( drag.left, leftFr );
+    paneFr.set( drag.right, drag.spanFr - leftFr );
+    layoutPanes();
+}
+
+function endDrag() {
+    if ( !drag ) {
+        return;
+    }
+    drag.gutter.classList.remove( 'dragging' );
+    mainEl.classList.remove( 'resizing' );
+    drag = null;
+}
+
+for ( const gutter of gutters ) {
+    gutter.addEventListener( 'pointerdown', ( e ) => startDrag( e, gutter ) );
+    gutter.addEventListener( 'pointermove', moveDrag );
+    gutter.addEventListener( 'pointerup', endDrag );
+    gutter.addEventListener( 'lostpointercapture', endDrag );
+}
+
+narrow.addEventListener( 'change', layoutPanes );
+layoutPanes();
 
 function loadExample( example ) {
     files = [
