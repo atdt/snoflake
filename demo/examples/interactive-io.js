@@ -23,8 +23,7 @@ export function init() {
         send = document.querySelector( '#interactive-io-send' ),
         eof = document.querySelector( '#interactive-io-eof' );
 
-    let session = null,
-        running = false;
+    let session = null;
 
     function setInputEnabled( enabled ) {
         line.disabled = send.disabled = eof.disabled = !enabled;
@@ -43,7 +42,6 @@ export function init() {
         // On the main thread the session is just an object; dropping the
         // reference is all the teardown there is.
         session = null;
-        running = false;
         setInputEnabled( false );
     }
 
@@ -57,13 +55,12 @@ export function init() {
             onOutput: ( text ) => append( text ),
             onError: ( text ) => append( text, 'error' ),
             onDone: ( exitCode ) => {
-                running = false;
+                session = null;
                 setInputEnabled( false );
                 setStatus( exitCode ? 'Error' : 'Finished' );
             },
         } );
 
-        running = true;
         setInputEnabled( true );
         session.start();
     }
@@ -75,7 +72,7 @@ export function init() {
 
     form.addEventListener( 'submit', function ( event ) {
         event.preventDefault();
-        if ( !running || !session ) return;
+        if ( !session ) return;
         const text = line.value;
         line.value = '';
         append( '> ' + text, 'input' );
@@ -89,7 +86,7 @@ export function init() {
     } );
 
     eof.addEventListener( 'click', function () {
-        if ( !running || !session ) return;
+        if ( !session ) return;
         append( '<EOF>', 'input' );
         session.end();
         setInputEnabled( false );
