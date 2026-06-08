@@ -6,7 +6,7 @@ import { snobol } from 'codemirror-lang-snobol';
 
 import EXAMPLES from 'examples:all';
 
-const DEFAULT_EXAMPLE = 'Pattern matching';
+const DEFAULT_EXAMPLE = 'Random poem';
 
 const statusEl = document.querySelector( '#status' ),
     mainEl = document.querySelector( 'main' ),
@@ -425,6 +425,7 @@ exampleSel.addEventListener( 'change', () => {
     run();
 } );
 
+exampleSel.value = DEFAULT_EXAMPLE;
 loadExample( EXAMPLES[DEFAULT_EXAMPLE] );
 // Hold the first run until the worker has loaded the runtime, so the status
 // doesn't flash 'Running…' during startup.
