@@ -1,0 +1,19 @@
+{
+    "lint": {
+        "exclude": ["dist/", "node_modules/"],
+        "rules": {
+            "exclude": ["no-control-regex"]
+        }
+    },
+    "fmt": {
+        "indentWidth": 4,
+        "lineWidth": 80,
+        "proseWrap": "always",
+        "semiColons": true,
+        "singleQuote": true,
+        "spaceAround": true,
+        "useBraces": "whenNotSingleLine",
+        "useTabs": false,
+        "exclude": ["dist/", "node_modules/"]
+    }
+}
