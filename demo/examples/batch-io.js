@@ -26,7 +26,9 @@ export function init() {
         } );
         output.textContent = [ result.stdout, result.stderr ]
             .filter( Boolean ).join( '\n' ) || '(no output)';
-        setStatus( result.stderr || result.exitCode ? 'Error' : 'Finished' );
+        setStatus(
+            ( result.stderr || result.exitCode ) ? 'Error' : 'Finished',
+        );
     }
 
     function reload() {
