@@ -291,11 +291,12 @@ const sourcesPane = document.querySelector( '#sources' ),
 
 const GUTTER_PX = 6,
     MIN_PANE_PX = 120,
-    paneFr = new Map( [
+    DEFAULT_FR = new Map( [
         [ sourcesPane, 1.1 ],
         [ inputPane, 0.55 ],
         [ outputPane, 0.8 ],
-    ] );
+    ] ),
+    paneFr = new Map( DEFAULT_FR );
 
 function layoutPanes() {
     if ( narrow.matches ) {
@@ -374,11 +375,20 @@ function endDrag() {
     drag = null;
 }
 
+// Double-clicking any gutter restores the default split.
+function resetPanes() {
+    for ( const [ pane, fr ] of DEFAULT_FR ) {
+        paneFr.set( pane, fr );
+    }
+    layoutPanes();
+}
+
 for ( const gutter of gutters ) {
     gutter.addEventListener( 'pointerdown', ( e ) => startDrag( e, gutter ) );
     gutter.addEventListener( 'pointermove', moveDrag );
     gutter.addEventListener( 'pointerup', endDrag );
     gutter.addEventListener( 'lostpointercapture', endDrag );
+    gutter.addEventListener( 'dblclick', resetPanes );
 }
 
 narrow.addEventListener( 'change', layoutPanes );
