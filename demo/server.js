@@ -16,16 +16,6 @@ const contentTypes = {
     '.sno': 'text/plain; charset=utf-8',
 };
 
-function responseHeaders( file ) {
-    return {
-        'Content-Type': contentTypes[path.extname( file )] ||
-            'application/octet-stream',
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp',
-        'Cross-Origin-Resource-Policy': 'same-origin',
-    };
-}
-
 const root = path.resolve(
     fileURLToPath( new URL( './dist', import.meta.url ) ),
 );
@@ -53,7 +43,10 @@ function startServer( host, port ) {
                 return;
             }
 
-            res.writeHead( 200, responseHeaders( file ) );
+            res.writeHead( 200, {
+                'Content-Type': contentTypes[path.extname( file )] ||
+                    'application/octet-stream',
+            } );
             res.end( data );
         } );
     } );
