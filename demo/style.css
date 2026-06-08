@@ -96,14 +96,18 @@ p a {
 }
 
 /* Buttons and controls */
-button {
+button,
+.picker select {
     height: 38px;
     border: 1px solid var(--accent);
     border-radius: 6px;
+    font: inherit;
+}
+
+button {
     padding: 0 14px;
     background: var(--accent);
     color: white;
-    font: inherit;
     font-weight: 650;
     cursor: pointer;
 }
@@ -245,13 +249,9 @@ input:disabled {
 }
 
 .picker select {
-    height: 38px;
-    border: 1px solid var(--accent);
-    border-radius: 6px;
     padding: 0 10px;
     background: var(--panel);
     color: var(--ink);
-    font: inherit;
 }
 
 /* Shape grammar: 3-D scene */
