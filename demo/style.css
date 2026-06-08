@@ -13,6 +13,13 @@
     --terminal-line: #52df6e;
     --terminal-input: #b9f2c2;
     --terminal-error: #ffb454;
+    --mono:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Consolas,
+        'Liberation Mono',
+        monospace;
 }
 
 /* Reset and base */
@@ -169,13 +176,7 @@ input:disabled {
     overflow: auto;
     padding: 12px 14px;
     background: var(--source);
-    font:
-        1.1rem/1.5 ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        'Liberation Mono',
-        monospace;
+    font: 1.1rem/1.5 var(--mono);
 }
 
 .strings-row {
@@ -289,13 +290,7 @@ p code {
     border-radius: 4px;
     background: #e6ece6;
     color: var(--accent-strong);
-    font:
-        1.2rem/1 ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        'Liberation Mono',
-        monospace;
+    font: 1.2rem/1 var(--mono);
 }
 
 /* Panes and the source/output editors they hold */
@@ -342,13 +337,7 @@ pre {
     padding: 18px;
     color: #15191f;
     background: var(--source);
-    font:
-        1.3rem/1.48 ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        'Liberation Mono',
-        monospace;
+    font: 1.3rem/1.48 var(--mono);
     tab-size: 8;
 }
 
@@ -363,13 +352,7 @@ textarea {
     flex: 1;
     min-height: 0;
     background: var(--source);
-    font:
-        1.3rem/1.48 ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        'Liberation Mono',
-        monospace;
+    font: 1.3rem/1.48 var(--mono);
 }
 
 .cm-editor .cm-scroller {
@@ -418,13 +401,7 @@ pre {
     );
     color: var(--terminal-line);
     text-shadow: 0 0 6px;
-    font:
-        1.4rem/1.55 ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        'Liberation Mono',
-        monospace;
+    font: 1.4rem/1.55 var(--mono);
     white-space: pre-wrap;
 }
 
@@ -449,13 +426,7 @@ pre {
     padding: 10px 12px;
     border-top: 1px solid #2a3439;
     color: var(--terminal-input);
-    font:
-        1.4rem/1.4 ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        'Liberation Mono',
-        monospace;
+    font: 1.4rem/1.4 var(--mono);
 }
 
 .prompt input {
