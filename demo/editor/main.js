@@ -285,7 +285,7 @@ function loadExample( example ) {
             state: fileState( example.source ),
             fixed: true,
         },
-        ...Object.entries( example.files ?? {} ).map(
+        ...Object.entries( example.files ).map(
             ( [ name, content ] ) => ( {
                 name,
                 state: fileState( content ),

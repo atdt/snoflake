@@ -57,9 +57,7 @@ const examplesPlugin = {
                     }
                 }
 
-                examples[name] = Object.keys( files ).length
-                    ? { source, input, files }
-                    : { source, input };
+                examples[name] = { source, input, files };
             }
 
             return {
