@@ -1,0 +1,30 @@
+#!/bin/sh
+# Keep the committed demo bundle in sync with demo source. When demo
+# source is staged, rebuild demo/dist and fail the commit if what is
+# staged does not match the fresh build, so a stale bundle never lands.
+
+set -e
+
+staged=$(
+    git diff --cached --name-only --diff-filter=ACMR |
+        grep '^demo/' |
+        grep -vE '^demo/(dist|node_modules|test)/' || true
+)
+[ -z "$staged" ] && exit 0
+
+if [ ! -d demo/node_modules ]; then
+    echo "pre-commit: demo source is staged but demo/node_modules is missing." >&2
+    echo "  Run 'cd demo && npm install', then rebuild and stage demo/dist." >&2
+    exit 1
+fi
+
+if ! ( cd demo && npm run build >/dev/null 2>&1 ); then
+    echo "pre-commit: demo build failed; cannot verify demo/dist." >&2
+    exit 1
+fi
+
+if ! git diff --quiet -- demo/dist; then
+    echo "pre-commit: demo/dist was stale and has been rebuilt." >&2
+    echo "  Stage it and commit again:  git add demo/dist" >&2
+    exit 1
+fi

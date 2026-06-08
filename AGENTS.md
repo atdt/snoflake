@@ -49,6 +49,9 @@ a finishing step.
 
 ## Before you start
 
+- Run `git config core.hooksPath .githooks` once per clone. The hooks wrap
+  commit messages to 72 columns and rebuild `demo/dist` when demo source is
+  staged, failing the commit if the bundle is stale.
 - Changing SNOBOL-visible behavior means changing the SIL or a macro's JS
   implementation. Read `docs/sil-guide.md` first. The non-negotiables: edit
   `v311-snoflake.sil` only, tag every change, `make build` after.
