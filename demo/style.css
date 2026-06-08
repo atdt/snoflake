@@ -13,6 +13,11 @@
     --terminal-line: #52df6e;
     --terminal-input: #b9f2c2;
     --terminal-error: #ffb454;
+    /* Dark surfaces shared by the canvas and terminal panes. */
+    --dark-line: #2a3439;
+    --dark-muted: #a8b4b0;
+    --canvas-panel: #11161a;
+    --canvas-bg: #0a0e11;
     --mono:
         ui-monospace,
         SFMono-Regular,
@@ -65,7 +70,6 @@ h1,
 h2 {
     margin: 0 0 6px;
     line-height: 1.05;
-    letter-spacing: 0;
 }
 
 h1 {
@@ -94,7 +98,6 @@ p a {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
-    justify-content: flex-start;
 }
 
 /* Buttons and controls */
@@ -162,10 +165,7 @@ input:disabled {
         minmax(420px, 1.1fr) minmax(170px, 0.55fr) minmax(320px, 1fr);
 }
 
-.workspace-ca {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr);
-}
-
+.workspace-ca,
 .workspace-shape {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr);
 }
@@ -214,12 +214,13 @@ input:disabled {
 
 /* Canvas panes (L-system, cellular automata) */
 .canvas-pane {
-    background: #11161a;
+    background: var(--canvas-panel);
 }
 
-.canvas-pane .pane-header {
-    border-bottom-color: #2a3439;
-    color: #a8b4b0;
+.canvas-pane .pane-header,
+.conversation-pane .pane-header {
+    border-bottom-color: var(--dark-line);
+    color: var(--dark-muted);
 }
 
 .canvas-wrap {
@@ -234,8 +235,8 @@ input:disabled {
 .canvas-pane canvas {
     max-width: 100%;
     max-height: 100%;
-    background: #0a0e11;
-    border: 1px solid #2a3439;
+    background: var(--canvas-bg);
+    border: 1px solid var(--dark-line);
     border-radius: 4px;
 }
 
@@ -335,7 +336,7 @@ pre {
     margin: 0;
     border: 0;
     padding: 18px;
-    color: #15191f;
+    color: var(--ink);
     background: var(--source);
     font: 1.3rem/1.48 var(--mono);
     tab-size: 8;
@@ -380,11 +381,6 @@ pre {
     background: var(--terminal);
 }
 
-.conversation-pane .pane-header {
-    border-bottom-color: #2a3439;
-    color: #a8b4b0;
-}
-
 .conversation-pane .status {
     color: var(--terminal-input);
 }
@@ -424,7 +420,7 @@ pre {
     gap: 10px;
     min-height: 58px;
     padding: 10px 12px;
-    border-top: 1px solid #2a3439;
+    border-top: 1px solid var(--dark-line);
     color: var(--terminal-input);
     font: 1.4rem/1.4 var(--mono);
 }
