@@ -44,7 +44,10 @@ const examplesPlugin = {
                     if ( entry === 'input.txt' ) {
                         input = readFileSync( `${base}/${entry}`, 'utf8' );
                     } else {
-                        files[entry] = readFileSync( `${base}/${entry}`, 'utf8' );
+                        files[entry] = readFileSync(
+                            `${base}/${entry}`,
+                            'utf8',
+                        );
                     }
                 }
 
