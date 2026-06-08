@@ -354,11 +354,6 @@ textarea {
     color: var(--muted);
 }
 
-.input-pane .cm-editor,
-.input-pane .cm-gutters {
-    background: var(--input-panel);
-}
-
 pre {
     overflow: auto;
     white-space: pre-wrap;
@@ -367,10 +362,6 @@ pre {
 /* Interactive I/O: terminal transcript and input prompt */
 .conversation-pane {
     background: var(--terminal);
-}
-
-.conversation-pane .status {
-    color: var(--terminal-input);
 }
 
 /* Phosphor terminal: green on near-black, faint scanlines, and a glow
