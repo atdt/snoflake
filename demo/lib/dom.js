@@ -1,6 +1,6 @@
 // Small DOM helpers shared by the example modules.
 
-// Return a setter for an element's text content, used for the status lines.
+// Return a setter for an element's text content.
 export const textSetter = ( el ) => ( text ) => {
     el.textContent = text;
 };
