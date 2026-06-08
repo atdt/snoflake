@@ -32,10 +32,6 @@
     box-sizing: border-box;
 }
 
-[hidden] {
-    display: none !important;
-}
-
 html {
     scroll-behavior: smooth;
     /* 62.5% of the browser default 16px, so 1rem = 10px. */
@@ -44,7 +40,6 @@ html {
 
 body {
     margin: 0;
-    min-height: 100vh;
     background: var(--bg);
     color: var(--ink);
     font-family:
@@ -260,10 +255,6 @@ input:disabled {
 }
 
 /* Shape grammar: 3-D scene */
-.scene-pane .pane-header {
-    justify-content: space-between;
-}
-
 .scene-pane .hint {
     color: var(--muted);
     font-size: 1.1rem;
@@ -273,9 +264,7 @@ input:disabled {
 }
 
 #shape-grammar-canvas {
-    display: block;
     flex: 1;
-    width: 100%;
     min-height: 460px;
     background: #eef2ee;
     touch-action: none;
@@ -332,7 +321,6 @@ p code {
 textarea,
 pre {
     flex: 1;
-    width: 100%;
     margin: 0;
     border: 0;
     padding: 18px;
