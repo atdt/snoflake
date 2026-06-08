@@ -1,22 +1,16 @@
 // Bundles the demo into ./dist with esbuild. The output is committed, so the
 // demo runs straight from a clone with no install, while CodeMirror and the
 // runtime are inlined here rather than fetched from a CDN at load time.
-//
-// Pass --serve to rebuild on change and serve the result.
 
-import { cp, readdir, readFile, rm } from 'node:fs/promises';
+import { cpSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import process from 'node:process';
 import * as esbuild from 'esbuild';
 
-import { startServer } from './server.js';
-
-const serve = process.argv.includes( '--serve' ),
-    here = ( p ) => fileURLToPath( new URL( p, import.meta.url ) ),
+const here = ( p ) => fileURLToPath( new URL( p, import.meta.url ) ),
     outdir = here( './dist' );
 
-// Static pages are copied verbatim; each references its bundle by a stable
-// name (./main.js, ./editor.js, ./style.css), so no rewriting is needed.
+// These pages are copied into dist unbundled. They reference their bundles by
+// stable names (main.js, editor.js, style.css), so nothing needs rewriting.
 const STATIC = [ 'index.html', 'editor.html' ];
 
 // The editor's examples live on disk: one directory per example with a
@@ -33,27 +27,24 @@ const examplesPlugin = {
             namespace: 'examples',
         } ) );
 
-        build.onLoad( { filter: /.*/, namespace: 'examples' }, async () => {
+        build.onLoad( { filter: /.*/, namespace: 'examples' }, () => {
             const manifest = JSON.parse(
-                    await readFile( `${root}/manifest.json`, 'utf8' ),
+                    readFileSync( `${root}/manifest.json`, 'utf8' ),
                 ),
-                watchFiles = [ `${root}/manifest.json` ],
                 examples = {};
 
             for ( const { name, dir } of manifest ) {
                 const base = `${root}/${dir}`,
-                    source = await readFile( `${base}/main.sno`, 'utf8' ),
+                    source = readFileSync( `${base}/main.sno`, 'utf8' ),
                     files = {};
                 let input = '';
 
-                for ( const entry of ( await readdir( base ) ).sort() ) {
-                    const path = `${base}/${entry}`;
-                    watchFiles.push( path );
+                for ( const entry of readdirSync( base ).sort() ) {
                     if ( entry === 'main.sno' ) continue;
                     if ( entry === 'input.txt' ) {
-                        input = await readFile( path, 'utf8' );
+                        input = readFileSync( `${base}/${entry}`, 'utf8' );
                     } else {
-                        files[entry] = await readFile( path, 'utf8' );
+                        files[entry] = readFileSync( `${base}/${entry}`, 'utf8' );
                     }
                 }
 
@@ -63,7 +54,6 @@ const examplesPlugin = {
             return {
                 contents: JSON.stringify( examples ),
                 loader: 'json',
-                watchFiles,
             };
         } );
     },
@@ -84,7 +74,6 @@ const options = {
     format: 'esm',
     splitting: true,
     minify: true,
-    sourcemap: serve,
     outdir,
     entryNames: '[name]',
     chunkNames: 'chunks/[name]-[hash]',
@@ -94,22 +83,8 @@ const options = {
     logLevel: 'info',
 };
 
-await rm( outdir, { recursive: true, force: true } );
-
-if ( serve ) {
-    const ctx = await esbuild.context( options );
-    await ctx.watch();
-    await copyStatic();
-    startServer( outdir );
-} else {
-    await esbuild.build( options );
-    await copyStatic();
-}
-
-async function copyStatic() {
-    await Promise.all(
-        STATIC.map( ( name ) =>
-            cp( here( `./${name}` ), `${outdir}/${name}` )
-        ),
-    );
+rmSync( outdir, { recursive: true, force: true } );
+await esbuild.build( options );
+for ( const name of STATIC ) {
+    cpSync( here( `./${name}` ), `${outdir}/${name}` );
 }
