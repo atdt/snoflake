@@ -1,5 +1,5 @@
 * Split each input line into words with Intl.Segmenter,
-* loaded as the WORDS helper. One loop fits every script.
+* loaded as the WORDS helper.
   LOAD('WORDS(STRING)STRING',`
     function (s) {
       var out = [];

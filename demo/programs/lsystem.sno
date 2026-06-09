@@ -1,8 +1,6 @@
-* L-system: SNOBOL rewrites the grammar, then walks the result as a
-* turtle and draws it. The host supplies the preset and a narrow
-* canvas binding; the drawing decisions all live here.
+* L-system: rewrite the grammar, then walk the result as a turtle
+* and draw it.
 
-         &TRIM = 1
          STR   = AXIOM()
          G     = 0
          EMIT(STR)

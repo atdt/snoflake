@@ -1,8 +1,6 @@
-* Elementary 1D cellular automaton, end to end in SNOBOL: decode the
-* Wolfram rule number into its lookup table, build row 0, slide a
-* 3-cell window to step each row, and paint the cells.
-
-         &TRIM = 1
+* 1D cellular automaton. Decode the Wolfram rule number into its lookup
+* table, build row 0, slide a 3-cell window to step each row, and paint
+* the cells.
 
 * RULE position K holds the next cell for 3-bit neighborhood K.
          N = RULE()

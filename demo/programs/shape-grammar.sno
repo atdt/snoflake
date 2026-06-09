@@ -1,4 +1,4 @@
-* Snoflake browser demo: a 3-D shape grammar.
+* A 3-D shape grammar.
 *
 * SNOBOL holds a worklist string of symbols of the form
 * NAME(arg,arg,...) separated by spaces. Each iteration peels the
@@ -11,12 +11,8 @@
 * Coordinates are integer "studs"; Y is up. The renderer scales
 * the world to pixels and centers the scene.
 *
-* Try editing the heights in R_BLOCK, the floor stripe colours in
-* R_FLOOR, or the rooftop machine room in BCAP. The grammar runs
-* in a Web Worker, so it will not freeze the page.
-
-        &TRIM    = 1
-        &ANCHOR  = 1
+* R_BLOCK sets the lot heights, R_FLOOR the floor stripe colours,
+* and BCAP the rooftop cap. The grammar runs in a Web Worker.
 
 *-----------------------------------------------------------------
 *       Patterns: HEAD peels the leading symbol off the worklist;
