@@ -351,6 +351,10 @@
         text-shadow: 0 0 6px rgba(82, 223, 110, 0.4);
     }
 
+    #out:focus {
+        outline: none;
+    }
+
     #out::selection {
         background: rgba(82, 223, 110, 0.3);
     }
@@ -414,7 +418,7 @@
     <div class="gutter" role="separator" aria-orientation="vertical"></div>
     <section>
         <h2>Output</h2>
-        <pre id="out"></pre>
+        <pre id="out" tabindex="0"></pre>
     </section>
 </main>
 

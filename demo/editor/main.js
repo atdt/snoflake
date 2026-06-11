@@ -299,6 +299,14 @@ addEventListener( 'keydown', ( event ) => {
     }
 } );
 
+// Scope Ctrl/Cmd+A to the output pane; otherwise it selects the whole page.
+out.addEventListener( 'keydown', ( event ) => {
+    if ( ( event.metaKey || event.ctrlKey ) && event.key === 'a' ) {
+        event.preventDefault();
+        getSelection().selectAllChildren( out );
+    }
+} );
+
 showInputEl.addEventListener( 'change', () => {
     mainEl.classList.toggle( 'input-hidden', !showInputEl.checked );
     layoutPanes();

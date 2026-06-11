@@ -16,7 +16,8 @@ version 3.11 SIL source, runs as a command-line interpreter, embeds as a
 standard ES module, and runs unmodified in the browser.
 
 > **Try it now:** [atdt.github.io/snoflake/demo/][3] lets you run SNOBOL4 in the
-> browser, no install required.
+> browser, no install required, or open the [editor][6] to write and run
+> multi-file programs with your own input.
 
 > **User Guide:** [`docs/manual.md`](docs/manual.md) is the hands-on manual for
 > command-line use, scripting, browser embedding, host extensions, and inline
@@ -239,3 +240,4 @@ tagged inline with their original `[PLBnn]` revision markers. See
 [3]: https://atdt.github.io/snoflake/demo/
 [4]: https://esm.sh/
 [5]: https://github.com/atdt/snoflake/releases
+[6]: https://atdt.github.io/snoflake/demo/editor.html
