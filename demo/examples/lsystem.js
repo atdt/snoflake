@@ -1,13 +1,14 @@
-// L-systems: SNOBOL rewrites the grammar string and walks the result as
-// a turtle, drawing through the canvas bindings. Runs synchronously on
-// the main thread, deferred one frame so the status text paints first.
+// L-systems: SNOBOL rewrites the grammar string and walks the result as a
+// turtle, drawing through the canvas bindings.
 
-import { runSnoflake } from '../lib/runner.js';
 import { fillSelect, textSetter } from '../lib/dom.js';
 import { createEditor } from '../lib/editor.js';
-import { makeTurtleExtensions, presets } from '../lib/turtle.js';
+import { replay } from '../lib/canvas2d.js';
+import { presets } from '../lib/turtle.js';
 import program from '../programs/lsystem.sno';
 
+// Emitted next to this bundle by build.js, so the path is output-relative.
+const workerUrl = new URL( './canvas-worker.js', import.meta.url );
 const lineLimit = 160;
 
 export function init() {
@@ -17,6 +18,8 @@ export function init() {
         picker = document.querySelector( '#lsystem-preset' ),
         run = document.querySelector( '#lsystem-run' ),
         setStatus = textSetter( document.querySelector( '#lsystem-status' ) );
+
+    let worker = null;
 
     // Add a "gen N — NN ch — <string>" row to the generations pane.
     function appendGeneration( gen, str ) {
@@ -38,30 +41,46 @@ export function init() {
         strings.append( row );
     }
 
-    function draw() {
-        const preset = presets[picker.value];
-        if ( !preset ) return;
+    function stop() {
+        if ( worker ) {
+            worker.terminate();
+            worker = null;
+        }
+    }
 
+    function draw() {
+        if ( !presets[picker.value] ) return;
+        stop();
         strings.textContent = '';
         setStatus( 'Drawing' );
 
-        requestAnimationFrame( function () {
-            let gen = 0;
-            const extensions = makeTurtleExtensions(
-                canvas,
-                preset,
-                function ( str ) {
-                    appendGeneration( gen++, str );
-                },
-            );
-
-            const result = runSnoflake( source.getValue(), { extensions } );
-            if ( result.stderr ) {
+        let gen = 0,
+            errored = false;
+        worker = new Worker( workerUrl, { type: 'module' } );
+        worker.addEventListener( 'message', function ( event ) {
+            const message = event.data;
+            if ( message.type === 'emit' ) {
+                appendGeneration( gen++, message.str );
+            } else if ( message.type === 'stderr' ) {
+                errored = true;
                 setStatus( 'Error' );
-                console.error( result.stderr );
-            } else {
-                setStatus( 'Drawn' );
+                console.error( message.line );
+            } else if ( message.type === 'done' ) {
+                replay( canvas, message.commands );
+                worker = null;
+                if ( !errored ) setStatus( 'Drawn' );
             }
+        } );
+        worker.addEventListener( 'error', function ( event ) {
+            setStatus( 'Error: ' + event.message );
+        } );
+
+        worker.postMessage( {
+            kind: 'lsystem',
+            source: source.getValue(),
+            width: canvas.width,
+            height: canvas.height,
+            preset: picker.value,
         } );
     }
 

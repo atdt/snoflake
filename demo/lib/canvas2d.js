@@ -36,3 +36,28 @@ export function makeCanvasExtensions( canvas ) {
         },
     };
 }
+
+// A stand-in canvas for running the demos off the main thread, where there
+// is no real one. Its context records every call and assignment in order;
+// replay() applies that list to a live canvas. WIDTH/HEIGHT answer from the
+// size passed here, since CLEAR and the program read it back.
+export function recordingCanvas( width, height ) {
+    const commands = [],
+        ctx = new Proxy( {}, {
+            get: ( _target, op ) => ( ...args ) =>
+                commands.push( [ 'call', op, args ] ),
+            set: ( _target, op, value ) => {
+                commands.push( [ 'set', op, value ] );
+                return true;
+            },
+        } );
+    return { canvas: { width, height, getContext: () => ctx }, commands };
+}
+
+export function replay( canvas, commands ) {
+    const ctx = canvas.getContext( '2d' );
+    for ( const [ kind, op, payload ] of commands ) {
+        if ( kind === 'set' ) ctx[op] = payload;
+        else ctx[op]( ...payload );
+    }
+}

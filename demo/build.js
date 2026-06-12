@@ -73,13 +73,13 @@ const examplesPlugin = {
 };
 
 const options = {
-    // Each worker is its own entry point, emitted as a sibling of the page
-    // bundles (shape-worker.js, editor-worker.js) where its new Worker(...)
-    // call looks for it. Splitting keeps the shared runtime image in one chunk.
+    // Workers are entry points too, so each is emitted beside the page
+    // bundles where its new Worker(...) URL resolves.
     entryPoints: {
         main: here( './main.js' ),
         editor: here( './editor/main.js' ),
         style: here( './style.css' ),
+        'canvas-worker': here( './workers/canvas-worker.js' ),
         'shape-worker': here( './workers/shape-worker.js' ),
         'editor-worker': here( './editor/worker.js' ),
     },
