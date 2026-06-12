@@ -1,8 +1,8 @@
-import { EditorView, minimalSetup } from 'codemirror';
+import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { snobol } from 'codemirror-lang-snobol';
+import { setup } from '../lib/setup.js';
 
 import EXAMPLES from 'examples:all';
 
@@ -147,8 +147,7 @@ function run() {
 spawnWorker();
 
 const extensions = [
-    minimalSetup,
-    snobol(),
+    setup,
     editorTheme,
     syntaxHighlighting( highlight ),
 ];
