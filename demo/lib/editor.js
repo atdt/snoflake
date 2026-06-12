@@ -2,13 +2,13 @@
 // editors here. CodeMirror is bundled with the page, so the upgrade is
 // immediate. Examples talk to the pane only through getValue and setValue.
 
-import { basicSetup, EditorView } from 'codemirror';
+import { EditorView, minimalSetup } from 'codemirror';
 import { snobol } from 'codemirror-lang-snobol';
 
 export function createEditor( textarea ) {
     const view = new EditorView( {
         doc: textarea.value,
-        extensions: [ basicSetup, snobol() ],
+        extensions: [ minimalSetup, snobol() ],
     } );
     view.contentDOM.setAttribute(
         'aria-label',

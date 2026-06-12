@@ -1,4 +1,4 @@
-import{a as M,b as C,c as T,d as g,e as F,f as p,g as f}from"./chunks/chunk-I2WGIKSS.js";var O=[{name:"Pattern matching",file:"PATTERN.SNO",source:`READ    LINE = INPUT :F(END)
+import{a as M,b as C,c as T,d as g,e as F,f as p,g as f}from"./chunks/chunk-AS2LTD4L.js";var O=[{name:"Pattern matching",file:"PATTERN.SNO",source:`READ    LINE = INPUT :F(END)
         LINE ('GOLD' | 'BLUE') . SHADE ('FISH' | 'BIRD') . KIND :F(READ)
         OUTPUT = SHADE ' ' KIND :(READ)
 END`,input:`GOLDFISH
