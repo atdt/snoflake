@@ -2,15 +2,17 @@
 // demo runs straight from a clone with no install, while CodeMirror and the
 // runtime are inlined here rather than fetched from a CDN at load time.
 
-import { cpSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 const here = ( p ) => fileURLToPath( new URL( p, import.meta.url ) ),
     outdir = here( './dist' );
 
-// These pages are copied into dist unbundled. They reference their bundles by
-// stable names (main.js, editor.js, style.css), so nothing needs rewriting.
+// These pages go into dist unbundled, referencing their bundles by stable
+// names (main.js, editor.js, style.css); the only rewrite is the modulepreload
+// links injected below for each page's hashed chunks.
 const STATIC = [ 'index.html', 'editor.html' ];
 
 // The editor's examples live on disk: one directory per example holding a
@@ -93,11 +95,50 @@ const options = {
     loader: { '.sno': 'text' },
     target: [ 'es2022' ],
     plugins: [ examplesPlugin ],
+    metafile: true,
     logLevel: 'info',
 };
 
+// Walk an entry's transitive static imports in the metafile, returning each
+// shared chunk's href relative to the page that loads the entry.
+function chunksFor( outputs, entry ) {
+    const base = dirname( entry ),
+        seen = new Set(),
+        stack = [ entry ];
+    while ( stack.length ) {
+        for ( const imp of outputs[stack.pop()]?.imports ?? [] ) {
+            if ( imp.kind === 'import-statement' && !seen.has( imp.path ) ) {
+                seen.add( imp.path );
+                stack.push( imp.path );
+            }
+        }
+    }
+    return [ ...seen ].map( ( p ) => `./${relative( base, p )}` );
+}
+
+// A page's chunks are reachable only through its entry, so the browser can't
+// fetch them until it has downloaded and parsed that entry. A modulepreload
+// link per chunk starts them in parallel instead, saving a round trip.
+function addPreloads( html, { outputs } ) {
+    return html.replace(
+        /^([ \t]*)<script type="module" src="\.\/([^"]+)"><\/script>/m,
+        ( line, indent, src ) => {
+            const entry = Object.keys( outputs ).find(
+                    ( o ) => outputs[o].entryPoint && basename( o ) === src,
+                ),
+                links = chunksFor( outputs, entry ).map( ( href ) =>
+                    `${indent}<link rel="modulepreload" href="${href}">`
+                );
+            return [ ...links, line ].join( '\n' );
+        },
+    );
+}
+
 rmSync( outdir, { recursive: true, force: true } );
-await esbuild.build( options );
+const { metafile } = await esbuild.build( options );
 for ( const name of STATIC ) {
-    cpSync( here( `./${name}` ), `${outdir}/${name}` );
+    writeFileSync(
+        `${outdir}/${name}`,
+        addPreloads( readFileSync( here( `./${name}` ), 'utf8' ), metafile ),
+    );
 }
