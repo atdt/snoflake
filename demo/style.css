@@ -27,6 +27,14 @@
         monospace;
 }
 
+@font-face {
+    font-family: '3270';
+    src: url('./fonts/3270-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Reset and base */
 * {
     box-sizing: border-box;
@@ -376,7 +384,7 @@ pre {
     );
     color: var(--terminal-line);
     text-shadow: 0 0 3px color-mix(in srgb, currentColor 55%, transparent);
-    font: 1.4rem/1.55 var(--mono);
+    font: 1.6rem/1.55 '3270', var(--mono);
     white-space: pre-wrap;
 }
 

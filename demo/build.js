@@ -2,7 +2,13 @@
 // demo runs straight from a clone with no install, while CodeMirror and the
 // runtime are inlined here rather than fetched from a CDN at load time.
 
-import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+    cpSync,
+    readdirSync,
+    readFileSync,
+    rmSync,
+    writeFileSync,
+} from 'node:fs';
 import { basename, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -86,6 +92,9 @@ const options = {
         'editor-worker': here( './editor/worker.js' ),
     },
     bundle: true,
+    // Fonts ship as static files copied into dist below; leave their url()
+    // references in the CSS untouched rather than fingerprinting them.
+    external: [ '*.woff2' ],
     format: 'esm',
     splitting: true,
     minify: true,
@@ -136,6 +145,7 @@ function addPreloads( html, { outputs } ) {
 
 rmSync( outdir, { recursive: true, force: true } );
 const { metafile } = await esbuild.build( options );
+cpSync( here( './fonts' ), `${outdir}/fonts`, { recursive: true } );
 for ( const name of STATIC ) {
     writeFileSync(
         `${outdir}/${name}`,

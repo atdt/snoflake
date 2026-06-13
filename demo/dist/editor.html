@@ -2,7 +2,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Snoflake</title>
+<link rel="preload" href="./fonts/3270-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+    @font-face {
+        font-family: '3270';
+        src: url('./fonts/3270-Regular.woff2') format('woff2');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }
+
     :root {
         color-scheme: light dark;
         --bg: light-dark(#fdfdfc, #16191d);
@@ -349,6 +358,7 @@
         );
         color: var(--terminal-fg);
         text-shadow: 0 0 6px rgba(82, 223, 110, 0.4);
+        font: 1.6rem/1.55 '3270', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     }
 
     #out:focus {
