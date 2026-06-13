@@ -160,17 +160,15 @@ const emptyEntry = {
     next: null,
 };
 
-const emptyActions = new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT );
-const emptyNext = Array.from( { length: BYTE_VALUES } ).fill( null );
-
 function emptyTable( foldable ) {
-    return {
+    const table = {
         puts: new Int32Array( BYTE_VALUES ),
-        actions: new Uint8Array( emptyActions ),
-        next: emptyNext.slice(),
-        fallback: emptyEntry,
+        actions: new Uint8Array( BYTE_VALUES ),
+        next: new Array( BYTE_VALUES ),
         foldable,
     };
+    clearTable( table, 'RUNOUT' );
+    return table;
 }
 
 // Clearing resets only byte rows. Wider host code units stay a miss.
