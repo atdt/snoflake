@@ -163,14 +163,13 @@ const emptyEntry = {
 const emptyActions = new Uint8Array( BYTE_VALUES ).fill( Action.RUNOUT );
 const emptyNext = Array.from( { length: BYTE_VALUES } ).fill( null );
 
-function emptyTable( foldable, foldsLookups ) {
+function emptyTable( foldable ) {
     return {
         puts: new Int32Array( BYTE_VALUES ),
         actions: new Uint8Array( emptyActions ),
         next: emptyNext.slice(),
         fallback: emptyEntry,
         foldable,
-        foldsLookups,
     };
 }
 
@@ -390,11 +389,7 @@ export const tableNames = Object.keys( tableDefinitions );
 export function buildSyntaxTables() {
     const tables = {};
     for ( const name in tableDefinitions ) {
-        // All tables fold under &CASE except SNABTB, which holds literal user bytes.
-        tables[name] = emptyTable(
-            FOLDABLE_TABLES.includes( name ),
-            name !== 'SNABTB',
-        );
+        tables[name] = emptyTable( FOLDABLE_TABLES.includes( name ) );
     }
     return tables;
 }

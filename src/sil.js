@@ -4200,14 +4200,16 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
     const mem = this.mem;
     // Fold the lookup byte under &CASE so lowercase source (`:f`, lowercase
     // identifiers) dispatches through the same row as its uppercase form.
-    // Tables exempted via foldsLookups=false (SNABTB) scan byte-literal.
+    // SNABTB holds literal user bytes, so it scans without folding.
     const caseFold = this.mem[this.symbols.CASECL] !== 0;
     const tokenStart = A + O;
     const byteValues = constants.ALPHSZ;
     let table = this.syntaxTables[TABLE];
     let puts = table.puts, actions = table.actions, next = table.next;
     let fallback = table.fallback;
-    let foldLookups = caseFold && table.foldsLookups;
+    // Constant for the scan: SNABTB is never a GOTO target, so no transition
+    // crosses the folding boundary.
+    const foldLookups = caseFold && table !== this.syntaxTables.SNABTB;
     let lastPut = 0;
 
     for ( let I = 0; I < L; I++ ) {
@@ -4229,7 +4231,6 @@ sil.STREAM = function ( $SPEC1, $SPEC2, TABLE, ERROR, RUNOUT, SLOC ) {
                 actions = table.actions;
                 next = table.next;
                 fallback = table.fallback;
-                foldLookups = caseFold && table.foldsLookups;
                 continue;
 
             case Action.STOPSH:
