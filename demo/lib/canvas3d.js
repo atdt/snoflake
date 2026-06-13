@@ -13,11 +13,15 @@
 // boxes, which is what the shape grammar produces.
 
 const COLORS = {
-    PRK: [ 122, 168, 116 ],
-    FND: [ 180, 173, 158 ],
-    BRC: [ 173, 95, 70 ],
-    GLS: [ 134, 195, 220 ],
-    RUF: [ 82, 88, 96 ],
+    STR: [ 64, 66, 70 ], // asphalt
+    FND: [ 116, 122, 130 ], // concrete plaza
+    STL: [ 104, 112, 122 ], // steel mullion / floor line
+    RUF: [ 70, 76, 84 ], // dark roof
+    // Four curtain-wall glass tints, picked per tower.
+    GLS1: [ 126, 170, 200 ], // sky blue
+    GLS2: [ 96, 152, 156 ], // blue-green
+    GLS3: [ 168, 190, 202 ], // silver
+    GLS4: [ 84, 124, 168 ], // deep blue
 };
 
 // Per-face shade: imagine the sun in the upper-front-right quadrant.
@@ -108,7 +112,7 @@ export function createScene( canvas ) {
     const boxes = [];
 
     let width = 1, height = 1;
-    let yaw = -0.6, pitch = 0.55, distance = 150;
+    let yaw = -0.6, pitch = 0.55, distance = 190;
     let dirty = true;
     let auto = true;
 
@@ -295,7 +299,7 @@ export function createScene( canvas ) {
         resetCamera() {
             yaw = -0.6;
             pitch = 0.55;
-            distance = 150;
+            distance = 190;
             auto = true;
             dirty = true;
         },

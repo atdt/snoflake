@@ -1,18 +1,6 @@
-* A 3-D shape grammar.
-*
-* SNOBOL holds a worklist string of symbols of the form
-* NAME(arg,arg,...) separated by spaces. Each iteration peels the
-* leading symbol off the worklist, dispatches on its NAME, and
-* prepends one or more child symbols. Terminal BOX symbols are
-* passed to the host renderer through the EMIT extension:
-*
-*       EMIT(x, y, z, w, h, d, color)
-*
-* Coordinates are integer "studs"; Y is up. The renderer scales
-* the world to pixels and centers the scene.
-*
-* R_BLOCK sets the lot heights, R_FLOOR the floor stripe colours,
-* and BCAP the rooftop cap. The grammar runs in a Web Worker.
+* A 3-D shape grammar. Coordinates are integer "studs"; Y is up.
+* Host extensions: EMIT(x,y,z,w,h,d,color) draws a box, FLOORS()
+* returns a random height, TINT() a random glass colour.
 
 *-----------------------------------------------------------------
 *       Patterns: HEAD peels the leading symbol off the worklist;
@@ -21,19 +9,17 @@
 
         HEAD     = BREAK('(') . NAME '(' BREAK(')') . ARGS ')' ' '
 
-        ARGS3    = BREAK(',') . V1 ',' BREAK(',') . V2 ',' REM . V3
-        ARGS4    = BREAK(',') . V1 ',' BREAK(',') . V2
-+                  ',' BREAK(',') . V3 ',' REM . V4
-        ARGS6    = BREAK(',') . V1 ',' BREAK(',') . V2
-+                  ',' BREAK(',') . V3 ',' BREAK(',') . V4
-+                  ',' BREAK(',') . V5 ',' REM . V6
+        ARGS2    = BREAK(',') . V1 ',' REM . V2
         ARGS7    = BREAK(',') . V1 ',' BREAK(',') . V2
 +                  ',' BREAK(',') . V3 ',' BREAK(',') . V4
 +                  ',' BREAK(',') . V5 ',' BREAK(',') . V6
 +                  ',' REM . V7
 
-*       Seed: one city block, 72 studs square, centred at the origin.
-        WORK     = 'BLOCK(-36,-36,72,72) '
+*       Seed: a ground plane and a 2x2 grid of 72-stud blocks,
+*       separated by a 10-stud avenue and centred at the origin.
+        WORK     = 'BOX(-90,-1,-90,180,1,180,STR) '
++                  'BLOCK(-77,-77) BLOCK(5,-77) '
++                  'BLOCK(-77,5) BLOCK(5,5) '
 
 *-----------------------------------------------------------------
 *       Main rewrite loop: pop, dispatch, repeat.
@@ -58,56 +44,54 @@ R_BOX   ARGS ARGS7
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       BLOCK(x, z, w, d) - ground slab + 3x3 grid of lots.
-*       Lots are 20x20, streets 4 wide, outer margin 2.
-*       Heights are hardcoded for a varied skyline.
+*       BLOCK(x, z) - a 3x3 grid of 72-stud lots. Lots are 20x20,
+*       streets 4 wide, outer margin 2.
 *-----------------------------------------------------------------
-R_BLOCK ARGS ARGS4
+R_BLOCK ARGS ARGS2
         X = V1
         Z = V2
-        W = V3
-        D = V4
-        WORK = 'BOX(' X ',-1,' Z ',' W ',1,' D ',PRK) ' WORK
         X1 = X + 2
         X2 = X + 26
         X3 = X + 50
         Z1 = Z + 2
         Z2 = Z + 26
         Z3 = Z + 50
-        WORK = 'LOT(' X1 ',' Z1 ',5) LOT(' X2 ',' Z1 ',9) LOT(' X3 ',' Z1 ',6) ' WORK
-        WORK = 'LOT(' X1 ',' Z2 ',7) LOT(' X2 ',' Z2 ',4) LOT(' X3 ',' Z2 ',8) ' WORK
-        WORK = 'LOT(' X1 ',' Z3 ',8) LOT(' X2 ',' Z3 ',6) LOT(' X3 ',' Z3 ',5) ' WORK
+        WORK = 'LOT(' X1 ',' Z1 ') LOT(' X2 ',' Z1 ') LOT(' X3 ',' Z1 ') ' WORK
+        WORK = 'LOT(' X1 ',' Z2 ') LOT(' X2 ',' Z2 ') LOT(' X3 ',' Z2 ') ' WORK
+        WORK = 'LOT(' X1 ',' Z3 ') LOT(' X2 ',' Z3 ') LOT(' X3 ',' Z3 ') ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       LOT(x, z, n) - foundation slab + BUILD with N floors.
-*       Lot footprint is fixed at 20x20.
+*       LOT(x, z) - plaza slab + a BUILD whose height and glass tint
+*       the host chooses. The renderer scales the world, so the
+*       grammar just lays out 20x20 footprints.
 *-----------------------------------------------------------------
-R_LOT   ARGS ARGS3
+R_LOT   ARGS ARGS2
         X = V1
         Z = V2
-        N = V3
         WORK = 'BOX(' X ',0,' Z ',20,1,20,FND) ' WORK
-        WORK = 'BUILD(' X ',1,' Z ',20,20,' N ') ' WORK
+        WORK = 'BUILD(' X ',1,' Z ',20,20,' FLOORS() ',' TINT() ') ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       BUILD(x, y, z, w, d, n) - n stacked FLOORs then a roof cap.
-*       Each floor is 3 studs tall.
+*       BUILD(x, y, z, w, d, n, g) - n stacked FLOORs in glass tint g,
+*       then a roof cap. Each floor is 3 studs tall.
 *-----------------------------------------------------------------
-R_BUILD ARGS ARGS6
+R_BUILD ARGS ARGS7
         X = V1
         Y = V2
         Z = V3
         W = V4
         D = V5
         N = V6
+        G = V7
         EQ(N, 0)                 :S(BCAP)
-        WORK = 'FLOOR(' X ',' Y ',' Z ',' W ',3,' D ') ' WORK
+        WORK = 'FLOOR(' X ',' Y ',' Z ',' W ',3,' D ',' G ') ' WORK
         Y2 = Y + 3
         N2 = N - 1
-        WORK = 'BUILD(' X ',' Y2 ',' Z ',' W ',' D ',' N2 ') ' WORK
+        WORK = 'BUILD(' X ',' Y2 ',' Z ',' W ',' D ',' N2 ',' G ') ' WORK
         :(LOOP)
+*       Flat roof, then a small mechanical penthouse centred on it.
 BCAP    WORK = 'BOX(' X ',' Y ',' Z ',' W ',1,' D ',RUF) ' WORK
         XC = X + 8
         ZC = Z + 8
@@ -116,21 +100,22 @@ BCAP    WORK = 'BOX(' X ',' Y ',' Z ',' W ',1,' D ',RUF) ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       FLOOR(x, y, z, w, h, d) - three perimeter BANDs.
-*       Brick lintel, glass ribbon, brick sill.
+*       FLOOR(x, y, z, w, h, d, g) - a glass curtain wall topped by a
+*       thin steel floor line: a tall glass BAND in tint g, then a
+*       one-stud STL BAND at the floor slab.
 *-----------------------------------------------------------------
-R_FLOOR ARGS ARGS6
+R_FLOOR ARGS ARGS7
         X = V1
         Y = V2
         Z = V3
         W = V4
         H = V5
         D = V6
-        Y2 = Y + 1
-        Y3 = Y + H - 1
-        WORK = 'BAND(' X ',' Y ',' Z ',' W ',1,' D ',BRC) ' WORK
-        WORK = 'BAND(' X ',' Y2 ',' Z ',' W ',1,' D ',GLS) ' WORK
-        WORK = 'BAND(' X ',' Y3 ',' Z ',' W ',1,' D ',BRC) ' WORK
+        G = V7
+        HG = H - 1
+        Y2 = Y + HG
+        WORK = 'BAND(' X ',' Y ',' Z ',' W ',' HG ',' D ',' G ') ' WORK
+        WORK = 'BAND(' X ',' Y2 ',' Z ',' W ',1,' D ',STL) ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------

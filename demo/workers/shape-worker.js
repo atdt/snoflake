@@ -1,8 +1,11 @@
 // Worker host for the shape-grammar demo.
 //
-// The SNOBOL program calls EMIT(x, y, z, w, h, d, color) on every
-// terminal box. We register EMIT as a host extension and stream each
-// call to the main thread, where the canvas3d scene appends it.
+// The SNOBOL program does the layout; it calls out to JavaScript for
+// the things a string-rewriting language has no business doing itself:
+//
+//   EMIT    streams a finished box to the canvas3d scene
+//   FLOORS  returns a random building height, skewed toward mid-rises
+//   TINT    returns one of the curtain-wall glass colours
 
 import { run } from '../../src/snobol.js';
 
@@ -26,6 +29,15 @@ self.addEventListener( 'message', function ( event ) {
                             box: { x, y, z, w, h, d, color },
                         } );
                     },
+                // Squaring a uniform sample skews low: many mid-rises,
+                // a few towers.
+                'FLOORS()INTEGER': () => {
+                    const r = Math.floor( Math.random() * 34 );
+                    return Math.floor( r * r / 72 ) + 2;
+                },
+                // One of the four glass tints defined in canvas3d.js.
+                'TINT()STRING': () =>
+                    'GLS' + ( 1 + Math.floor( Math.random() * 4 ) ),
             },
         } );
         self.postMessage( { type: 'done', exitCode } );

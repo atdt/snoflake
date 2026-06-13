@@ -1,6 +1,6 @@
-import{b as V,f as w}from"./chunks/chunk-5K2CWJIC.js";import{b as B,c as X,e as y}from"./chunks/chunk-CVLCSGYR.js";import{a as x,b as G}from"./chunks/chunk-CFSBF4EM.js";function v(){let E=[];return{lines:E,write(e){E.push(e)}}}function b(E){return E.length===0?"":E.join(`
+import{b as V,f as w}from"./chunks/chunk-5K2CWJIC.js";import{b as f,c as X,e as y}from"./chunks/chunk-CVLCSGYR.js";import{a as G,b as x}from"./chunks/chunk-CFSBF4EM.js";function v(){let E=[];return{lines:E,write(e){E.push(e)}}}function Z(E){return E.length===0?"":E.join(`
 `)+`
-`}function k(E,e={}){let r=v(),n=v(),T=e.inputText!==void 0,O=0;try{({exitCode:O}=x({...e,source:E,sourcePath:e.file||"demo.sno",input:T?e.input||"input.txt":void 0,loader:{load:()=>e.inputText??""},stdout:r,stderr:n}))}catch(t){n.write("Execution error: "+(t?.message||t))}return{stdout:b(r.lines),stderr:b(n.lines),exitCode:O}}function u(E){let e=new V({doc:E.value,extensions:[w]});return e.contentDOM.setAttribute("aria-label",E.getAttribute("aria-label")||""),E.replaceWith(e.dom),{getValue(){return e.state.doc.toString()},setValue(r){e.dispatch({changes:{from:0,to:e.state.doc.length,insert:r}})}}}var d=E=>e=>{E.textContent=e};function f(E,e){for(let[r,n]of Object.entries(e)){let T=document.createElement("option");T.value=r,T.textContent=n.label,E.append(T)}}var Z=`* Split each input line into words with Intl.Segmenter,
+`}function b(E,e={}){let r=v(),o=v(),T=e.inputText!==void 0,O=0;try{({exitCode:O}=G({...e,source:E,sourcePath:e.file||"demo.sno",input:T?e.input||"input.txt":void 0,loader:{load:()=>e.inputText??""},stdout:r,stderr:o}))}catch(t){o.write("Execution error: "+(t?.message||t))}return{stdout:Z(r.lines),stderr:Z(o.lines),exitCode:O}}function W(E){let e=new V({doc:E.value,extensions:[w]});return e.contentDOM.setAttribute("aria-label",E.getAttribute("aria-label")||""),E.replaceWith(e.dom),{getValue(){return e.state.doc.toString()},setValue(r){e.dispatch({changes:{from:0,to:e.state.doc.length,insert:r}})}}}var d=E=>e=>{E.textContent=e};function B(E,e){for(let[r,o]of Object.entries(e)){let T=document.createElement("option");T.value=r,T.textContent=o.label,E.append(T)}}var k=`* Split each input line into words with Intl.Segmenter,
 * loaded as the WORDS helper.
   LOAD('WORDS(STRING)STRING',\`
     function (s) {
@@ -14,12 +14,12 @@ import{b as V,f as w}from"./chunks/chunk-5K2CWJIC.js";import{b as B,c as X,e as 
 NEXT  LINE = INPUT  :F(END)
   OUTPUT = WORDS(LINE)  :(NEXT)
 END
-`;var ae=`Hello world!
+`;var ie=`Hello world!
 \u3053\u3093\u306B\u3061\u306F\u4E16\u754C\u3002
 \u0E2A\u0E27\u0E31\u0E2A\u0E14\u0E35\u0E0A\u0E32\u0E27\u0E42\u0E25\u0E01!
 \u041F\u0440\u0438\u0432\u0435\u0442 \u043C\u0438\u0440!
-`;function z(){let E=u(document.querySelector("#batch-io-source")),e=document.querySelector("#batch-io-input"),r=document.querySelector("#batch-io-output"),n=d(document.querySelector("#batch-io-status")),T=document.querySelector("#batch-io-run"),O=document.querySelector("#batch-io-reset");function t(){r.textContent="",n("Running");let R=k(E.getValue(),{inputText:e.value});r.textContent=[R.stdout,R.stderr].filter(Boolean).join(`
-`)||"(no output)",n(R.stderr||R.exitCode?"Error":"Finished")}function a(){r.textContent="",E.setValue(Z),e.value=ae,n("Ready")}T.addEventListener("click",t),O.addEventListener("click",a),a()}var q=`* PLEASE WAIT A MINUTE WHILE I PREPARE TO BE YOUR CONSULTANT.\r
+`;function z(){let E=W(document.querySelector("#batch-io-source")),e=document.querySelector("#batch-io-input"),r=document.querySelector("#batch-io-output"),o=d(document.querySelector("#batch-io-status")),T=document.querySelector("#batch-io-run"),O=document.querySelector("#batch-io-reset");function t(){r.textContent="",o("Running");let R=b(E.getValue(),{inputText:e.value});r.textContent=[R.stdout,R.stderr].filter(Boolean).join(`
+`)||"(no output)",o(R.stderr||R.exitCode?"Error":"Finished")}function i(){r.textContent="",E.setValue(k),e.value=ie,o("Ready")}T.addEventListener("click",t),O.addEventListener("click",i),i()}var q=`* PLEASE WAIT A MINUTE WHILE I PREPARE TO BE YOUR CONSULTANT.\r
 * This program is based on the ELIZA program in the 1970 December\r
 * issue of SIGPLAN page 50, by Robert T. Duquet.\r
 * It has been modified by Mike Alexander and Viktors Berstis.\r
@@ -301,7 +301,7 @@ SETUP   LC = 'abcdefghijklmnopqrstuvwxyz'\r
 THAT'S//"\r
         :(MAIN)\r
 END\r
-`;function Q(){let E=u(document.querySelector("#interactive-io-source")),e=document.querySelector("#interactive-io-conversation"),r=d(document.querySelector("#interactive-io-status")),n=document.querySelector("#interactive-io-restart"),T=document.querySelector("#interactive-io-reset"),O=document.querySelector("#interactive-io-input-form"),t=document.querySelector("#interactive-io-input-line"),a=document.querySelector("#interactive-io-send"),R=document.querySelector("#interactive-io-eof"),i=null;function N(o){t.disabled=a.disabled=R.disabled=!o,O.classList.toggle("disabled",!o)}function S(o,I="program"){let H=document.createElement("div");H.className="terminal-line "+I,H.textContent=o,e.append(H),e.scrollTop=e.scrollHeight}function Y(){i=null,N(!1)}function l(){Y(),e.textContent="",r("Running"),i=G({source:E.getValue(),onOutput:o=>S(o),onError:o=>S(o,"error"),onDone:o=>{i=null,N(!1),r(o?"Error":"Finished")}}),N(!0),i.start()}function L(){E.setValue(q),l()}O.addEventListener("submit",function(o){if(o.preventDefault(),!i)return;let I=t.value;t.value="",S("> "+I,"input"),i.send(I)}),t.addEventListener("keydown",function(o){o.key!=="Enter"||o.shiftKey||(o.preventDefault(),O.requestSubmit())}),R.addEventListener("click",function(){i&&(S("<EOF>","input"),i.end(),N(!1))}),n.addEventListener("click",l),T.addEventListener("click",L),N(!1),L()}var _=`* L-system: rewrite the grammar, then walk the result as a turtle
+`;function Q(){let E=W(document.querySelector("#interactive-io-source")),e=document.querySelector("#interactive-io-conversation"),r=d(document.querySelector("#interactive-io-status")),o=document.querySelector("#interactive-io-restart"),T=document.querySelector("#interactive-io-reset"),O=document.querySelector("#interactive-io-input-form"),t=document.querySelector("#interactive-io-input-line"),i=document.querySelector("#interactive-io-send"),R=document.querySelector("#interactive-io-eof"),a=null;function N(n){t.disabled=i.disabled=R.disabled=!n,O.classList.toggle("disabled",!n)}function S(n,c="program"){let H=document.createElement("div");H.className="terminal-line "+c,H.textContent=n,e.append(H),e.scrollTop=e.scrollHeight}function L(){a=null,N(!1)}function I(){L(),e.textContent="",r("Running"),a=x({source:E.getValue(),onOutput:n=>S(n),onError:n=>S(n,"error"),onDone:n=>{a=null,N(!1),r(n?"Error":"Finished")}}),N(!0),a.start()}function Y(){E.setValue(q),I()}O.addEventListener("submit",function(n){if(n.preventDefault(),!a)return;let c=t.value;t.value="",S("> "+c,"input"),a.send(c)}),t.addEventListener("keydown",function(n){n.key!=="Enter"||n.shiftKey||(n.preventDefault(),O.requestSubmit())}),R.addEventListener("click",function(){a&&(S("<EOF>","input"),a.end(),N(!1))}),o.addEventListener("click",I),T.addEventListener("click",Y),N(!1),Y()}var _=`* L-system: rewrite the grammar, then walk the result as a turtle
 * and draw it.
 
          STR   = AXIOM()
@@ -389,7 +389,7 @@ WPOP     GT(SP, 0)                                 :F(WSCAN)
          IDENT(DRAW, '')                           :S(WSCAN)
          MOVETO(OFFX + X * SCALE, OFFY + Y * SCALE)   :(WSCAN)
 END
-`;var Ye=new URL("./canvas-worker.js",import.meta.url),j=160;function J(){let E=u(document.querySelector("#lsystem-source")),e=document.querySelector("#lsystem-canvas"),r=document.querySelector("#lsystem-strings"),n=document.querySelector("#lsystem-preset"),T=document.querySelector("#lsystem-run"),O=d(document.querySelector("#lsystem-status")),t=null;function a(S,Y){let l=document.createElement("div"),L=document.createElement("div"),o=document.createElement("span"),I=document.createElement("div");l.className="strings-row",L.className="gen",L.textContent="gen "+S,o.className="len",o.textContent=Y.length+" ch",L.append(o),I.className="body",I.textContent=Y.length>j?Y.slice(0,j)+"\u2026":Y,l.append(L,I),r.append(l)}function R(){t&&(t.terminate(),t=null)}function i(){if(!X[n.value])return;R(),r.textContent="",O("Drawing");let S=0,Y=!1;t=new Worker(Ye,{type:"module"}),t.addEventListener("message",function(l){let L=l.data;L.type==="emit"?a(S++,L.str):L.type==="stderr"?(Y=!0,O("Error"),console.error(L.line)):L.type==="done"&&(B(e,L.commands),t=null,Y||O("Drawn"))}),t.addEventListener("error",function(l){O("Error: "+l.message)}),t.postMessage({kind:"lsystem",source:E.getValue(),width:e.width,height:e.height,preset:n.value})}function N(){E.setValue(_),f(n,X),i()}T.addEventListener("click",i),n.addEventListener("change",i),N()}var $=`* 1D cellular automaton. Decode the Wolfram rule number into its lookup
+`;var Le=new URL("./canvas-worker.js",import.meta.url),j=160;function J(){let E=W(document.querySelector("#lsystem-source")),e=document.querySelector("#lsystem-canvas"),r=document.querySelector("#lsystem-strings"),o=document.querySelector("#lsystem-preset"),T=document.querySelector("#lsystem-run"),O=d(document.querySelector("#lsystem-status")),t=null;function i(S,L){let I=document.createElement("div"),Y=document.createElement("div"),n=document.createElement("span"),c=document.createElement("div");I.className="strings-row",Y.className="gen",Y.textContent="gen "+S,n.className="len",n.textContent=L.length+" ch",Y.append(n),c.className="body",c.textContent=L.length>j?L.slice(0,j)+"\u2026":L,I.append(Y,c),r.append(I)}function R(){t&&(t.terminate(),t=null)}function a(){if(!X[o.value])return;R(),r.textContent="",O("Drawing");let S=0,L=!1;t=new Worker(Le,{type:"module"}),t.addEventListener("message",function(I){let Y=I.data;Y.type==="emit"?i(S++,Y.str):Y.type==="stderr"?(L=!0,O("Error"),console.error(Y.line)):Y.type==="done"&&(f(e,Y.commands),t=null,L||O("Drawn"))}),t.addEventListener("error",function(I){O("Error: "+I.message)}),t.postMessage({kind:"lsystem",source:E.getValue(),width:e.width,height:e.height,preset:o.value})}function N(){E.setValue(_),B(o,X),a()}T.addEventListener("click",a),o.addEventListener("change",a),N()}var $=`* 1D cellular automaton. Decode the Wolfram rule number into its lookup
 * table, build row 0, slide a 3-cell window to step each row, and paint
 * the cells.
 
@@ -440,21 +440,9 @@ SCAN     PAD LEN(1) . B2 LEN(1) . B1 LEN(1) . B0   :F(DONE)
          PAD LEN(1) =                              :(SCAN)
 DONE     ROW = OUT                                 :(NEXTROW)
 END
-`;var ce=new URL("./canvas-worker.js",import.meta.url);function ee(){let E=u(document.querySelector("#cellular-automata-source")),e=document.querySelector("#cellular-automata-canvas"),r=document.querySelector("#cellular-automata-preset"),n=document.querySelector("#cellular-automata-run"),T=d(document.querySelector("#cellular-automata-status")),O=null;function t(){O&&(O.terminate(),O=null)}function a(){if(!y[r.value])return;t(),T("Running");let i=!1;O=new Worker(ce,{type:"module"}),O.addEventListener("message",function(N){let S=N.data;S.type==="stderr"?(i=!0,T("Error"),console.error(S.line)):S.type==="done"&&(B(e,S.commands),O=null,i||T("Done"))}),O.addEventListener("error",function(N){T("Error: "+N.message)}),O.postMessage({kind:"ca",source:E.getValue(),width:e.width,height:e.height,preset:r.value})}function R(){E.setValue($),f(r,y),a()}n.addEventListener("click",a),r.addEventListener("change",a),R()}var le={PRK:[122,168,116],FND:[180,173,158],BRC:[173,95,70],GLS:[134,195,220],RUF:[82,88,96]},Ie={PY:1,MY:.28,PX:.85,MX:.55,PZ:.42,MZ:.88},Ue=[{axis:"x",high:!0,shade:"PX",corners:[[1,0,0],[1,0,1],[1,1,1],[1,1,0]]},{axis:"x",high:!1,shade:"MX",corners:[[0,0,1],[0,0,0],[0,1,0],[0,1,1]]},{axis:"y",high:!0,shade:"PY",corners:[[0,1,0],[1,1,0],[1,1,1],[0,1,1]]},{axis:"y",high:!1,shade:"MY",corners:[[0,0,1],[1,0,1],[1,0,0],[0,0,0]]},{axis:"z",high:!0,shade:"PZ",corners:[[1,0,1],[0,0,1],[0,1,1],[1,1,1]]},{axis:"z",high:!1,shade:"MZ",corners:[[0,0,0],[1,0,0],[1,1,0],[0,1,0]]}],We={x:0,y:1,z:0};function ue(E,e){return{x:E.x-e.x,y:E.y-e.y,z:E.z-e.z}}function g(E,e){return E.x*e.x+E.y*e.y+E.z*e.z}function Ee(E,e){return{x:E.y*e.z-E.z*e.y,y:E.z*e.x-E.x*e.z,z:E.x*e.y-E.y*e.x}}function te(E){let e=Math.hypot(E.x,E.y,E.z)||1;return{x:E.x/e,y:E.y/e,z:E.z/e}}function de(E,e){return"rgb("+Math.round(E[0]*e)+","+Math.round(E[1]*e)+","+Math.round(E[2]*e)+")"}function Oe(E){let e=E.getContext("2d"),r=[],n=1,T=1,O=-.6,t=.55,a=150,R=!0,i=!0;function N(){let A=globalThis.devicePixelRatio||1,c=E.getBoundingClientRect();n=Math.max(c.width,1),T=Math.max(c.height,1),E.width=Math.round(n*A),E.height=Math.round(T*A),e.setTransform(A,0,0,A,0,0),R=!0}function S(A,c){let D=ue(A,c.cam),m=g(D,c.right),U=g(D,c.up),W=g(D,c.forward);return W<.5?null:{sx:c.focal*m/W+c.hx,sy:-c.focal*U/W+c.hy,cz:W}}function Y(A,c,D,m){let U=[],W=0;for(let h of c){let p=S(h,D);if(!p)return;U.push(p),W+=p.cz}A.push({pts:U,color:m,depth:W})}function l(){let A=Math.cos(t),c=Math.sin(t),D=Math.cos(O),m=Math.sin(O),U={x:a*A*m,y:a*c,z:a*A*D},W=te({x:-U.x,y:-U.y,z:-U.z}),h=te(Ee(W,We)),p={cam:U,forward:W,right:h,up:Ee(h,W),focal:Math.max(n,T)*1.05,hx:n/2,hy:T/2},K=e.createLinearGradient(0,0,0,T);K.addColorStop(0,"#d3dde7"),K.addColorStop(1,"#eef2ee"),e.fillStyle=K,e.fillRect(0,0,n,T);let F=[];for(let s of r){let M={x:s.x,y:s.y,z:s.z},C={x:s.x+s.w,y:s.y+s.h,z:s.z+s.d},ne=le[s.color]||[200,200,200];for(let P of Ue){if(!(P.high?U[P.axis]>C[P.axis]:U[P.axis]<M[P.axis]))continue;let Te=P.corners.map(([Ae,Re,se])=>({x:Ae?C.x:M.x,y:Re?C.y:M.y,z:se?C.z:M.z}));Y(F,Te,p,de(ne,Ie[P.shade]))}}F.sort((s,M)=>M.depth-s.depth);for(let s of F)e.fillStyle=s.color,e.strokeStyle=s.color,e.lineWidth=.6,e.beginPath(),e.moveTo(s.pts[0].sx,s.pts[0].sy),e.lineTo(s.pts[1].sx,s.pts[1].sy),e.lineTo(s.pts[2].sx,s.pts[2].sy),e.lineTo(s.pts[3].sx,s.pts[3].sy),e.closePath(),e.fill(),e.stroke()}function L(){i&&(O+=.0035,R=!0),R&&(l(),R=!1),requestAnimationFrame(L)}let o=null,I=()=>{i=!1};E.addEventListener("pointerdown",A=>{E.setPointerCapture(A.pointerId),o={x:A.clientX,y:A.clientY},I()}),E.addEventListener("pointermove",A=>{if(!o)return;let c=A.clientX-o.x,D=A.clientY-o.y;o.x=A.clientX,o.y=A.clientY,O-=c*.008,t=Math.max(.05,Math.min(Math.PI/2-.05,t+D*.008)),R=!0});let H=()=>{o=null};return E.addEventListener("pointerup",H),E.addEventListener("pointercancel",H),E.addEventListener("wheel",A=>{A.preventDefault(),a=Math.max(60,Math.min(360,a*(1+A.deltaY*.001))),R=!0,I()},{passive:!1}),globalThis.addEventListener("resize",N),N(),requestAnimationFrame(L),{addBox(A){r.push(A),R=!0},clear(){r.length=0,R=!0},resetCamera(){O=-.6,t=.55,a=150,i=!0,R=!0}}}var re=`* A 3-D shape grammar.
-*
-* SNOBOL holds a worklist string of symbols of the form
-* NAME(arg,arg,...) separated by spaces. Each iteration peels the
-* leading symbol off the worklist, dispatches on its NAME, and
-* prepends one or more child symbols. Terminal BOX symbols are
-* passed to the host renderer through the EMIT extension:
-*
-*       EMIT(x, y, z, w, h, d, color)
-*
-* Coordinates are integer "studs"; Y is up. The renderer scales
-* the world to pixels and centers the scene.
-*
-* R_BLOCK sets the lot heights, R_FLOOR the floor stripe colours,
-* and BCAP the rooftop cap. The grammar runs in a Web Worker.
+`;var le=new URL("./canvas-worker.js",import.meta.url);function ee(){let E=W(document.querySelector("#cellular-automata-source")),e=document.querySelector("#cellular-automata-canvas"),r=document.querySelector("#cellular-automata-preset"),o=document.querySelector("#cellular-automata-run"),T=d(document.querySelector("#cellular-automata-status")),O=null;function t(){O&&(O.terminate(),O=null)}function i(){if(!y[r.value])return;t(),T("Running");let a=!1;O=new Worker(le,{type:"module"}),O.addEventListener("message",function(N){let S=N.data;S.type==="stderr"?(a=!0,T("Error"),console.error(S.line)):S.type==="done"&&(f(e,S.commands),O=null,a||T("Done"))}),O.addEventListener("error",function(N){T("Error: "+N.message)}),O.postMessage({kind:"ca",source:E.getValue(),width:e.width,height:e.height,preset:r.value})}function R(){E.setValue($),B(r,y),i()}o.addEventListener("click",i),r.addEventListener("change",i),R()}var Ie={STR:[64,66,70],FND:[116,122,130],STL:[104,112,122],RUF:[70,76,84],GLS1:[126,170,200],GLS2:[96,152,156],GLS3:[168,190,202],GLS4:[84,124,168]},ce={PY:1,MY:.28,PX:.85,MX:.55,PZ:.42,MZ:.88},Ue=[{axis:"x",high:!0,shade:"PX",corners:[[1,0,0],[1,0,1],[1,1,1],[1,1,0]]},{axis:"x",high:!1,shade:"MX",corners:[[0,0,1],[0,0,0],[0,1,0],[0,1,1]]},{axis:"y",high:!0,shade:"PY",corners:[[0,1,0],[1,1,0],[1,1,1],[0,1,1]]},{axis:"y",high:!1,shade:"MY",corners:[[0,0,1],[1,0,1],[1,0,0],[0,0,0]]},{axis:"z",high:!0,shade:"PZ",corners:[[1,0,1],[0,0,1],[0,1,1],[1,1,1]]},{axis:"z",high:!1,shade:"MZ",corners:[[0,0,0],[1,0,0],[1,1,0],[0,1,0]]}],ue={x:0,y:1,z:0};function We(E,e){return{x:E.x-e.x,y:E.y-e.y,z:E.z-e.z}}function g(E,e){return E.x*e.x+E.y*e.y+E.z*e.z}function Ee(E,e){return{x:E.y*e.z-E.z*e.y,y:E.z*e.x-E.x*e.z,z:E.x*e.y-E.y*e.x}}function te(E){let e=Math.hypot(E.x,E.y,E.z)||1;return{x:E.x/e,y:E.y/e,z:E.z/e}}function de(E,e){return"rgb("+Math.round(E[0]*e)+","+Math.round(E[1]*e)+","+Math.round(E[2]*e)+")"}function Oe(E){let e=E.getContext("2d"),r=[],o=1,T=1,O=-.6,t=.55,i=190,R=!0,a=!0;function N(){let A=globalThis.devicePixelRatio||1,l=E.getBoundingClientRect();o=Math.max(l.width,1),T=Math.max(l.height,1),E.width=Math.round(o*A),E.height=Math.round(T*A),e.setTransform(A,0,0,A,0,0),R=!0}function S(A,l){let D=We(A,l.cam),m=g(D,l.right),U=g(D,l.up),u=g(D,l.forward);return u<.5?null:{sx:l.focal*m/u+l.hx,sy:-l.focal*U/u+l.hy,cz:u}}function L(A,l,D,m){let U=[],u=0;for(let C of l){let p=S(C,D);if(!p)return;U.push(p),u+=p.cz}A.push({pts:U,color:m,depth:u})}function I(){let A=Math.cos(t),l=Math.sin(t),D=Math.cos(O),m=Math.sin(O),U={x:i*A*m,y:i*l,z:i*A*D},u=te({x:-U.x,y:-U.y,z:-U.z}),C=te(Ee(u,ue)),p={cam:U,forward:u,right:C,up:Ee(C,u),focal:Math.max(o,T)*1.05,hx:o/2,hy:T/2},K=e.createLinearGradient(0,0,0,T);K.addColorStop(0,"#d3dde7"),K.addColorStop(1,"#eef2ee"),e.fillStyle=K,e.fillRect(0,0,o,T);let F=[];for(let s of r){let M={x:s.x,y:s.y,z:s.z},h={x:s.x+s.w,y:s.y+s.h,z:s.z+s.d},oe=Ie[s.color]||[200,200,200];for(let P of Ue){if(!(P.high?U[P.axis]>h[P.axis]:U[P.axis]<M[P.axis]))continue;let Te=P.corners.map(([Ae,Re,se])=>({x:Ae?h.x:M.x,y:Re?h.y:M.y,z:se?h.z:M.z}));L(F,Te,p,de(oe,ce[P.shade]))}}F.sort((s,M)=>M.depth-s.depth);for(let s of F)e.fillStyle=s.color,e.strokeStyle=s.color,e.lineWidth=.6,e.beginPath(),e.moveTo(s.pts[0].sx,s.pts[0].sy),e.lineTo(s.pts[1].sx,s.pts[1].sy),e.lineTo(s.pts[2].sx,s.pts[2].sy),e.lineTo(s.pts[3].sx,s.pts[3].sy),e.closePath(),e.fill(),e.stroke()}function Y(){a&&(O+=.0035,R=!0),R&&(I(),R=!1),requestAnimationFrame(Y)}let n=null,c=()=>{a=!1};E.addEventListener("pointerdown",A=>{E.setPointerCapture(A.pointerId),n={x:A.clientX,y:A.clientY},c()}),E.addEventListener("pointermove",A=>{if(!n)return;let l=A.clientX-n.x,D=A.clientY-n.y;n.x=A.clientX,n.y=A.clientY,O-=l*.008,t=Math.max(.05,Math.min(Math.PI/2-.05,t+D*.008)),R=!0});let H=()=>{n=null};return E.addEventListener("pointerup",H),E.addEventListener("pointercancel",H),E.addEventListener("wheel",A=>{A.preventDefault(),i=Math.max(60,Math.min(360,i*(1+A.deltaY*.001))),R=!0,c()},{passive:!1}),globalThis.addEventListener("resize",N),N(),requestAnimationFrame(Y),{addBox(A){r.push(A),R=!0},clear(){r.length=0,R=!0},resetCamera(){O=-.6,t=.55,i=190,a=!0,R=!0}}}var re=`* A 3-D shape grammar. Coordinates are integer "studs"; Y is up.
+* Host extensions: EMIT(x,y,z,w,h,d,color) draws a box, FLOORS()
+* returns a random height, TINT() a random glass colour.
 
 *-----------------------------------------------------------------
 *       Patterns: HEAD peels the leading symbol off the worklist;
@@ -463,19 +451,17 @@ END
 
         HEAD     = BREAK('(') . NAME '(' BREAK(')') . ARGS ')' ' '
 
-        ARGS3    = BREAK(',') . V1 ',' BREAK(',') . V2 ',' REM . V3
-        ARGS4    = BREAK(',') . V1 ',' BREAK(',') . V2
-+                  ',' BREAK(',') . V3 ',' REM . V4
-        ARGS6    = BREAK(',') . V1 ',' BREAK(',') . V2
-+                  ',' BREAK(',') . V3 ',' BREAK(',') . V4
-+                  ',' BREAK(',') . V5 ',' REM . V6
+        ARGS2    = BREAK(',') . V1 ',' REM . V2
         ARGS7    = BREAK(',') . V1 ',' BREAK(',') . V2
 +                  ',' BREAK(',') . V3 ',' BREAK(',') . V4
 +                  ',' BREAK(',') . V5 ',' BREAK(',') . V6
 +                  ',' REM . V7
 
-*       Seed: one city block, 72 studs square, centred at the origin.
-        WORK     = 'BLOCK(-36,-36,72,72) '
+*       Seed: a ground plane and a 2x2 grid of 72-stud blocks,
+*       separated by a 10-stud avenue and centred at the origin.
+        WORK     = 'BOX(-90,-1,-90,180,1,180,STR) '
++                  'BLOCK(-77,-77) BLOCK(5,-77) '
++                  'BLOCK(-77,5) BLOCK(5,5) '
 
 *-----------------------------------------------------------------
 *       Main rewrite loop: pop, dispatch, repeat.
@@ -500,56 +486,54 @@ R_BOX   ARGS ARGS7
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       BLOCK(x, z, w, d) - ground slab + 3x3 grid of lots.
-*       Lots are 20x20, streets 4 wide, outer margin 2.
-*       Heights are hardcoded for a varied skyline.
+*       BLOCK(x, z) - a 3x3 grid of 72-stud lots. Lots are 20x20,
+*       streets 4 wide, outer margin 2.
 *-----------------------------------------------------------------
-R_BLOCK ARGS ARGS4
+R_BLOCK ARGS ARGS2
         X = V1
         Z = V2
-        W = V3
-        D = V4
-        WORK = 'BOX(' X ',-1,' Z ',' W ',1,' D ',PRK) ' WORK
         X1 = X + 2
         X2 = X + 26
         X3 = X + 50
         Z1 = Z + 2
         Z2 = Z + 26
         Z3 = Z + 50
-        WORK = 'LOT(' X1 ',' Z1 ',5) LOT(' X2 ',' Z1 ',9) LOT(' X3 ',' Z1 ',6) ' WORK
-        WORK = 'LOT(' X1 ',' Z2 ',7) LOT(' X2 ',' Z2 ',4) LOT(' X3 ',' Z2 ',8) ' WORK
-        WORK = 'LOT(' X1 ',' Z3 ',8) LOT(' X2 ',' Z3 ',6) LOT(' X3 ',' Z3 ',5) ' WORK
+        WORK = 'LOT(' X1 ',' Z1 ') LOT(' X2 ',' Z1 ') LOT(' X3 ',' Z1 ') ' WORK
+        WORK = 'LOT(' X1 ',' Z2 ') LOT(' X2 ',' Z2 ') LOT(' X3 ',' Z2 ') ' WORK
+        WORK = 'LOT(' X1 ',' Z3 ') LOT(' X2 ',' Z3 ') LOT(' X3 ',' Z3 ') ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       LOT(x, z, n) - foundation slab + BUILD with N floors.
-*       Lot footprint is fixed at 20x20.
+*       LOT(x, z) - plaza slab + a BUILD whose height and glass tint
+*       the host chooses. The renderer scales the world, so the
+*       grammar just lays out 20x20 footprints.
 *-----------------------------------------------------------------
-R_LOT   ARGS ARGS3
+R_LOT   ARGS ARGS2
         X = V1
         Z = V2
-        N = V3
         WORK = 'BOX(' X ',0,' Z ',20,1,20,FND) ' WORK
-        WORK = 'BUILD(' X ',1,' Z ',20,20,' N ') ' WORK
+        WORK = 'BUILD(' X ',1,' Z ',20,20,' FLOORS() ',' TINT() ') ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       BUILD(x, y, z, w, d, n) - n stacked FLOORs then a roof cap.
-*       Each floor is 3 studs tall.
+*       BUILD(x, y, z, w, d, n, g) - n stacked FLOORs in glass tint g,
+*       then a roof cap. Each floor is 3 studs tall.
 *-----------------------------------------------------------------
-R_BUILD ARGS ARGS6
+R_BUILD ARGS ARGS7
         X = V1
         Y = V2
         Z = V3
         W = V4
         D = V5
         N = V6
+        G = V7
         EQ(N, 0)                 :S(BCAP)
-        WORK = 'FLOOR(' X ',' Y ',' Z ',' W ',3,' D ') ' WORK
+        WORK = 'FLOOR(' X ',' Y ',' Z ',' W ',3,' D ',' G ') ' WORK
         Y2 = Y + 3
         N2 = N - 1
-        WORK = 'BUILD(' X ',' Y2 ',' Z ',' W ',' D ',' N2 ') ' WORK
+        WORK = 'BUILD(' X ',' Y2 ',' Z ',' W ',' D ',' N2 ',' G ') ' WORK
         :(LOOP)
+*       Flat roof, then a small mechanical penthouse centred on it.
 BCAP    WORK = 'BOX(' X ',' Y ',' Z ',' W ',1,' D ',RUF) ' WORK
         XC = X + 8
         ZC = Z + 8
@@ -558,21 +542,22 @@ BCAP    WORK = 'BOX(' X ',' Y ',' Z ',' W ',1,' D ',RUF) ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
-*       FLOOR(x, y, z, w, h, d) - three perimeter BANDs.
-*       Brick lintel, glass ribbon, brick sill.
+*       FLOOR(x, y, z, w, h, d, g) - a glass curtain wall topped by a
+*       thin steel floor line: a tall glass BAND in tint g, then a
+*       one-stud STL BAND at the floor slab.
 *-----------------------------------------------------------------
-R_FLOOR ARGS ARGS6
+R_FLOOR ARGS ARGS7
         X = V1
         Y = V2
         Z = V3
         W = V4
         H = V5
         D = V6
-        Y2 = Y + 1
-        Y3 = Y + H - 1
-        WORK = 'BAND(' X ',' Y ',' Z ',' W ',1,' D ',BRC) ' WORK
-        WORK = 'BAND(' X ',' Y2 ',' Z ',' W ',1,' D ',GLS) ' WORK
-        WORK = 'BAND(' X ',' Y3 ',' Z ',' W ',1,' D ',BRC) ' WORK
+        G = V7
+        HG = H - 1
+        Y2 = Y + HG
+        WORK = 'BAND(' X ',' Y ',' Z ',' W ',' HG ',' D ',' G ') ' WORK
+        WORK = 'BAND(' X ',' Y2 ',' Z ',' W ',1,' D ',STL) ' WORK
         :(LOOP)
 
 *-----------------------------------------------------------------
@@ -597,4 +582,4 @@ R_BAND  ARGS ARGS7
         WORK = 'BOX(' XE ',' Y ',' Z2 ',1,' H ',' D2 ',' C ') ' WORK
         :(LOOP)
 END
-`;var Pe=new URL("./shape-worker.js",import.meta.url);function oe(){let E=u(document.querySelector("#shape-grammar-source")),e=document.querySelector("#shape-grammar-canvas"),r=d(document.querySelector("#shape-grammar-status")),n=document.querySelector("#shape-grammar-restart"),T=document.querySelector("#shape-grammar-reset"),O=Oe(e),t=null;function a(){t&&(t.terminate(),t=null)}function R(){a(),O.clear(),O.resetCamera();let N=0;t=new Worker(Pe,{type:"module"}),t.addEventListener("message",function(S){let Y=S.data;Y.type==="box"?(O.addBox(Y.box),r(++N+" boxes")):Y.type==="done"?r(N+" boxes \xB7 finished"):Y.type==="stderr"&&r("Error: "+Y.line)}),t.addEventListener("error",function(S){r("Error: "+S.message)}),r("Running"),t.postMessage({type:"start",source:E.getValue()})}function i(){E.setValue(re),R()}n.addEventListener("click",R),T.addEventListener("click",i),i()}z();Q();J();ee();oe();
+`;var Pe=new URL("./shape-worker.js",import.meta.url);function ne(){let E=W(document.querySelector("#shape-grammar-source")),e=document.querySelector("#shape-grammar-canvas"),r=d(document.querySelector("#shape-grammar-status")),o=document.querySelector("#shape-grammar-restart"),T=document.querySelector("#shape-grammar-reset"),O=Oe(e),t=null;function i(){t&&(t.terminate(),t=null)}function R(){i(),O.clear(),O.resetCamera();let N=0;t=new Worker(Pe,{type:"module"}),t.addEventListener("message",function(S){let L=S.data;L.type==="box"?(O.addBox(L.box),r(++N+" boxes")):L.type==="done"?r(N+" boxes \xB7 finished"):L.type==="stderr"&&r("Error: "+L.line)}),t.addEventListener("error",function(S){r("Error: "+S.message)}),r("Running"),t.postMessage({type:"start",source:E.getValue()})}function a(){E.setValue(re),R()}o.addEventListener("click",R),T.addEventListener("click",a),a()}z();Q();J();ee();ne();
